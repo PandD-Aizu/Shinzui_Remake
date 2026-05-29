@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{71bfab14-2f64-4a80-bb2c-2001c1abf1b2}">
+		<property name="assetPath">
+			<value>【サークルPandD】Plan通りのゲームを素直に作らせてくれないヤバい開発者たち_NovelPart_01_Temp.mp3</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>176.232</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{2b01225c-f8cd-4cd7-8082-0b0f4fe63372}</destination>
+		</relationship>
+	</object>
+</objects>
