@@ -1,7 +1,7 @@
 ---
 name: バグ報告
 about: 動作不良やエラーなどを修正するためのバグを報告するためのテンプレート
-title: "[BUG] "
+title: "[Fix] "
 labels: bug
 assignees: ""
 ---

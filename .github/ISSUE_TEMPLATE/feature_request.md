@@ -1,8 +1,8 @@
 ---
-name: 機能要望 (Feature Request)
-about: 新しい機能の追加や改善
-title: "[FEATURE] "
-labels: add or enhancement
+name: 機能追加や改善
+about: 新しい機能の追加や改善のためのテンプレート
+title: "[Feature] "
+labels: enhancement
 assignees: ""
 ---
 
