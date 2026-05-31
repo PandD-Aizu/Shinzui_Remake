@@ -2,9 +2,9 @@
 {
     public record PlayerCrouchStatus
     {
-        public float standingHeight { get; init; } = 2.0f;   // 立ち状態の高さ
-        public float crouchingHeight { get; init; } = 1.0f;  // しゃがみ時の高さ
-        public float heightChangeRate { get; init; } = 5.0f; // しゃがみと立ちの高さの変化率
+        public float StandingHeight { get; init; } = 2.0f;   // 立ち状態の高さ
+        public float CrouchingHeight { get; init; } = 1.0f;  // しゃがみ時の高さ
+        public float HeightChangeRate { get; init; } = 5.0f; // しゃがみと立ちの高さの変化率
         
         public PlayerCrouchStatus() { }
 
@@ -13,9 +13,9 @@
             float crouchingHeight,
             float heightChangeRate)
         {
-            this.standingHeight = standingHeight;
-            this.crouchingHeight = crouchingHeight;
-            this.heightChangeRate = heightChangeRate;
+            this.StandingHeight = standingHeight;
+            this.CrouchingHeight = crouchingHeight;
+            this.HeightChangeRate = heightChangeRate;
         }
     }
 }

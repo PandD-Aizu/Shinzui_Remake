@@ -6,8 +6,8 @@ namespace Shinzui.Domain.Entities
 {
     public class PlayerEntity
     {
-        public PlayerSpeedStatus _playerSpeedStatus { get; set; }
-        public PlayerCrouchStatus _playerCrouchStatus { get; set; }
+        public PlayerSpeedStatus PlayerSpeedStatus { get; set; }
+        public PlayerCrouchStatus PlayerCrouchStatus { get; set; }
         
         public ReactiveProperty<PlayerMovementState> MovementState { get; } = new (PlayerMovementState.Idle);
         public ReactiveProperty<Vector3> Velocity { get; } = new (Vector3.zero);
@@ -17,9 +17,9 @@ namespace Shinzui.Domain.Entities
             PlayerSpeedStatus playerSpeedStatus,
             PlayerCrouchStatus playerCrouchStatus)
         {
-            _playerSpeedStatus = playerSpeedStatus;
-            _playerCrouchStatus = playerCrouchStatus;
-            CurrentHeight = new ReactiveProperty<float>(playerCrouchStatus.standingHeight);
+            PlayerSpeedStatus = playerSpeedStatus;
+            PlayerCrouchStatus = playerCrouchStatus;
+            CurrentHeight = new ReactiveProperty<float>(playerCrouchStatus.StandingHeight);
         }
 
         /// <summary>
@@ -52,9 +52,9 @@ namespace Shinzui.Domain.Entities
             return MovementState.Value switch
             {
                 PlayerMovementState.Idle => 0.0f,
-                PlayerMovementState.Walking => _playerSpeedStatus.MoveSpeed,
-                PlayerMovementState.Running => _playerSpeedStatus.MoveSpeed * _playerSpeedStatus.RunSpeedMultiplier,
-                PlayerMovementState.Crouching => _playerSpeedStatus.MoveSpeed * _playerSpeedStatus.CrouchSpeedMultiplier,
+                PlayerMovementState.Walking => PlayerSpeedStatus.MoveSpeed,
+                PlayerMovementState.Running => PlayerSpeedStatus.MoveSpeed * PlayerSpeedStatus.RunSpeedMultiplier,
+                PlayerMovementState.Crouching => PlayerSpeedStatus.MoveSpeed * PlayerSpeedStatus.CrouchSpeedMultiplier,
                 _ => 0.0f
             };
         }
@@ -72,7 +72,7 @@ namespace Shinzui.Domain.Entities
             float currentHorizontalSpeed = new Vector3(currentVel.x, 0.0f, currentVel.z).magnitude;
             
             // 目標速度に向けて補間
-            float newHorizontalSpeed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed, deltaTime * _playerSpeedStatus.SpeedChangeRate);
+            float newHorizontalSpeed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed, deltaTime * PlayerSpeedStatus.SpeedChangeRate);
 
             Vector3 newVelocity = currentVel;
             if (input != Vector2.zero)
@@ -119,10 +119,10 @@ namespace Shinzui.Domain.Entities
         public void UpdateHeight(float deltaTime)
         {
             float targetHeight = (MovementState.Value == PlayerMovementState.Crouching) 
-                ? _playerCrouchStatus.crouchingHeight 
-                : _playerCrouchStatus.standingHeight;
+                ? PlayerCrouchStatus.CrouchingHeight 
+                : PlayerCrouchStatus.StandingHeight;
 
-            CurrentHeight.Value = Mathf.Lerp(CurrentHeight.Value, targetHeight, deltaTime * _playerCrouchStatus.heightChangeRate);
+            CurrentHeight.Value = Mathf.Lerp(CurrentHeight.Value, targetHeight, deltaTime * PlayerCrouchStatus.HeightChangeRate);
         }
 
 
