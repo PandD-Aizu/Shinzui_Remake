@@ -1,0 +1,16 @@
+{
+    "name": "ApplicationLayer",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b5b42ada7c4c5104f8c868951c2e3654"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

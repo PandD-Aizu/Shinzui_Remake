@@ -1,0 +1,18 @@
+{
+    "name": "InfrastructureLayer",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b5b42ada7c4c5104f8c868951c2e3654",
+        "GUID:11ca5201f2811b14086b120a09e65b3b",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
