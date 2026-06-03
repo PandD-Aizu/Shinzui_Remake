@@ -7,22 +7,29 @@ namespace Shinzui.Editor
     [InitializeOnLoad]
     public static class EditorMouseLockToggler
     {
-        private static bool? lastAltState = null;
-
         static EditorMouseLockToggler()
         {
-            EditorApplication.update += Update;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        private static void Update()
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
-            // プレイモード中のみ動作
-            if (!EditorApplication.isPlaying)
+            if (state == PlayModeStateChange.EnteredPlayMode)
             {
-                lastAltState = null; // プレイモード終了時に状態をリセット
-                return;
+                // プレイモード開始時に監視用GameObjectを作成
+                var go = new GameObject("EditorMouseLockTogglerHelper");
+                go.hideFlags = HideFlags.HideAndDontSave; // ヒエラルキーに表示せず、シーン保存もさせない
+                go.AddComponent<EditorMouseLockTogglerHelper>();
             }
+        }
+    }
 
+    internal class EditorMouseLockTogglerHelper : MonoBehaviour
+    {
+        private bool? lastAltState = null;
+
+        private void Update()
+        {
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {
@@ -43,7 +50,7 @@ namespace Shinzui.Editor
         /// lockCursorがtrueの場合、カーソルをロックして非表示
         /// </summary>
         /// <param name="lockCursor"></param>
-        private static void ApplyCursorLock(bool lockCursor)
+        private void ApplyCursorLock(bool lockCursor)
         {
             if (lockCursor)
             {
@@ -55,6 +62,13 @@ namespace Shinzui.Editor
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
             }
+        }
+
+        private void OnDestroy()
+        {
+            // 破棄されるときはカーソルロックを安全に解除しておく
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
     }
 }

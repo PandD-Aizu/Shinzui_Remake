@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Shinzui.Domain.ValueObjects.Player
 {
@@ -26,4 +26,9 @@ namespace Shinzui.Domain.ValueObjects.Player
             SpeedChangeRate = speedChangeRate;
         }
     }
+}
+
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit {}
 }
