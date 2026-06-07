@@ -15,7 +15,6 @@ namespace Shinzui.DI
     public class PlayerLifetimeScope : LifetimeScope
     {
         [SerializeField] private PlayerView playerView;
-        [SerializeField] private InputActionAsset inputActionsAsset;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -23,9 +22,6 @@ namespace Shinzui.DI
 
             // シングルトンインスタンスとして登録
             builder.RegisterInstance(player);
-            
-            // InputActionAssetの登録
-            builder.RegisterInstance(inputActionsAsset);
 
             // InputServiceの登録
             builder.Register<UnityInputService>(Lifetime.Singleton).As<IInputService>();
