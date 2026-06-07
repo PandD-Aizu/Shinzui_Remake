@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.WhiteBalance
   active: 1
   temperature:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   tint:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
 --- !u!114 &-5814313382732556513
 MonoBehaviour:
@@ -33,25 +33,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ShadowsMidtonesHighlights
   active: 1
   shadows:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   midtones:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   highlights:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   shadowsStart:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   shadowsEnd:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.3
   highlightsStart:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.55
   highlightsEnd:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
 --- !u!114 &-4480900584651681756
 MonoBehaviour:
@@ -92,7 +92,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ColorCurves
   active: 1
   master:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 2
       m_Loop: 0
@@ -123,7 +123,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   red:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 2
       m_Loop: 0
@@ -154,7 +154,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   green:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 2
       m_Loop: 0
@@ -185,7 +185,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   blue:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 2
       m_Loop: 0
@@ -216,7 +216,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   hueVsHue:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 0
       m_Loop: 1
@@ -229,7 +229,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   hueVsSat:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 0
       m_Loop: 1
@@ -242,7 +242,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   satVsSat:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 0
       m_Loop: 0
@@ -255,7 +255,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
   lumVsSat:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value:
       <length>k__BackingField: 0
       m_Loop: 0
@@ -287,7 +287,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   bloomMip:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   firstFlareIntensity:
     m_OverrideState: 1
@@ -299,13 +299,13 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   warpedFlareScale:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1}
   samples:
     m_OverrideState: 1
     m_Value: 1
   sampleDimmer:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.5
   vignetteEffect:
     m_OverrideState: 1
@@ -329,7 +329,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0.25
   resolution:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 4
   chromaticAbberationIntensity:
     m_OverrideState: 1
@@ -348,10 +348,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.PaniniProjection
   active: 1
   distance:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   cropToFit:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
 --- !u!114 &-2825357319432367998
 MonoBehaviour:
@@ -367,19 +367,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.LensDistortion
   active: 1
   intensity:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   xMultiplier:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   yMultiplier:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   center:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 0.5, y: 0.5}
   scale:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
 --- !u!114 &-2760067132624038314
 MonoBehaviour:
@@ -395,31 +395,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ChannelMixer
   active: 1
   redOutRedIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 100
   redOutGreenIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   redOutBlueIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   greenOutRedIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   greenOutGreenIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 100
   greenOutBlueIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   blueOutRedIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   blueOutGreenIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   blueOutBlueIn:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 100
 --- !u!114 &-1979837425324744372
 MonoBehaviour:
@@ -495,13 +495,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.LiftGammaGain
   active: 1
   lift:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   gamma:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
   gain:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 1, y: 1, z: 1, w: 0}
 --- !u!114 &1373401093309902266
 MonoBehaviour:
@@ -523,10 +523,10 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0.2
   response:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.8
   texture:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {fileID: 0}
 --- !u!114 &1859528079905493729
 MonoBehaviour:
@@ -570,11 +570,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ColorLookup
   active: 1
   texture:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {fileID: 0}
     dimension: 1
   contribution:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
 --- !u!114 &6549510615640023942
 MonoBehaviour:
@@ -593,16 +593,16 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 2
   gaussianStart:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 10
   gaussianEnd:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 30
   gaussianMaxRadius:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   highQualitySampling:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   focusDistance:
     m_OverrideState: 1
@@ -612,7 +612,7 @@ MonoBehaviour:
     m_Value: 2.8
   focalLength:
     m_OverrideState: 1
-    m_Value: 50
+    m_Value: 10
   bladeCount:
     m_OverrideState: 1
     m_Value: 8
@@ -636,13 +636,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.SplitToning
   active: 1
   shadows:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   highlights:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   balance:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
 --- !u!114 &7256664503053151593
 MonoBehaviour:
@@ -658,37 +658,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.ProbeVolumesOptions
   active: 1
   normalBias:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.05
   viewBias:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.1
   scaleBiasWithMinProbeDistance:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   samplingNoise:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.1
   animateSamplingNoise:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   leakReductionMode:
     m_OverrideState: 1
     m_Value: 2
   minValidDotProductValue:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.1
   occlusionOnlyReflectionNormalization:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   intensityMultiplier:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   skyOcclusionIntensityMultiplier:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   worldOffset:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {x: 0, y: 0, z: 0}
 --- !u!114 &8419845154667855337
 MonoBehaviour:
@@ -704,7 +704,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Bloom
   active: 1
   skipIterations:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   threshold:
     m_OverrideState: 1
@@ -716,29 +716,29 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0.7
   clamp:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 65472
   tint:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   highQualityFiltering:
     m_OverrideState: 1
     m_Value: 1
   filter:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   downscale:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   maxIterations:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 6
   dirtTexture:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: {fileID: 0}
     dimension: 1
   dirtIntensity:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
 --- !u!114 &8780823003380897920
 MonoBehaviour:
@@ -757,28 +757,28 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 2
   neutralHDRRangeReductionMode:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 2
   acesPreset:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 3
   hueShiftAmount:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   detectPaperWhite:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   paperWhite:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 300
   detectBrightnessLimits:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1
   minNits:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0.005
   maxNits:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 1000
 --- !u!114 &9087586311572707975
 MonoBehaviour:
