@@ -9,6 +9,9 @@ namespace Shinzui.View
         [SerializeField] private CapsuleCollider playerCollider;
         [SerializeField] private Camera mainCamera;
 
+        [Header("Movement Settings")]
+        [SerializeField] private float rotationSpeed = 270.0f; // 度/秒 (旋回速度)
+
         public Vector3 CameraForward => mainCamera != null ? mainCamera.transform.forward : transform.forward;
         public Vector3 CameraRight => mainCamera != null ? mainCamera.transform.right : transform.right;
         
@@ -49,7 +52,14 @@ namespace Shinzui.View
             if (mainCamera != null)
             {
                 float cameraYAngle = mainCamera.transform.eulerAngles.y;
-                transform.rotation = Quaternion.Euler(0.0f, cameraYAngle, 0.0f);
+                Quaternion targetRotation = Quaternion.Euler(0.0f, cameraYAngle, 0.0f);
+                
+                // なめらかにカメラ方向へ回転
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation, 
+                    targetRotation, 
+                    rotationSpeed * Time.deltaTime
+                );
             }
         }
     }

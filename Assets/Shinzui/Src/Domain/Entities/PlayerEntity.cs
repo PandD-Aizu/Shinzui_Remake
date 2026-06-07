@@ -25,9 +25,6 @@ namespace Shinzui.Domain.Entities
         /// <summary>
         /// 入力の有無、走る要求、しゃがむ要求に基づいて移動状態を更新する
         /// </summary>
-        /// <param name="hasInput">入力があるかどうか</param>
-        /// <param name="isRunningRequested">true: 走っている</param>
-        /// <param name="isCrouchingRequested">true: しゃがんでいる</param>
         public void UpdateState(bool hasInput, bool isRunningRequested, bool isCrouchingRequested)
         {
             if (isCrouchingRequested)
@@ -43,8 +40,6 @@ namespace Shinzui.Domain.Entities
         /// <summary>
         /// 現在の移動状態と入力の有無に基づいて、目標速度を計算して返す
         /// </summary>
-        /// <param name="hasInput">true: 入力がある</param>
-        /// <returns>目標速度(スカラー)</returns>
         public float GetTargetSpeed(bool hasInput)
         {
             if (!hasInput) return 0.0f;
@@ -60,38 +55,84 @@ namespace Shinzui.Domain.Entities
         }
 
         /// <summary>
-        /// 移動入力と方向ベクトルから、水平方向の速度を計算して更新します。
+        /// 移動入力と方向ベクトルから、水平方向の速度を計算して更新する
         /// </summary>
         public void CalculateVelocity(Vector2 input, Vector3 right, Vector3 forward, float deltaTime)
         {
-            bool hasInput = input != Vector2.zero;
-            float targetSpeed = GetTargetSpeed(hasInput);
+            var speedStatus = this.PlayerSpeedStatus;
             Vector3 currentVel = Velocity.Value;
-            
-            // 水平方向の現在の速さを取得
-            float currentHorizontalSpeed = new Vector3(currentVel.x, 0.0f, currentVel.z).magnitude;
-            
-            // 目標速度に向けて補間
-            float newHorizontalSpeed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed, deltaTime * PlayerSpeedStatus.SpeedChangeRate);
+            Vector3 currentHorizontalVel = new Vector3(currentVel.x, 0.0f, currentVel.z);
+            Vector3 targetHorizontalVel = Vector3.zero;
+
+            // スティックのデッドゾーン処理
+            if (input.sqrMagnitude > 0.01f)
+            {
+                // 入力ベクトルを正規化
+                Vector2 normalizedInput = input.normalized;
+                float targetSpeed = GetTargetSpeed(true);
+
+                // 1. 方向ペナルティ倍率の計算
+                float penalty = 1.0f;
+                if (normalizedInput.y < 0.0f)
+                {
+                    // 後退時ペナルティ：真後ろ（-1）に近づくほど強くかかる
+                    float backwardWeight = Mathf.Abs(normalizedInput.y);
+                    penalty = Mathf.Lerp(speedStatus.StrafeSpeedMultiplier, speedStatus.BackwardSpeedMultiplier, backwardWeight);
+                }
+                else
+                {
+                    // 横移動ペナルティ：真横に近づくほど強くかかる
+                    float strafeWeight = Mathf.Abs(normalizedInput.x);
+                    penalty = Mathf.Lerp(1.0f, speedStatus.StrafeSpeedMultiplier, strafeWeight);
+                }
+                targetSpeed *= penalty;
+
+                // 2. カメラのピッチ角の影響を排除して平面投影
+                Vector3 projForward = Vector3.ProjectOnPlane(forward, Vector3.up).normalized;
+                Vector3 projRight = Vector3.ProjectOnPlane(right, Vector3.up).normalized;
+
+                // 入力に応じた絶対的な目標方向
+                Vector3 targetDirection = (projRight * normalizedInput.x + projForward * normalizedInput.y).normalized;
+                Vector3 finalDirection = targetDirection;
+
+                // 3. 動き出しのガタつきを消すスムーズな旋回慣性
+                if (currentHorizontalVel.sqrMagnitude > 0.001f)
+                {
+                    Vector3 currentDir = currentHorizontalVel.normalized;
+                    float dot = Vector3.Dot(currentDir, targetDirection);
+
+                    // 真後ろへの入力時のSlerpフリーズを防止
+                    if (dot < -0.99f)
+                    {
+                        // 確実に直交する右ベクトルをブレンドして回転のきっかけを作る
+                        Vector3 escapeAxis = Vector3.Cross(currentDir, Vector3.up).normalized;
+                        if (escapeAxis.sqrMagnitude < 0.01f) escapeAxis = projRight;
+                        currentDir = (currentDir + escapeAxis * 0.1f).normalized;
+                    }
+
+                    // 速度が乗るほど慣性が強く効き、静止時はクイッと曲がるようにブレンド率を調整
+                    float currentSpeedRatio = Mathf.Clamp01(currentHorizontalVel.magnitude / speedStatus.MoveSpeed);
+                    float actualRotationRate = Mathf.Lerp(speedStatus.AccelerationRate * 3f, speedStatus.AccelerationRate, currentSpeedRatio);
+
+                    finalDirection = Vector3.Slerp(currentDir, targetDirection, deltaTime * actualRotationRate);
+                }
+
+                targetHorizontalVel = finalDirection.normalized * targetSpeed;
+            }
+
+            // 4. 加速と減速のメリハリを付けて Lerp で速度合成
+            bool hasInput = input.sqrMagnitude > 0.01f;
+            float rate = hasInput ? speedStatus.AccelerationRate : speedStatus.DecelerationRate;
+
+            Vector3 newHorizontalVel = Vector3.Lerp(
+                currentHorizontalVel, 
+                targetHorizontalVel, 
+                deltaTime * rate
+            );
 
             Vector3 newVelocity = currentVel;
-            if (input != Vector2.zero)
-            {
-                Vector3 inputDirection = new Vector3(input.x, 0.0f, input.y).normalized;
-                Vector3 targetDirection = (right * inputDirection.x + forward * inputDirection.z).normalized;
-                
-                Vector3 horizontalMovement = targetDirection * newHorizontalSpeed;
-                newVelocity.x = horizontalMovement.x;
-                newVelocity.z = horizontalMovement.z;
-            }
-            else
-            {
-                // 入力がない場合は現在の進行方向を維持したまま減速する
-                Vector3 horizontalDir = new Vector3(currentVel.x, 0.0f, currentVel.z).normalized;
-                Vector3 horizontalMovement = horizontalDir * newHorizontalSpeed;
-                newVelocity.x = horizontalMovement.x;
-                newVelocity.z = horizontalMovement.z;
-            }
+            newVelocity.x = newHorizontalVel.x;
+            newVelocity.z = newHorizontalVel.z;
 
             Velocity.Value = newVelocity;
         }
@@ -124,7 +165,5 @@ namespace Shinzui.Domain.Entities
 
             CurrentHeight.Value = Mathf.Lerp(CurrentHeight.Value, targetHeight, deltaTime * PlayerCrouchStatus.HeightChangeRate);
         }
-
-
     }
 }
