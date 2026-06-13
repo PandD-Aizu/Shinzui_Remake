@@ -12,7 +12,6 @@ using Shinzui.Presentation.Inventory;
 using Shinzui.View;
 using Shinzui.View.Inventory;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using VContainer;
 using VContainer.Unity;
 
@@ -21,7 +20,7 @@ namespace Shinzui.DI
     public class PlayerLifetimeScope : LifetimeScope
     {
         [SerializeField] private PlayerView playerView;
-        [SerializeField] private InventoryView inventoryView;
+        [SerializeField] private InventoryView inventoryView; // 【追加】インベントリView参照
 
         protected override void Configure(IContainerBuilder builder)
         {
