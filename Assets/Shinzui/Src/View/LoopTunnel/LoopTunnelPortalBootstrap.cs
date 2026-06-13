@@ -1,5 +1,7 @@
-﻿﻿using UnityEngine;
+using System.Reflection;
+using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 namespace Shinzui.View.LoopTunnel
@@ -46,11 +48,10 @@ namespace Shinzui.View.LoopTunnel
         [SerializeField] private float tunnelLength = 60.0f;
         [SerializeField] private float tunnelWidth = 16.0f;
         [SerializeField] private float tunnelHeight = 10.0f;
-        [SerializeField] private float visualPadding = 12.0f;
+        [SerializeField] private float visualPadding = 40.0f;
         [SerializeField] private int markerCount = 0;
 
         [Header("Portal Rendering")]
-        [SerializeField] private int textureSize = 1024;
         [SerializeField] private float nearClipOffset = 0.04f;
 
         private Camera _mainCamera;
@@ -65,6 +66,18 @@ namespace Shinzui.View.LoopTunnel
         private CharacterController _playerController;
         private Transform _player;
         private float _halfLength;
+
+        private void OnEnable()
+        {
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
+        }
+
+        private void OnDisable()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
+        }
 
         private void Awake()
         {
@@ -85,10 +98,7 @@ namespace Shinzui.View.LoopTunnel
 
         private void LateUpdate()
         {
-            if (_mainCamera == null)
-            {
-                _mainCamera = Camera.main;
-            }
+            _mainCamera = Camera.main;
 
             if (_mainCamera == null)
             {
@@ -96,8 +106,16 @@ namespace Shinzui.View.LoopTunnel
             }
 
             EnsureRenderTextures();
-            RenderPortal(_frontPortalCamera, _frontPortal, _backPortal, _frontPortalRenderer, _backPortalRenderer);
-            RenderPortal(_backPortalCamera, _backPortal, _frontPortal, _frontPortalRenderer, _backPortalRenderer);
+            
+            if (_frontPortalRenderer != null && _frontPortalCamera != null)
+            {
+                _frontPortalCamera.enabled = _frontPortalRenderer.isVisible;
+            }
+            if (_backPortalRenderer != null && _backPortalCamera != null)
+            {
+                _backPortalCamera.enabled = _backPortalRenderer.isVisible;
+            }
+
             WrapPlayerIfNeeded();
         }
 
@@ -136,12 +154,11 @@ namespace Shinzui.View.LoopTunnel
             CreateCube(root.transform, "Left Wall", new Vector3(-tunnelWidth * 0.5f, tunnelHeight * 0.5f, 0.0f), new Vector3(0.16f, tunnelHeight, visualLength), wallMaterial);
             CreateCube(root.transform, "Right Wall", new Vector3(tunnelWidth * 0.5f, tunnelHeight * 0.5f, 0.0f), new Vector3(0.16f, tunnelHeight, visualLength), wallMaterial);
 
-            // 奥行きがわかりやすくなるような目印を等間隔に配置
             for (int i = 0; i < markerCount; i++)
             {
                 float z = Mathf.Lerp(-visualHalfLength + 1.0f, visualHalfLength - 1.0f, i / Mathf.Max(1.0f, markerCount - 1.0f));
-                CreateCube(root.transform, "Depth Marker " + i, new Vector3(-tunnelWidth * 0.5f + 0.09f, tunnelHeight * 0.5f, z), new Vector3(0.04f, tunnelHeight * 0.9f, 0.08f), stripeMaterial);
-                CreateCube(root.transform, "Depth Marker Mirror " + i, new Vector3(tunnelWidth * 0.5f - 0.09f, tunnelHeight * 0.5f, z), new Vector3(0.04f, tunnelHeight * 0.9f, 0.08f), stripeMaterial);
+                CreateCube(root.transform, "Depth Marker", new Vector3(-tunnelWidth * 0.5f + 0.09f, tunnelHeight * 0.5f, z), new Vector3(0.04f, tunnelHeight * 0.9f, 0.08f), stripeMaterial);
+                CreateCube(root.transform, "Depth Marker Mirror", new Vector3(tunnelWidth * 0.5f - 0.09f, tunnelHeight * 0.5f, z), new Vector3(0.04f, tunnelHeight * 0.9f, 0.08f), stripeMaterial);
             }
 
             var lightObject = new GameObject("Loop Tunnel Fill Light");
@@ -208,46 +225,69 @@ namespace Shinzui.View.LoopTunnel
             var cameraObject = new GameObject(name);
             cameraObject.transform.SetParent(transform, false);
             var camera = cameraObject.AddComponent<Camera>();
-            camera.enabled = false;
+            camera.enabled = true;
             camera.depth = -100;
             camera.clearFlags = CameraClearFlags.Skybox;
             camera.useOcclusionCulling = false;
             return camera;
         }
 
-        private void RenderPortal(Camera portalCamera, Transform sourcePortal, Transform destinationPortal, Renderer frontRenderer, Renderer backRenderer)
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
-            if (portalCamera == null || sourcePortal == null || destinationPortal == null)
+            if (_mainCamera == null)
             {
                 return;
             }
 
+            if (camera == _frontPortalCamera)
+            {
+                PreparePortal(_frontPortalCamera, _frontPortal, _backPortal, _frontPortalRenderer, _backPortalRenderer);
+            }
+            else if (camera == _backPortalCamera)
+            {
+                PreparePortal(_backPortalCamera, _backPortal, _frontPortal, _frontPortalRenderer, _backPortalRenderer);
+            }
+        }
+
+        private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            if (camera == _frontPortalCamera || camera == _backPortalCamera)
+            {
+                RestorePortalRenderers(_frontPortalRenderer, _backPortalRenderer);
+            }
+        }
+
+        private bool _frontWasEnabled;
+        private bool _backWasEnabled;
+
+        private void PreparePortal(Camera portalCamera, Transform sourcePortal, Transform destinationPortal, Renderer frontRenderer, Renderer backRenderer)
+        {
             CopyCameraSettings(_mainCamera, portalCamera);
             MatchPortalCameraTransform(portalCamera.transform, sourcePortal, destinationPortal);
             ApplyObliqueClipPlane(portalCamera, destinationPortal);
 
-            bool frontWasEnabled = frontRenderer != null && frontRenderer.enabled;
-            bool backWasEnabled = backRenderer != null && backRenderer.enabled;
+            _frontWasEnabled = frontRenderer != null && frontRenderer.enabled;
+            _backWasEnabled = backRenderer != null && backRenderer.enabled;
+
             if (frontRenderer != null)
             {
                 frontRenderer.enabled = false;
             }
-
             if (backRenderer != null)
             {
                 backRenderer.enabled = false;
             }
+        }
 
-            portalCamera.Render();
-
+        private void RestorePortalRenderers(Renderer frontRenderer, Renderer backRenderer)
+        {
             if (frontRenderer != null)
             {
-                frontRenderer.enabled = frontWasEnabled;
+                frontRenderer.enabled = _frontWasEnabled;
             }
-
             if (backRenderer != null)
             {
-                backRenderer.enabled = backWasEnabled;
+                backRenderer.enabled = _backWasEnabled;
             }
         }
 
@@ -257,8 +297,7 @@ namespace Shinzui.View.LoopTunnel
             Transform destinationPortal)
         {
             Vector3 relativePos =
-                new Vector3(0,0, tunnelWidth/2);
-                //sourcePortal.InverseTransformPoint(_mainCamera.transform.position);
+                sourcePortal.InverseTransformPoint(_mainCamera.transform.position);
 
             relativePos =
                 Quaternion.Euler(0, 180, 0) * relativePos;
@@ -280,13 +319,10 @@ namespace Shinzui.View.LoopTunnel
         private void ApplyObliqueClipPlane(Camera portalCamera, Transform destinationPortal)
         {
             Vector3 clipNormal = destinationPortal.forward;
-            if (Vector3.Dot(clipNormal, portalCamera.transform.position - destinationPortal.position) < 0.0f)
-            {
-                clipNormal = -clipNormal;
-            }
-
             Vector3 clipPosition = destinationPortal.position + clipNormal * nearClipOffset;
-            Matrix4x4 worldToCamera = portalCamera.worldToCameraMatrix;
+            
+            Matrix4x4 worldToCamera = Matrix4x4.Scale(new Vector3(1.0f, 1.0f, -1.0f)) * portalCamera.transform.worldToLocalMatrix;
+
             Vector3 cameraPosition = worldToCamera.MultiplyPoint(clipPosition);
             Vector3 cameraNormal = worldToCamera.MultiplyVector(clipNormal).normalized;
             Vector4 clipPlane = new Vector4(cameraNormal.x, cameraNormal.y, cameraNormal.z, -Vector3.Dot(cameraPosition, cameraNormal));
@@ -297,9 +333,48 @@ namespace Shinzui.View.LoopTunnel
         {
             RenderTexture renderTexture = target.targetTexture;
             target.CopyFrom(source);
-            target.enabled = false;
+            target.enabled = true;
             target.targetTexture = renderTexture;
             target.stereoTargetEye = StereoTargetEyeMask.None;
+            target.farClipPlane = Mathf.Max(source.farClipPlane, tunnelLength * 2.5f);
+            
+            var sourceData = source.GetComponent<UniversalAdditionalCameraData>();
+            var targetData = target.GetComponent<UniversalAdditionalCameraData>();
+            if (sourceData != null)
+            {
+                if (targetData == null)
+                {
+                    targetData = target.gameObject.AddComponent<UniversalAdditionalCameraData>();
+                }
+                targetData.renderPostProcessing = sourceData.renderPostProcessing;
+                targetData.renderShadows = sourceData.renderShadows;
+                targetData.antialiasing = sourceData.antialiasing;
+                targetData.antialiasingQuality = sourceData.antialiasingQuality;
+                targetData.volumeLayerMask = sourceData.volumeLayerMask;
+                targetData.volumeTrigger = sourceData.volumeTrigger != null ? sourceData.volumeTrigger : source.transform;
+                
+                int index = GetRendererIndex(sourceData);
+                if (index >= 0)
+                {
+                    targetData.SetRenderer(index);
+                }
+            }
+        }
+
+        private static FieldInfo _rendererIndexField;
+
+        private static int GetRendererIndex(UniversalAdditionalCameraData data)
+        {
+            if (_rendererIndexField == null)
+            {
+                _rendererIndexField = typeof(UniversalAdditionalCameraData).GetField("m_RendererIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+
+            if (_rendererIndexField != null)
+            {
+                return (int)_rendererIndexField.GetValue(data);
+            }
+            return -1;
         }
 
         private void WrapPlayerIfNeeded()
@@ -358,7 +433,10 @@ namespace Shinzui.View.LoopTunnel
 
         private void EnsureRenderTextures()
         {
-            if (_frontPortalTexture != null && _frontPortalTexture.width == textureSize)
+            int width = Mathf.Clamp(Mathf.RoundToInt(_mainCamera.pixelWidth), 128, 4096);
+            int height = Mathf.Clamp(Mathf.RoundToInt(_mainCamera.pixelHeight), 128, 4096);
+
+            if (_frontPortalTexture != null && _frontPortalTexture.width == width && _frontPortalTexture.height == height)
             {
                 return;
             }
@@ -366,8 +444,8 @@ namespace Shinzui.View.LoopTunnel
             ReleaseRenderTexture(_frontPortalTexture);
             ReleaseRenderTexture(_backPortalTexture);
 
-            _frontPortalTexture = CreateRenderTexture("Forward Portal Texture");
-            _backPortalTexture = CreateRenderTexture("Back Portal Texture");
+            _frontPortalTexture = CreateRenderTexture("Forward Portal Texture", width, height);
+            _backPortalTexture = CreateRenderTexture("Back Portal Texture", width, height);
 
             _frontPortalCamera.targetTexture = _frontPortalTexture;
             _backPortalCamera.targetTexture = _backPortalTexture;
@@ -375,9 +453,9 @@ namespace Shinzui.View.LoopTunnel
             SetPortalTexture(_backPortalRenderer.sharedMaterial, _backPortalTexture);
         }
 
-        private RenderTexture CreateRenderTexture(string name)
+        private RenderTexture CreateRenderTexture(string name, int width, int height)
         {
-            var texture = new RenderTexture(textureSize, textureSize, 24, RenderTextureFormat.ARGB32)
+            var texture = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32)
             {
                 name = name,
                 antiAliasing = 2,
@@ -417,7 +495,11 @@ namespace Shinzui.View.LoopTunnel
 
         private static Material CreatePortalMaterial(string name)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Unlit");
+            var shader = Shader.Find("Custom/PortalShader");
+            if (shader == null)
+            {
+                shader = Shader.Find("Universal Render Pipeline/Unlit");
+            }
             if (shader == null)
             {
                 shader = Shader.Find("Unlit/Texture");
@@ -493,4 +575,3 @@ namespace Shinzui.View.LoopTunnel
         }
     }
 }
-
