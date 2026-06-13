@@ -23,7 +23,6 @@ namespace Shinzui.Application.UseCases
         private GameSettings _editingSettings;
 
         // --- Presentation層へ公開するリアクティブプロパティ ---
-        
         // 音量関連
         public ReactiveProperty<float> MasterVolume { get; } = new();
         public ReactiveProperty<float> BgmVolume { get; } = new();

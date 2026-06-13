@@ -8,18 +8,26 @@ namespace Shinzui.Domain.Entities
     {
         public PlayerSpeedStatus PlayerSpeedStatus { get; set; }
         public PlayerCrouchStatus PlayerCrouchStatus { get; set; }
+        public PlayerStamina PlayerStamina { get; set; }
         
         public ReactiveProperty<PlayerMovementState> MovementState { get; } = new (PlayerMovementState.Idle);
         public ReactiveProperty<Vector3> Velocity { get; } = new (Vector3.zero);
         public ReactiveProperty<float> CurrentHeight { get; }
+        public ReactiveProperty<float> CurrentStamina { get; }
+        public ReadOnlyReactiveProperty<float> StaminaRatio { get; }
+        public ReactiveProperty<bool> IsExhausted { get; } = new (false);
 
         public PlayerEntity(
             PlayerSpeedStatus playerSpeedStatus,
-            PlayerCrouchStatus playerCrouchStatus)
+            PlayerCrouchStatus playerCrouchStatus,
+            PlayerStamina playerStamina)
         {
             PlayerSpeedStatus = playerSpeedStatus;
             PlayerCrouchStatus = playerCrouchStatus;
+            PlayerStamina = playerStamina;
             CurrentHeight = new ReactiveProperty<float>(playerCrouchStatus.StandingHeight);
+            CurrentStamina = new ReactiveProperty<float>(playerStamina.CurrentStamina);
+            StaminaRatio = CurrentStamina.Select(x => x / playerStamina.MaxStamina).ToReadOnlyReactiveProperty();
         }
 
         /// <summary>
@@ -29,12 +37,46 @@ namespace Shinzui.Domain.Entities
         {
             if (isCrouchingRequested)
                 MovementState.Value = PlayerMovementState.Crouching;
-            else if (isRunningRequested && hasInput)
+            else if (isRunningRequested && hasInput && !IsExhausted.Value)
                 MovementState.Value = PlayerMovementState.Running;
             else if (hasInput)
                 MovementState.Value = PlayerMovementState.Walking;
             else
                 MovementState.Value = PlayerMovementState.Idle;
+        }
+
+        /// <summary>
+        /// 移動状態に基づいてスタミナを更新する
+        /// </summary>
+        public void UpdateStamina(float deltaTime)
+        {
+            float staminaChange;
+            if (MovementState.Value == PlayerMovementState.Running)
+            {
+                staminaChange = -PlayerStamina.StaminaDecreaseRate * deltaTime;
+            }
+            else
+            {
+                staminaChange = PlayerStamina.StaminaIncreaseRate * deltaTime;
+            }
+
+            float newStamina = Mathf.Clamp(
+                PlayerStamina.CurrentStamina + staminaChange,
+                PlayerStamina.MinStamina,
+                PlayerStamina.MaxStamina
+            );
+
+            PlayerStamina = PlayerStamina with { CurrentStamina = newStamina };
+            CurrentStamina.Value = newStamina;
+
+            if (newStamina <= PlayerStamina.MinStamina)
+            {
+                IsExhausted.Value = true;
+            }
+            else if (IsExhausted.Value && newStamina >= PlayerStamina.MaxStamina * 0.2f)
+            {
+                IsExhausted.Value = false;
+            }
         }
 
         /// <summary>

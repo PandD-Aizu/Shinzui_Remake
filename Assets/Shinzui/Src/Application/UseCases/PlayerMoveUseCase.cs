@@ -12,6 +12,7 @@ namespace Shinzui.Application.UseCases
 
         public ReadOnlyReactiveProperty<Vector3> Velocity => _playerEntityEntity.Velocity;
         public ReadOnlyReactiveProperty<float> CurrentHeight => _playerEntityEntity.CurrentHeight;
+        public ReadOnlyReactiveProperty<float> StaminaRatio => _playerEntityEntity.StaminaRatio;
 
         public Vector2 MoveInput => _inputService.MoveInput;
         public bool SprintPressed => _inputService.SprintPressed;
@@ -47,6 +48,9 @@ namespace Shinzui.Application.UseCases
 
             // プレイヤー状態の移動状態を判定
             _playerEntityEntity.UpdateState(hasInput, isRunningRequested, actualCrouching);
+
+            // スタミナの更新
+            _playerEntityEntity.UpdateStamina(deltaTime);
 
             // 水平速度の更新
             _playerEntityEntity.CalculateVelocity(input, right, forward, deltaTime);

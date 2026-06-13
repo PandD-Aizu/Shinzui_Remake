@@ -31,6 +31,11 @@ namespace Shinzui.Presentation
                 .Subscribe(height => _view.SetHeight(height))
                 .AddTo(ref disposableBuilder);
 
+            // UseCaseを介してスタミナの割合更新を監視し、Viewに流す
+            _useCase.StaminaRatio
+                .Subscribe(ratio => _view.ChangeStaminaSlider(ratio))
+                .AddTo(ref disposableBuilder);
+
             _disposable = disposableBuilder.Build();
         }
 

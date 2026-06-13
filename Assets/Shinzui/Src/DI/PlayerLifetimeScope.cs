@@ -53,7 +53,8 @@ namespace Shinzui.DI
         {
             return new PlayerEntity(
                 new PlayerSpeedStatus(),
-                new PlayerCrouchStatus());
+                new PlayerCrouchStatus(),
+                new PlayerStamina());
         }
     }
 }
