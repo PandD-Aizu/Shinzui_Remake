@@ -66,6 +66,8 @@ namespace Shinzui.View.LoopTunnel
         private CharacterController _playerController;
         private Transform _player;
         private float _halfLength;
+        private BoxCollider _frontPortalCollider;
+        private BoxCollider _backPortalCollider;
 
         private void OnEnable()
         {
@@ -199,6 +201,15 @@ namespace Shinzui.View.LoopTunnel
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
 
+            if(name == "Forward Portal")
+            {
+                _frontPortalCollider = portalObject.AddComponent<BoxCollider>();
+            }
+            else if(name == "Back Portal")
+            {
+                _backPortalCollider = portalObject.AddComponent<BoxCollider>();
+            }
+
             return portalObject.transform;
         }
 
@@ -207,10 +218,7 @@ namespace Shinzui.View.LoopTunnel
             float frameWidth = tunnelWidth - 0.05f;
             float frameHeight = tunnelHeight - 0.05f;
             float z = portal.position.z;
-            CreateCube(portal, "Top Frame", new Vector3(0.0f, frameHeight * 0.5f, 0.0f), new Vector3(frameWidth, 0.12f, 0.12f), material);
-            CreateCube(portal, "Bottom Frame", new Vector3(0.0f, -frameHeight * 0.5f, 0.0f), new Vector3(frameWidth, 0.12f, 0.12f), material);
-            CreateCube(portal, "Left Frame", new Vector3(-frameWidth * 0.5f, 0.0f, 0.0f), new Vector3(0.12f, frameHeight, 0.12f), material);
-            CreateCube(portal, "Right Frame", new Vector3(frameWidth * 0.5f, 0.0f, 0.0f), new Vector3(0.12f, frameHeight, 0.12f), material);
+            //CreateCube(portal, "CollisionCube", new Vector3(frameWidth * 0.5f, frameHeight * 0.5f, 0.0f), new Vector3(frameWidth, frameHeight, 1.02f), material);
             portal.position = new Vector3(portal.position.x, portal.position.y, z);
         }
 
@@ -393,12 +401,12 @@ namespace Shinzui.View.LoopTunnel
             Vector3 position = _player.position;
             bool wrapped = false;
 
-            if (position.z > _halfLength)
+            if (_player.GetComponent<CapsuleCollider>().bounds.Intersects(_backPortalCollider.bounds))
             {
                 position.z -= tunnelLength;
                 wrapped = true;
             }
-            else if (position.z < -_halfLength)
+            else if (_player.GetComponent<CapsuleCollider>().bounds.Intersects(_frontPortalCollider.bounds))
             {
                 position.z += tunnelLength;
                 wrapped = true;
