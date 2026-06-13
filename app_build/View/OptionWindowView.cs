@@ -42,6 +42,8 @@ namespace Shinzui.View.Settings
         [Header("Accessibility UI")]
         [SerializeField] private Toggle centerDotToggle;
 
+
+
         private readonly Dictionary<string, GameObject> _categoryPanelMap = new(StringComparer.OrdinalIgnoreCase);
         private bool _categoryPanelsInitialized;
         
@@ -62,6 +64,8 @@ namespace Shinzui.View.Settings
         public Slider BrightnessSlider => brightnessSlider;
 
         public Toggle CenterDotToggle => centerDotToggle;
+
+
 
         public void ShowCategoryPanel(string categoryId)
         {
