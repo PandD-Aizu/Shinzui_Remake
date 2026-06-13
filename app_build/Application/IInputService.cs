@@ -23,5 +23,10 @@ namespace Shinzui.Application.Interfaces
         /// </summary>
         /// <param name="blocked">true の場合、移動や視点移動の入力を無効化します。</param>
         void SetBlocked(bool blocked);
+
+        /// <summary>
+        /// 懐中電灯トグル用入力（Fキーなど）
+        /// </summary>
+        bool FlashlightTogglePressed { get; }
     }
 }

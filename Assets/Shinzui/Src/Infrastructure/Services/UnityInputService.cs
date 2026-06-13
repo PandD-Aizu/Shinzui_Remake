@@ -13,6 +13,7 @@ namespace Shinzui.Infrastructure.Services
         private readonly InputAction _crouchAction;
         private readonly InputAction _inventoryToggleAction;
         private readonly InputAction _itemUseAction;
+        private readonly InputAction _flashlightToggleAction;
 
         private bool _isBlocked;
 
@@ -21,6 +22,7 @@ namespace Shinzui.Infrastructure.Services
         public bool CrouchPressed => !_isBlocked && _crouchAction != null && _crouchAction.IsPressed();
         public bool InventoryTogglePressed => _inventoryToggleAction != null && _inventoryToggleAction.WasPressedThisFrame(); // 開閉入力はブロック中でも受け付ける
         public bool ItemUsePressed => !_isBlocked && _itemUseAction != null && _itemUseAction.WasPressedThisFrame();
+        public bool FlashlightTogglePressed => !_isBlocked && _flashlightToggleAction != null && _flashlightToggleAction.WasPressedThisFrame();
 
         public UnityInputService()
         {
@@ -67,6 +69,11 @@ namespace Shinzui.Infrastructure.Services
             _itemUseAction.AddBinding("<Keyboard>/e");
             _itemUseAction.AddBinding("<Gamepad>/buttonSouth");
 
+            // FlashlightToggleアクション (Button) の作成とバインディング
+            _flashlightToggleAction = playerMap.AddAction("FlashlightToggle", type: InputActionType.Button);
+            _flashlightToggleAction.AddBinding("<Keyboard>/f");
+            _flashlightToggleAction.AddBinding("<Gamepad>/buttonNorth");
+
             // インプット制御を有効化
             _actionAsset.Enable();
         }
@@ -99,25 +106,12 @@ namespace Shinzui.Infrastructure.Services
                 Debug.LogWarning($"[UnityInputService] PlayerInputの有効無効切り替えに失敗しました: {ex.Message}");
             }
 
-            // 2. Cinemachine の視点移動を停止（リフレクションを用いてアセンブリ参照なしに制御）
+            // 2. Cinemachine の視点移動入力を停止
+            // ※ レンダリングに関わる CinemachineBrain の無効化は、Unity内部のカリング演算 (OcclusionCulling) に
+            // 　 平面数不整合エラーを引き起こすため行わず、入力受付のみを制御する CinemachineInputProvider のみ無効化します。
             try
             {
-                // CinemachineBrain を探して無効化/有効化する
-                var brainType = Type.GetType("Unity.Cinemachine.CinemachineBrain, Unity.Cinemachine") 
-                                ?? Type.GetType("Cinemachine.CinemachineBrain, Cinemachine");
-                if (brainType != null)
-                {
-                    var brains = UnityEngine.Object.FindObjectsByType(brainType, UnityEngine.FindObjectsSortMode.None);
-                    foreach (var brain in brains)
-                    {
-                        if (brain is MonoBehaviour behaviour)
-                        {
-                            behaviour.enabled = !blocked;
-                        }
-                    }
-                }
-
-                // CinemachineInputProvider も無効化/有効化する
+                // CinemachineInputProvider を無効化/有効化する
                 var providerType = Type.GetType("Unity.Cinemachine.CinemachineInputProvider, Unity.Cinemachine") 
                                    ?? Type.GetType("Cinemachine.CinemachineInputProvider, Cinemachine");
                 if (providerType != null)
@@ -134,7 +128,7 @@ namespace Shinzui.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[UnityInputService] Cinemachineコンポーネントの制御に失敗しました: {ex.Message}");
+                Debug.LogWarning($"[UnityInputService] CinemachineInputProviderの制御に失敗しました: {ex.Message}");
             }
 
             // 3. アクションアセットの直接検索による無効化
