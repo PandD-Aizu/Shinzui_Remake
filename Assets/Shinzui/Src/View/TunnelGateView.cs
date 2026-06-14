@@ -44,13 +44,7 @@ namespace Shinzui.View
         public MeshRenderer PortalRenderer => _portalRenderer;
         public RenderTexture PortalRT => _portalRT;
 
-        // ポストプロセスコンポーネントの一時退避用
-        private class PostProcessState
-        {
-            public VolumeComponent component;
-            public bool originalActive;
-        }
-        private readonly List<PostProcessState> _tempDisabledComponents = new();
+
 
         private void Awake()
         {
@@ -69,14 +63,12 @@ namespace Shinzui.View
                 ActiveGates.Add(this);
             }
             RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-            RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
         }
 
         private void OnDisable()
         {
             ActiveGates.Remove(this);
             RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-            RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
             ReleasePortalResources();
         }
 
@@ -155,8 +147,6 @@ namespace Shinzui.View
                 {
                     AdjustPortalCameraNearClip(_portalCamera, targetGate.transform);
                 }
-                // ポータルカメラのレンダリング開始時に一時的にポストプロセスを無効化
-                DisablePostProcessingForPortal();
                 return;
             }
 
@@ -165,15 +155,6 @@ namespace Shinzui.View
             {
                 _mainCamera = camera;
                 RenderPortalRecursive(context, MaxRecursionDepth);
-            }
-        }
-
-        private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
-        {
-            if (camera == _portalCamera)
-            {
-                // ポータルカメラのレンダリング終了時にポストプロセスを復元
-                RestorePostProcessingForPortal();
             }
         }
 
@@ -298,7 +279,7 @@ namespace Shinzui.View
                 targetData = _portalCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
             }
             targetData.renderType = CameraRenderType.Base;
-            targetData.renderPostProcessing = true; // Volumetric Fogの描画に必要
+            targetData.renderPostProcessing = false; // ポストプロセスの二重適用を防ぐため無効にする（Volumetric Fogはローカルパッケージの修正により描画されます）
             targetData.antialiasing = AntialiasingMode.None;
             targetData.SetRenderer(0);
         }
@@ -388,8 +369,8 @@ namespace Shinzui.View
                 {
                     targetData = target.gameObject.AddComponent<UniversalAdditionalCameraData>();
                 }
-                // Volumetric Fogの描画に必要だが、二重Bloomを防ぐため他のポストプロセスは描画直前に一時的に無効化します
-                targetData.renderPostProcessing = true;
+                // ポストプロセスの二重適用を防ぐため無効にする（Volumetric Fogはローカルパッケージの修正により描画されます）
+                targetData.renderPostProcessing = false;
                 targetData.renderShadows = sourceData.renderShadows;
                 targetData.antialiasing = sourceData.antialiasing;
                 targetData.antialiasingQuality = sourceData.antialiasingQuality;
@@ -397,56 +378,6 @@ namespace Shinzui.View
                 targetData.volumeTrigger = sourceData.volumeTrigger != null ? sourceData.volumeTrigger : source.transform;
                 targetData.SetRenderer(0);
             }
-        }
-
-        private void DisablePostProcessingForPortal()
-        {
-            _tempDisabledComponents.Clear();
-            var stack = VolumeManager.instance.stack;
-            if (stack == null) return;
-
-            DisableComponentIfActive<Bloom>(stack);
-            DisableComponentIfActive<Tonemapping>(stack);
-            DisableComponentIfActive<ColorAdjustments>(stack);
-            DisableComponentIfActive<WhiteBalance>(stack);
-            DisableComponentIfActive<LiftGammaGain>(stack);
-            DisableComponentIfActive<ShadowsMidtonesHighlights>(stack);
-            DisableComponentIfActive<SplitToning>(stack);
-            DisableComponentIfActive<ChromaticAberration>(stack);
-            DisableComponentIfActive<Vignette>(stack);
-            DisableComponentIfActive<FilmGrain>(stack);
-            DisableComponentIfActive<MotionBlur>(stack);
-            DisableComponentIfActive<DepthOfField>(stack);
-            DisableComponentIfActive<LensDistortion>(stack);
-            DisableComponentIfActive<PaniniProjection>(stack);
-            DisableComponentIfActive<ScreenSpaceLensFlare>(stack);
-        }
-
-        private void DisableComponentIfActive<T>(VolumeStack stack) where T : VolumeComponent
-        {
-            var component = stack.GetComponent<T>();
-            if (component != null && component.active)
-            {
-                _tempDisabledComponents.Add(new PostProcessState
-                {
-                    component = component,
-                    originalActive = component.active
-                });
-                component.active = false;
-            }
-        }
-
-        private void RestorePostProcessingForPortal()
-        {
-            for (int i = 0; i < _tempDisabledComponents.Count; i++)
-            {
-                var state = _tempDisabledComponents[i];
-                if (state.component != null)
-                {
-                    state.component.active = state.originalActive;
-                }
-            }
-            _tempDisabledComponents.Clear();
         }
 
         private Material CreatePortalMaterial()
@@ -561,11 +492,11 @@ namespace Shinzui.View
                 }
                 else
                 {
-                    // 最深部は黒で潰すのではなく、自分自身の前フレームのメインRT（_portalRT）を貼ることで、
-                    // スカイボックス（空）が見えるのを防ぎ、かつ奥へと吸い込まれるような無限フィードバック映像（ドロステ効果）にします
+                    // 最深部は前フレームの映像（_portalRT）による時間差にじみ（ゴースト）を防ぐため、
+                    // クリアカラーである黒（Texture2D.blackTexture）を貼り、奥の暗闇に自然に溶け込ませます
                     if (PortalRenderer != null && PortalRenderer.sharedMaterial != null)
                     {
-                        PortalRenderer.sharedMaterial.SetTexture("_MainTex", _portalRT != null ? _portalRT : Texture2D.blackTexture);
+                        PortalRenderer.sharedMaterial.SetTexture("_MainTex", Texture2D.blackTexture);
                     }
                 }
 

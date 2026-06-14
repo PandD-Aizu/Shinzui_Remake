@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Cinemachine;
 
 namespace Shinzui.View
 {
@@ -20,6 +21,7 @@ namespace Shinzui.View
 
         public Vector3 CameraForward => mainCamera != null ? mainCamera.transform.forward : transform.forward;
         public Vector3 CameraRight => mainCamera != null ? mainCamera.transform.right : transform.right;
+        public Vector3 CameraPosition => mainCamera != null ? mainCamera.transform.position : transform.position;
         
         public bool IsGrounded => characterController != null && characterController.isGrounded;
 
@@ -88,6 +90,9 @@ namespace Shinzui.View
             {
                 transform.position += offset;
             }
+
+            // Cinemachineの追従遅れによる一瞬の空の映り込みを防ぐため、ワープを通知する
+            CinemachineCore.OnTargetObjectWarped(transform, offset);
         }
 
         /// <summary>

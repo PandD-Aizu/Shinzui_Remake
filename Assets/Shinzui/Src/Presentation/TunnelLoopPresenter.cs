@@ -16,7 +16,7 @@ namespace Shinzui.Presentation
         // 連続ワープ（チャタリング）防止のためのクールダウン時間（秒）
         private const float WarpCooldown = 0.15f;
         private float _lastWarpTime;
-        private Vector3 _prevPlayerPosition;
+        private Vector3 _prevCameraPosition;
 
         public TunnelLoopPresenter(PlayerView playerView)
         {
@@ -29,7 +29,7 @@ namespace Shinzui.Presentation
             Debug.Log("[TunnelLoopPresenter] Initialize called");
             if (_playerView != null)
             {
-                _prevPlayerPosition = _playerView.transform.position;
+                _prevCameraPosition = _playerView.CameraPosition;
             }
         }
 
@@ -62,7 +62,7 @@ namespace Shinzui.Presentation
             }
 
             // 次のフレームのために位置を保存
-            _prevPlayerPosition = _playerView.transform.position;
+            _prevCameraPosition = _playerView.CameraPosition;
         }
 
         private void EvaluateAndWarp(TunnelGateView gate)
@@ -81,9 +81,9 @@ namespace Shinzui.Presentation
 
             Vector3 gateForward = gate.transform.forward;
 
-            // プレイヤーの現在位置と前フレームの位置
-            Vector3 currPos = _playerView.transform.position;
-            Vector3 prevPos = _prevPlayerPosition;
+            // プレイヤーの現在カメラ位置と前フレームのカメラ位置
+            Vector3 currPos = _playerView.CameraPosition;
+            Vector3 prevPos = _prevCameraPosition;
 
             // ゲート平面に対する前フレームと現フレームの符号付き距離（投影距離）
             float dPrev = Vector3.Dot(prevPos - gateCenter, gateForward);
@@ -97,11 +97,11 @@ namespace Shinzui.Presentation
                 // 基本のワープ移動量（ゲート間の位置の差分）
                 Vector3 offset = targetGate.transform.position - gate.transform.position;
 
-                // プレイヤーのワープ実行
+                // プレイヤーのワープ実行（ルートオブジェクトが移動し、子であるカメラも移動する）
                 _playerView.Warp(offset);
 
                 // 過去位置も同じオフセットで同期（チャタリング防止の肝）
-                _prevPlayerPosition += offset;
+                _prevCameraPosition += offset;
 
                 _lastWarpTime = Time.time;
             }
