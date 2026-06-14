@@ -6,8 +6,8 @@ using UnityEngine.Rendering.Universal;
 namespace Shinzui.View
 {
     /// <summary>
-    /// トンネルの端点（ゲート）のViewクラス。
-    /// URP環境において、RenderTexture投影方式によるステンシルマスク付きポータル表現をセットアップします。
+    /// トンネルの端点のViewクラス
+    /// URP環境において、RenderTexture投影方式によるステンシルマスク付きポータル表現をセットアップ
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public class TunnelGateView : MonoBehaviour
@@ -36,7 +36,7 @@ namespace Shinzui.View
         private RenderTexture _portalRT;
         private Mesh _portalMesh;
 
-        // 全アクティブなゲートのリスト（動的生成に対応）
+        // 全アクティブなゲートのリスト
         public static readonly List<TunnelGateView> ActiveGates = new();
 
         public TunnelGateView TargetGate => targetGate;
@@ -74,8 +74,7 @@ namespace Shinzui.View
 
         private void Start()
         {
-            // Startでの直接の初期化は行わず、UpdateやOnBeginCameraRenderingの際にオンデマンドで初期化します。
-            // これにより、OnDisable/OnEnableなどの切り替えによってポータルオブジェクトが消失するのを防ぎます。
+            
         }
 
         private void InitializePortalResources()
@@ -138,9 +137,9 @@ namespace Shinzui.View
         {
             if (targetGate == null) return;
 
-            // 1. ポータルカメラ自身のレンダリング開始時：
-            // URPによる自動的な射影行列の再計算を上書きし、斜め射影ニアクリップ面を強制適用します。
-            // これにより、ポータル手前にあるオブジェクトの回り込みや、再帰時の不要なオクルージョンを防ぎます。
+            // ポータルカメラ自身のレンダリング開始時：
+            // URPによる自動的な射影行列の再計算を上書きし、斜め射影ニアクリップ面を強制適用する
+            // これにより、ポータル手前にあるオブジェクトの回り込みや、再帰時の不要なオクルージョンを防ぐ
             if (camera == _portalCamera)
             {
                 if (useDynamicNearClip)
@@ -150,7 +149,7 @@ namespace Shinzui.View
                 return;
             }
 
-            // 2. メインカメラのレンダリング開始時のみ、再帰ポータル描画をトリガー
+            // メインカメラのレンダリング開始時のみ、再帰ポータル描画をトリガー
             if (camera == Camera.main)
             {
                 _mainCamera = camera;
@@ -222,7 +221,7 @@ namespace Shinzui.View
 
             quadObject.transform.localPosition = Vector3.zero;
             quadObject.transform.localRotation = Quaternion.Euler(0.0f, 180.0f, 0.0f);
-            quadObject.layer = 2; // Ignore Raycast
+            quadObject.layer = 2;
 
             if (_collider is BoxCollider box)
             {
@@ -245,7 +244,7 @@ namespace Shinzui.View
 
             maskObject.transform.localPosition = Vector3.zero;
             maskObject.transform.localRotation = Quaternion.Euler(0.0f, 180.0f, 0.0f);
-            maskObject.layer = 2; // Ignore Raycast
+            maskObject.layer = 2;
 
             if (_collider is BoxCollider box)
             {
@@ -279,7 +278,7 @@ namespace Shinzui.View
                 targetData = _portalCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
             }
             targetData.renderType = CameraRenderType.Base;
-            targetData.renderPostProcessing = false; // ポストプロセスの二重適用を防ぐため無効にする（Volumetric Fogはローカルパッケージの修正により描画されます）
+            targetData.renderPostProcessing = false; // ポストプロセスの二重適用を防ぐため無効にする
             targetData.antialiasing = AntialiasingMode.None;
             targetData.SetRenderer(0);
         }
@@ -327,18 +326,15 @@ namespace Shinzui.View
         private void AdjustPortalCameraNearClip(Camera portalCamera, Transform destinationPortal)
         {
             if (_mainCamera == null) return;
-
-            // ゲート面はZ軸に垂直であるため、射影行列を歪ませるOblique Matrixは使用せず、
-            // 通常のニアクリップ平面（nearClipPlane）をゲート位置に設定することで、歪みのない完璧なパースペクティブを維持します。
             
-            // カメラからゲート平面への距離を計算（カメラ前方方向への投影距離）
+            // カメラからゲート平面への距離を計算
             Vector3 toGate = destinationPortal.position - portalCamera.transform.position;
             float distanceToPlane = Vector3.Dot(toGate, portalCamera.transform.forward);
 
-            // ゲート自身が描画されるよう、nearClipOffsetだけ手前にニアクリップ面を設定します
+            // ゲート自身が描画されるよう、nearClipOffsetだけ手前にニアクリップ面を設定
             portalCamera.nearClipPlane = Mathf.Max(0.01f, distanceToPlane - nearClipOffset);
             
-            // ニアクリップの変更に基づき、正しい射影行列を自動計算させます（上書きは不要）
+            // ニアクリップの変更に基づき、正しい射影行列を自動計算
             portalCamera.ResetProjectionMatrix();
         }
 
@@ -350,7 +346,7 @@ namespace Shinzui.View
             target.targetTexture = rt;
             target.farClipPlane = Mathf.Max(source.farClipPlane, 150f);
             
-            // 背景はスカイボックスではなく黒の単色でクリアする（トンネルの奥の暗闇を表現）
+            // 背景はスカイボックスではなく黒の単色でクリアする
             target.clearFlags = CameraClearFlags.SolidColor;
             target.backgroundColor = Color.black;
 
@@ -369,7 +365,7 @@ namespace Shinzui.View
                 {
                     targetData = target.gameObject.AddComponent<UniversalAdditionalCameraData>();
                 }
-                // ポストプロセスの二重適用を防ぐため無効にする（Volumetric Fogはローカルパッケージの修正により描画されます）
+                // ポストプロセスの二重適用を防ぐため無効
                 targetData.renderPostProcessing = false;
                 targetData.renderShadows = sourceData.renderShadows;
                 targetData.antialiasing = sourceData.antialiasing;
@@ -444,15 +440,15 @@ namespace Shinzui.View
 
         private void RenderPortalRecursive(ScriptableRenderContext context, int depth)
         {
-            // レンダリング直前にもオンデマンド初期化を実行し、オブジェクトの生存を確実にする
+            // レンダリング直前にもオンデマンド初期化を実行し、オブジェクトの生存を確実に
             InitializePortalResources();
 
             if (depth <= 0 || _portalCamera == null || targetGate == null) return;
 
-            // 1. カメラ設定のコピー
+            // カメラ設定のコピー
             CopyCameraSettings(_mainCamera, _portalCamera);
 
-            // 2. 各再帰レベルごとの一時的な RenderTexture (RT) を用意
+            // 各再帰レベルごとの一時的なRenderTextureを用意
             RenderTexture[] tempRTs = new RenderTexture[depth];
             int width = _portalRT != null ? _portalRT.width : Screen.width;
             int height = _portalRT != null ? _portalRT.height : Screen.height;
@@ -462,12 +458,11 @@ namespace Shinzui.View
                 tempRTs[i] = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.DefaultHDR);
             }
 
-            // 3. 奥から順番にレンダリングする
+            // 奥から順番にレンダリングする
             for (int i = depth - 1; i >= 0; i--)
             {
                 int currentLevel = i + 1;
-                // 再帰レベルに応じてカメラ位置を奥にシフトし、正しいドロステ効果（縮小ネスト）を生成します。
-                // 最深部（クリアカラー黒）がトンネルの奥を塞ぐため、トンネルモデルがないことによる空の露出は防がれます。
+                // 再帰レベルに応じてカメラ位置を奥にシフトし、正しいドロステ効果を生成
                 MatchPortalCameraTransformForDepth(_portalCamera.transform, transform, targetGate.transform, currentLevel);
 
                 if (useDynamicNearClip)
@@ -483,8 +478,7 @@ namespace Shinzui.View
 
                 if (i < depth - 1)
                 {
-                    // 1つ奥のレベルのRTを、自分自身の投影マテリアルにアプライ
-                    // （ポータルカメラから見て奥に写っているのは自分自身のゲートであるため）
+                    // 1つ奥のレベルのRTを、自分自身の投影マテリアルに適用
                     if (PortalRenderer != null && PortalRenderer.sharedMaterial != null)
                     {
                         PortalRenderer.sharedMaterial.SetTexture("_MainTex", tempRTs[i + 1]);
@@ -492,22 +486,22 @@ namespace Shinzui.View
                 }
                 else
                 {
-                    // 最深部は前フレームの映像（_portalRT）による時間差にじみ（ゴースト）を防ぐため、
-                    // クリアカラーである黒（Texture2D.blackTexture）を貼り、奥の暗闇に自然に溶け込ませます
+                    // 最深部は前フレームの映像による時間差にじみを防ぐため、
+                    // クリアカラーである黒を貼り、奥の暗闇に自然に溶け込ませます
                     if (PortalRenderer != null && PortalRenderer.sharedMaterial != null)
                     {
                         PortalRenderer.sharedMaterial.SetTexture("_MainTex", Texture2D.blackTexture);
                     }
                 }
 
-                // 相手側ゲートを一時的に非アクティブ化して描画の写り込み（手前の遮蔽）を防ぐ
+                // 相手側ゲートを一時的に非アクティブ化して描画の写り込みを防ぐ
                 bool targetGateWasActive = targetGate._portalRenderer != null && targetGate._portalRenderer.enabled;
                 bool targetMaskWasActive = targetGate._portalMaskRenderer != null && targetGate._portalMaskRenderer.enabled;
 
                 if (targetGate._portalRenderer != null) targetGate._portalRenderer.enabled = false;
                 if (targetGate._portalMaskRenderer != null) targetGate._portalMaskRenderer.enabled = false;
 
-                // URP の機能でカメラを明示的に即時描画
+                // URPの機能でカメラを明示的に即時描画
                 UniversalRenderPipeline.RenderSingleCamera(context, _portalCamera);
 
                 // 描画後に表示状態を復元します
@@ -515,7 +509,7 @@ namespace Shinzui.View
                 if (targetGate._portalMaskRenderer != null) targetGate._portalMaskRenderer.enabled = targetMaskWasActive;
             }
 
-            // 4. 最終結果をメインの RenderTexture にコピー
+            // 最終結果をメインの RenderTexture にコピー
             if (_portalRT != null && tempRTs[0] != null)
             {
                 Graphics.Blit(tempRTs[0], _portalRT);
@@ -527,7 +521,7 @@ namespace Shinzui.View
                 PortalRenderer.sharedMaterial.SetTexture("_MainTex", _portalRT);
             }
 
-            // 5. テンポラリRTの解放
+            // テンポラリRTの解放
             for (int i = 0; i < depth; i++)
             {
                 RenderTexture.ReleaseTemporary(tempRTs[i]);
