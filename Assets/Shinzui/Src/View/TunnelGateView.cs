@@ -221,7 +221,7 @@ namespace Shinzui.View
 
             quadObject.transform.localPosition = Vector3.zero;
             quadObject.transform.localRotation = Quaternion.Euler(0.0f, 180.0f, 0.0f);
-            quadObject.layer = 2;
+            quadObject.layer = LayerMask.NameToLayer("Portal");
 
             if (_collider is BoxCollider box)
             {

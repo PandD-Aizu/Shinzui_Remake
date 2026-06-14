@@ -46,8 +46,6 @@ public sealed class VolumetricFogRendererFeature : ScriptableRendererFeature
 		bool isPostProcessEnabled = (renderingData.postProcessingEnabled && renderingData.cameraData.postProcessEnabled) || isPortalCamera;
 		bool shouldAddVolumetricFogRenderPass = isPostProcessEnabled && ShouldAddVolumetricFogRenderPass(renderingData.cameraData.cameraType);
 		
-
-
 		if (shouldAddVolumetricFogRenderPass)
 		{
 			volumetricFogRenderPass.renderPassEvent = GetRenderPassEvent();

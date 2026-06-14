@@ -16,7 +16,7 @@ namespace Shinzui.Presentation
         // 連続ワープ防止のためのクールダウン時間（秒）
         private const float WarpCooldown = 0.15f;
         private float _lastWarpTime;
-        private Vector3 _prevCameraPosition;
+        private Vector3 _prevCameraNearPosition;
 
         public TunnelLoopPresenter(PlayerView playerView)
         {
@@ -29,20 +29,25 @@ namespace Shinzui.Presentation
             Debug.Log("[TunnelLoopPresenter] Initialize called");
             if (_playerView != null)
             {
-                _prevCameraPosition = _playerView.CameraPosition;
+                _prevCameraNearPosition = _playerView.CameraNearPosition;
             }
         }
 
         public void Tick()
         {
-            var playerCollider = _playerView.PlayerCollider;
-            if (playerCollider == null)
+            if (_playerView == null)
             {
                 return;
             }
 
             // 物理トランスフォームの同期を強制し、コライダーの bounds を最新位置に更新する
             Physics.SyncTransforms();
+
+            // プレイヤーの現在カメラニア面位置と前フレームのニア面位置から、このフレームのニア面位置の移動範囲を作成
+            // （高速移動時や低フレームレート時のすり抜けを防止するため）
+            Vector3 currNearPos = _playerView.CameraNearPosition;
+            Bounds cameraMovementBounds = new Bounds(currNearPos, Vector3.zero);
+            cameraMovementBounds.Encapsulate(_prevCameraNearPosition);
 
             // アクティブなすべてのトンネルゲートを巡回して判定
             for (int i = 0; i < TunnelGateView.ActiveGates.Count; i++)
@@ -53,8 +58,8 @@ namespace Shinzui.Presentation
                     continue;
                 }
 
-                // 当たり判定に入っているか判定
-                if (playerCollider.bounds.Intersects(gate.Collider.bounds))
+                // カメラニア面位置の移動範囲がゲートのコライダーの範囲と交差しているか判定
+                if (cameraMovementBounds.Intersects(gate.Collider.bounds))
                 {
                     EvaluateAndWarp(gate);
                     break; // 同一フレームでのワープ処理は1回のみにするためループを抜ける
@@ -62,7 +67,7 @@ namespace Shinzui.Presentation
             }
 
             // 次のフレームのために位置を保存
-            _prevCameraPosition = _playerView.CameraPosition;
+            _prevCameraNearPosition = currNearPos;
         }
 
         private void EvaluateAndWarp(TunnelGateView gate)
@@ -81,9 +86,9 @@ namespace Shinzui.Presentation
 
             Vector3 gateForward = gate.transform.forward;
 
-            // プレイヤーの現在カメラ位置と前フレームのカメラ位置
-            Vector3 currPos = _playerView.CameraPosition;
-            Vector3 prevPos = _prevCameraPosition;
+            // プレイヤーの現在カメラニア面位置と前フレームのニア面位置
+            Vector3 currPos = _playerView.CameraNearPosition;
+            Vector3 prevPos = _prevCameraNearPosition;
 
             // ゲート平面に対する前フレームと現フレームの符号付き距離
             float dPrev = Vector3.Dot(prevPos - gateCenter, gateForward);
@@ -97,11 +102,18 @@ namespace Shinzui.Presentation
                 // 基本のワープ移動量
                 Vector3 offset = targetGate.transform.position - gate.transform.position;
 
+                // 境界線上でのチャタリングを防ぐため、進行方向に極小の押し出しを追加
+                Vector3 moveDir = (currPos - prevPos).normalized;
+                if (moveDir.sqrMagnitude > 0.001f)
+                {
+                    offset += moveDir * 0.02f;
+                }
+
                 // プレイヤーのワープ実行
                 _playerView.Warp(offset);
 
                 // 過去位置も同じオフセットで同期
-                _prevCameraPosition += offset;
+                _prevCameraNearPosition += offset;
 
                 _lastWarpTime = Time.time;
             }

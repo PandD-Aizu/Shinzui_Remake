@@ -29,6 +29,8 @@ namespace Shinzui.View
         public Vector3 CameraForward => mainCamera != null ? mainCamera.transform.forward : transform.forward;
         public Vector3 CameraRight => mainCamera != null ? mainCamera.transform.right : transform.right;
         public Vector3 CameraPosition => mainCamera != null ? mainCamera.transform.position : transform.position;
+        public float CameraNearClipPlane => mainCamera != null ? mainCamera.nearClipPlane : 0.3f;
+        public Vector3 CameraNearPosition => CameraPosition + CameraForward * CameraNearClipPlane;
         
         public bool IsGrounded => characterController != null && characterController.isGrounded;
 
@@ -133,6 +135,12 @@ namespace Shinzui.View
             else
             {
                 transform.position += offset;
+            }
+
+            // カメラ自体も即座にワープさせることで、同フレーム内での他スクリプトによるカメラ座標参照のズレを防ぐ
+            if (mainCamera != null)
+            {
+                mainCamera.transform.position += offset;
             }
 
             // Cinemachineの追従遅れによる一瞬の空の映り込みを防ぐため、ワープを通知する
