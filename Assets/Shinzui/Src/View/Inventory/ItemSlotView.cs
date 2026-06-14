@@ -36,12 +36,38 @@ namespace Shinzui.View.Inventory
             ClearSlot();
         }
 
+        private UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<Sprite> _iconLoadHandle;
+
         public void SetItem(string iconAddress, int quantity)
         {
             if (iconImage != null)
             {
-                iconImage.gameObject.SetActive(true);
-                // 実際の実装ではここで Addressables を利用して画像を非同期でロードします。
+                if (_iconLoadHandle.IsValid())
+                {
+                    UnityEngine.AddressableAssets.Addressables.Release(_iconLoadHandle);
+                }
+
+                if (!string.IsNullOrEmpty(iconAddress))
+                {
+                    _iconLoadHandle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<Sprite>(iconAddress);
+                    _iconLoadHandle.Completed += handle =>
+                    {
+                        if (handle.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+                        {
+                            iconImage.sprite = handle.Result;
+                            iconImage.gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            iconImage.gameObject.SetActive(false);
+                        }
+                    };
+                }
+                else
+                {
+                    iconImage.gameObject.SetActive(false);
+                    iconImage.sprite = null;
+                }
             }
             
             if (quantityText != null)
@@ -53,9 +79,15 @@ namespace Shinzui.View.Inventory
 
         public void ClearSlot()
         {
+            if (_iconLoadHandle.IsValid())
+            {
+                UnityEngine.AddressableAssets.Addressables.Release(_iconLoadHandle);
+            }
+
             if (iconImage != null)
             {
                 iconImage.gameObject.SetActive(false);
+                iconImage.sprite = null;
             }
             if (quantityText != null)
             {
@@ -104,6 +136,10 @@ namespace Shinzui.View.Inventory
 
         private void OnDestroy()
         {
+            if (_iconLoadHandle.IsValid())
+            {
+                UnityEngine.AddressableAssets.Addressables.Release(_iconLoadHandle);
+            }
             _onClick.OnCompleted();
             _onDragDrop.OnCompleted();
         }
