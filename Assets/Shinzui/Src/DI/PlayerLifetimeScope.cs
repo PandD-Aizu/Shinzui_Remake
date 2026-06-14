@@ -59,6 +59,7 @@ namespace Shinzui.DI
 
             // PresenterをVContainerのEntryPointとして登録
             builder.RegisterEntryPoint<PlayerMovePresenter>();
+            builder.RegisterEntryPoint<TunnelLoopPresenter>();
 
             // ==========================================
             // インベントリシステムのDI登録

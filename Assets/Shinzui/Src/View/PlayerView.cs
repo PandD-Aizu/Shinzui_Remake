@@ -23,11 +23,36 @@ namespace Shinzui.View
         
         public bool IsGrounded => characterController != null && characterController.isGrounded;
 
+        /// <summary>
+        /// プレイヤーのコライダーを取得します。
+        /// </summary>
+        public Collider PlayerCollider => playerCollider;
+
+        /// <summary>
+        /// プレイヤーの現在の移動速度を取得します。
+        /// </summary>
+        public Vector3 CurrentVelocity => characterController != null ? characterController.velocity : Vector3.zero;
+
         private void Awake()
         {
             if (staminaFillImage == null && staminaSlider != null && staminaSlider.fillRect != null)
             {
                 staminaFillImage = staminaSlider.fillRect.GetComponent<Image>();
+            }
+
+            int playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer != -1)
+            {
+                SetLayerRecursive(gameObject, playerLayer);
+            }
+        }
+
+        private void SetLayerRecursive(GameObject obj, int newLayer)
+        {
+            obj.layer = newLayer;
+            foreach (Transform child in obj.transform)
+            {
+                SetLayerRecursive(child.gameObject, newLayer);
             }
         }
 
@@ -48,11 +73,29 @@ namespace Shinzui.View
         }
 
         /// <summary>
+        /// プレイヤーの位置をワープさせます。
+        /// CharacterControllerを一時的に無効化して位置を変更します。
+        /// </summary>
+        public void Warp(Vector3 offset)
+        {
+            if (characterController != null)
+            {
+                characterController.enabled = false;
+                transform.position += offset;
+                characterController.enabled = true;
+            }
+            else
+            {
+                transform.position += offset;
+            }
+        }
+
+        /// <summary>
         /// 物理的な移動を実行します。
         /// </summary>
         public void Move(Vector3 velocity)
         {
-            if (characterController != null)
+            if (characterController != null && characterController.enabled)
             {
                 characterController.Move(velocity * Time.deltaTime);
             }
