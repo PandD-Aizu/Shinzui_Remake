@@ -605,6 +605,8 @@ MonoBehaviour:
   - {fileID: -6973434839311246141}
   - {fileID: 1156189575943319257}
   - {fileID: 2244419491005358}
+  - {fileID: 1692021023060196932}
+  - {fileID: 3606543353807393277}
 --- !u!114 &2244419491005358
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -735,6 +737,34 @@ MonoBehaviour:
   texture:
     m_OverrideState: 1
     m_Value: {fileID: 0}
+--- !u!114 &1692021023060196932
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c19e45de50f42b1bd30c67c9ea0df22, type: 3}
+  m_Name: InverseScanlineVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.InverseScanLine.InverseScanlineVolume
+  active: 1
+  glitchPeriod:
+    m_OverrideState: 1
+    m_Value: 3
+  glitchSize:
+    m_OverrideState: 1
+    m_Value: 0.001
+  glitchSpeed:
+    m_OverrideState: 1
+    m_Value: 2.5
+  glitchProbability:
+    m_OverrideState: 1
+    m_Value: 0.1
+  blockScale:
+    m_OverrideState: 1
+    m_Value: {x: 50, y: 300}
 --- !u!114 &1859528079905493729
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -783,6 +813,46 @@ MonoBehaviour:
   contribution:
     m_OverrideState: 1
     m_Value: 0
+--- !u!114 &3606543353807393277
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce5974aa8fb6deb4a9f5cd0a926833a4, type: 3}
+  m_Name: ScanlineVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Scanline.ScanlineVolume
+  active: 1
+  speed:
+    m_OverrideState: 1
+    m_Value: 0.39
+  barSize:
+    m_OverrideState: 1
+    m_Value: 0.001
+  strength:
+    m_OverrideState: 1
+    m_Value: 10
+  frequency:
+    m_OverrideState: 1
+    m_Value: 100
+  curvature:
+    m_OverrideState: 1
+    m_Value: 0.15
+  fineLines:
+    m_OverrideState: 1
+    m_Value: 1
+  fineLinesScale:
+    m_OverrideState: 1
+    m_Value: 480
+  vignette:
+    m_OverrideState: 1
+    m_Value: 0.3
+  flicker:
+    m_OverrideState: 1
+    m_Value: 0.5
 --- !u!114 &6549510615640023942
 MonoBehaviour:
   m_ObjectHideFlags: 3
