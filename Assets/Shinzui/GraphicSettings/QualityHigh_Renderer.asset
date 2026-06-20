@@ -83,7 +83,8 @@ MonoBehaviour:
   - {fileID: -5841903638586397886}
   - {fileID: -1538220207743190309}
   - {fileID: -811768065182550585}
-  m_RendererFeatureMap: 42ebfea99763edae
+  - {fileID: 6265200972613448145}
+  m_RendererFeatureMap: 42ebfea99763edaed1710e131777f256
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -112,3 +113,19 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 1
+--- !u!114 &6265200972613448145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd58cc6524b477082406482ea2a80fc, type: 3}
+  m_Name: PixelationRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.PixelationRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 3bfe149ecae3460b9db0b5fa27af19a4, type: 3}
+    injectionPoint: 600
