@@ -86,6 +86,7 @@ namespace Shinzui.Presentation.Inventory
                         var dto = _useCase.GetSlotDto(clickedIndex).CurrentValue;
                         if (dto.HasItem)
                         {
+                            _view.SetContextMenuButtons(dto.IsConsumable, dto.IsEquipment);
                             _view.ShowContextMenu(slotView.transform.position);
                         }
                         else
@@ -154,6 +155,41 @@ namespace Shinzui.Presentation.Inventory
                         if (dto.HasItem && dto.IsConsumable)
                         {
                             await _useCase.UseItemAsync(selected);
+                        }
+                    }
+                })
+                .AddTo(ref builder);
+
+            // コンテキストメニューの「装備する」ボタンクリック時の処理
+            if (_view.EquipButton != null)
+            {
+                OnButtonClicked(_view.EquipButton)
+                    .Subscribe(_ =>
+                    {
+                        _view.HideContextMenu();
+                        int selected = _selectedSlotIndex.Value;
+                        if (selected >= 0)
+                        {
+                            var dto = _useCase.GetSlotDto(selected).CurrentValue;
+                            if (dto.HasItem && dto.IsEquipment)
+                            {
+                                _useCase.EquipItem(selected);
+                            }
+                        }
+                    })
+                    .AddTo(ref builder);
+            }
+
+            // 装備中スロットの同期 (UseCase -> View)
+            _useCase.EquippedSlotIndex
+                .Subscribe(equippedIndex =>
+                {
+                    for (int i = 0; i < _view.SlotCount; i++)
+                    {
+                        var slotView = _view.GetSlotView(i);
+                        if (slotView != null)
+                        {
+                            slotView.SetEquipped(i == equippedIndex);
                         }
                     }
                 })

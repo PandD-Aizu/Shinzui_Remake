@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{61bb27f0-976c-4feb-9a3b-ac9b68b1d6b4}">
+		<property name="assetPath">
+			<value>The Sound Of Pressing A Flashlight Button.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>2</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{2b01225c-f8cd-4cd7-8082-0b0f4fe63372}</destination>
+		</relationship>
+	</object>
+</objects>

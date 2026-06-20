@@ -9,6 +9,7 @@ namespace Shinzui.Infrastructure.Repositories
     {
         private readonly Dictionary<string, ItemDefinition> _itemDatabase = new()
         {
+            { "stone", new ItemDefinition("stone", "Stone", "A stone.", "Sprite/Medicine", ItemType.Equipment, 99) },
             { "potion_red", new ItemDefinition("potion_red", "Red Potion", "A red potion that restores health.", "Sprite/Medicine", ItemType.Consumable, 99) },
             { "potion_blue", new ItemDefinition("potion_blue", "Blue Potion", "A blue potion that restores magic energy.", "Sprite/Medicine", ItemType.Consumable, 99) },
             { "sword_iron", new ItemDefinition("sword_iron", "Iron Sword", "A common sword made of iron.", "Sprite/Medicine", ItemType.Equipment, 1) },

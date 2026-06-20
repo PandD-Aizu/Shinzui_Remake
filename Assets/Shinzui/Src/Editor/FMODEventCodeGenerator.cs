@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using FMODUnity;
@@ -106,7 +106,10 @@ namespace Shinzui.Editor
 
         private static string PathToFieldName(string eventPath)
         {
-            var withoutPrefix = eventPath.Replace("event:/", "");
+            bool isSnapshot = eventPath.StartsWith("snapshot:/");
+            var withoutPrefix = isSnapshot 
+                ? eventPath.Replace("snapshot:/", "") 
+                : eventPath.Replace("event:/", "");
             
             var snakeCase = System.Text.RegularExpressions.Regex.Replace(
                 withoutPrefix,
@@ -114,11 +117,13 @@ namespace Shinzui.Editor
                 "_"
             );
 
-            return snakeCase
+            var fieldName = snakeCase
                 .Replace("/", "_")
                 .Replace(" ", "_")
                 .Replace("-", "_")
                 .ToUpper();
+
+            return isSnapshot ? $"SNAPSHOT_{fieldName}" : fieldName;
         }
     }
 }

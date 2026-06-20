@@ -25,6 +25,45 @@ namespace Shinzui.View.Inventory
         private ItemSlotView[] _slotViews;
         private UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<Sprite> _largeIconLoadHandle;
 
+        private Button _equipButton;
+        public Button EquipButton
+        {
+            get
+            {
+                if (_equipButton == null && useButton != null)
+                {
+                    CreateEquipButton();
+                }
+                return _equipButton;
+            }
+        }
+
+        private void CreateEquipButton()
+        {
+            _equipButton = Instantiate(useButton, useButton.transform.parent);
+            _equipButton.name = "EquipButton";
+            
+            var tmpText = _equipButton.GetComponentInChildren<TMPro.TMP_Text>();
+            if (tmpText != null)
+            {
+                tmpText.text = "Equip";
+            }
+            else
+            {
+                var normalText = _equipButton.GetComponentInChildren<Text>();
+                if (normalText != null)
+                {
+                    normalText.text = "Equip";
+                }
+            }
+        }
+
+        public void SetContextMenuButtons(bool showUse, bool showEquip)
+        {
+            if (useButton != null) useButton.gameObject.SetActive(showUse);
+            if (_equipButton != null) _equipButton.gameObject.SetActive(showEquip);
+        }
+
         public int SlotCount => _slotViews?.Length ?? 0;
 
         public ItemSlotView GetSlotView(int index)
