@@ -540,7 +540,7 @@ GameObject:
   m_Component:
   - component: {fileID: 133980214}
   - component: {fileID: 133980216}
-  - component: {fileID: 133980215}
+  - component: {fileID: 133980217}
   m_Layer: 0
   m_Name: EnemyMovement
   m_TagString: Untagged
@@ -563,20 +563,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1064692462}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &133980215
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 133980213}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e11f9a87ddafde1468bfd98fd80476f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PresentationLayer::EnemyMovement
-  agent: {fileID: 1064692457}
-  target: {fileID: 119550617}
 --- !u!135 &133980216
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -598,6 +584,18 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 10
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &133980217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 133980213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f0911dd974e35042a140830d8fdf363, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PresentationLayer::EnemyPresenter
 --- !u!1 &148840331
 GameObject:
   m_ObjectHideFlags: 0
@@ -5056,7 +5054,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2079809561}
   - component: {fileID: 2079809563}
-  - component: {fileID: 2079809562}
+  - component: {fileID: 2079809564}
   m_Layer: 0
   m_Name: EnemyMovement
   m_TagString: Untagged
@@ -5079,20 +5077,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1976666199}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2079809562
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2079809560}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e11f9a87ddafde1468bfd98fd80476f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PresentationLayer::EnemyMovement
-  agent: {fileID: 1976666194}
-  target: {fileID: 119550617}
 --- !u!135 &2079809563
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -5114,6 +5098,18 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 10
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2079809564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079809560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f0911dd974e35042a140830d8fdf363, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PresentationLayer::EnemyPresenter
 --- !u!134 &2087523278
 PhysicsMaterial:
   m_ObjectHideFlags: 0
@@ -5379,7 +5375,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2137102895}
   - component: {fileID: 2137102896}
-  - component: {fileID: 2137102898}
+  - component: {fileID: 2137102897}
   m_Layer: 0
   m_Name: EnemyMovement
   m_TagString: Untagged
@@ -5423,7 +5419,7 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 10
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2137102898
+--- !u!114 &2137102897
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5432,11 +5428,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2137102894}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e11f9a87ddafde1468bfd98fd80476f3, type: 3}
+  m_Script: {fileID: 11500000, guid: 9f0911dd974e35042a140830d8fdf363, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PresentationLayer::EnemyMovement
-  agent: {fileID: 1546306904}
-  target: {fileID: 119550617}
+  m_EditorClassIdentifier: PresentationLayer::EnemyPresenter
 --- !u!4 &543450652176403241
 Transform:
   m_ObjectHideFlags: 0
