@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{09e6ec59-6183-48e3-823a-442344ccf7b5}">
+		<property name="assetPath">
+			<value>dragon-studio-breaking-wood-356120.mp3</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>8.0979591836734688</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{2b01225c-f8cd-4cd7-8082-0b0f4fe63372}</destination>
+		</relationship>
+	</object>
+</objects>

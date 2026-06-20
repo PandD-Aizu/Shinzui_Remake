@@ -14,6 +14,7 @@ namespace Shinzui.Infrastructure.Services
         private readonly InputAction _inventoryToggleAction;
         private readonly InputAction _itemUseAction;
         private readonly InputAction _flashlightToggleAction;
+        private readonly InputAction _attackAction;
 
         private bool _isBlocked;
 
@@ -54,6 +55,18 @@ namespace Shinzui.Infrastructure.Services
                 bool gamepadNorth = Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame;
                 bool actionPressed = _flashlightToggleAction != null && (_flashlightToggleAction.triggered || _flashlightToggleAction.WasPressedThisFrame());
                 return keyboardF || gamepadNorth || actionPressed;
+            }
+        }
+
+        public bool AttackPressed
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                bool mouseLeft = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+                bool gamepadTrigger = Gamepad.current != null && Gamepad.current.rightTrigger.wasPressedThisFrame;
+                bool actionPressed = _attackAction != null && (_attackAction.triggered || _attackAction.WasPressedThisFrame());
+                return mouseLeft || gamepadTrigger || actionPressed;
             }
         }
 
@@ -106,6 +119,11 @@ namespace Shinzui.Infrastructure.Services
             _flashlightToggleAction = playerMap.AddAction("FlashlightToggle", type: InputActionType.Button);
             _flashlightToggleAction.AddBinding("<Keyboard>/f");
             _flashlightToggleAction.AddBinding("<Gamepad>/buttonNorth");
+
+            // Attackアクション (Button) の作成とバインディング
+            _attackAction = playerMap.AddAction("Attack", type: InputActionType.Button);
+            _attackAction.AddBinding("<Mouse>/leftButton");
+            _attackAction.AddBinding("<Gamepad>/rightTrigger");
 
             // インプット制御を有効化
             _actionAsset.Enable();

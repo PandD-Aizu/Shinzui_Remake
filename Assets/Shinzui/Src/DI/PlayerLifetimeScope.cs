@@ -45,6 +45,7 @@ namespace Shinzui.DI
 
             // UseCaseの登録
             builder.Register<PlayerMoveUseCase>(Lifetime.Scoped);
+            builder.Register<PlayerThrowUseCase>(Lifetime.Scoped);
 
             // Viewの登録
             var viewInstance = playerView;
@@ -56,6 +57,14 @@ namespace Shinzui.DI
             if (viewInstance != null)
             {
                 builder.RegisterComponent(viewInstance);
+
+                // PlayerThrowViewの動的アタッチとDI登録
+                var throwViewInstance = viewInstance.GetComponent<PlayerThrowView>();
+                if (throwViewInstance == null)
+                {
+                    throwViewInstance = viewInstance.gameObject.AddComponent<PlayerThrowView>();
+                }
+                builder.RegisterComponent(throwViewInstance);
             }
             else
             {
@@ -64,6 +73,7 @@ namespace Shinzui.DI
 
             // PresenterをVContainerのEntryPointとして登録
             builder.RegisterEntryPoint<PlayerMovePresenter>();
+            builder.RegisterEntryPoint<PlayerThrowPresenter>();
             builder.RegisterEntryPoint<TunnelLoopPresenter>();
 
             // ==========================================
