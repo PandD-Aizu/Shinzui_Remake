@@ -14,7 +14,6 @@ namespace Shinzui.Application.UseCases.Inventory
         private readonly IItemCatalog _catalog;
         private readonly IInventoryRepository _repository;
 
-        // 各スロットの状態変更を Presenter 向けに DTO で公開する
         private readonly ReactiveProperty<InventorySlotDto>[] _slotDtos;
         public ReadOnlyReactiveProperty<InventorySlotDto> GetSlotDto(int index) => _slotDtos[index];
         public int Capacity => _inventory.Capacity;

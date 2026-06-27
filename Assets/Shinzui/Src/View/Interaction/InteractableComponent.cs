@@ -33,7 +33,7 @@ namespace Shinzui.View.Interaction
         /// <summary>
         /// インタラクト時のエフェクトを実行
         /// </summary>
-        public void ExecuteInteractEffect()
+        public virtual void ExecuteInteractEffect()
         {
             if (isOneTime)
             {
