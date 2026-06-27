@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using Shinzui.Application.UseCases;
+using UnityEngine.Android;
 
 namespace Shinzui.Presentation
 {
@@ -10,16 +11,19 @@ namespace Shinzui.Presentation
         private NavMeshAgent _agent;
         private Transform _player;
 
-        private float _timer;                            //時間計測用タイマー
-        private readonly float _wanderInterval = 10.0f;  //徘徊目的地を更新するインターバル
-        private readonly float _wanderRadius = 10.0f;    //徘徊範囲
+        private float _timer;           //時間計測用タイマー
+        private float _wanderInterval;  //徘徊目的地を更新するインターバル
+        private float _wanderRadius;    //徘徊範囲
+        
+        private Vector3 tunnelStartPos;  //プレイヤーがいるトンネルのスタート地点
+        private Vector3 tunnelEndPos;    //プレイヤーがいるトンネルのゴール地点
 
         void Start()
         {
             _enemyMoveUseCase = gameObject.AddComponent<EnemyMoveUseCase>();
             _agent = transform.parent.GetComponent<NavMeshAgent>();
             _player = GameObject.Find("Player").GetComponent<Transform>();
-            _timer = _wanderInterval;
+            (_wanderInterval, _wanderRadius) = _enemyMoveUseCase.GetWanderingInfo();
         }
 
         void Update()
@@ -40,6 +44,21 @@ namespace Shinzui.Presentation
             if (_enemyMoveUseCase.IsChasing)
             {
                 Vector3 playerPos = _player.position;
+                Vector3 dummy = playerPos;
+                
+                // TODO: tunnelの取得ができるようになったらコメントアウトを外す
+                /*tunnnelStartPos = PlayerMoveUseCase.currentTunnelStart.transform.position;
+                tunnnelEndPos = PlayerMoveUseCase.currentTunnelEnd.transform.position;
+                
+                float centerZ = (tunnelStartPos.z + tunnelEndPos.z)/2;                 //トンネルの中央
+                float tunnelDistance = Mathf.Abs(tunnelStartPos.z - tunnelEndPos.z); //トンネルの長さ
+
+                if (playerPos.z > centerZ) dummy.z -= tunnelDistance;
+                else dummy.z += tunnelDistance;
+                
+                Vector3 target = Vector3.Distance(transform.position, playerPos) < Vector3.Distance(transform.position, dummy) ? playerPos : dummy;
+                
+                _enemyMoveUseCase.SetDestination(_agent, target);*/ // <-これを使用するとき、下のコードは使わない
                 _enemyMoveUseCase.SetDestination(_agent, _player.position);
             }
         }

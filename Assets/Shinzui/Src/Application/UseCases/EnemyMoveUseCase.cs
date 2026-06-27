@@ -14,6 +14,18 @@ namespace Shinzui.Application.UseCases
         public bool IsWandering { get; private set; }
         public bool IsChasing { get; private set; }
 
+        /// <summary>
+        /// 徘徊情報を取得する
+        /// </summary>
+        /// <returns>徘徊スパン、徘徊範囲</returns>
+        public (float, float) GetWanderingInfo()
+        {
+            return (EnemyEntity._wanderInterval, EnemyEntity._wanderRadius);
+        }
+
+        /// <summary>
+        /// 購読の設定
+        /// </summary>
         void Start()
         {
             _enemyEntity.MovementState
