@@ -444,6 +444,9 @@ namespace Shinzui.View.LoopTunnel
             float frontDistance = GetCameraDistanceFromPortal(_frontPortal);
             float backDistance = GetCameraDistanceFromPortal(_backPortal);
 
+            // ワープ地点として認識する距離の閾値を設定
+            float portalDeltaDistance = 0.1f;
+
             if (!_cameraDistancesInitialized)
             {
                 SetPreviousCameraDistances(frontDistance, backDistance);
@@ -451,13 +454,13 @@ namespace Shinzui.View.LoopTunnel
                 return;
             }
 
-            if (_previousFrontCameraDistance > 0.0f && frontDistance <= 0.0f)
+            if (_previousFrontCameraDistance > portalDeltaDistance && frontDistance <= portalDeltaDistance)
             {
                 WarpPlayer(_frontPortal, _backPortal);
                 return;
             }
 
-            if (_previousBackCameraDistance > 0.0f && backDistance <= 0.0f)
+            if (_previousBackCameraDistance > -portalDeltaDistance && backDistance <= -portalDeltaDistance)
             {
                 WarpPlayer(_backPortal, _frontPortal);
                 return;
@@ -480,7 +483,6 @@ namespace Shinzui.View.LoopTunnel
         private void WarpPlayer(Transform sourcePortal, Transform destinationPortal)
         {
             Vector3 positionDelta = destinationPortal.position - sourcePortal.position;
-            ShowWarpFrameBridge(sourcePortal);
 
             bool controllerWasEnabled = _playerController != null && _playerController.enabled;
             if (_playerController != null)
@@ -514,66 +516,6 @@ namespace Shinzui.View.LoopTunnel
             {
                 CinemachineCore.OnTargetObjectWarped(targets[i], positionDelta);
             }
-        }
-
-        private void ShowWarpFrameBridge(Transform sourcePortal)
-        {
-            if (_warpFrameCanvas == null || _warpFrameImage == null)
-            {
-                return;
-            }
-
-            RenderTexture portalTexture = sourcePortal == _frontPortal
-                ? _frontPortalTexture
-                : _backPortalTexture;
-
-            if (portalTexture == null || !portalTexture.IsCreated())
-            {
-                return;
-            }
-
-            EnsureWarpFrameTexture(portalTexture.width, portalTexture.height);
-            Graphics.Blit(portalTexture, _warpFrameTexture);
-
-            _warpFrameImage.texture = _warpFrameTexture;
-            _warpFrameCanvas.targetDisplay = _mainCamera != null ? _mainCamera.targetDisplay : 0;
-            _warpFrameCanvas.enabled = true;
-
-            if (_hideWarpFrameCoroutine != null)
-            {
-                StopCoroutine(_hideWarpFrameCoroutine);
-            }
-
-            _hideWarpFrameCoroutine = StartCoroutine(HideWarpFrameBridgeAfterPresentation());
-        }
-
-        private void EnsureWarpFrameTexture(int width, int height)
-        {
-            if (_warpFrameTexture != null
-                && _warpFrameTexture.width == width
-                && _warpFrameTexture.height == height)
-            {
-                return;
-            }
-
-            ReleaseRenderTexture(_warpFrameTexture);
-            _warpFrameTexture = CreateRenderTexture("Warp Frame Texture", width, height);
-        }
-
-        private IEnumerator HideWarpFrameBridgeAfterPresentation()
-        {
-            int frameCount = Mathf.Max(1, warpBridgeFrameCount);
-            for (int i = 0; i < frameCount; i++)
-            {
-                yield return new WaitForEndOfFrame();
-            }
-
-            if (_warpFrameCanvas != null)
-            {
-                _warpFrameCanvas.enabled = false;
-            }
-
-            _hideWarpFrameCoroutine = null;
         }
 
         private void ClampPlayerIntoTunnel()
