@@ -9,6 +9,7 @@ namespace Shinzui.Application.DTOs.Inventory
         string IconAssetAddress,
         int Quantity,
         int MaxStackSize,
-        bool IsConsumable
+        bool IsConsumable,
+        bool IsEquipment
     );
 }

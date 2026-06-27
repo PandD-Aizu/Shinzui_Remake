@@ -12,20 +12,17 @@ namespace Shinzui.Presentation.Flashlight
         private readonly FlashlightUseCase _useCase;
         private readonly FlashlightView _view;
         private readonly IInputService _inputService;
-        private readonly IFMODSEService _fmodSeService;
 
         private IDisposable _disposable;
 
         public FlashlightPresenter(
             FlashlightUseCase useCase,
             FlashlightView view,
-            IInputService inputService,
-            IFMODSEService fmodSeService)
+            IInputService inputService)
         {
             _useCase = useCase;
             _view = view;
             _inputService = inputService;
-            _fmodSeService = fmodSeService;
         }
 
         public void Initialize()
@@ -37,18 +34,6 @@ namespace Shinzui.Presentation.Flashlight
                 .Subscribe(isOn =>
                 {
                     _view.SetLightActive(isOn);
-                })
-                .AddTo(ref builder);
-
-            // トグル時の効果音再生を同期（初期状態の発火はスキップ）
-            _useCase.IsOn
-                .Skip(1)
-                .Subscribe(isOn =>
-                {
-                    if (!_view.ToggleEvent.IsNull)
-                    {
-                        _fmodSeService.PlayOneShot(_view.ToggleEvent);
-                    }
                 })
                 .AddTo(ref builder);
 

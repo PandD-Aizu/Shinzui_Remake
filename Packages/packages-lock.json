@@ -26,7 +26,7 @@
         "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.test-framework": "1.1.31"
       },
-      "hash": "c0908b88d6ec2d7152df2a8fc9c1590270856390"
+      "hash": "dccecd689072dce4c319e15c812006005c68ad0b"
     },
     "com.cqf.urpvolumetricfog": {
       "version": "file:com.cqf.urpvolumetricfog",
@@ -80,7 +80,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ai.navigation": {
-      "version": "2.0.12",
+      "version": "2.0.13",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -99,7 +99,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.cinemachine": {
-      "version": "3.1.5",
+      "version": "3.1.7",
       "depth": 0,
       "source": "registry",
       "dependencies": {

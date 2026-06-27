@@ -23,6 +23,11 @@ namespace Shinzui.Application.UseCases.Inventory
         private readonly ReactiveProperty<bool> _isOpen = new(false);
         public ReadOnlyReactiveProperty<bool> IsOpen => _isOpen;
 
+        // 装備状態の保持
+        private readonly ReactiveProperty<int> _equippedSlotIndex = new(-1);
+        public ReadOnlyReactiveProperty<int> EquippedSlotIndex => _equippedSlotIndex;
+        public ReadOnlyReactiveProperty<string> EquippedItemId { get; }
+
         public InventoryUseCase(
             InventoryEntity inventory,
             IItemCatalog catalog,
@@ -31,6 +36,14 @@ namespace Shinzui.Application.UseCases.Inventory
             _inventory = inventory;
             _catalog = catalog;
             _repository = repository;
+
+            // 装備アイテムIDのストリームを構築
+            EquippedItemId = _equippedSlotIndex
+                .Select(index => index >= 0 
+                    ? _inventory.GetSlot(index).Select(stack => stack?.Item.Id) 
+                    : Observable.Return<string>(null))
+                .Switch()
+                .ToReadOnlyReactiveProperty();
 
             // 各スロットを DTO 変換ストリームとして監視・同期
             _slotDtos = new ReactiveProperty<InventorySlotDto>[_inventory.Capacity];
@@ -44,6 +57,15 @@ namespace Shinzui.Application.UseCases.Inventory
                     .Subscribe(stack =>
                     {
                         _slotDtos[index].Value = CreateDto(index, stack);
+
+                        // 装備中のスロットが空になったか、装備品でなくなった場合は装備を解除
+                        if (_equippedSlotIndex.Value == index)
+                        {
+                            if (stack == null || stack.Item.Type != ItemType.Equipment)
+                            {
+                                _equippedSlotIndex.Value = -1;
+                            }
+                        }
                     });
             }
         }
@@ -64,7 +86,7 @@ namespace Shinzui.Application.UseCases.Inventory
         {
             if (stack == null)
             {
-                return new InventorySlotDto(index, false, "", "", "", "", 0, 0, false);
+                return new InventorySlotDto(index, false, "", "", "", "", 0, 0, false, false);
             }
             return new InventorySlotDto(
                 index,
@@ -75,8 +97,48 @@ namespace Shinzui.Application.UseCases.Inventory
                 stack.Item.IconAssetAddress,
                 stack.Quantity,
                 stack.Item.MaxStackSize,
-                stack.Item.IsConsumable
+                stack.Item.IsConsumable,
+                stack.Item.Type == ItemType.Equipment
             );
+        }
+
+        public void EquipItem(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= Capacity)
+            {
+                _equippedSlotIndex.Value = -1;
+                return;
+            }
+
+            var slot = _inventory.GetSlot(slotIndex).CurrentValue;
+            if (slot == null || slot.Item.Type != ItemType.Equipment)
+            {
+                _equippedSlotIndex.Value = -1;
+                return;
+            }
+
+            _equippedSlotIndex.Value = slotIndex;
+        }
+
+        public void UnequipItem()
+        {
+            _equippedSlotIndex.Value = -1;
+        }
+
+        public async Task<bool> ConsumeEquippedItemAsync()
+        {
+            int index = _equippedSlotIndex.Value;
+            if (index < 0) return false;
+
+            var slot = _inventory.GetSlot(index).CurrentValue;
+            if (slot == null) return false;
+
+            bool success = _inventory.TryRemoveItem(index, 1);
+            if (success)
+            {
+                await SaveAsync();
+            }
+            return success;
         }
 
         // UIアクション：アイテムの追加

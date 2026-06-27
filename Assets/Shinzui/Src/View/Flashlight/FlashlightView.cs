@@ -7,10 +7,7 @@ namespace Shinzui.View.Flashlight
     {
         [Header("Components")]
         [SerializeField] private Light flashlightLight;         // スポットライト等のLightコンポーネント
-        [SerializeField] private EventReference toggleEvent; // スイッチON/OFF時のFMODイベント
         [SerializeField] private Camera targetCamera;           // 追従対象のカメラ
-
-        public EventReference ToggleEvent => toggleEvent;
 
         [Header("Tracking Ease Settings")]
         [SerializeField] private float minSpeed = 2.0f;         // 目標接近時の最低追従速度
