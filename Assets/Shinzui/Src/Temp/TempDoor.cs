@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Shinzui.View.Interaction;
 
-namespace DoorMove.Temp
+namespace Shinzui.Temp
 {
     // ドアのタイプ
     public enum DoorType
@@ -78,7 +78,7 @@ namespace DoorMove.Temp
     public class TempDoor : InteractableComponent
     {
         [Header("Close Message")]
-        [SerializeField] 
+        [SerializeField, TextArea(3, 5)] 
         private string afterMessage = "door closed";
 
         [Header("Door Parts Configuration")]

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Shinzui.View.Interaction;
 
-namespace DoorMove.Temp
+namespace Shinzui.Temp
 {
 
     public class TempPlayerDoorInteractor : MonoBehaviour
