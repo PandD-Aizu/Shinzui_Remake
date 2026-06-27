@@ -1,9 +1,11 @@
+using System.Collections;
 using System.Reflection;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Shinzui.View.LoopTunnel
 {
@@ -56,6 +58,10 @@ namespace Shinzui.View.LoopTunnel
         [Header("Portal Rendering")]
         [SerializeField] private float nearClipOffset = 0.04f;
 
+        [Header("Warp Frame Bridge")]
+        [Range(1, 6)]
+        [SerializeField] private int warpBridgeFrameCount = 1;
+
         private Camera _mainCamera;
         private Camera _frontPortalCamera;
         private Camera _backPortalCamera;
@@ -71,6 +77,10 @@ namespace Shinzui.View.LoopTunnel
         private bool _cameraDistancesInitialized;
         private float _previousFrontCameraDistance;
         private float _previousBackCameraDistance;
+        private Canvas _warpFrameCanvas;
+        private RawImage _warpFrameImage;
+        private RenderTexture _warpFrameTexture;
+        private Coroutine _hideWarpFrameCoroutine;
 
         private void OnEnable()
         {
@@ -93,6 +103,7 @@ namespace Shinzui.View.LoopTunnel
             BuildTunnel();
             BuildPortals();
             BuildPortalCameras();
+            BuildWarpFrameBridge();
 
             if (_player != null)
             {
@@ -127,6 +138,7 @@ namespace Shinzui.View.LoopTunnel
         {
             ReleaseRenderTexture(_frontPortalTexture);
             ReleaseRenderTexture(_backPortalTexture);
+            ReleaseRenderTexture(_warpFrameTexture);
         }
 
         private Transform FindPlayerTransform()
@@ -231,6 +243,37 @@ namespace Shinzui.View.LoopTunnel
             camera.clearFlags = CameraClearFlags.Skybox;
             camera.useOcclusionCulling = false;
             return camera;
+        }
+
+        private void BuildWarpFrameBridge()
+        {
+            var canvasObject = new GameObject(
+                "Warp Frame Bridge",
+                typeof(RectTransform),
+                typeof(Canvas));
+            canvasObject.transform.SetParent(transform, false);
+
+            _warpFrameCanvas = canvasObject.GetComponent<Canvas>();
+            _warpFrameCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _warpFrameCanvas.sortingOrder = short.MaxValue;
+            _warpFrameCanvas.enabled = false;
+
+            var imageObject = new GameObject(
+                "Portal Frame Image",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(RawImage));
+            imageObject.transform.SetParent(canvasObject.transform, false);
+
+            var rectTransform = imageObject.GetComponent<RectTransform>();
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.offsetMin = Vector2.zero;
+            rectTransform.offsetMax = Vector2.zero;
+
+            _warpFrameImage = imageObject.GetComponent<RawImage>();
+            _warpFrameImage.raycastTarget = false;
+            _warpFrameImage.color = Color.white;
         }
 
         private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
@@ -437,6 +480,8 @@ namespace Shinzui.View.LoopTunnel
         private void WarpPlayer(Transform sourcePortal, Transform destinationPortal)
         {
             Vector3 positionDelta = destinationPortal.position - sourcePortal.position;
+            ShowWarpFrameBridge(sourcePortal);
+
             bool controllerWasEnabled = _playerController != null && _playerController.enabled;
             if (_playerController != null)
             {
@@ -469,6 +514,66 @@ namespace Shinzui.View.LoopTunnel
             {
                 CinemachineCore.OnTargetObjectWarped(targets[i], positionDelta);
             }
+        }
+
+        private void ShowWarpFrameBridge(Transform sourcePortal)
+        {
+            if (_warpFrameCanvas == null || _warpFrameImage == null)
+            {
+                return;
+            }
+
+            RenderTexture portalTexture = sourcePortal == _frontPortal
+                ? _frontPortalTexture
+                : _backPortalTexture;
+
+            if (portalTexture == null || !portalTexture.IsCreated())
+            {
+                return;
+            }
+
+            EnsureWarpFrameTexture(portalTexture.width, portalTexture.height);
+            Graphics.Blit(portalTexture, _warpFrameTexture);
+
+            _warpFrameImage.texture = _warpFrameTexture;
+            _warpFrameCanvas.targetDisplay = _mainCamera != null ? _mainCamera.targetDisplay : 0;
+            _warpFrameCanvas.enabled = true;
+
+            if (_hideWarpFrameCoroutine != null)
+            {
+                StopCoroutine(_hideWarpFrameCoroutine);
+            }
+
+            _hideWarpFrameCoroutine = StartCoroutine(HideWarpFrameBridgeAfterPresentation());
+        }
+
+        private void EnsureWarpFrameTexture(int width, int height)
+        {
+            if (_warpFrameTexture != null
+                && _warpFrameTexture.width == width
+                && _warpFrameTexture.height == height)
+            {
+                return;
+            }
+
+            ReleaseRenderTexture(_warpFrameTexture);
+            _warpFrameTexture = CreateRenderTexture("Warp Frame Texture", width, height);
+        }
+
+        private IEnumerator HideWarpFrameBridgeAfterPresentation()
+        {
+            int frameCount = Mathf.Max(1, warpBridgeFrameCount);
+            for (int i = 0; i < frameCount; i++)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+
+            if (_warpFrameCanvas != null)
+            {
+                _warpFrameCanvas.enabled = false;
+            }
+
+            _hideWarpFrameCoroutine = null;
         }
 
         private void ClampPlayerIntoTunnel()
