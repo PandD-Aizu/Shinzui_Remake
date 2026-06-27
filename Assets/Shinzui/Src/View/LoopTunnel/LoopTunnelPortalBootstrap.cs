@@ -1,4 +1,5 @@
 using System.Reflection;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -42,6 +43,7 @@ namespace Shinzui.View.LoopTunnel
         }
     }
 
+    [DefaultExecutionOrder(10000)]
     public sealed class LoopTunnelPortalRuntime : MonoBehaviour
     {
         [Header("Tunnel")]
@@ -53,6 +55,9 @@ namespace Shinzui.View.LoopTunnel
 
         [Header("Portal Rendering")]
         [SerializeField] private float nearClipOffset = 0.04f;
+
+        [Header("Warp")]
+        [SerializeField] private float cameraWarpMargin = 0.08f;
 
         private Camera _mainCamera;
         private Camera _frontPortalCamera;
@@ -66,8 +71,9 @@ namespace Shinzui.View.LoopTunnel
         private CharacterController _playerController;
         private Transform _player;
         private float _halfLength;
-        private BoxCollider _frontPortalCollider;
-        private BoxCollider _backPortalCollider;
+        private bool _cameraDistancesInitialized;
+        private float _previousFrontCameraDistance;
+        private float _previousBackCameraDistance;
 
         private void OnEnable()
         {
@@ -200,15 +206,6 @@ namespace Shinzui.View.LoopTunnel
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
-
-            if(name == "Forward Portal")
-            {
-                _frontPortalCollider = portalObject.AddComponent<BoxCollider>();
-            }
-            else if(name == "Back Portal")
-            {
-                _backPortalCollider = portalObject.AddComponent<BoxCollider>();
-            }
 
             return portalObject.transform;
         }
@@ -398,36 +395,82 @@ namespace Shinzui.View.LoopTunnel
                 _playerController = _player.GetComponent<CharacterController>();
             }
 
-            Vector3 position = _player.position;
-            bool wrapped = false;
-
-            if (_player.GetComponent<CapsuleCollider>().bounds.Intersects(_backPortalCollider.bounds))
-            {
-                position.z -= tunnelLength;
-                wrapped = true;
-            }
-            else if (_player.GetComponent<CapsuleCollider>().bounds.Intersects(_frontPortalCollider.bounds))
-            {
-                position.z += tunnelLength;
-                wrapped = true;
-            }
-
-            if (!wrapped)
+            if (_mainCamera == null || _frontPortal == null || _backPortal == null)
             {
                 return;
             }
 
+            float frontDistance = GetCameraDistanceFromPortal(_frontPortal);
+            float backDistance = GetCameraDistanceFromPortal(_backPortal);
+            float warpDistance = Mathf.Max(cameraWarpMargin, _mainCamera.nearClipPlane + cameraWarpMargin);
+
+            if (!_cameraDistancesInitialized)
+            {
+                SetPreviousCameraDistances(frontDistance, backDistance);
+                _cameraDistancesInitialized = true;
+                return;
+            }
+
+            if (_previousFrontCameraDistance > warpDistance && frontDistance <= warpDistance)
+            {
+                WarpPlayer(_frontPortal, _backPortal);
+                return;
+            }
+
+            if (_previousBackCameraDistance > warpDistance && backDistance <= warpDistance)
+            {
+                WarpPlayer(_backPortal, _frontPortal);
+                return;
+            }
+
+            SetPreviousCameraDistances(frontDistance, backDistance);
+        }
+
+        private float GetCameraDistanceFromPortal(Transform portal)
+        {
+            return Vector3.Dot(_mainCamera.transform.position - portal.position, portal.forward);
+        }
+
+        private void SetPreviousCameraDistances(float frontDistance, float backDistance)
+        {
+            _previousFrontCameraDistance = frontDistance;
+            _previousBackCameraDistance = backDistance;
+        }
+
+        private void WarpPlayer(Transform sourcePortal, Transform destinationPortal)
+        {
+            Vector3 positionDelta = destinationPortal.position - sourcePortal.position;
             bool controllerWasEnabled = _playerController != null && _playerController.enabled;
             if (_playerController != null)
             {
                 _playerController.enabled = false;
             }
 
-            _player.position = position;
+            _player.position += positionDelta;
 
             if (_playerController != null)
             {
                 _playerController.enabled = controllerWasEnabled;
+            }
+
+            NotifyCinemachineTargets(positionDelta);
+
+            if (_mainCamera != null && !_mainCamera.transform.IsChildOf(_player))
+            {
+                _mainCamera.transform.position += positionDelta;
+            }
+
+            SetPreviousCameraDistances(
+                GetCameraDistanceFromPortal(_frontPortal),
+                GetCameraDistanceFromPortal(_backPortal));
+        }
+
+        private void NotifyCinemachineTargets(Vector3 positionDelta)
+        {
+            var targets = _player.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < targets.Length; i++)
+            {
+                CinemachineCore.OnTargetObjectWarped(targets[i], positionDelta);
             }
         }
 
