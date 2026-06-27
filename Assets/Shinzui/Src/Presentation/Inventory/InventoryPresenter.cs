@@ -51,6 +51,7 @@ namespace Shinzui.Presentation.Inventory
                     if (!isOpen)
                     {
                         _selectedSlotIndex.Value = -1;
+                        _view.HideContextMenu(); // 閉じたらコンテキストメニューも非表示
                     }
                 })
                 .AddTo(ref builder);
@@ -81,6 +82,17 @@ namespace Shinzui.Presentation.Inventory
                     .Subscribe(clickedIndex =>
                     {
                         SelectSlot(clickedIndex);
+
+                        var dto = _useCase.GetSlotDto(clickedIndex).CurrentValue;
+                        if (dto.HasItem)
+                        {
+                            _view.SetContextMenuButtons(dto.IsConsumable, dto.IsEquipment);
+                            _view.ShowContextMenu(slotView.transform.position);
+                        }
+                        else
+                        {
+                            _view.HideContextMenu();
+                        }
                     })
                     .AddTo(ref builder);
 
@@ -105,6 +117,89 @@ namespace Shinzui.Presentation.Inventory
                             slotView.SetSelection(i == index);
                         }
                     }
+                })
+                .AddTo(ref builder);
+
+            // 選択されたスロットに対応する詳細表示の更新
+            _selectedSlotIndex
+                .Subscribe(index =>
+                {
+                    UpdateSelectedItemDetails(index);
+                })
+                .AddTo(ref builder);
+
+            // 選択中のスロットのデータが変化した場合も詳細表示を再更新する
+            for (int i = 0; i < _useCase.Capacity; i++)
+            {
+                int index = i;
+                _useCase.GetSlotDto(index)
+                    .Subscribe(dto =>
+                    {
+                        if (_selectedSlotIndex.Value == index)
+                        {
+                            UpdateSelectedItemDetails(index);
+                        }
+                    })
+                    .AddTo(ref builder);
+            }
+
+            // コンテキストメニューの「使用する」ボタンクリック時の処理
+            OnButtonClicked(_view.UseButton)
+                .Subscribe(async _ =>
+                {
+                    _view.HideContextMenu();
+                    int selected = _selectedSlotIndex.Value;
+                    if (selected >= 0)
+                    {
+                        var dto = _useCase.GetSlotDto(selected).CurrentValue;
+                        if (dto.HasItem && dto.IsConsumable)
+                        {
+                            await _useCase.UseItemAsync(selected);
+                        }
+                    }
+                })
+                .AddTo(ref builder);
+
+            // コンテキストメニューの「装備する」ボタンクリック時の処理
+            if (_view.EquipButton != null)
+            {
+                OnButtonClicked(_view.EquipButton)
+                    .Subscribe(_ =>
+                    {
+                        _view.HideContextMenu();
+                        int selected = _selectedSlotIndex.Value;
+                        if (selected >= 0)
+                        {
+                            var dto = _useCase.GetSlotDto(selected).CurrentValue;
+                            if (dto.HasItem && dto.IsEquipment)
+                            {
+                                _useCase.EquipItem(selected);
+                            }
+                        }
+                    })
+                    .AddTo(ref builder);
+            }
+
+            // 装備中スロットの同期 (UseCase -> View)
+            _useCase.EquippedSlotIndex
+                .Subscribe(equippedIndex =>
+                {
+                    for (int i = 0; i < _view.SlotCount; i++)
+                    {
+                        var slotView = _view.GetSlotView(i);
+                        if (slotView != null)
+                        {
+                            slotView.SetEquipped(i == equippedIndex);
+                        }
+                    }
+                })
+                .AddTo(ref builder);
+
+            // コンテキストメニューの背景クリックで閉じる処理
+            OnButtonClicked(_view.ContextMenuBackgroundButton)
+                .Subscribe(_ =>
+                {
+                    _view.HideContextMenu();
                 })
                 .AddTo(ref builder);
 
@@ -156,14 +251,36 @@ namespace Shinzui.Presentation.Inventory
 
         private void SelectSlot(int index)
         {
-            if (_selectedSlotIndex.Value == index)
+            _selectedSlotIndex.Value = index;
+        }
+
+        private void UpdateSelectedItemDetails(int index)
+        {
+            if (index < 0 || index >= _useCase.Capacity)
             {
-                _selectedSlotIndex.Value = -1;
+                _view.ClearDetailedInfo();
+                return;
+            }
+
+            var dto = _useCase.GetSlotDto(index).CurrentValue;
+            if (dto != null && dto.HasItem)
+            {
+                _view.UpdateDetailedInfo(dto.ItemName, dto.Description, dto.IconAssetAddress);
             }
             else
             {
-                _selectedSlotIndex.Value = index;
+                _view.ClearDetailedInfo();
             }
+        }
+
+        private Observable<Unit> OnButtonClicked(UnityEngine.UI.Button button)
+        {
+            return Observable.Create<Unit>(observer =>
+            {
+                UnityEngine.Events.UnityAction action = () => observer.OnNext(Unit.Default);
+                button.onClick.AddListener(action);
+                return Disposable.Create(() => button.onClick.RemoveListener(action));
+            });
         }
 
         public void Dispose()

@@ -14,15 +14,61 @@ namespace Shinzui.Infrastructure.Services
         private readonly InputAction _inventoryToggleAction;
         private readonly InputAction _itemUseAction;
         private readonly InputAction _flashlightToggleAction;
+        private readonly InputAction _attackAction;
 
         private bool _isBlocked;
 
         public Vector2 MoveInput => !_isBlocked && _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
         public bool SprintPressed => !_isBlocked && _sprintAction != null && _sprintAction.IsPressed();
         public bool CrouchPressed => !_isBlocked && _crouchAction != null && _crouchAction.IsPressed();
-        public bool InventoryTogglePressed => _inventoryToggleAction != null && _inventoryToggleAction.WasPressedThisFrame(); // 開閉入力はブロック中でも受け付ける
-        public bool ItemUsePressed => !_isBlocked && _itemUseAction != null && _itemUseAction.WasPressedThisFrame();
-        public bool FlashlightTogglePressed => !_isBlocked && _flashlightToggleAction != null && _flashlightToggleAction.WasPressedThisFrame();
+
+        public bool InventoryTogglePressed
+        {
+            get
+            {
+                // UI等によるTabキーの消費や動的InputActionの不具合を回避するため、直接デバイス入力をフォールバックとしてチェック
+                bool keyboardTab = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
+                bool gamepadSelect = Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame;
+                bool actionPressed = _inventoryToggleAction != null && (_inventoryToggleAction.triggered || _inventoryToggleAction.WasPressedThisFrame());
+                return keyboardTab || gamepadSelect || actionPressed;
+            }
+        }
+
+        public bool ItemUsePressed
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                bool keyboardE = Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
+                bool gamepadSouth = Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
+                bool actionPressed = _itemUseAction != null && (_itemUseAction.triggered || _itemUseAction.WasPressedThisFrame());
+                return keyboardE || gamepadSouth || actionPressed;
+            }
+        }
+
+        public bool FlashlightTogglePressed
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                bool keyboardF = Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+                bool gamepadNorth = Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame;
+                bool actionPressed = _flashlightToggleAction != null && (_flashlightToggleAction.triggered || _flashlightToggleAction.WasPressedThisFrame());
+                return keyboardF || gamepadNorth || actionPressed;
+            }
+        }
+
+        public bool AttackPressed
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                bool mouseLeft = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+                bool gamepadTrigger = Gamepad.current != null && Gamepad.current.rightTrigger.wasPressedThisFrame;
+                bool actionPressed = _attackAction != null && (_attackAction.triggered || _attackAction.WasPressedThisFrame());
+                return mouseLeft || gamepadTrigger || actionPressed;
+            }
+        }
 
         public UnityInputService()
         {
@@ -74,18 +120,23 @@ namespace Shinzui.Infrastructure.Services
             _flashlightToggleAction.AddBinding("<Keyboard>/f");
             _flashlightToggleAction.AddBinding("<Gamepad>/buttonNorth");
 
+            // Attackアクション (Button) の作成とバインディング
+            _attackAction = playerMap.AddAction("Attack", type: InputActionType.Button);
+            _attackAction.AddBinding("<Mouse>/leftButton");
+            _attackAction.AddBinding("<Gamepad>/rightTrigger");
+
             // インプット制御を有効化
             _actionAsset.Enable();
         }
 
         /// <summary>
-        /// 移動やカメラ視点移動の入力をブロック制御します。
+        /// 移動やカメラ視点移動の入力をブロック制御
         /// </summary>
         public void SetBlocked(bool blocked)
         {
             _isBlocked = blocked;
 
-            // 1. グローバルな PlayerInput コンポーネントのアクション制御
+            // グローバルな PlayerInput コンポーネントのアクション制御
             try
             {
                 var playerInputs = UnityEngine.Object.FindObjectsByType<UnityEngine.InputSystem.PlayerInput>(UnityEngine.FindObjectsSortMode.None);
@@ -106,32 +157,40 @@ namespace Shinzui.Infrastructure.Services
                 Debug.LogWarning($"[UnityInputService] PlayerInputの有効無効切り替えに失敗しました: {ex.Message}");
             }
 
-            // 2. Cinemachine の視点移動入力を停止
-            // ※ レンダリングに関わる CinemachineBrain の無効化は、Unity内部のカリング演算 (OcclusionCulling) に
-            // 　 平面数不整合エラーを引き起こすため行わず、入力受付のみを制御する CinemachineInputProvider のみ無効化します。
+            // Cinemachine の視点移動入力を停止
             try
             {
-                // CinemachineInputProvider を無効化/有効化する
-                var providerType = Type.GetType("Unity.Cinemachine.CinemachineInputProvider, Unity.Cinemachine") 
-                                   ?? Type.GetType("Cinemachine.CinemachineInputProvider, Cinemachine");
-                if (providerType != null)
+                // Cinemachine v3 (Unity.Cinemachine) と Cinemachine v2 (Cinemachine) のカメラ制御・入力コンポーネントを無効化/有効化
+                string[] cinemachineTypes = new string[]
                 {
-                    var providers = UnityEngine.Object.FindObjectsByType(providerType, UnityEngine.FindObjectsSortMode.None);
-                    foreach (var provider in providers)
+                    "Unity.Cinemachine.CinemachinePanTilt",
+                    "Unity.Cinemachine.CinemachineInputProvider",
+                    "Cinemachine.CinemachineInputProvider",
+                    "Cinemachine.CinemachinePOV"
+                };
+
+                foreach (var typeName in cinemachineTypes)
+                {
+                    var compType = FindType(typeName);
+                    if (compType != null)
                     {
-                        if (provider is MonoBehaviour behaviour)
+                        var components = UnityEngine.Object.FindObjectsByType(compType, UnityEngine.FindObjectsSortMode.None);
+                        foreach (var comp in components)
                         {
-                            behaviour.enabled = !blocked;
+                            if (comp is MonoBehaviour behaviour)
+                            {
+                                behaviour.enabled = !blocked;
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[UnityInputService] CinemachineInputProviderの制御に失敗しました: {ex.Message}");
+                Debug.LogWarning($"[UnityInputService] Cinemachine入力コンポーネントの制御に失敗しました: {ex.Message}");
             }
 
-            // 3. アクションアセットの直接検索による無効化
+            // アクションアセットの直接検索による無効化
             try
             {
                 var playerMap = InputSystem.actions?.FindActionMap("Player");
@@ -146,7 +205,7 @@ namespace Shinzui.Infrastructure.Services
                 Debug.LogWarning($"[UnityInputService] ActionMap 'Player' の切り替えに失敗しました: {ex.Message}");
             }
 
-            // 4. マウスカーソルの状態制御
+            // マウスカーソルの状態制御
             if (blocked)
             {
                 Cursor.lockState = CursorLockMode.None;
@@ -157,6 +216,19 @@ namespace Shinzui.Infrastructure.Services
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
             }
+        }
+
+        private static Type FindType(string fullName)
+        {
+            var type = Type.GetType(fullName);
+            if (type != null) return type;
+
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                type = asm.GetType(fullName);
+                if (type != null) return type;
+            }
+            return null;
         }
 
         public void Dispose()

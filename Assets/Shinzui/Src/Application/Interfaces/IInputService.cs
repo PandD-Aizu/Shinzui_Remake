@@ -28,5 +28,10 @@ namespace Shinzui.Application.Interfaces
         /// 懐中電灯トグル用入力（Fキーなど）
         /// </summary>
         bool FlashlightTogglePressed { get; }
+
+        /// <summary>
+        /// 左クリックなどの攻撃・投擲入力
+        /// </summary>
+        bool AttackPressed { get; }
     }
 }

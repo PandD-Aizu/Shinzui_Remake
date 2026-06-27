@@ -11,10 +11,13 @@ using Shinzui.Infrastructure.Repositories;
 using Shinzui.Infrastructure.Services;
 using Shinzui.Presentation;
 using Shinzui.Presentation.Inventory;
-using Shinzui.Presentation.Flashlight; // 【追加】
+using Shinzui.Presentation.Flashlight;
 using Shinzui.View;
 using Shinzui.View.Inventory;
-using Shinzui.View.Flashlight; // 【追加】
+using Shinzui.View.Flashlight;
+using Shinzui.Application.UseCases.Interaction;
+using Shinzui.Presentation.Interaction;
+using Shinzui.View.Interaction;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -26,7 +29,9 @@ namespace Shinzui.DI
         [Header("Views")]
         [SerializeField] private PlayerView playerView;
         [SerializeField] private InventoryView inventoryView;
-        [SerializeField] private FlashlightView flashlightView; // 【追加】懐中電灯View参照
+        [SerializeField] private FlashlightView flashlightView;
+        [SerializeField] private PlayerInteractionView interactionView;
+        [SerializeField] private InteractionMessageView interactionMessageView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -40,6 +45,7 @@ namespace Shinzui.DI
 
             // UseCaseの登録
             builder.Register<PlayerMoveUseCase>(Lifetime.Scoped);
+            builder.Register<PlayerThrowUseCase>(Lifetime.Scoped);
 
             // Viewの登録
             var viewInstance = playerView;
@@ -51,6 +57,14 @@ namespace Shinzui.DI
             if (viewInstance != null)
             {
                 builder.RegisterComponent(viewInstance);
+
+                // PlayerThrowViewの動的アタッチとDI登録
+                var throwViewInstance = viewInstance.GetComponent<PlayerThrowView>();
+                if (throwViewInstance == null)
+                {
+                    throwViewInstance = viewInstance.gameObject.AddComponent<PlayerThrowView>();
+                }
+                builder.RegisterComponent(throwViewInstance);
             }
             else
             {
@@ -59,6 +73,8 @@ namespace Shinzui.DI
 
             // PresenterをVContainerのEntryPointとして登録
             builder.RegisterEntryPoint<PlayerMovePresenter>();
+            builder.RegisterEntryPoint<PlayerThrowPresenter>();
+            builder.RegisterEntryPoint<TunnelLoopPresenter>();
 
             // ==========================================
             // インベントリシステムのDI登録
@@ -89,12 +105,8 @@ namespace Shinzui.DI
                 Debug.LogWarning("InventoryView instance was not assigned and not found in the scene hierarchy.");
             }
 
-            // Presentation (EntryPointとして自動でInitialize/Tick/Disposeを実行)
+            // Presentation
             builder.RegisterEntryPoint<InventoryPresenter>();
-
-            // ==========================================
-            // 【追加】懐中電灯システムのDI登録
-            // ==========================================
             
             // Domain & UseCase
             builder.Register<FlashlightEntity>(Lifetime.Singleton).WithParameter(false); // 初期状態: OFF
@@ -118,6 +130,41 @@ namespace Shinzui.DI
 
             // Presentation (EntryPoint)
             builder.RegisterEntryPoint<FlashlightPresenter>();
+
+            // ==========================================
+            // インタラクトシステムのDI登録
+            // ==========================================
+            builder.Register<InteractionUseCase>(Lifetime.Singleton);
+
+            var interactViewInstance = interactionView;
+            if (interactViewInstance == null)
+            {
+                interactViewInstance = FindFirstObjectByType<PlayerInteractionView>();
+            }
+            if (interactViewInstance != null)
+            {
+                builder.RegisterComponent(interactViewInstance);
+            }
+            else
+            {
+                Debug.LogWarning("PlayerInteractionView instance was not assigned and not found in the scene hierarchy.");
+            }
+
+            var messageViewInstance = interactionMessageView;
+            if (messageViewInstance == null)
+            {
+                messageViewInstance = FindFirstObjectByType<InteractionMessageView>();
+            }
+            if (messageViewInstance != null)
+            {
+                builder.RegisterComponent(messageViewInstance);
+            }
+            else
+            {
+                Debug.LogWarning("InteractionMessageView instance was not assigned and not found in the scene hierarchy.");
+            }
+
+            builder.RegisterEntryPoint<InteractionPresenter>();
         }
 
         private static PlayerEntity CreatePlayer()

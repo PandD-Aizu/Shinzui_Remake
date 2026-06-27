@@ -156,6 +156,50 @@ MonoBehaviour:
   blueOutBlueIn:
     m_OverrideState: 0
     m_Value: 100
+--- !u!114 &-7340833849881910712
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5151e3afc2f7443ab2d19b66bb1f4ec5, type: 3}
+  m_Name: PixelationVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.PixelationVolume
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0.1
+--- !u!114 &-6955425716890869498
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c19e45de50f42b1bd30c67c9ea0df22, type: 3}
+  m_Name: InverseScanlineVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.InverseScanLine.InverseScanlineVolume
+  active: 1
+  glitchPeriod:
+    m_OverrideState: 1
+    m_Value: 3
+  glitchSize:
+    m_OverrideState: 1
+    m_Value: 0.001
+  glitchSpeed:
+    m_OverrideState: 1
+    m_Value: 2.5
+  glitchProbability:
+    m_OverrideState: 1
+    m_Value: 0.1
+  blockScale:
+    m_OverrideState: 1
+    m_Value: {x: 50, y: 300}
 --- !u!114 &-6549546810452758030
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -467,6 +511,8 @@ MonoBehaviour:
   - {fileID: -6549546810452758030}
   - {fileID: -4544673827302023917}
   - {fileID: -1345691626975950684}
+  - {fileID: -7340833849881910712}
+  - {fileID: -6955425716890869498}
 --- !u!114 &3350307603905537517
 MonoBehaviour:
   m_ObjectHideFlags: 3

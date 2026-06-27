@@ -36,12 +36,38 @@ namespace Shinzui.View.Inventory
             ClearSlot();
         }
 
+        private UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<Sprite> _iconLoadHandle;
+
         public void SetItem(string iconAddress, int quantity)
         {
             if (iconImage != null)
             {
-                iconImage.gameObject.SetActive(true);
-                // 実際の実装ではここで Addressables を利用して画像を非同期でロードします。
+                if (_iconLoadHandle.IsValid())
+                {
+                    UnityEngine.AddressableAssets.Addressables.Release(_iconLoadHandle);
+                }
+
+                if (!string.IsNullOrEmpty(iconAddress))
+                {
+                    _iconLoadHandle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<Sprite>(iconAddress);
+                    _iconLoadHandle.Completed += handle =>
+                    {
+                        if (handle.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+                        {
+                            iconImage.sprite = handle.Result;
+                            iconImage.gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            iconImage.gameObject.SetActive(false);
+                        }
+                    };
+                }
+                else
+                {
+                    iconImage.gameObject.SetActive(false);
+                    iconImage.sprite = null;
+                }
             }
             
             if (quantityText != null)
@@ -53,27 +79,57 @@ namespace Shinzui.View.Inventory
 
         public void ClearSlot()
         {
+            if (_iconLoadHandle.IsValid())
+            {
+                UnityEngine.AddressableAssets.Addressables.Release(_iconLoadHandle);
+            }
+
             if (iconImage != null)
             {
                 iconImage.gameObject.SetActive(false);
+                iconImage.sprite = null;
             }
             if (quantityText != null)
             {
                 quantityText.gameObject.SetActive(false);
             }
             
-            // 選択状態も解除（白に戻す）
-            SetSelection(false);
+            _isSelected = false;
+            _isEquipped = false;
+            UpdateFrameColor();
         }
 
-        /// <summary>
-        /// 選択状態に応じてフレームの色を切り替える（選択時：赤、通常時：白）
-        /// </summary>
+        private bool _isSelected;
+        private bool _isEquipped;
+
         public void SetSelection(bool isSelected)
+        {
+            _isSelected = isSelected;
+            UpdateFrameColor();
+        }
+
+        public void SetEquipped(bool isEquipped)
+        {
+            _isEquipped = isEquipped;
+            UpdateFrameColor();
+        }
+
+        private void UpdateFrameColor()
         {
             if (frameImage != null)
             {
-                frameImage.color = isSelected ? Color.red : Color.white;
+                if (_isSelected)
+                {
+                    frameImage.color = Color.red;
+                }
+                else if (_isEquipped)
+                {
+                    frameImage.color = Color.green; // 装備中は緑
+                }
+                else
+                {
+                    frameImage.color = Color.white;
+                }
             }
         }
 
@@ -104,6 +160,10 @@ namespace Shinzui.View.Inventory
 
         private void OnDestroy()
         {
+            if (_iconLoadHandle.IsValid())
+            {
+                UnityEngine.AddressableAssets.Addressables.Release(_iconLoadHandle);
+            }
             _onClick.OnCompleted();
             _onDragDrop.OnCompleted();
         }
