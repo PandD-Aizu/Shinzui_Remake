@@ -56,9 +56,6 @@ namespace Shinzui.View.LoopTunnel
         [Header("Portal Rendering")]
         [SerializeField] private float nearClipOffset = 0.04f;
 
-        [Header("Warp")]
-        [SerializeField] private float cameraWarpMargin = 0.08f;
-
         private Camera _mainCamera;
         private Camera _frontPortalCamera;
         private Camera _backPortalCamera;
@@ -124,7 +121,6 @@ namespace Shinzui.View.LoopTunnel
                 _backPortalCamera.enabled = _backPortalRenderer.isVisible;
             }
 
-            WrapPlayerIfNeeded();
         }
 
         private void OnDestroy()
@@ -243,6 +239,8 @@ namespace Shinzui.View.LoopTunnel
             {
                 return;
             }
+
+            WrapPlayerIfNeeded();
 
             if (camera == _frontPortalCamera)
             {
@@ -402,7 +400,6 @@ namespace Shinzui.View.LoopTunnel
 
             float frontDistance = GetCameraDistanceFromPortal(_frontPortal);
             float backDistance = GetCameraDistanceFromPortal(_backPortal);
-            float warpDistance = Mathf.Max(cameraWarpMargin, _mainCamera.nearClipPlane + cameraWarpMargin);
 
             if (!_cameraDistancesInitialized)
             {
@@ -411,13 +408,13 @@ namespace Shinzui.View.LoopTunnel
                 return;
             }
 
-            if (_previousFrontCameraDistance > warpDistance && frontDistance <= warpDistance)
+            if (_previousFrontCameraDistance > 0.0f && frontDistance <= 0.0f)
             {
                 WarpPlayer(_frontPortal, _backPortal);
                 return;
             }
 
-            if (_previousBackCameraDistance > warpDistance && backDistance <= warpDistance)
+            if (_previousBackCameraDistance > 0.0f && backDistance <= 0.0f)
             {
                 WarpPlayer(_backPortal, _frontPortal);
                 return;
