@@ -12,6 +12,7 @@ namespace Shinzui.Application.UseCases
         public EnemyEntity EnemyEntity => _enemyEntity;
         
         public bool IsWandering { get; private set; }
+        public bool IsChasing { get; private set; }
 
         void Start()
         {
@@ -20,6 +21,7 @@ namespace Shinzui.Application.UseCases
                 .Subscribe(state =>
                 {
                     IsWandering = state == EnemyMovementState.Wandering;
+                    IsChasing = state == EnemyMovementState.IsChasing;
                 }
             );
         }

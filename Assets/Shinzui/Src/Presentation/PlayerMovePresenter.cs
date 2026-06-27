@@ -65,6 +65,9 @@ namespace Shinzui.Presentation
 
             // Y回転をカメラに合わせる
             _view.AlignYRotationWithCamera();
+            
+            // 現在のトンネルの判定
+            _useCase.CheckCurrentTunnel(_view.transform.position);
         }
 
         public void Dispose()

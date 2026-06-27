@@ -8,7 +8,7 @@ namespace Shinzui.Presentation
     {
         private EnemyMoveUseCase _enemyMoveUseCase;
         private NavMeshAgent _agent;
-        private Transform _target;
+        private Transform _player;
 
         private float _timer;                            //時間計測用タイマー
         private readonly float _wanderInterval = 10.0f;  //徘徊目的地を更新するインターバル
@@ -18,7 +18,7 @@ namespace Shinzui.Presentation
         {
             _enemyMoveUseCase = gameObject.AddComponent<EnemyMoveUseCase>();
             _agent = transform.parent.GetComponent<NavMeshAgent>();
-            _target = GameObject.Find("Player").GetComponent<Transform>();
+            _player = GameObject.Find("Player").GetComponent<Transform>();
             _timer = _wanderInterval;
         }
 
@@ -36,16 +36,21 @@ namespace Shinzui.Presentation
                     _timer = 0;
                 }
             }
+
+            if (_enemyMoveUseCase.IsChasing)
+            {
+                Vector3 playerPos = _player.position;
+                _enemyMoveUseCase.SetDestination(_agent, _player.position);
+            }
         }
 
-        void OnTriggerStay(Collider other)
+        void OnTriggerEnter(Collider other)
         {
-            if (_agent == null || _target == null) return;
+            if (_agent == null || _player == null) return;
 
-            if (other.name == "Player")
+            if (other.name == _player.name)
             {
                 _enemyMoveUseCase.UpdateEnemyState(2); //敵のMovementStateをIsChasingに変更する
-                _enemyMoveUseCase.SetDestination(_agent, _target.position);
             }
         }
 

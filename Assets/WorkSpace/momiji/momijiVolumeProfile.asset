@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8482745224745229592
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce5974aa8fb6deb4a9f5cd0a926833a4, type: 3}
+  m_Name: ScanlineVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Scanline.ScanlineVolume
+  active: 1
+  speed:
+    m_OverrideState: 0
+    m_Value: 0.5
+  barSize:
+    m_OverrideState: 0
+    m_Value: 0.1
+  strength:
+    m_OverrideState: 0
+    m_Value: 1
+  frequency:
+    m_OverrideState: 0
+    m_Value: 30
+  curvature:
+    m_OverrideState: 0
+    m_Value: 0.03
+  fineLines:
+    m_OverrideState: 0
+    m_Value: 0.25
+  fineLinesScale:
+    m_OverrideState: 0
+    m_Value: 480
+  vignette:
+    m_OverrideState: 0
+    m_Value: 0.3
+  flicker:
+    m_OverrideState: 0
+    m_Value: 0.05
+--- !u!114 &-6919633342351637501
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5151e3afc2f7443ab2d19b66bb1f4ec5, type: 3}
+  m_Name: PixelationVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.PixelationVolume
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
+  m_Name: momijiVolumeProfile
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.VolumeProfile
+  components:
+  - {fileID: -6919633342351637501}
+  - {fileID: -8482745224745229592}
+  - {fileID: 6423881439231688924}
+--- !u!114 &6423881439231688924
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c19e45de50f42b1bd30c67c9ea0df22, type: 3}
+  m_Name: InverseScanlineVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.InverseScanLine.InverseScanlineVolume
+  active: 1
+  glitchPeriod:
+    m_OverrideState: 0
+    m_Value: 15
+  glitchSize:
+    m_OverrideState: 0
+    m_Value: 0.001
+  glitchSpeed:
+    m_OverrideState: 0
+    m_Value: 0.5
+  glitchProbability:
+    m_OverrideState: 0
+    m_Value: 0.1
+  blockScale:
+    m_OverrideState: 0
+    m_Value: {x: 50, y: 300}
