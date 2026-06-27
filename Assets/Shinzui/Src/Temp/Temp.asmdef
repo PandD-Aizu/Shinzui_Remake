@@ -6,7 +6,8 @@
         "GUID:b5b42ada7c4c5104f8c868951c2e3654",
         "GUID:5513a911fe0c1bc49b43b58556f80be7",
         "GUID:7d8b58355269bc44485c0f295e01598a",
-        "GUID:f6672bd4acd5b6b4986d0eb222564034"
+        "GUID:f6672bd4acd5b6b4986d0eb222564034",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
