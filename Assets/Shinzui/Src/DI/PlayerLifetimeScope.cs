@@ -32,7 +32,6 @@ namespace Shinzui.DI
         [SerializeField] private FlashlightView flashlightView;
         [SerializeField] private PlayerInteractionView interactionView;
         [SerializeField] private InteractionMessageView interactionMessageView;
-        [SerializeField] private ItemGetView itemGetView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -108,22 +107,7 @@ namespace Shinzui.DI
 
             // Presentation
             builder.RegisterEntryPoint<InventoryPresenter>();
-
-            // ItemGetUI の View & Presenter 登録
-            var itemGetViewInstance = itemGetView;
-            if (itemGetViewInstance == null)
-            {
-                itemGetViewInstance = FindFirstObjectByType<ItemGetView>();
-            }
-            if (itemGetViewInstance != null)
-            {
-                builder.RegisterComponent(itemGetViewInstance);
-            }
-            else
-            {
-                Debug.LogWarning("ItemGetView instance was not assigned and not found in the scene hierarchy.");
-            }
-            builder.RegisterEntryPoint<ItemGetPresenter>();
+            builder.RegisterComponentInHierarchy<EnemyPresenter>();
             
             // Domain & UseCase
             builder.Register<FlashlightEntity>(Lifetime.Singleton).WithParameter(false); // 初期状態: OFF

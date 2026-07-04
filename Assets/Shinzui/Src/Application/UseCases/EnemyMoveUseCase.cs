@@ -12,7 +12,20 @@ namespace Shinzui.Application.UseCases
         public EnemyEntity EnemyEntity => _enemyEntity;
         
         public bool IsWandering { get; private set; }
+        public bool IsChasing { get; private set; }
 
+        /// <summary>
+        /// 徘徊情報を取得する
+        /// </summary>
+        /// <returns>徘徊スパン、徘徊範囲</returns>
+        public (float, float) GetWanderingInfo()
+        {
+            return (EnemyEntity._wanderInterval, EnemyEntity._wanderRadius);
+        }
+
+        /// <summary>
+        /// 購読の設定
+        /// </summary>
         void Start()
         {
             _enemyEntity.MovementState
@@ -20,6 +33,7 @@ namespace Shinzui.Application.UseCases
                 .Subscribe(state =>
                 {
                     IsWandering = state == EnemyMovementState.Wandering;
+                    IsChasing = state == EnemyMovementState.IsChasing;
                 }
             );
         }
@@ -41,7 +55,7 @@ namespace Shinzui.Application.UseCases
                 case 1:
                     _enemyEntity.UpdateState(EnemyMovementState.Wandering);
                     break;
-                case 3:
+                case 2:
                     _enemyEntity.UpdateState(EnemyMovementState.IsChasing);
                     break;
                 default:
@@ -57,6 +71,13 @@ namespace Shinzui.Application.UseCases
         public void SetDestination(NavMeshAgent agent, Vector3 target)
         {
             agent.SetDestination(target);
+        }
+
+        public void Warp(Vector3 warpTarget)
+        {
+            Vector3 pos = transform.parent.transform.position;
+            pos.z = warpTarget.z;
+            transform.parent.transform.position = pos;
         }
     }
 }
