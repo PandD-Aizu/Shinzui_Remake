@@ -63,9 +63,7 @@ namespace Shinzui.Presentation
 
                 if (playerPos.z > centerZ) dummy.z -= tunnelDistance;
                 else dummy.z += tunnelDistance;
-
-                Debug.Log("player: " + playerPos);
-                Debug.Log("dummy: " + dummy);
+                
                 Vector3 target = Vector3.Distance(transform.position, playerPos) < Vector3.Distance(transform.position, dummy) ? playerPos : dummy;
                 
                 _enemyMoveUseCase.SetDestination(_agent, target);
