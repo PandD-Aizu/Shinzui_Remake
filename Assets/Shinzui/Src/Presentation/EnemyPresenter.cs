@@ -1,8 +1,10 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 using Shinzui.Application.UseCases;
 using UnityEngine.Android;
 using VContainer;
+using Random = UnityEngine.Random;
 
 namespace Shinzui.Presentation
 {
@@ -16,6 +18,7 @@ namespace Shinzui.Presentation
         private float _timer;                   //時間計測用タイマー
         private float _wanderInterval = -1.0f;  //徘徊目的地を更新するインターバル
         private float _wanderRadius = -1.0f;    //徘徊範囲
+        private float _chaseDistance = -1.0f;   //索敵範囲
 
         [Inject]
         public void Construct(PlayerMoveUseCase playerMoveUseCase)
@@ -28,11 +31,12 @@ namespace Shinzui.Presentation
             _enemyMoveUseCase = gameObject.AddComponent<EnemyMoveUseCase>();
             _agent = transform.parent.GetComponent<NavMeshAgent>();
             _player = GameObject.Find("Player").GetComponent<Transform>();
-            (_wanderInterval, _wanderRadius) = _enemyMoveUseCase.GetWanderingInfo();
+            (_wanderInterval, _wanderRadius, _chaseDistance) = _enemyMoveUseCase.GetWanderingInfo();
             _timer = _wanderInterval;
             
-            if(_wanderInterval < 0) Debug.LogWarning("Wander interval is negative");
-            if(_wanderRadius < 0) Debug.LogWarning("WanderRadius is negative");
+            if(_wanderInterval < 0) Debug.LogWarning("EnemyPresenter: Wander interval is negative");
+            if(_wanderRadius < 0) Debug.LogWarning("EnemyPresenter: WanderRadius is negative");
+            if(_chaseDistance < 0) Debug.LogWarning("EnemyPresenter: Chase distance is negative");
         }
 
         void Update()
@@ -40,6 +44,21 @@ namespace Shinzui.Presentation
             Vector3 playerPos = _player.position;
             Vector3 tunnelStartPos = _playerMoveUseCase.currentTunnelStart.transform.position;
             Vector3 tunnelEndPos = _playerMoveUseCase.currentTunnelEnd.transform.position;
+            
+            Vector3 dummy = playerPos;
+                
+            float centerZ = (tunnelStartPos.z + tunnelEndPos.z)/2;                 //トンネルの中央
+            float tunnelDistance = Mathf.Abs(tunnelStartPos.z - tunnelEndPos.z); //トンネルの長さ
+
+            if (playerPos.z > centerZ) dummy.z -= tunnelDistance;
+            else dummy.z += tunnelDistance;
+
+            if (Vector3.Distance(transform.position, playerPos) < _chaseDistance ||
+                Vector3.Distance(transform.position, dummy) < _chaseDistance)
+            {
+                _enemyMoveUseCase.UpdateEnemyState(2); //敵のMovementStateをIsChasingに変更する
+            }
+            else _enemyMoveUseCase.UpdateEnemyState(1); //敵のMovementStateをWanderingに変更する
             
             // 敵が徘徊状態なら、一定時間間隔で移動先を決めて移動する
             if (_enemyMoveUseCase.IsWandering)
@@ -56,14 +75,6 @@ namespace Shinzui.Presentation
             //敵が追跡状態ならプレイヤーまたはダミーのうち、より近いほうを追跡する
             if (_enemyMoveUseCase.IsChasing)
             {
-                Vector3 dummy = playerPos;
-                
-                float centerZ = (tunnelStartPos.z + tunnelEndPos.z)/2;                 //トンネルの中央
-                float tunnelDistance = Mathf.Abs(tunnelStartPos.z - tunnelEndPos.z); //トンネルの長さ
-
-                if (playerPos.z > centerZ) dummy.z -= tunnelDistance;
-                else dummy.z += tunnelDistance;
-                
                 Vector3 target = Vector3.Distance(transform.position, playerPos) < Vector3.Distance(transform.position, dummy) ? playerPos : dummy;
                 
                 _enemyMoveUseCase.SetDestination(_agent, target);
@@ -71,24 +82,6 @@ namespace Shinzui.Presentation
             
             if(transform.position.z > tunnelEndPos.z) _enemyMoveUseCase.Warp(tunnelStartPos);
             if(transform.position.z < tunnelStartPos.z) _enemyMoveUseCase.Warp(tunnelEndPos);
-        }
-
-        void OnTriggerEnter(Collider other)
-        {
-            if (_agent == null || _player == null) return;
-
-            if (other.name == _player.name)
-            {
-                _enemyMoveUseCase.UpdateEnemyState(2); //敵のMovementStateをIsChasingに変更する
-            }
-        }
-
-        void OnTriggerExit(Collider other)
-        {
-            if (other.name == _player.name)
-            {
-                _enemyMoveUseCase.UpdateEnemyState(1); //敵のMovementStateをWanderingに変更する
-            }
         }
 
         /// <summary>
@@ -105,6 +98,12 @@ namespace Shinzui.Presentation
             NavMeshHit hit;
             NavMesh.SamplePosition(randomDirection, out hit, radius, NavMesh.AllAreas);
             return hit.position;
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(gameObject.transform.position, _chaseDistance);
         }
     }
 }

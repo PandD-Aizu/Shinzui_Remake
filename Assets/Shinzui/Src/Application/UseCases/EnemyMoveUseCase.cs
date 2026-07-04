@@ -18,9 +18,9 @@ namespace Shinzui.Application.UseCases
         /// 徘徊情報を取得する
         /// </summary>
         /// <returns>徘徊スパン、徘徊範囲</returns>
-        public (float, float) GetWanderingInfo()
+        public (float, float, float) GetWanderingInfo()
         {
-            return (EnemyEntity._wanderInterval, EnemyEntity._wanderRadius);
+            return (EnemyEntity._wanderInterval, EnemyEntity._wanderRadius, EnemyEntity._chaseDistance);
         }
 
         /// <summary>
