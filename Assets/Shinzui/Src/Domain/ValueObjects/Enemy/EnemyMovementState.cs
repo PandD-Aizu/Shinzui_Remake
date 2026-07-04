@@ -4,6 +4,6 @@ namespace Shinzui.Domain.ValueObjects.Enemy
     {
         Idle,       //待機
         Wandering,  //徘徊
-        IsChasing   //プレイヤー追従
+        IsChasing   //プレイヤー追跡
     }
 }

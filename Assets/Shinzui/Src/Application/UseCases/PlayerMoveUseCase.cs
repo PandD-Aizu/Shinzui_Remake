@@ -76,11 +76,12 @@ namespace Shinzui.Application.UseCases
             float rayDistance = 5.0f;
             ray = new Ray(position, Vector3.down);
             RaycastHit hit;
-            
-            if (Physics.Raycast(ray, out hit, rayDistance))
+            LayerMask stageMask = LayerMask.GetMask("Stage");
+            if (Physics.Raycast(ray, out hit, rayDistance, stageMask))
             {
                 currentTunnelStart = hit.collider.transform.parent.Find("TunnelStart").gameObject;
                 currentTunnelEnd = hit.collider.transform.parent.Find("TunnelEnd").gameObject;
+                if(currentTunnelEnd == null || currentTunnelStart == null) Debug.Log("currentTunnel is null");
             }
             
             Debug.DrawRay(ray.origin, ray.direction * rayDistance, Color.red);

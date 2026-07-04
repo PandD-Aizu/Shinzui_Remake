@@ -107,6 +107,7 @@ namespace Shinzui.DI
 
             // Presentation
             builder.RegisterEntryPoint<InventoryPresenter>();
+            builder.RegisterComponentInHierarchy<EnemyPresenter>();
             
             // Domain & UseCase
             builder.Register<FlashlightEntity>(Lifetime.Singleton).WithParameter(false); // 初期状態: OFF

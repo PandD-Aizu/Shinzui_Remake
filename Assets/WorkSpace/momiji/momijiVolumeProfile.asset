@@ -17,8 +17,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 0.5
   barSize:
-    m_OverrideState: 0
-    m_Value: 0.1
+    m_OverrideState: 1
+    m_Value: 0
   strength:
     m_OverrideState: 0
     m_Value: 1
@@ -35,8 +35,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 480
   vignette:
-    m_OverrideState: 0
-    m_Value: 0.3
+    m_OverrideState: 1
+    m_Value: 0
   flicker:
     m_OverrideState: 0
     m_Value: 0.05
@@ -89,8 +89,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 15
   glitchSize:
-    m_OverrideState: 0
-    m_Value: 0.001
+    m_OverrideState: 1
+    m_Value: 0
   glitchSpeed:
     m_OverrideState: 0
     m_Value: 0.5

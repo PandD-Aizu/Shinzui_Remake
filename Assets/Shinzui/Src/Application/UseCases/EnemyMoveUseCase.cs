@@ -55,7 +55,7 @@ namespace Shinzui.Application.UseCases
                 case 1:
                     _enemyEntity.UpdateState(EnemyMovementState.Wandering);
                     break;
-                case 3:
+                case 2:
                     _enemyEntity.UpdateState(EnemyMovementState.IsChasing);
                     break;
                 default:
@@ -71,6 +71,13 @@ namespace Shinzui.Application.UseCases
         public void SetDestination(NavMeshAgent agent, Vector3 target)
         {
             agent.SetDestination(target);
+        }
+
+        public void Warp(Vector3 warpTarget)
+        {
+            Vector3 pos = transform.parent.transform.position;
+            pos.z = warpTarget.z;
+            transform.parent.transform.position = pos;
         }
     }
 }
