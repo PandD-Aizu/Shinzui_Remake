@@ -410,7 +410,7 @@ MonoBehaviour:
     m_Value: {x: 90, y: 99}
   minLuminance:
     m_OverrideState: 1
-    m_Value: -3
+    m_Value: -2
   maxLuminance:
     m_OverrideState: 1
     m_Value: -1.6
@@ -426,6 +426,9 @@ MonoBehaviour:
   speedDown:
     m_OverrideState: 1
     m_Value: 5
+  portalExposureCompensation:
+    m_OverrideState: 1
+    m_Value: 1
 --- !u!114 &-3257076713848821620
 MonoBehaviour:
   m_ObjectHideFlags: 3

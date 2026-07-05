@@ -33,5 +33,26 @@ namespace Shinzui.Application.Interfaces
         /// 左クリックなどの攻撃・投擲入力
         /// </summary>
         bool AttackPressed { get; }
+
+        /// <summary>
+        /// 攻撃・投擲入力（左クリック等）が押し続けられているか
+        /// </summary>
+        bool AttackHeld { get; }
+    }
+
+    /// <summary>
+    /// プレイヤーの現在位置および現在のトンネル境界情報を取得するための抽象インターフェース
+    /// </summary>
+    public interface IPlayerTracker
+    {
+        /// <summary>
+        /// プレイヤーの現在位置座標
+        /// </summary>
+        Vector3 PlayerPosition { get; }
+
+        /// <summary>
+        /// プレイヤーの現在いるトンネルの両端座標。情報が取得できない場合は null
+        /// </summary>
+        (Vector3 start, Vector3 end)? CurrentTunnelBounds { get; }
     }
 }

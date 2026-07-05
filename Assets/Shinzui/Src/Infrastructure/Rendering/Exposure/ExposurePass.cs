@@ -58,69 +58,80 @@ namespace Shinzui.Infrastructure.Rendering.Exposure
             var volume = stack.GetComponent<ExposureVolume>();
             if (volume == null || !volume.IsActive() || _material == null || _computeShader == null || _exposureBuffer == null)
                 return;
+
+            // 現在レンダリングしているカメラ情報を取得
+            var cameraData = frameData.Get<UniversalCameraData>();
+            var camera = cameraData.camera;
             
+            // ポータル用カメラであるか判定
+            bool isPortalCamera = camera != null && camera.name.Contains("Portal");
+
             // 必要な情報を ContextContainer から取得
             var resources = frameData.Get<UniversalResourceData>();
             var src = resources.activeColorTexture;
             var desc = renderGraph.GetTextureDesc(src);
             var dst = renderGraph.CreateTexture(desc);
 
-            // 一時ヒストグラムバッファの作成 (256ビン, uint)
-            var histogramDesc = new BufferDesc(256 * sizeof(uint), sizeof(uint), GraphicsBuffer.Target.Structured);
-            BufferHandle histogramBuffer = renderGraph.CreateBuffer(histogramDesc);
-
             // 永続露出バッファをRenderGraphにインポート
             BufferHandle exposureResultBuffer = renderGraph.ImportBuffer(_exposureBuffer);
 
-            int width = desc.width;
-            int height = desc.height;
-
-            // 1. Compute Pass: 露出計算
-            using (var builder = renderGraph.AddComputePass<ComputePassData>("Compute Exposure", out var data))
+            // ポータル用カメラではない場合のみ、露出バッファの更新処理（Compute Pass）を行う
+            if (!isPortalCamera)
             {
-                data.HistogramBuffer = histogramBuffer;
-                data.ExposureResultBuffer = exposureResultBuffer;
-                data.SourceTex = src;
+                // 一時ヒストグラムバッファの作成 (256ビン, uint)
+                var histogramDesc = new BufferDesc(256 * sizeof(uint), sizeof(uint), GraphicsBuffer.Target.Structured);
+                BufferHandle histogramBuffer = renderGraph.CreateBuffer(histogramDesc);
 
-                builder.UseBuffer(data.HistogramBuffer, AccessFlags.Write);
-                builder.UseBuffer(data.ExposureResultBuffer, AccessFlags.ReadWrite);
-                builder.UseTexture(data.SourceTex, AccessFlags.Read);
+                int width = desc.width;
+                int height = desc.height;
 
-                builder.SetRenderFunc((ComputePassData passData, ComputeGraphContext ctx) =>
+                // Compute Pass: 露出計算
+                using (var builder = renderGraph.AddComputePass<ComputePassData>("Compute Exposure", out var data))
                 {
-                    // ヒストグラムバッファの初期化
-                    ctx.cmd.SetComputeBufferParam(_computeShader, _kernelClear, "_HistogramBuffer", passData.HistogramBuffer);
-                    ctx.cmd.DispatchCompute(_computeShader, _kernelClear, 1, 1, 1);
+                    data.HistogramBuffer = histogramBuffer;
+                    data.ExposureResultBuffer = exposureResultBuffer;
+                    data.SourceTex = src;
 
-                    // ヒストグラムの生成
-                    ctx.cmd.SetComputeTextureParam(_computeShader, _kernelGenerate, "_SourceTex", passData.SourceTex);
-                    ctx.cmd.SetComputeBufferParam(_computeShader, _kernelGenerate, "_HistogramBuffer", passData.HistogramBuffer);
-                    
-                    int threadGroupsX = Mathf.CeilToInt((float)width / 16.0f);
-                    int threadGroupsY = Mathf.CeilToInt((float)height / 16.0f);
-                    ctx.cmd.DispatchCompute(_computeShader, _kernelGenerate, threadGroupsX, threadGroupsY, 1);
+                    builder.UseBuffer(data.HistogramBuffer, AccessFlags.Write);
+                    builder.UseBuffer(data.ExposureResultBuffer, AccessFlags.ReadWrite);
+                    builder.UseTexture(data.SourceTex, AccessFlags.Read);
 
-                    // 露出値の算出と目の順応適用
-                    ctx.cmd.SetComputeBufferParam(_computeShader, _kernelCompute, "_HistogramBuffer", passData.HistogramBuffer);
-                    ctx.cmd.SetComputeBufferParam(_computeShader, _kernelCompute, "_ExposureResultBuffer", passData.ExposureResultBuffer);
-                    
-                    ctx.cmd.SetComputeIntParam(_computeShader, "_Mode", (int)volume.mode.value);
-                    ctx.cmd.SetComputeIntParam(_computeShader, "_AdaptationMode", (int)volume.eyeAdaptation.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_FixedExposure", volume.exposureCompensation.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_MinLogLuminance", volume.minLuminance.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_MaxLogLuminance", volume.maxLuminance.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_LowPercentile", volume.filtering.value.x / 100.0f);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_HighPercentile", volume.filtering.value.y / 100.0f);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_ExposureCompensation", volume.exposureCompensation.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_AdaptationSpeedUp", volume.speedUp.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_AdaptationSpeedDown", volume.speedDown.value);
-                    ctx.cmd.SetComputeFloatParam(_computeShader, "_DeltaTime", Time.deltaTime);
+                    builder.SetRenderFunc((ComputePassData passData, ComputeGraphContext ctx) =>
+                    {
+                        // ヒストグラムバッファの初期化
+                        ctx.cmd.SetComputeBufferParam(_computeShader, _kernelClear, "_HistogramBuffer", passData.HistogramBuffer);
+                        ctx.cmd.DispatchCompute(_computeShader, _kernelClear, 1, 1, 1);
 
-                    ctx.cmd.DispatchCompute(_computeShader, _kernelCompute, 1, 1, 1);
-                });
+                        // ヒストグラムの生成
+                        ctx.cmd.SetComputeTextureParam(_computeShader, _kernelGenerate, "_SourceTex", passData.SourceTex);
+                        ctx.cmd.SetComputeBufferParam(_computeShader, _kernelGenerate, "_HistogramBuffer", passData.HistogramBuffer);
+                        
+                        int threadGroupsX = Mathf.CeilToInt((float)width / 16.0f);
+                        int threadGroupsY = Mathf.CeilToInt((float)height / 16.0f);
+                        ctx.cmd.DispatchCompute(_computeShader, _kernelGenerate, threadGroupsX, threadGroupsY, 1);
+
+                        // 露出値の算出と目の順応適用
+                        ctx.cmd.SetComputeBufferParam(_computeShader, _kernelCompute, "_HistogramBuffer", passData.HistogramBuffer);
+                        ctx.cmd.SetComputeBufferParam(_computeShader, _kernelCompute, "_ExposureResultBuffer", passData.ExposureResultBuffer);
+                        
+                        ctx.cmd.SetComputeIntParam(_computeShader, "_Mode", (int)volume.mode.value);
+                        ctx.cmd.SetComputeIntParam(_computeShader, "_AdaptationMode", (int)volume.eyeAdaptation.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_FixedExposure", volume.exposureCompensation.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_MinLogLuminance", volume.minLuminance.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_MaxLogLuminance", volume.maxLuminance.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_LowPercentile", volume.filtering.value.x / 100.0f);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_HighPercentile", volume.filtering.value.y / 100.0f);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_ExposureCompensation", volume.exposureCompensation.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_AdaptationSpeedUp", volume.speedUp.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_AdaptationSpeedDown", volume.speedDown.value);
+                        ctx.cmd.SetComputeFloatParam(_computeShader, "_DeltaTime", Time.deltaTime);
+
+                        ctx.cmd.DispatchCompute(_computeShader, _kernelCompute, 1, 1, 1);
+                    });
+                }
             }
 
-            // 2. Raster Pass: 露出適用のBlit
+            // Raster Pass: 露出適用のBlit
             using (var builder = renderGraph.AddRasterRenderPass<PassData>(PassName, out var data))
             {
                 data.Material = _material;
@@ -137,8 +148,17 @@ namespace Shinzui.Infrastructure.Rendering.Exposure
                 builder.SetRenderFunc((PassData passData, RasterGraphContext ctx) =>
                 {
                     ctx.cmd.SetGlobalBuffer("_HDRPExposureBufferGlobal", passData.ExposureResultBuffer);
-                    ctx.cmd.SetGlobalInt("_Mode", (int)volume.mode.value);
-                    ctx.cmd.SetGlobalFloat("_FixedExposureMultiplier", volume.exposureCompensation.value);
+
+                    if (isPortalCamera)
+                    {
+                        ctx.cmd.SetGlobalInt("_Mode", (int)ExposureMode.Fixed);
+                        ctx.cmd.SetGlobalFloat("_FixedExposureMultiplier", volume.portalExposureCompensation.value);
+                    }
+                    else
+                    {
+                        ctx.cmd.SetGlobalInt("_Mode", (int)volume.mode.value);
+                        ctx.cmd.SetGlobalFloat("_FixedExposureMultiplier", volume.exposureCompensation.value);
+                    }
                     
                     Blitter.BlitTexture(ctx.cmd, passData.Src, new Vector4(1, 1, 0, 0), passData.Material, 0);
                 });

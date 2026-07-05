@@ -30,6 +30,7 @@ namespace Shinzui.DI
         [SerializeField] private PlayerView playerView;
         [SerializeField] private InventoryView inventoryView;
         [SerializeField] private FlashlightView flashlightView;
+        [SerializeField] private StrobeGaugeView strobeGaugeView;
         [SerializeField] private PlayerInteractionView interactionView;
         [SerializeField] private InteractionMessageView interactionMessageView;
 
@@ -72,7 +73,7 @@ namespace Shinzui.DI
             }
 
             // PresenterをVContainerのEntryPointとして登録
-            builder.RegisterEntryPoint<PlayerMovePresenter>();
+            builder.RegisterEntryPoint<PlayerMovePresenter>().AsSelf().As<IPlayerTracker>().As<ITickable>().As<IInitializable>();
             builder.RegisterEntryPoint<PlayerThrowPresenter>();
             builder.RegisterEntryPoint<TunnelLoopPresenter>();
 
@@ -127,6 +128,22 @@ namespace Shinzui.DI
             else
             {
                 Debug.LogWarning("FlashlightView instance was not assigned and not found in the scene hierarchy.");
+            }
+
+            // View (ストロボゲージUI)
+            var gaugeViewInstance = strobeGaugeView;
+            if (gaugeViewInstance == null)
+            {
+                gaugeViewInstance = FindFirstObjectByType<StrobeGaugeView>();
+            }
+
+            if (gaugeViewInstance != null)
+            {
+                builder.RegisterComponent(gaugeViewInstance);
+            }
+            else
+            {
+                Debug.LogWarning("StrobeGaugeView instance was not assigned and not found in the scene hierarchy.");
             }
 
             // Presentation (EntryPoint)

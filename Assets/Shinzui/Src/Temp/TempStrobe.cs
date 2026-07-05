@@ -33,7 +33,8 @@ namespace Shinzui.Temp
         private void StartStrobe()
         {
             // ここで一気に、懐中電灯の光を強くして、徐々に弱くするようにする
-            
+            // lerpは仮実装
+            currentIntensity = Mathf.Lerp(minStrobeIntensity, maxStrobeIntensity, intensityChangeSpeed * Time.deltaTime);
         }
     }
 }

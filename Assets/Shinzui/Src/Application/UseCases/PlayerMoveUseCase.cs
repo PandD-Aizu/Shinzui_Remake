@@ -83,8 +83,6 @@ namespace Shinzui.Application.UseCases
                 currentTunnelEnd = hit.collider.transform.parent.Find("TunnelEnd").gameObject;
                 if(currentTunnelEnd == null || currentTunnelStart == null) Debug.Log("currentTunnel is null");
             }
-            
-            Debug.DrawRay(ray.origin, ray.direction * rayDistance, Color.red);
         }
     }
 }
