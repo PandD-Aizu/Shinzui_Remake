@@ -46,6 +46,8 @@ namespace Shinzui.Infrastructure.Rendering.Exposure
         public EyeAdaptationModeParameter eyeAdaptation = new EyeAdaptationModeParameter(EyeAdaptationMode.Progressive);
         public MinFloatParameter speedUp = new MinFloatParameter(5.0f, 0.0f);
         public MinFloatParameter speedDown = new MinFloatParameter(5.0f, 0.0f);
+        
+        public FloatParameter portalExposureCompensation = new FloatParameter(1.0f);
 
         public bool IsActive() => active;
     }

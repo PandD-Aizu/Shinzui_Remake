@@ -1,57 +1,38 @@
-using R3;
 using Shinzui.Domain.Entities;
 using Shinzui.Domain.ValueObjects.Enemy;
-using UnityEngine;
-using UnityEngine.AI;
 
 namespace Shinzui.Application.UseCases
 {
-    public class EnemyMoveUseCase : MonoBehaviour
+    /// <summary>
+    /// 敵の移動状態やパラメータを統画するユースケース（ピュアC#）
+    /// </summary>
+    public class EnemyMoveUseCase
     {
-        private readonly EnemyEntity _enemyEntity = new EnemyEntity(); // 敵のエンティティ
+        private readonly EnemyEntity _enemyEntity = new();
         public EnemyEntity EnemyEntity => _enemyEntity;
-        
-        public bool IsWandering { get; private set; }
-        public bool IsChasing { get; private set; }
+
+        public bool IsWandering => _enemyEntity.MovementState.Value == EnemyMovementState.Wandering;
+        public bool IsChasing => _enemyEntity.MovementState.Value == EnemyMovementState.IsChasing;
 
         /// <summary>
         /// 徘徊情報を取得する
         /// </summary>
-        /// <returns>徘徊スパン、徘徊範囲</returns>
-        public (float, float, float) GetWanderingInfo()
+        /// <returns>徘徊目的地を更新するインターバル、徘徊範囲、索敵範囲</returns>
+        public (float wanderInterval, float wanderRadius, float chaseDistance) GetWanderingInfo()
         {
-            return (EnemyEntity._wanderInterval, EnemyEntity._wanderRadius, EnemyEntity._chaseDistance);
+            return (_enemyEntity._wanderInterval, _enemyEntity._wanderRadius, _enemyEntity._chaseDistance);
         }
 
         /// <summary>
-        /// 購読の設定
-        /// </summary>
-        void Start()
-        {
-            _enemyEntity.MovementState
-                .AsObservable()
-                .Subscribe(state =>
-                {
-                    IsWandering = state == EnemyMovementState.Wandering;
-                    IsChasing = state == EnemyMovementState.IsChasing;
-                }
-            );
-        }
-
-        /// <summary>
-        /// 敵のMovementStateを変更する
-        /// 0 -> Idle
+        /// 敵の移動状態を変更する
         /// 1 -> Wandering
         /// 2 -> IsChasing
+        /// その他 -> Idle
         /// </summary>
-        /// <param name="stateNum"></param>
         public void UpdateEnemyState(int stateNum)
         {
             switch (stateNum)
             {
-                case 0:
-                    _enemyEntity.UpdateState(EnemyMovementState.Idle);
-                    break;
                 case 1:
                     _enemyEntity.UpdateState(EnemyMovementState.Wandering);
                     break;
@@ -59,25 +40,9 @@ namespace Shinzui.Application.UseCases
                     _enemyEntity.UpdateState(EnemyMovementState.IsChasing);
                     break;
                 default:
+                    _enemyEntity.UpdateState(EnemyMovementState.Idle);
                     break;
             }
-        }
-        
-        /// <summary>
-        /// 敵の移動先を設定する
-        /// </summary>
-        /// <param name="agent">NavMeshAgentを持つ敵</param>
-        /// <param name="target">移動先のターゲットの座標</param>
-        public void SetDestination(NavMeshAgent agent, Vector3 target)
-        {
-            agent.SetDestination(target);
-        }
-
-        public void Warp(Vector3 warpTarget)
-        {
-            Vector3 pos = transform.parent.transform.position;
-            pos.z = warpTarget.z;
-            transform.parent.transform.position = pos;
         }
     }
 }

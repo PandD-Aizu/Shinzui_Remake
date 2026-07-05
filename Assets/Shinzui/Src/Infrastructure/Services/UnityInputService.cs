@@ -70,6 +70,18 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        public bool AttackHeld
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                bool mouseLeft = Mouse.current != null && Mouse.current.leftButton.isPressed;
+                bool gamepadTrigger = Gamepad.current != null && Gamepad.current.rightTrigger.isPressed;
+                bool actionPressed = _attackAction != null && _attackAction.IsPressed();
+                return mouseLeft || gamepadTrigger || actionPressed;
+            }
+        }
+
         public UnityInputService()
         {
             // 動的にInputActionAssetを作成
