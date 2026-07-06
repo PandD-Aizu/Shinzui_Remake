@@ -40,6 +40,16 @@ namespace Shinzui.View
         public Collider PlayerCollider => playerCollider;
 
         /// <summary>
+        /// 演出用のスタミナFill画像を取得します。
+        /// </summary>
+        public Image StaminaFillImage => staminaFillImage;
+
+        /// <summary>
+        /// メインカメラを取得します。
+        /// </summary>
+        public Camera MainCamera => mainCamera;
+
+        /// <summary>
         /// プレイヤーの現在の移動速度を取得します。
         /// </summary>
         public Vector3 CurrentVelocity => characterController != null ? characterController.velocity : Vector3.zero;
