@@ -389,6 +389,46 @@ MonoBehaviour:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
+--- !u!114 &-3267896414627624232
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cf8be55ce8e43899b6c4935e66ff02c, type: 3}
+  m_Name: ExposureVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Exposure.ExposureVolume
+  active: 1
+  mode:
+    m_OverrideState: 1
+    m_Value: 2
+  filtering:
+    m_OverrideState: 1
+    m_Value: {x: 90, y: 99}
+  minLuminance:
+    m_OverrideState: 1
+    m_Value: -2
+  maxLuminance:
+    m_OverrideState: 1
+    m_Value: -1.6
+  exposureCompensation:
+    m_OverrideState: 1
+    m_Value: 1
+  eyeAdaptation:
+    m_OverrideState: 1
+    m_Value: 1
+  speedUp:
+    m_OverrideState: 1
+    m_Value: 5
+  speedDown:
+    m_OverrideState: 1
+    m_Value: 5
+  portalExposureCompensation:
+    m_OverrideState: 1
+    m_Value: 1
 --- !u!114 &-3257076713848821620
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -607,6 +647,7 @@ MonoBehaviour:
   - {fileID: 2244419491005358}
   - {fileID: 1692021023060196932}
   - {fileID: 3606543353807393277}
+  - {fileID: -3267896414627624232}
 --- !u!114 &2244419491005358
 MonoBehaviour:
   m_ObjectHideFlags: 3

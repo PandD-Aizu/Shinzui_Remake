@@ -11,6 +11,8 @@
         "GUID:abfa99725cacf794899b52f6d15e9931",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Runtime"
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

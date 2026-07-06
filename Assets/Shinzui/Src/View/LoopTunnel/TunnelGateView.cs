@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -371,7 +372,11 @@ namespace Shinzui.View
                 targetData.antialiasing = sourceData.antialiasing;
                 targetData.antialiasingQuality = sourceData.antialiasingQuality;
                 targetData.volumeLayerMask = sourceData.volumeLayerMask;
-                targetData.volumeTrigger = sourceData.volumeTrigger != null ? sourceData.volumeTrigger : source.transform;
+                // Volumeのブレンド判定基準を「プレイヤーの現在地」ではなく
+                // 「ポータルの先（targetGate側）」の位置にする。
+                // これにより、ExposureVolumeのportalExposureCompensationなど
+                // 場所ごとに異なるVolume設定が、実際に映っている先の空間基準で評価される。
+                targetData.volumeTrigger = targetGate != null ? targetGate.transform : source.transform;
                 targetData.SetRenderer(0);
             }
         }

@@ -1,4 +1,5 @@
 using System;
+using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases;
 using R3;
 using Shinzui.View;
@@ -7,12 +8,26 @@ using VContainer.Unity;
 
 namespace Shinzui.Presentation
 {
-    public class PlayerMovePresenter : IInitializable, ITickable, IDisposable
+    public class PlayerMovePresenter : IInitializable, ITickable, IDisposable, IPlayerTracker
     {
         private readonly PlayerMoveUseCase _useCase;
         private readonly PlayerView _view;
 
         private IDisposable _disposable;
+
+        public Vector3 PlayerPosition => _view != null ? _view.transform.position : Vector3.zero;
+
+        public (Vector3 start, Vector3 end)? CurrentTunnelBounds
+        {
+            get
+            {
+                if (_useCase != null && _useCase.currentTunnelStart != null && _useCase.currentTunnelEnd != null)
+                {
+                    return (_useCase.currentTunnelStart.transform.position, _useCase.currentTunnelEnd.transform.position);
+                }
+                return null;
+            }
+        }
 
         public PlayerMovePresenter(
             PlayerMoveUseCase useCase,
@@ -65,6 +80,9 @@ namespace Shinzui.Presentation
 
             // Y回転をカメラに合わせる
             _view.AlignYRotationWithCamera();
+            
+            // 現在のトンネルの判定
+            _useCase.CheckCurrentTunnel(_view.transform.position);
         }
 
         public void Dispose()

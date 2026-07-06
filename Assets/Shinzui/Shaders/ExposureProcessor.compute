@@ -1,0 +1,232 @@
+#pragma kernel KClearHistogram
+#pragma kernel KGenerateHistogram
+#pragma kernel KComputeExposure
+
+// 入力テクスチャ（画面のカラー）
+Texture2D<float4> _SourceTex;
+
+// ヒストグラムバッファ (256ビン)
+RWStructuredBuffer<uint> _HistogramBuffer;
+
+// 露出結果バッファ [0] = 現在フレームの露出, [1] = 履歴
+RWStructuredBuffer<float> _ExposureResultBuffer;
+
+// 制御パラメータ
+uint _Mode;             // 0: Fixed, 1: Automatic, 2: AutomaticHistogram
+uint _AdaptationMode;   // 0: Instant, 1: Progressive
+float _FixedExposure;
+float _MinLogLuminance; // EV100の最小値
+float _MaxLogLuminance; // EV100の最大値
+float _LowPercentile;   // 0.0 ~ 1.0
+float _HighPercentile;  // 0.0 ~ 1.0
+float _ExposureCompensation;
+float _AdaptationSpeedUp;
+float _AdaptationSpeedDown;
+float _DeltaTime;
+
+#define GROUP_SIZE_X 16
+#define GROUP_SIZE_Y 16
+#define THREAD_COUNT 256
+
+// --- 輝度・EV変換のヘルパー ---
+float GetLuminance(float3 color)
+{
+    // sRGB輝度係数
+    return dot(color, float3(0.2126f, 0.7152f, 0.0722f));
+}
+
+float GetEV100FromLuminance(float luminance)
+{
+    // EV100 = log2(L * 100 / 12.5) = log2(L) + 3.0
+    return log2(max(luminance, 0.0001f)) + 3.0f;
+}
+
+float GetLuminanceFromEV100(float ev100)
+{
+    return pow(2.0f, ev100 - 3.0f);
+}
+
+// EV100値を[0, 255]のヒストグラムビンインデックスに変換
+uint GetHistogramBin(float ev)
+{
+    float t = saturate((ev - _MinLogLuminance) / (_MaxLogLuminance - _MinLogLuminance));
+    return (uint)(t * 254.0f + 1.0f); // 1 ~ 255 にマッピング (0は超暗所)
+}
+
+// ビンインデックスから代表EV100値に逆変換
+float GetEV100FromBin(uint bin)
+{
+    if (bin == 0) return _MinLogLuminance - 1.0f;
+    float t = (float)(bin - 1) / 254.0f;
+    return lerp(_MinLogLuminance, _MaxLogLuminance, t);
+}
+
+// --------------------------------------------------
+// 1. ヒストグラム初期化カーネル
+// --------------------------------------------------
+[numthreads(256, 1, 1)]
+void KClearHistogram(uint3 globalID : SV_DispatchThreadID)
+{
+    if (globalID.x < 256)
+    {
+        _HistogramBuffer[globalID.x] = 0;
+    }
+}
+
+// --------------------------------------------------
+// 2. ヒストグラム生成カーネル
+// --------------------------------------------------
+groupshared uint localHistogram[256];
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, 1)]
+void KGenerateHistogram(
+    uint3 itemID : SV_GroupThreadID,
+    uint3 globalID : SV_DispatchThreadID)
+{
+    uint threadIndex = itemID.y * GROUP_SIZE_X + itemID.x;
+    
+    // ローカルヒストグラムの初期化
+    localHistogram[threadIndex] = 0;
+    GroupMemoryBarrierWithGroupSync();
+    
+    uint width, height;
+    _SourceTex.GetDimensions(width, height);
+    
+    if (globalID.x < width && globalID.y < height)
+    {
+        float3 color = _SourceTex[globalID.xy].rgb;
+        float luminance = GetLuminance(color);
+        float ev = GetEV100FromLuminance(luminance);
+        uint bin = GetHistogramBin(ev);
+        
+        InterlockedAdd(localHistogram[bin], 1);
+    }
+    
+    GroupMemoryBarrierWithGroupSync();
+    
+    // グローバルヒストグラムへの加算
+    InterlockedAdd(_HistogramBuffer[threadIndex], localHistogram[threadIndex]);
+}
+
+// --------------------------------------------------
+// 3. 露出計算カーネル
+// --------------------------------------------------
+groupshared float sharedTemp[256];
+
+[numthreads(256, 1, 1)]
+void KComputeExposure(uint3 itemID : SV_GroupThreadID)
+{
+    uint threadIndex = itemID.x;
+    
+    // モードがFixed（固定）の場合、スレッド0が結果を書いて終わる
+    if (_Mode == 0) // Fixed
+    {
+        if (threadIndex == 0)
+        {
+            float targetExposure = _FixedExposure;
+            if (_AdaptationMode == 1 && _DeltaTime > 0.0f) // Progressive
+            {
+                float pastExposure = _ExposureResultBuffer[1];
+                float speed = (targetExposure > pastExposure) ? _AdaptationSpeedDown : _AdaptationSpeedUp;
+                float finalExposure = pastExposure + (targetExposure - pastExposure) * (1.0f - exp(-_DeltaTime * speed));
+                _ExposureResultBuffer[0] = finalExposure;
+                _ExposureResultBuffer[1] = finalExposure;
+            }
+            else
+            {
+                _ExposureResultBuffer[0] = targetExposure;
+                _ExposureResultBuffer[1] = targetExposure;
+            }
+        }
+        return;
+    }
+    
+    // --- 自動露出の計算 ---
+    uint count = _HistogramBuffer[threadIndex];
+    sharedTemp[threadIndex] = (float)count;
+    GroupMemoryBarrierWithGroupSync();
+    
+    if (threadIndex == 0)
+    {
+        float totalPixels = 0.0f;
+        [unroll]
+        for (uint i = 0; i < 256; i++)
+        {
+            totalPixels += sharedTemp[i];
+        }
+        
+        float avgEV = 0.0f;
+        
+        if (totalPixels > 0.0f)
+        {
+            float minPercentile = 0.0f;
+            float maxPercentile = 1.0f;
+            
+            if (_Mode == 2) // AutomaticHistogram
+            {
+                minPercentile = _LowPercentile;
+                maxPercentile = _HighPercentile;
+            }
+            
+            float lowBound = totalPixels * minPercentile;
+            float highBound = totalPixels * maxPercentile;
+            
+            float sumEV = 0.0f;
+            float sumWeight = 0.0f;
+            float accumulatedPixels = 0.0f;
+            
+            for (uint j = 0; j < 256; j++)
+            {
+                float binCount = sharedTemp[j];
+                accumulatedPixels += binCount;
+                
+                if (accumulatedPixels >= lowBound && (accumulatedPixels - binCount) <= highBound)
+                {
+                    float weight = binCount;
+                    
+                    if (accumulatedPixels - binCount < lowBound)
+                    {
+                        weight -= (lowBound - (accumulatedPixels - binCount));
+                    }
+                    if (accumulatedPixels > highBound)
+                    {
+                        weight -= (accumulatedPixels - highBound);
+                    }
+                    
+                    weight = max(weight, 0.0f);
+                    float binEV = GetEV100FromBin(j);
+                    sumEV += binEV * weight;
+                    sumWeight += weight;
+                }
+            }
+            
+            avgEV = (sumWeight > 0.0f) ? (sumEV / sumWeight) : _MinLogLuminance;
+        }
+        else
+        {
+            avgEV = 0.0f;
+        }
+        
+        float targetEV = avgEV - _ExposureCompensation;
+        targetEV = clamp(targetEV, _MinLogLuminance, _MaxLogLuminance);
+        
+        float targetExposure = 1.0f / max(pow(2.0f, targetEV), 0.0001f);
+        float pastExposure = _ExposureResultBuffer[1];
+        
+        if (isnan(pastExposure) || pastExposure <= 0.0f)
+        {
+            pastExposure = targetExposure;
+        }
+        
+        float finalExposure = targetExposure;
+        
+        if (_AdaptationMode == 1 && _DeltaTime > 0.0f)
+        {
+            float speed = (targetExposure > pastExposure) ? _AdaptationSpeedDown : _AdaptationSpeedUp;
+            finalExposure = pastExposure + (targetExposure - pastExposure) * (1.0f - exp(-_DeltaTime * speed));
+        }
+        
+        _ExposureResultBuffer[0] = finalExposure;
+        _ExposureResultBuffer[1] = finalExposure;
+    }
+}

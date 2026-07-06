@@ -18,6 +18,10 @@ namespace Shinzui.Application.UseCases.Inventory
         public ReadOnlyReactiveProperty<InventorySlotDto> GetSlotDto(int index) => _slotDtos[index];
         public int Capacity => _inventory.Capacity;
 
+        // アイテム獲得通知ストリーム
+        private readonly Subject<ItemGetDto> _onItemGot = new();
+        public Observable<ItemGetDto> OnItemGot => _onItemGot;
+
         // インベントリ画面の開閉状態の保持
         private readonly ReactiveProperty<bool> _isOpen = new(false);
         public ReadOnlyReactiveProperty<bool> IsOpen => _isOpen;
@@ -150,6 +154,7 @@ namespace Shinzui.Application.UseCases.Inventory
             if (success)
             {
                 await SaveAsync();
+                _onItemGot.OnNext(new ItemGetDto(item.Name, item.IconAssetAddress));
             }
             return success;
         }

@@ -28,8 +28,34 @@ namespace Shinzui.View.Flashlight
         [Range(0.0f, 1.0f)]
         [SerializeField] private float radius = 0.2f;           // 光源付近のノイズ減衰半径
 
-        private Quaternion _currentFollowRotation;              // 手振れを含まない純粋な追従回転キャッシュ
-        private VolumetricAdditionalLight _volumetricLight;      // ボリュメトリックライトコンポーネント参照
+        [Header("Strobe Visual Settings")]
+        [SerializeField] private float maxStrobeBoost = 15.0f;             // ストロボ最大追加輝度値
+        [SerializeField] private float volumetricScatteringBoost = 8.0f;   // ストロボ最大追加ボリュメトリック散乱度
+
+        private Quaternion _currentFollowRotation;          // 手振れを含まない純粋な追従回転キャッシュ
+        private VolumetricAdditionalLight _volumetricLight; // ボリュメトリックライトコンポーネント参照
+        private float _baseIntensity = -1f;                 // ライトの基本輝度
+        private float _baseVolumetricScattering = -1f;      // ボリュメトリックライトの基本散乱強度
+
+        private void EnsureBaseValuesCached()
+        {
+            if (_baseIntensity < 0f && flashlightLight != null)
+            {
+                _baseIntensity = flashlightLight.intensity;
+            }
+
+            if (_baseVolumetricScattering < 0f)
+            {
+                if (_volumetricLight != null)
+                {
+                    _baseVolumetricScattering = _volumetricLight.Scattering;
+                }
+                else
+                {
+                    _baseVolumetricScattering = scattering;
+                }
+            }
+        }
 
         private void Start()
         {
@@ -38,22 +64,26 @@ namespace Shinzui.View.Flashlight
                 targetCamera = Camera.main;
             }
 
-            // バグ回避：GPU Resident Drawer (Occlusion Culling)の平面計算クラッシュを防ぐため、影をオフにします。
+            // ボリュメトリックライトコンポーネントを自動セットアップ
+            if (flashlightLight != null && enableVolumetric)
+            {
+                _volumetricLight = flashlightLight.GetComponent<VolumetricAdditionalLight>();
+                if (_volumetricLight == null)
+                {
+                    _volumetricLight = flashlightLight.gameObject.AddComponent<VolumetricAdditionalLight>();
+                }
+            }
+
+            EnsureBaseValuesCached();
+            
             if (flashlightLight != null)
             {
                 flashlightLight.shadows = LightShadows.None;
                 _currentFollowRotation = flashlightLight.transform.rotation;
 
-                // ボリュメトリックライトコンポーネントを自動セットアップ
-                if (enableVolumetric)
+                // ボリュメトリックライトコンポーネントの設定適用
+                if (enableVolumetric && _volumetricLight != null)
                 {
-                    _volumetricLight = flashlightLight.GetComponent<VolumetricAdditionalLight>();
-                    if (_volumetricLight == null)
-                    {
-                        _volumetricLight = flashlightLight.gameObject.AddComponent<VolumetricAdditionalLight>();
-                    }
-
-                    // 設定パラメータの適用
                     _volumetricLight.Anisotropy = anisotropy;
                     _volumetricLight.Scattering = scattering;
                     _volumetricLight.Radius = radius;
@@ -95,7 +125,7 @@ namespace Shinzui.View.Flashlight
                 if (enableSway)
                 {
                     float time = Time.time * swaySpeed;
-                    // ノイズでX軸とY軸の揺れ角を計算 (-swayAmount 〜 +swayAmount)
+                    // ノイズでX軸とY軸の揺れ角を計算
                     float shakeX = (Mathf.PerlinNoise(time, 0.0f) - 0.5f) * swayAmount;
                     float shakeY = (Mathf.PerlinNoise(0.0f, time) - 0.5f) * swayAmount;
                     
@@ -131,6 +161,25 @@ namespace Shinzui.View.Flashlight
                 {
                     _volumetricLight.enabled = active;
                 }
+            }
+        }
+
+        /// <summary>
+        /// ストロボの発光輝度を反映する
+        /// </summary>
+        /// <param name="strobeFactor">0.0 〜 1.0 の発光係数</param>
+        public void SetStrobeIntensity(float strobeFactor)
+        {
+            EnsureBaseValuesCached();
+
+            if (flashlightLight != null)
+            {
+                flashlightLight.intensity = _baseIntensity + (maxStrobeBoost * strobeFactor);
+            }
+
+            if (_volumetricLight != null)
+            {
+                _volumetricLight.Scattering = _baseVolumetricScattering + (volumetricScatteringBoost * strobeFactor);
             }
         }
     }

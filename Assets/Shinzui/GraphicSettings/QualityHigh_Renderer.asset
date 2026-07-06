@@ -15,6 +15,23 @@ MonoBehaviour:
   m_Active: 1
   downsampleDepthShader: {fileID: 4800000, guid: cffeaeec0396a2c4dad475266cc8dfeb, type: 3}
   volumetricFogShader: {fileID: 4800000, guid: 08f816187f9af0244a95556ee0cab83f, type: 3}
+--- !u!114 &-3261005941647117757
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4e8136761c945fa9d23731aa0600ede, type: 3}
+  m_Name: ExposureRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Exposure.ExposureRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 682befa5b27f45a39ca5ba5fd80e82b2, type: 3}
+    computeShader: {fileID: 7200000, guid: 6b054d4d2f7b4e08b2deb59148ce89c5, type: 3}
+    injectionPoint: 600
 --- !u!114 &-2416843845793650869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -102,7 +119,8 @@ MonoBehaviour:
   - {fileID: 6265200972613448145}
   - {fileID: 6817841505760810079}
   - {fileID: -2416843845793650869}
-  m_RendererFeatureMap: 42ebfea99763edaed1710e131777f2565f94c91dbad69d5e4b67e1c553a575de
+  - {fileID: -3261005941647117757}
+  m_RendererFeatureMap: 42ebfea99763edaed1710e131777f2565f94c91dbad69d5e4b67e1c553a575de4372afa55f94bed2
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}

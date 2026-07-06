@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using R3;
 using Shinzui.Application.Interfaces;
@@ -17,6 +18,10 @@ namespace Shinzui.Application.UseCases
         public Vector2 MoveInput => _inputService.MoveInput;
         public bool SprintPressed => _inputService.SprintPressed;
         public bool CrouchPressed => _inputService.CrouchPressed;
+        
+        private Ray ray;                                          //現在いるトンネルを取得するために足元に飛ばすray
+        [HideInInspector] public GameObject currentTunnelStart;   //現在いるトンネルのスタート地点
+        [HideInInspector] public GameObject currentTunnelEnd;     //現在いるトンネルのゴール地点
 
         /// <summary>
         /// コンストラクタ
@@ -60,6 +65,24 @@ namespace Shinzui.Application.UseCases
 
             // コライダーの高さ更新
             _playerEntityEntity.UpdateHeight(deltaTime);
+        }
+
+        /// <summary>
+        /// プレイヤーの下方向にrayを飛ばし、現在いるトンネルオブジェクトを取得する
+        /// </summary>
+        /// <param name="position">プレイヤーの座標</param>
+        public void CheckCurrentTunnel(Vector3 position)
+        { 
+            float rayDistance = 5.0f;
+            ray = new Ray(position, Vector3.down);
+            RaycastHit hit;
+            LayerMask stageMask = LayerMask.GetMask("Stage");
+            if (Physics.Raycast(ray, out hit, rayDistance, stageMask))
+            {
+                currentTunnelStart = hit.collider.transform.parent.Find("TunnelStart").gameObject;
+                currentTunnelEnd = hit.collider.transform.parent.Find("TunnelEnd").gameObject;
+                if(currentTunnelEnd == null || currentTunnelStart == null) Debug.Log("currentTunnel is null");
+            }
         }
     }
 }
