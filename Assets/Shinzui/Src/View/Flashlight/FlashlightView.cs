@@ -32,10 +32,34 @@ namespace Shinzui.View.Flashlight
         [SerializeField] private float maxStrobeBoost = 15.0f;             // ストロボ最大追加輝度値
         [SerializeField] private float volumetricScatteringBoost = 8.0f;   // ストロボ最大追加ボリュメトリック散乱度
 
+        [Header("Strobe Hit Settings")]
+        [SerializeField] private float strobeRange = 12.0f;                // ストロボが届く最大距離
+        [SerializeField] private float strobeRadius = 1.2f;                // ストロボ判定の太さ
+        [SerializeField] private float maxSlowDuration = 4.0f;             // 最大減速時間
+        [SerializeField] private float slowSpeedMultiplier = 0.35f;        // 減速中の移動速度倍率
+        [SerializeField] private float stopDistance = 3.0f;                // 最大チャージ時に停止できる距離
+        [SerializeField] private float stopDuration = 2.0f;                // 停止時間
+        [SerializeField] private float fullChargeStopThreshold = 0.98f;    // 停止扱いにするチャージ率
+        [SerializeField] private float centerViewportRadius = 0.18f;       // 画面中央判定の半径
+        [SerializeField] private LayerMask strobeHitMask = ~0;          // ストロボ命中判定対象
+
         private Quaternion _currentFollowRotation;          // 手振れを含まない純粋な追従回転キャッシュ
         private VolumetricAdditionalLight _volumetricLight; // ボリュメトリックライトコンポーネント参照
         private float _baseIntensity = -1f;                 // ライトの基本輝度
         private float _baseVolumetricScattering = -1f;      // ボリュメトリックライトの基本散乱強度
+
+        public Camera TargetCamera => targetCamera != null ? targetCamera : Camera.main;
+        public Vector3 StrobeOrigin => TargetCamera != null ? TargetCamera.transform.position : transform.position;
+        public Vector3 StrobeDirection => TargetCamera != null ? TargetCamera.transform.forward : transform.forward;
+        public float StrobeRange => strobeRange;
+        public float StrobeRadius => strobeRadius;
+        public float MaxSlowDuration => maxSlowDuration;
+        public float SlowSpeedMultiplier => slowSpeedMultiplier;
+        public float StopDistance => stopDistance;
+        public float StopDuration => stopDuration;
+        public float FullChargeStopThreshold => fullChargeStopThreshold;
+        public float CenterViewportRadius => centerViewportRadius;
+        public LayerMask StrobeHitMask => strobeHitMask;
 
         private void EnsureBaseValuesCached()
         {

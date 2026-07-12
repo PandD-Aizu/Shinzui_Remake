@@ -1269,6 +1269,63 @@ RectTransform:
   m_AnchoredPosition: {x: -865, y: -450}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &396944458
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 396944460}
+  - component: {fileID: 396944459}
+  m_Layer: 5
+  m_Name: GameOverPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &396944459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396944458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f60e3e4ca68e93a4aa40f4d4c6c850b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.PlayerDeathView
+  jumpscareDelay: 0.8
+  pauseGameOnGameOver: 1
+  gameOverCanvasGroup: {fileID: 0}
+  onJumpscareRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onGameOverShown:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!224 &396944460
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396944458}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 761664889}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &467162262
 GameObject:
   m_ObjectHideFlags: 0
@@ -2557,6 +2614,7 @@ RectTransform:
   - {fileID: 1958970260}
   - {fileID: 196527158}
   - {fileID: 929750189}
+  - {fileID: 396944460}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3957,6 +4015,17 @@ MonoBehaviour:
   radius: 0.2
   maxStrobeBoost: 15
   volumetricScatteringBoost: 8
+  strobeRange: 12
+  strobeRadius: 1.2
+  maxSlowDuration: 4
+  slowSpeedMultiplier: 0.35
+  stopDistance: 3
+  stopDuration: 2
+  fullChargeStopThreshold: 0.98
+  centerViewportRadius: 0.18
+  strobeHitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &1230834971
 GameObject:
   m_ObjectHideFlags: 0
@@ -4386,6 +4455,7 @@ MonoBehaviour:
   interactionView: {fileID: 119550618}
   interactionMessageView: {fileID: 168151109}
   specialItemHudView: {fileID: 929750188}
+  playerDeathView: {fileID: 396944459}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0
@@ -5349,9 +5419,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2031599277}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f0911dd974e35042a140830d8fdf363, type: 3}
+  m_Script: {fileID: 11500000, guid: 60f92327828c4d04a838ddcdbb7c7331, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PresentationLayer::EnemyPresenter
+  m_EditorClassIdentifier: ViewLayer::EnemyView
+  playerDeathDistance: 1.2
+  deathAttemptCooldown: 1
+  agentOverride: {fileID: 0}
 --- !u!1 &2038647889
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,152 +1,222 @@
 using System;
-using UnityEngine;
-using UnityEngine.AI;
+using System.Collections.Generic;
 using Shinzui.Application.Interfaces;
+using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.UseCases;
-using VContainer;
-using Random = UnityEngine.Random;
+using Shinzui.Application.UseCases.Enemy;
+using Shinzui.View;
+using UnityEngine;
+using VContainer.Unity;
 
 namespace Shinzui.Presentation
 {
     /// <summary>
-    /// 敵の行動AIプレゼンター
-    /// プレイヤー情報へのアクセスは抽象化された IPlayerTracker を経由します
+    /// 敵全体をVContainerのEntryPointとして駆動するPresenter。
+    /// 1体ごとの行動制御は EnemyController に委譲する。
     /// </summary>
-    public class EnemyPresenter : MonoBehaviour
+    public class EnemyPresenter : IInitializable, ITickable, IDisposable
     {
-        private EnemyMoveUseCase _enemyMoveUseCase;
-        private NavMeshAgent _agent;
-        private IPlayerTracker _playerTracker;
+        private readonly IPlayerTracker _playerTracker;
+        private readonly PlayerDeathUseCase _playerDeathUseCase;
+        private readonly EnemyDirectorUseCase _enemyDirectorUseCase;
+        private readonly Func<EnemyMoveUseCase> _enemyMoveUseCaseFactory;
+        private readonly EnemyView[] _enemyViews;
+        private readonly List<EnemyController> _controllers = new();
+        private readonly Dictionary<EnemyView, EnemyController> _controllersByView = new();
+        private EnemyReport[] _enemyReports = Array.Empty<EnemyReport>();
 
-        private float _timer;                   // 時間計測用タイマー
-        private float _wanderInterval = -1.0f;  // 徘徊目的地を更新するインターバル
-        private float _wanderRadius = -1.0f;    // 徘徊範囲
-        private float _chaseDistance = -1.0f;   // 索敵範囲
-
-        [Inject]
-        public void Construct(IPlayerTracker playerTracker)
+        public EnemyPresenter(
+            IPlayerTracker playerTracker,
+            PlayerDeathUseCase playerDeathUseCase,
+            EnemyDirectorUseCase enemyDirectorUseCase,
+            Func<EnemyMoveUseCase> enemyMoveUseCaseFactory,
+            EnemyView[] enemyViews)
         {
             _playerTracker = playerTracker;
-        } 
-        
-        void Start()
-        {
-            _enemyMoveUseCase = new EnemyMoveUseCase();
-            
-            // 親オブジェクトにある NavMeshAgent を取得
-            if (transform.parent != null)
-            {
-                _agent = transform.parent.GetComponent<NavMeshAgent>();
-            }
-            else
-            {
-                _agent = GetComponent<NavMeshAgent>();
-            }
-
-            (_wanderInterval, _wanderRadius, _chaseDistance) = _enemyMoveUseCase.GetWanderingInfo();
-            _timer = _wanderInterval;
-            
-            if (_wanderInterval < 0) Debug.LogWarning("EnemyPresenter: Wander interval is negative");
-            if (_wanderRadius < 0) Debug.LogWarning("EnemyPresenter: WanderRadius is negative");
-            if (_chaseDistance < 0) Debug.LogWarning("EnemyPresenter: Chase distance is negative");
+            _playerDeathUseCase = playerDeathUseCase;
+            _enemyDirectorUseCase = enemyDirectorUseCase;
+            _enemyMoveUseCaseFactory = enemyMoveUseCaseFactory;
+            _enemyViews = enemyViews ?? Array.Empty<EnemyView>();
         }
 
-        void Update()
+        public void Initialize()
         {
-            if (_playerTracker == null) return;
+            _controllers.Clear();
+            _controllersByView.Clear();
 
-            Vector3 playerPos = _playerTracker.PlayerPosition;
-            var tunnelBounds = _playerTracker.CurrentTunnelBounds;
-
-            // トンネル境界情報が未取得の場合は動作しない
-            if (!tunnelBounds.HasValue) return;
-
-            Vector3 tunnelStartPos = tunnelBounds.Value.start;
-            Vector3 tunnelEndPos = tunnelBounds.Value.end;
-
-            Vector3 dummy = playerPos;
-            float centerZ = (tunnelStartPos.z + tunnelEndPos.z) / 2.0f;               // トンネルの中央
-            float tunnelDistance = Mathf.Abs(tunnelStartPos.z - tunnelEndPos.z);      // トンネルの長さ
-
-            if (playerPos.z > centerZ) dummy.z -= tunnelDistance;
-            else dummy.z += tunnelDistance;
-
-            float distanceToPlayer = Vector3.Distance(transform.position, playerPos);
-            float distanceToDummy = Vector3.Distance(transform.position, dummy);
-
-            // プレイヤーまたはループ対岸のダミー位置が索敵範囲内であれば追跡状態にする
-            if (distanceToPlayer < _chaseDistance || distanceToDummy < _chaseDistance)
+            foreach (EnemyView enemyView in _enemyViews)
             {
-                _enemyMoveUseCase.UpdateEnemyState(2); // IsChasing
-            }
-            else
-            {
-                _enemyMoveUseCase.UpdateEnemyState(1); // Wandering
-            }
-            
-            // 敵が徘徊状態なら、一定時間間隔で移動先を決めて移動する
-            if (_enemyMoveUseCase.IsWandering)
-            {
-                _timer += Time.deltaTime;
-                if (_timer > _wanderInterval)
+                if (enemyView == null || _controllersByView.ContainsKey(enemyView))
                 {
-                    Vector3 targetPosition = RandomTarget(transform.position, _wanderRadius);
-                    if (_agent != null)
-                    {
-                        _agent.SetDestination(targetPosition);
-                    }
-                    _timer = 0;
+                    continue;
                 }
+
+                var controller = new EnemyController(
+                    _controllers.Count,
+                    enemyView,
+                    _enemyMoveUseCaseFactory(),
+                    _playerDeathUseCase);
+                controller.Initialize();
+
+                _controllers.Add(controller);
+                _controllersByView.Add(enemyView, controller);
             }
 
-            // 敵が追跡状態ならプレイヤーまたはダミーのうち、より近いほうを追跡する
-            if (_enemyMoveUseCase.IsChasing)
+            if (_controllers.Count == 0)
             {
-                Vector3 target = distanceToPlayer < distanceToDummy ? playerPos : dummy;
-                if (_agent != null)
-                {
-                    _agent.SetDestination(target);
-                }
+                Debug.LogWarning("EnemyPresenter: EnemyView was not assigned and not found in the scene hierarchy.");
             }
-            
-            // ループトンネルの境界ワープ処理
-            if (transform.position.z > tunnelEndPos.z) Warp(tunnelStartPos);
-            if (transform.position.z < tunnelStartPos.z) Warp(tunnelEndPos);
+
+            _enemyReports = new EnemyReport[_controllers.Count];
         }
 
-        private void Warp(Vector3 warpTarget)
+        public void Tick()
         {
-            if (transform.parent != null)
+            float deltaTime = Time.deltaTime;
+            EnemyCommand[] commands = DecideCommands();
+
+            foreach (EnemyController controller in _controllers)
             {
-                Vector3 pos = transform.parent.position;
-                pos.z = warpTarget.z;
-                transform.parent.position = pos;
+                EnemyCommand command = controller.Id >= 0 && controller.Id < commands.Length
+                    ? commands[controller.Id]
+                    : EnemyCommand.Wander;
+                controller.Tick(deltaTime, _playerTracker, command);
             }
-            else
+        }
+
+        public void Dispose()
+        {
+            foreach (EnemyController controller in _controllers)
             {
-                Vector3 pos = transform.position;
-                pos.z = warpTarget.z;
-                transform.position = pos;
+                controller.Dispose();
             }
+
+            _controllers.Clear();
+            _controllersByView.Clear();
+            _enemyReports = Array.Empty<EnemyReport>();
         }
 
         /// <summary>
-        /// 現在位置から徘徊範囲内でランダムに移動先を決める
+        /// 統括AIに現在の世界状態を渡してEnemyごとの命令を決定する
         /// </summary>
-        Vector3 RandomTarget(Vector3 origin, float radius)
+        /// <returns>EnemyのIdに対応する命令配列</returns>
+        private EnemyCommand[] DecideCommands()
         {
-            Vector3 randomDirection = Random.insideUnitSphere * radius;
-            randomDirection += origin;
-            
-            NavMeshHit hit;
-            NavMesh.SamplePosition(randomDirection, out hit, radius, NavMesh.AllAreas);
-            return hit.position;
+            if (_enemyDirectorUseCase == null || _playerTracker == null)
+            {
+                return Array.Empty<EnemyCommand>();
+            }
+
+            EnsureReportCapacity();
+
+            for (int i = 0; i < _controllers.Count; i++)
+            {
+                _enemyReports[i] = _controllers[i].CreateReport();
+            }
+
+            var tunnelBounds = _playerTracker.CurrentTunnelBounds;
+            EnemyWorldState worldState = new EnemyWorldState(
+                _playerTracker.PlayerPosition,
+                _enemyReports,
+                tunnelBounds.HasValue,
+                tunnelBounds.HasValue ? tunnelBounds.Value.start : Vector3.zero,
+                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero);
+
+            return _enemyDirectorUseCase.DecideCommands(worldState);
         }
 
-        private void OnDrawGizmos()
+        /// <summary>
+        /// Enemy状態報告配列の容量を現在のController数に合わせる
+        /// </summary>
+        private void EnsureReportCapacity()
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(gameObject.transform.position, _chaseDistance);
+            if (_enemyReports.Length == _controllers.Count)
+            {
+                return;
+            }
+
+            _enemyReports = new EnemyReport[_controllers.Count];
+        }
+
+        /// <summary>
+        /// RaycastHit からストロボのターゲットを決定する。
+        /// </summary>
+        /// <param name="hit">Raycastの結果</param>
+        /// <param name="maxDistance">最大検索距離</param>
+        /// <returns>ストロボのターゲット</returns>
+        public StrobeTarget FindStrobeTarget(RaycastHit hit, float maxDistance)
+        {
+            if (TryFindController(hit, out EnemyController controller))
+            {
+                return new StrobeTarget(controller);
+            }
+
+            return FindNearestStrobeTarget(hit.point, maxDistance);
+        }
+
+        /// <summary>
+        /// RaycastHit から EnemyController を検索する。
+        /// </summary>
+        /// <param name="hit">Raycastの結果</param>
+        /// <param name="controller">見つかったEnemyController</param>
+        /// <returns>見つかったかどうか</returns>
+        private bool TryFindController(RaycastHit hit, out EnemyController controller)
+        {
+            controller = null;
+            if (hit.collider == null)
+            {
+                return false;
+            }
+
+            if (TryFindController(hit.collider.GetComponentInParent<EnemyView>(), out controller))
+            {
+                return true;
+            }
+
+            if (TryFindController(hit.collider.GetComponentInChildren<EnemyView>(), out controller))
+            {
+                return true;
+            }
+
+            return TryFindController(hit.collider.transform.root.GetComponentInChildren<EnemyView>(), out controller);
+        }
+
+        /// <summary>
+        /// EnemyView から EnemyController を検索する
+        /// </summary>
+        /// <param name="enemyView">検索するEnemyView</param>
+        /// <param name="controller">見つかったEnemyController</param>
+        /// <returns>見つかったかどうか</returns>
+        private bool TryFindController(EnemyView enemyView, out EnemyController controller)
+        {
+            controller = null;
+            return enemyView != null && _controllersByView.TryGetValue(enemyView, out controller);
+        }
+
+        /// <summary>
+        /// 指定された位置から最も近いストロボターゲットを検索する
+        /// </summary>
+        /// <param name="position">検索する位置</param>
+        /// <param name="maxDistance">最大検索距離</param>
+        /// <returns>ストロボのターゲット</returns>
+        private StrobeTarget FindNearestStrobeTarget(Vector3 position, float maxDistance)
+        {
+            EnemyController nearestController = null;
+            float nearestSqrDistance = maxDistance * maxDistance;
+
+            foreach (EnemyController controller in _controllers)
+            {
+                float sqrDistance = (controller.StrobeTargetPosition - position).sqrMagnitude;
+                if (sqrDistance > nearestSqrDistance)
+                {
+                    continue;
+                }
+
+                nearestSqrDistance = sqrDistance;
+                nearestController = controller;
+            }
+
+            return nearestController != null ? new StrobeTarget(nearestController) : StrobeTarget.Empty;
         }
     }
 }

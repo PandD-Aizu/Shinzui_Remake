@@ -5,6 +5,18 @@ using Shinzui.Domain.ValueObjects.FMOD;
 
 namespace Shinzui.Application.UseCases.Flashlight
 {
+    public readonly struct StrobeReleaseResult
+    {
+        public bool Fired { get; }
+        public float Charge { get; }
+
+        public StrobeReleaseResult(bool fired, float charge)
+        {
+            Fired = fired;
+            Charge = charge;
+        }
+    }
+
     public class FlashlightUseCase
     {
         private readonly FlashlightEntity _flashlightEntity;
@@ -51,15 +63,19 @@ namespace Shinzui.Application.UseCases.Flashlight
         /// <summary>
         /// ストロボ発光処理（リリース時）
         /// </summary>
-        public void Release()
+        public StrobeReleaseResult Release()
         {
+            float charge = 0f;
+            bool fired = false;
+
             if (_currentPushTime > 0f)
             {
-                float charge = _flashlightEntity.StrobeCharge.CurrentValue;
+                charge = _flashlightEntity.StrobeCharge.CurrentValue;
                 if (charge >= MinChargeThreshold)
                 {
                     // チャージ量に応じた強さでストロボ発光
                     _flashlightEntity.SetStrobeIntensity(charge);
+                    fired = true;
                     
                     // 発光時の演出SE
                     _fmodSeService.PlayOneShot(FMODEventPath.FLASH_LIGHT_BUTTON_SE.Reference);
@@ -69,6 +85,8 @@ namespace Shinzui.Application.UseCases.Flashlight
                 _currentPushTime = 0f;
                 _flashlightEntity.SetStrobeCharge(0f);
             }
+
+            return new StrobeReleaseResult(fired, charge);
         }
 
         /// <summary>

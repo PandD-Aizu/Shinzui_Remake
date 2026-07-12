@@ -4984,9 +4984,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2137102894}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f0911dd974e35042a140830d8fdf363, type: 3}
+  m_Script: {fileID: 11500000, guid: 60f92327828c4d04a838ddcdbb7c7331, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PresentationLayer::EnemyPresenter
+  m_EditorClassIdentifier: ViewLayer::EnemyView
 --- !u!4 &543450652176403241
 Transform:
   m_ObjectHideFlags: 0
