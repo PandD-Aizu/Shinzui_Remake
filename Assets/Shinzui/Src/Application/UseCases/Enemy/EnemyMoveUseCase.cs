@@ -24,25 +24,28 @@ namespace Shinzui.Application.UseCases
         }
 
         /// <summary>
-        /// 敵の移動状態を変更する
-        /// 1 -> Wandering
-        /// 2 -> IsChasing
-        /// その他 -> Idle
+        /// 敵の移動状態を徘徊に変更する
         /// </summary>
-        public void UpdateEnemyState(int stateNum)
+        public void StartWandering()
         {
-            switch (stateNum)
-            {
-                case 1:
-                    _enemyEntity.UpdateState(EnemyMovementState.Wandering);
-                    break;
-                case 2:
-                    _enemyEntity.UpdateState(EnemyMovementState.IsChasing);
-                    break;
-                default:
-                    _enemyEntity.UpdateState(EnemyMovementState.Idle);
-                    break;
-            }
+            _enemyEntity.UpdateState(EnemyMovementState.Wandering);
         }
+
+        /// <summary>
+        /// 敵の移動状態を追跡に変更する
+        /// </summary>
+        public void StartChasing()
+        {
+            _enemyEntity.UpdateState(EnemyMovementState.IsChasing);
+        }
+
+        /// <summary>
+        /// 敵の移動状態を停止に変更する
+        /// </summary>
+        public void Stop()
+        {
+            _enemyEntity.UpdateState(EnemyMovementState.Idle);
+        }
+
     }
 }

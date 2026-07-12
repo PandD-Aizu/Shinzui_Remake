@@ -15,6 +15,7 @@ namespace Shinzui.Presentation.Flashlight
         private readonly FlashlightView _view;
         private readonly IInputService _inputService;
         private readonly StrobeGaugeView _strobeGaugeView;
+        private readonly EnemyPresenter _enemyPresenter;
 
         private IDisposable _disposable;
 
@@ -22,12 +23,14 @@ namespace Shinzui.Presentation.Flashlight
             FlashlightUseCase useCase,
             FlashlightView view,
             IInputService inputService,
-            StrobeGaugeView strobeGaugeView)
+            StrobeGaugeView strobeGaugeView,
+            EnemyPresenter enemyPresenter)
         {
             _useCase = useCase;
             _view = view;
             _inputService = inputService;
             _strobeGaugeView = strobeGaugeView;
+            _enemyPresenter = enemyPresenter;
         }
 
         private bool _wasAttackHeld;
@@ -120,11 +123,11 @@ namespace Shinzui.Presentation.Flashlight
 
             if (hits == null || hits.Length == 0) return;
 
-            var affectedEnemies = new HashSet<EnemyPresenter>();
+            var affectedEnemies = new HashSet<int>();
             foreach (RaycastHit hit in hits)
             {
-                EnemyPresenter enemy = FindEnemyPresenter(hit);
-                if (enemy == null || !affectedEnemies.Add(enemy))
+                StrobeTarget enemy = _enemyPresenter.FindStrobeTarget(hit, 6.0f);
+                if (!enemy.IsValid || !affectedEnemies.Add(enemy.Id))
                 {
                     continue;
                 }
@@ -139,7 +142,7 @@ namespace Shinzui.Presentation.Flashlight
         /// <param name="enemy">対象の敵</param>
         /// <param name="origin">ストロボの発射元</param>
         /// <param name="charge">ストロボのチャージ量</param>
-        private void ApplyStrobeToEnemy(EnemyPresenter enemy, Vector3 origin, float charge)
+        private void ApplyStrobeToEnemy(StrobeTarget enemy, Vector3 origin, float charge)
         {
             Vector3 targetPosition = enemy.StrobeTargetPosition;
             float distance = Vector3.Distance(origin, targetPosition);
@@ -169,53 +172,6 @@ namespace Shinzui.Presentation.Flashlight
             }
 
             enemy.ApplyStrobeEffect(false, _view.SlowSpeedMultiplier, duration);
-        }
-
-        private static EnemyPresenter FindEnemyPresenter(RaycastHit hit)
-        {
-            if (hit.collider == null) return null;
-
-            EnemyPresenter enemy = hit.collider.GetComponentInParent<EnemyPresenter>();
-            if (enemy != null)
-            {
-                return enemy;
-            }
-
-            enemy = hit.collider.GetComponentInChildren<EnemyPresenter>();
-            if (enemy != null)
-            {
-                return enemy;
-            }
-
-            Transform root = hit.collider.transform.root;
-            enemy = root.GetComponentInChildren<EnemyPresenter>();
-            if (enemy != null)
-            {
-                return enemy;
-            }
-
-            return FindNearestEnemyPresenter(hit.point, 6.0f);
-        }
-
-        private static EnemyPresenter FindNearestEnemyPresenter(Vector3 position, float maxDistance)
-        {
-            EnemyPresenter[] enemies = UnityEngine.Object.FindObjectsByType<EnemyPresenter>(FindObjectsSortMode.None);
-            EnemyPresenter nearestEnemy = null;
-            float nearestSqrDistance = maxDistance * maxDistance;
-
-            foreach (EnemyPresenter enemy in enemies)
-            {
-                float sqrDistance = (enemy.StrobeTargetPosition - position).sqrMagnitude;
-                if (sqrDistance > nearestSqrDistance)
-                {
-                    continue;
-                }
-
-                nearestSqrDistance = sqrDistance;
-                nearestEnemy = enemy;
-            }
-
-            return nearestEnemy;
         }
 
         /// <summary>

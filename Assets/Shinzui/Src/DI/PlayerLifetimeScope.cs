@@ -1,6 +1,7 @@
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.Interfaces.Inventory;
 using Shinzui.Application.UseCases;
+using Shinzui.Application.UseCases.Enemy;
 using Shinzui.Application.UseCases.Inventory;
 using Shinzui.Application.UseCases.Flashlight; // 【追加】
 using Shinzui.Domain.Entities;
@@ -36,6 +37,7 @@ namespace Shinzui.DI
         [SerializeField] private InteractionMessageView interactionMessageView;
         [SerializeField] private SpecialItemHudView specialItemHudView;
         [SerializeField] private PlayerDeathView playerDeathView;
+        [SerializeField] private EnemyView[] enemyViews;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -50,6 +52,9 @@ namespace Shinzui.DI
             // UseCaseの登録
             builder.Register<PlayerMoveUseCase>(Lifetime.Scoped);
             builder.Register<PlayerThrowUseCase>(Lifetime.Scoped);
+            builder.Register<EnemyDirectorUseCase>(Lifetime.Scoped);
+            builder.Register<EnemyMoveUseCase>(Lifetime.Transient);
+            builder.RegisterFactory<EnemyMoveUseCase>(resolver => () => resolver.Resolve<EnemyMoveUseCase>(), Lifetime.Scoped);
 
             // Viewの登録
             var viewInstance = playerView;
@@ -117,7 +122,7 @@ namespace Shinzui.DI
             builder.RegisterEntryPoint<InventoryPresenter>();
             RegisterSpecialItemHud(builder);
             RegisterPlayerDeath(builder);
-            builder.RegisterComponentInHierarchy<EnemyPresenter>();
+            RegisterEnemies(builder);
             
             // Domain & UseCase
             builder.Register<FlashlightEntity>(Lifetime.Singleton).WithParameter(false); // 初期状態: OFF
@@ -238,6 +243,24 @@ namespace Shinzui.DI
 
             view.Configure(itemImage);
             return view;
+        }
+
+        private void RegisterEnemies(IContainerBuilder builder)
+        {
+            EnemyView[] enemyViewInstances = enemyViews;
+            if (enemyViewInstances == null || enemyViewInstances.Length == 0)
+            {
+                enemyViewInstances = FindObjectsByType<EnemyView>(FindObjectsSortMode.None);
+            }
+
+            if (enemyViewInstances == null || enemyViewInstances.Length == 0)
+            {
+                Debug.LogWarning("EnemyView instances were not assigned and not found in the scene hierarchy.");
+                enemyViewInstances = new EnemyView[0];
+            }
+
+            builder.RegisterInstance(enemyViewInstances);
+            builder.RegisterEntryPoint<EnemyPresenter>().AsSelf();
         }
 
         private void RegisterPlayerDeath(IContainerBuilder builder)
