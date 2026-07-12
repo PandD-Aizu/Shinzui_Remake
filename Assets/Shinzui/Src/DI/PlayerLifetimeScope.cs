@@ -19,6 +19,7 @@ using Shinzui.Application.UseCases.Interaction;
 using Shinzui.Presentation.Interaction;
 using Shinzui.View.Interaction;
 using UnityEngine;
+using UnityEngine.UI;
 using VContainer;
 using VContainer.Unity;
 
@@ -33,6 +34,7 @@ namespace Shinzui.DI
         [SerializeField] private StrobeGaugeView strobeGaugeView;
         [SerializeField] private PlayerInteractionView interactionView;
         [SerializeField] private InteractionMessageView interactionMessageView;
+        [SerializeField] private SpecialItemHudView specialItemHudView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -84,10 +86,13 @@ namespace Shinzui.DI
             // Domain & UseCase
             builder.Register<InventoryEntity>(Lifetime.Singleton).WithParameter(10); // 初期スロット数: 10
             builder.Register<InventoryUseCase>(Lifetime.Singleton);
+            builder.Register<SpecialItemEntity>(Lifetime.Singleton);
+            builder.Register<SpecialItemUseCase>(Lifetime.Singleton);
 
             // Infrastructure (Catalog & Repository & Sound)
             builder.Register<IItemCatalog, AddressableItemCatalog>(Lifetime.Singleton);
             builder.Register<IInventoryRepository, PlayerPrefsInventoryRepository>(Lifetime.Singleton);
+            builder.Register<ISpecialItemRepository, PlayerPrefsInventoryRepository>(Lifetime.Singleton);
             builder.Register<IFMODSEService, FMODSEService>(Lifetime.Singleton);
 
             // View (シーン上のUIコンポーネント)
@@ -108,6 +113,7 @@ namespace Shinzui.DI
 
             // Presentation
             builder.RegisterEntryPoint<InventoryPresenter>();
+            RegisterSpecialItemHud(builder);
             builder.RegisterComponentInHierarchy<EnemyPresenter>();
             
             // Domain & UseCase
@@ -183,6 +189,52 @@ namespace Shinzui.DI
             }
 
             builder.RegisterEntryPoint<InteractionPresenter>();
+        }
+
+        private void RegisterSpecialItemHud(IContainerBuilder builder)
+        {
+            var specialItemHudViewInstance = specialItemHudView;
+            if (specialItemHudViewInstance == null)
+            {
+                specialItemHudViewInstance = FindFirstObjectByType<SpecialItemHudView>();
+            }
+
+            if (specialItemHudViewInstance == null)
+            {
+                specialItemHudViewInstance = CreateSpecialItemHudViewFromScenePath();
+            }
+
+            if (specialItemHudViewInstance != null)
+            {
+                builder.RegisterComponent(specialItemHudViewInstance);
+                builder.RegisterEntryPoint<SpecialItemHudPresenter>();
+            }
+            else
+            {
+                Debug.LogWarning("SpecialItemHudView was not assigned and HUDCanvas/SpecialItem/ItemSprite was not found.");
+            }
+        }
+
+        private static SpecialItemHudView CreateSpecialItemHudViewFromScenePath()
+        {
+            var hudCanvas = GameObject.Find("HUDCanvas");
+            var specialItemRoot = hudCanvas != null ? hudCanvas.transform.Find("SpecialItem") : null;
+            var itemSprite = specialItemRoot != null ? specialItemRoot.Find("ItemSprite") : null;
+            var itemImage = itemSprite != null ? itemSprite.GetComponent<Image>() : null;
+
+            if (specialItemRoot == null || itemImage == null)
+            {
+                return null;
+            }
+
+            var view = specialItemRoot.GetComponent<SpecialItemHudView>();
+            if (view == null)
+            {
+                view = specialItemRoot.gameObject.AddComponent<SpecialItemHudView>();
+            }
+
+            view.Configure(itemImage);
+            return view;
         }
 
         private static PlayerEntity CreatePlayer()

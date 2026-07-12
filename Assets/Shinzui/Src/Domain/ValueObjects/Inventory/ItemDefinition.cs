@@ -4,8 +4,9 @@ namespace Shinzui.Domain.ValueObjects.Inventory
     {
         Consumable, // 消費アイテム
         Equipment,  // 装備品
-        Quest,      // クエストアイテム
-        Key         // 鍵・重要アイテム
+        Special,    // 特殊アイテム
+        Story,      // ストーリーアイテム
+        Key,        // 鍵・重要アイテム
     }
 
     public record ItemDefinition

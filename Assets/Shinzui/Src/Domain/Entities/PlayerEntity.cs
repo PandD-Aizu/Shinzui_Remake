@@ -1,4 +1,5 @@
 using R3;
+using Shinzui.Domain.ValueObjects.Inventory;
 using Shinzui.Domain.ValueObjects.Player;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ namespace Shinzui.Domain.Entities
 {
     public class PlayerEntity
     {
+        private SpecialItemModifiers _specialItemModifiers = SpecialItemModifiers.None;
         public PlayerSpeedStatus PlayerSpeedStatus { get; set; }
         public PlayerCrouchStatus PlayerCrouchStatus { get; set; }
         public PlayerStamina PlayerStamina { get; set; }
@@ -16,6 +18,7 @@ namespace Shinzui.Domain.Entities
         public ReactiveProperty<float> CurrentStamina { get; }
         public ReadOnlyReactiveProperty<float> StaminaRatio { get; }
         public ReactiveProperty<bool> IsExhausted { get; } = new (false);
+        public SpecialItemModifiers SpecialItemModifiers => _specialItemModifiers;
 
         public PlayerEntity(
             PlayerSpeedStatus playerSpeedStatus,
@@ -46,6 +49,14 @@ namespace Shinzui.Domain.Entities
         }
 
         /// <summary>
+        /// 特殊アイテム由来の常時効果を設定する
+        /// </summary>
+        public void SetSpecialItemModifiers(SpecialItemModifiers modifiers)
+        {
+            _specialItemModifiers = modifiers ?? SpecialItemModifiers.None;
+        }
+
+        /// <summary>
         /// 移動状態に基づいてスタミナを更新する
         /// </summary>
         public void UpdateStamina(float deltaTime)
@@ -57,7 +68,9 @@ namespace Shinzui.Domain.Entities
             }
             else
             {
-                staminaChange = PlayerStamina.StaminaIncreaseRate * deltaTime;
+                staminaChange = PlayerStamina.StaminaIncreaseRate
+                    * _specialItemModifiers.StaminaRecoveryMultiplier
+                    * deltaTime;
             }
 
             float newStamina = Mathf.Clamp(
@@ -89,9 +102,9 @@ namespace Shinzui.Domain.Entities
             return MovementState.Value switch
             {
                 PlayerMovementState.Idle => 0.0f,
-                PlayerMovementState.Walking => PlayerSpeedStatus.MoveSpeed,
-                PlayerMovementState.Running => PlayerSpeedStatus.MoveSpeed * PlayerSpeedStatus.RunSpeedMultiplier,
-                PlayerMovementState.Crouching => PlayerSpeedStatus.MoveSpeed * PlayerSpeedStatus.CrouchSpeedMultiplier,
+                PlayerMovementState.Walking => PlayerSpeedStatus.MoveSpeed * _specialItemModifiers.MoveSpeedMultiplier,
+                PlayerMovementState.Running => PlayerSpeedStatus.MoveSpeed * PlayerSpeedStatus.RunSpeedMultiplier * _specialItemModifiers.MoveSpeedMultiplier,
+                PlayerMovementState.Crouching => PlayerSpeedStatus.MoveSpeed * PlayerSpeedStatus.CrouchSpeedMultiplier * _specialItemModifiers.MoveSpeedMultiplier,
                 _ => 0.0f
             };
         }
@@ -113,7 +126,7 @@ namespace Shinzui.Domain.Entities
                 Vector2 normalizedInput = input.normalized;
                 float targetSpeed = GetTargetSpeed(true);
 
-                // 1. 方向ペナルティ倍率の計算
+                // 方向ペナルティ倍率の計算
                 float penalty = 1.0f;
                 if (normalizedInput.y < 0.0f)
                 {
@@ -129,7 +142,7 @@ namespace Shinzui.Domain.Entities
                 }
                 targetSpeed *= penalty;
 
-                // 2. カメラのピッチ角の影響を排除して平面投影
+                // カメラのピッチ角の影響を排除して平面投影
                 Vector3 projForward = Vector3.ProjectOnPlane(forward, Vector3.up).normalized;
                 Vector3 projRight = Vector3.ProjectOnPlane(right, Vector3.up).normalized;
 
@@ -137,7 +150,7 @@ namespace Shinzui.Domain.Entities
                 Vector3 targetDirection = (projRight * normalizedInput.x + projForward * normalizedInput.y).normalized;
                 Vector3 finalDirection = targetDirection;
 
-                // 3. 動き出しのガタつきを消すスムーズな旋回慣性
+                // 動き出しのガタつきを消すスムーズな旋回慣性
                 if (currentHorizontalVel.sqrMagnitude > 0.001f)
                 {
                     Vector3 currentDir = currentHorizontalVel.normalized;
@@ -162,7 +175,7 @@ namespace Shinzui.Domain.Entities
                 targetHorizontalVel = finalDirection.normalized * targetSpeed;
             }
 
-            // 4. 加速と減速のメリハリを付けて Lerp で速度合成
+            // 加速と減速のメリハリを付けて Lerp で速度合成
             bool hasInput = input.sqrMagnitude > 0.01f;
             float rate = hasInput ? speedStatus.AccelerationRate : speedStatus.DecelerationRate;
 

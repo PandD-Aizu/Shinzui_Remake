@@ -15,7 +15,10 @@ namespace Shinzui.Infrastructure.Repositories
             { "potion_stamina", new ItemDefinition("potion_stamina", "Stamina Potion", "A stamina potion that restores stamina.", "Sprite/Medicine", ItemType.Consumable, 99) },
             { "sword_iron", new ItemDefinition("sword_iron", "Iron Sword", "A common sword made of iron.", "Sprite/Medicine", ItemType.Equipment, 1) },
             { "key_old", new ItemDefinition("key_old", "Old Key", "A rusty old iron key.", "Sprite/Medicine", ItemType.Key, 1) },
-            { "FlashlightBattery", new ItemDefinition("FlashlightBattery", "Spare Battery", "A spare battery for the flashlight.", "Sprite/Medicine", ItemType.Consumable, 99) }
+            { "FlashlightBattery", new ItemDefinition("FlashlightBattery", "Spare Battery", "A spare battery for the flashlight.", "Sprite/Medicine", ItemType.Consumable, 99) },
+            { "special_death_charm", new SpecialItemDefinition("special_death_charm", "Death Charm", "Prevents death once, then disappears.", "Sprite/Medicine", new SpecialItemModifiers(1.0f, 1.0f, true)) },
+            { "special_speed_boots", new SpecialItemDefinition("special_speed_boots", "Speed Boots", "Increases movement speed while held.", "Sprite/Medicine", new SpecialItemModifiers(1.2f, 1.0f, false)) },
+            { "special_stamina_core", new SpecialItemDefinition("special_stamina_core", "Stamina Core", "Increases stamina recovery speed while held.", "Sprite/Medicine", new SpecialItemModifiers(1.0f, 1.5f, false)) }
         };
 
         public Task<ItemDefinition> GetItemAsync(string itemId)

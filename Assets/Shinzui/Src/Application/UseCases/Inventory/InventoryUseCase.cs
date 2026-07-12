@@ -85,6 +85,12 @@ namespace Shinzui.Application.UseCases.Inventory
             _isOpen.Value = open;
         }
 
+        /// <summary>
+        /// スロットインデックスとアイテムスタックから DTO を生成する
+        /// </summary>
+        /// <param name="index">インデックス</param>
+        /// <param name="stack">アイテムスタック</param>
+        /// <returns></returns>
         private InventorySlotDto CreateDto(int index, ItemStack stack)
         {
             if (stack == null)
@@ -105,6 +111,10 @@ namespace Shinzui.Application.UseCases.Inventory
             );
         }
 
+        /// <summary>
+        /// 装備アイテムを指定スロットに設定する
+        /// </summary>
+        /// <param name="slotIndex">スロットインデックス</param>
         public void EquipItem(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= Capacity)
@@ -123,11 +133,18 @@ namespace Shinzui.Application.UseCases.Inventory
             _equippedSlotIndex.Value = slotIndex;
         }
 
+        /// <summary>
+        /// 装備アイテムを解除する
+        /// </summary>
         public void UnequipItem()
         {
             _equippedSlotIndex.Value = -1;
         }
 
+        /// <summary>
+        /// 装備中のアイテムを消費する
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> ConsumeEquippedItemAsync()
         {
             int index = _equippedSlotIndex.Value;
@@ -143,12 +160,18 @@ namespace Shinzui.Application.UseCases.Inventory
             }
             return success;
         }
-
-        // UIアクション：アイテムの追加
+        
+        /// <summary>
+        /// アイテムの追加
+        /// </summary>
+        /// <param name="itemId">アイテムID</param>
+        /// <param name="quantity">数量</param>
+        /// <returns></returns>
         public async Task<bool> AddItemAsync(string itemId, int quantity)
         {
             var item = await _catalog.GetItemAsync(itemId);
             if (item == null) return false;
+            if (item.Type == ItemType.Special) return false;
 
             bool success = _inventory.TryAddItem(item, quantity, out int remaining);
             if (success)
@@ -156,23 +179,32 @@ namespace Shinzui.Application.UseCases.Inventory
                 await SaveAsync();
                 _onItemGot.OnNext(new ItemGetDto(item.Name, item.IconAssetAddress));
             }
+            
             return success;
         }
-
-        // UIアクション：スロット間の並び替え/マージ
+        
+        /// <summary>
+        /// スロット間の並び替えまたはマージを行う
+        /// </summary>
+        /// <param name="fromIndex">移動元のスロットインデックス</param>
+        /// <param name="toIndex">移動先のスロットインデックス</param>
         public async Task SwapOrMergeSlotsAsync(int fromIndex, int toIndex)
         {
             _inventory.SwapOrMergeSlots(fromIndex, toIndex);
             await SaveAsync();
         }
 
-        // UIアクション：アイテムの使用
+        /// <summary>
+        /// アイテムの使用
+        /// </summary>
+        /// <param name="slotIndex">スロットインデックス</param>
+        /// <returns></returns>
         public async Task<bool> UseItemAsync(int slotIndex)
         {
             var slot = _inventory.GetSlot(slotIndex).CurrentValue;
             if (slot == null || !slot.Item.IsConsumable) return false;
 
-            // ※実際のゲームではここでHP回復などの使用効果（別ユースケースなど）を呼び出します。
+            // TODO: ここでアイテム効果を適用する
             
             // 使用したため個数を1減らす
             bool success = _inventory.TryRemoveItem(slotIndex, 1);
@@ -180,10 +212,13 @@ namespace Shinzui.Application.UseCases.Inventory
             {
                 await SaveAsync();
             }
+            
             return success;
         }
 
-        // セーブ処理
+        /// <summary>
+        /// セーブ処理
+        /// </summary>
         private async Task SaveAsync()
         {
             var saveData = new InventorySaveData
@@ -199,10 +234,13 @@ namespace Shinzui.Application.UseCases.Inventory
                     .Where(x => !string.IsNullOrEmpty(x.ItemId))
                     .ToArray()
             };
+            
             await _repository.SaveInventoryAsync(saveData);
         }
 
-        // ロード処理
+        /// <summary>
+        /// ロード処理
+        /// </summary>
         public async Task LoadAsync()
         {
             var saveData = await _repository.LoadInventoryAsync();

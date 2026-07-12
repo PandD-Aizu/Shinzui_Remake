@@ -16,6 +16,13 @@ namespace Shinzui.Application.Interfaces.Inventory
         Task<InventorySaveData> LoadInventoryAsync();
     }
 
+    // 特殊アイテム専用スロットのセーブ/ロード用
+    public interface ISpecialItemRepository
+    {
+        Task SaveSpecialItemAsync(SpecialItemSaveData data);
+        Task<SpecialItemSaveData> LoadSpecialItemAsync();
+    }
+
     // 保存用シリアライズデータ構造
     [System.Serializable]
     public class InventorySaveData
@@ -29,5 +36,11 @@ namespace Shinzui.Application.Interfaces.Inventory
         public int SlotIndex;
         public string ItemId;
         public int Quantity;
+    }
+
+    [System.Serializable]
+    public class SpecialItemSaveData
+    {
+        public string ItemId;
     }
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using R3;
 using Shinzui.Application.Interfaces.Inventory;
 using Shinzui.Application.UseCases.Inventory;
+using Shinzui.Domain.ValueObjects.Inventory;
 
 namespace Shinzui.Application.UseCases.Interaction
 {
@@ -12,6 +13,7 @@ namespace Shinzui.Application.UseCases.Interaction
     public class InteractionUseCase
     {
         private readonly InventoryUseCase _inventoryUseCase;
+        private readonly SpecialItemUseCase _specialItemUseCase;
         private readonly IItemCatalog _itemCatalog;
         private readonly Subject<string> _onShowMessage = new();
 
@@ -20,9 +22,13 @@ namespace Shinzui.Application.UseCases.Interaction
         /// </summary>
         public Observable<string> OnShowMessage => _onShowMessage;
 
-        public InteractionUseCase(InventoryUseCase inventoryUseCase, IItemCatalog itemCatalog)
+        public InteractionUseCase(
+            InventoryUseCase inventoryUseCase,
+            SpecialItemUseCase specialItemUseCase,
+            IItemCatalog itemCatalog)
         {
             _inventoryUseCase = inventoryUseCase;
+            _specialItemUseCase = specialItemUseCase;
             _itemCatalog = itemCatalog;
         }
 
@@ -42,7 +48,7 @@ namespace Shinzui.Application.UseCases.Interaction
                 _onShowMessage.OnNext(message);
             }
 
-            // 2. アイテム取得の処理
+            // アイテム取得の処理
             if (interactableId.StartsWith("ItemTest_"))
             {
                 string itemId = interactableId.Substring(9); // "ItemTest_"の文字数分スキップしてItemIdを取得
@@ -50,8 +56,17 @@ namespace Shinzui.Application.UseCases.Interaction
                 // カタログからアイテム情報を非同期で取得
                 var item = await _itemCatalog.GetItemAsync(itemId);
                 
-                // インベントリへアイテムを追加
-                bool success = await _inventoryUseCase.AddItemAsync(itemId, 1);
+                bool success = false;
+                if (item != null && item.Type == ItemType.Special)
+                {
+                    var result = await _specialItemUseCase.AcquireAsync(itemId);
+                    success = result.Succeeded;
+                }
+                else
+                {
+                    // インベントリへアイテムを追加
+                    success = await _inventoryUseCase.AddItemAsync(itemId, 1);
+                }
                 
                 if (success)
                 {
