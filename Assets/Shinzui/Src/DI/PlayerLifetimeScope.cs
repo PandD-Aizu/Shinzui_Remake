@@ -35,6 +35,7 @@ namespace Shinzui.DI
         [SerializeField] private PlayerInteractionView interactionView;
         [SerializeField] private InteractionMessageView interactionMessageView;
         [SerializeField] private SpecialItemHudView specialItemHudView;
+        [SerializeField] private PlayerDeathView playerDeathView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -88,6 +89,7 @@ namespace Shinzui.DI
             builder.Register<InventoryUseCase>(Lifetime.Singleton);
             builder.Register<SpecialItemEntity>(Lifetime.Singleton);
             builder.Register<SpecialItemUseCase>(Lifetime.Singleton);
+            builder.Register<PlayerDeathUseCase>(Lifetime.Singleton);
 
             // Infrastructure (Catalog & Repository & Sound)
             builder.Register<IItemCatalog, AddressableItemCatalog>(Lifetime.Singleton);
@@ -114,6 +116,7 @@ namespace Shinzui.DI
             // Presentation
             builder.RegisterEntryPoint<InventoryPresenter>();
             RegisterSpecialItemHud(builder);
+            RegisterPlayerDeath(builder);
             builder.RegisterComponentInHierarchy<EnemyPresenter>();
             
             // Domain & UseCase
@@ -235,6 +238,24 @@ namespace Shinzui.DI
 
             view.Configure(itemImage);
             return view;
+        }
+
+        private void RegisterPlayerDeath(IContainerBuilder builder)
+        {
+            var deathViewInstance = playerDeathView;
+            if (deathViewInstance == null)
+            {
+                deathViewInstance = FindFirstObjectByType<PlayerDeathView>();
+            }
+
+            if (deathViewInstance == null)
+            {
+                var deathViewObject = new GameObject("PlayerDeathView");
+                deathViewInstance = deathViewObject.AddComponent<PlayerDeathView>();
+            }
+
+            builder.RegisterComponent(deathViewInstance);
+            builder.RegisterEntryPoint<PlayerDeathPresenter>();
         }
 
         private static PlayerEntity CreatePlayer()
