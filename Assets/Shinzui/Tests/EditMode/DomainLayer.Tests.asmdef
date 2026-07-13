@@ -1,0 +1,22 @@
+{
+    "name": "DomainLayer.Tests",
+    "rootNamespace": "Shinzui.Tests",
+    "references": [
+        "GUID:b5b42ada7c4c5104f8c868951c2e3654",
+        "GUID:0c752da273b17c547ae705acf0f2adf2"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

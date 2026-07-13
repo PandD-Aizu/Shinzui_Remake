@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{d3fae6cb-e26e-4ee7-9f85-ee2deaef6739}">
+		<property name="assetPath">
+			<value>Ryota氏絶叫08.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.51462585034013608</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{2b01225c-f8cd-4cd7-8082-0b0f4fe63372}</destination>
+		</relationship>
+	</object>
+</objects>

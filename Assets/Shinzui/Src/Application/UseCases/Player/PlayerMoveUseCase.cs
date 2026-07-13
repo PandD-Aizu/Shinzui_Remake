@@ -3,6 +3,7 @@ using UnityEngine;
 using R3;
 using Shinzui.Application.Interfaces;
 using Shinzui.Domain.Entities;
+using Shinzui.Domain.ValueObjects.Player;
 
 namespace Shinzui.Application.UseCases
 {
@@ -18,6 +19,7 @@ namespace Shinzui.Application.UseCases
         public Vector2 MoveInput => _inputService.MoveInput;
         public bool SprintPressed => _inputService.SprintPressed;
         public bool CrouchPressed => _inputService.CrouchPressed;
+        public bool IsRunning => _playerEntityEntity.MovementState.Value == PlayerMovementState.Running;
         
         private Ray ray;                                          //現在いるトンネルを取得するために足元に飛ばすray
         [HideInInspector] public GameObject currentTunnelStart;   //現在いるトンネルのスタート地点
@@ -42,6 +44,7 @@ namespace Shinzui.Application.UseCases
             bool isGrounded,
             Vector3 right,
             Vector3 forward,
+            Vector3 groundNormal,
             float deltaTime)
         {
             Vector2 input = _inputService.MoveInput;
@@ -49,7 +52,7 @@ namespace Shinzui.Application.UseCases
             bool isCrouchingRequested = _inputService.CrouchPressed;
 
             bool actualCrouching = isCrouchingRequested || forceCrouch;
-            bool hasInput = input != Vector2.zero;
+            bool hasInput = _playerEntityEntity.HasMovementInput(input);
 
             // プレイヤー状態の移動状態を判定
             _playerEntityEntity.UpdateState(hasInput, isRunningRequested, actualCrouching);
@@ -58,7 +61,7 @@ namespace Shinzui.Application.UseCases
             _playerEntityEntity.UpdateStamina(deltaTime);
 
             // 水平速度の更新
-            _playerEntityEntity.CalculateVelocity(input, right, forward, deltaTime);
+            _playerEntityEntity.CalculateVelocity(input, right, forward, groundNormal, isGrounded, deltaTime);
             
             // 重力の適用
             _playerEntityEntity.ApplyGravity(isGrounded, deltaTime);

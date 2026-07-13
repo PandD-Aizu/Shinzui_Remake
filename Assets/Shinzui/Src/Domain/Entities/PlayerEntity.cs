@@ -14,6 +14,7 @@ namespace Shinzui.Domain.Entities
         
         public ReactiveProperty<PlayerMovementState> MovementState { get; } = new (PlayerMovementState.Idle);
         public ReactiveProperty<Vector3> Velocity { get; } = new (Vector3.zero);
+        public Vector3 CurrentVelocity => Velocity.Value;
         public ReactiveProperty<float> CurrentHeight { get; }
         public ReactiveProperty<float> CurrentStamina { get; }
         public ReadOnlyReactiveProperty<float> StaminaRatio { get; }
@@ -112,19 +113,30 @@ namespace Shinzui.Domain.Entities
         /// <summary>
         /// 移動入力と方向ベクトルから、水平方向の速度を計算して更新する
         /// </summary>
-        public void CalculateVelocity(Vector2 input, Vector3 right, Vector3 forward, float deltaTime)
+        public void CalculateVelocity(
+            Vector2 input,
+            Vector3 right,
+            Vector3 forward,
+            Vector3 groundNormal,
+            bool isGrounded,
+            float deltaTime)
         {
             var speedStatus = this.PlayerSpeedStatus;
             Vector3 currentVel = Velocity.Value;
             Vector3 currentHorizontalVel = new Vector3(currentVel.x, 0.0f, currentVel.z);
             Vector3 targetHorizontalVel = Vector3.zero;
+            bool hasInput = HasMovementInput(input);
 
             // スティックのデッドゾーン処理
-            if (input.sqrMagnitude > 0.01f)
+            if (hasInput)
             {
-                // 入力ベクトルを正規化
+                // デッドゾーン以降の入力強度を保持し、アナログ入力の微速移動を可能にする
+                float inputMagnitude = Mathf.InverseLerp(
+                    speedStatus.InputDeadZone,
+                    1.0f,
+                    Mathf.Clamp01(input.magnitude));
                 Vector2 normalizedInput = input.normalized;
-                float targetSpeed = GetTargetSpeed(true);
+                float targetSpeed = GetTargetSpeed(true) * inputMagnitude;
 
                 // 方向ペナルティ倍率の計算
                 float penalty = 1.0f;
@@ -148,42 +160,36 @@ namespace Shinzui.Domain.Entities
 
                 // 入力に応じた絶対的な目標方向
                 Vector3 targetDirection = (projRight * normalizedInput.x + projForward * normalizedInput.y).normalized;
-                Vector3 finalDirection = targetDirection;
-
-                // 動き出しのガタつきを消すスムーズな旋回慣性
-                if (currentHorizontalVel.sqrMagnitude > 0.001f)
+                if (isGrounded && groundNormal.sqrMagnitude > 0.5f)
                 {
-                    Vector3 currentDir = currentHorizontalVel.normalized;
-                    float dot = Vector3.Dot(currentDir, targetDirection);
-
-                    // 真後ろへの入力時のSlerpフリーズを防止
-                    if (dot < -0.99f)
-                    {
-                        // 確実に直交する右ベクトルをブレンドして回転のきっかけを作る
-                        Vector3 escapeAxis = Vector3.Cross(currentDir, Vector3.up).normalized;
-                        if (escapeAxis.sqrMagnitude < 0.01f) escapeAxis = projRight;
-                        currentDir = (currentDir + escapeAxis * 0.1f).normalized;
-                    }
-
-                    // 速度が乗るほど慣性が強く効き、静止時はクイッと曲がるようにブレンド率を調整
-                    float currentSpeedRatio = Mathf.Clamp01(currentHorizontalVel.magnitude / speedStatus.MoveSpeed);
-                    float actualRotationRate = Mathf.Lerp(speedStatus.AccelerationRate * 3f, speedStatus.AccelerationRate, currentSpeedRatio);
-
-                    finalDirection = Vector3.Slerp(currentDir, targetDirection, deltaTime * actualRotationRate);
+                    targetDirection = Vector3.ProjectOnPlane(targetDirection, groundNormal).normalized;
                 }
 
-                targetHorizontalVel = finalDirection.normalized * targetSpeed;
+                targetHorizontalVel = targetDirection * targetSpeed;
             }
 
-            // 加速と減速のメリハリを付けて Lerp で速度合成
-            bool hasInput = input.sqrMagnitude > 0.01f;
             float rate = hasInput ? speedStatus.AccelerationRate : speedStatus.DecelerationRate;
 
-            Vector3 newHorizontalVel = Vector3.Lerp(
-                currentHorizontalVel, 
-                targetHorizontalVel, 
-                deltaTime * rate
-            );
+            // 大きく反対方向へ入力された場合は、方向を瞬時に反転させず一度制動する
+            if (hasInput && currentHorizontalVel.sqrMagnitude > 0.01f && targetHorizontalVel.sqrMagnitude > 0.01f)
+            {
+                float directionDot = Vector3.Dot(currentHorizontalVel.normalized, targetHorizontalVel.normalized);
+                if (directionDot < speedStatus.ReversalDotThreshold && currentHorizontalVel.magnitude > 0.1f)
+                {
+                    targetHorizontalVel = Vector3.zero;
+                    rate = speedStatus.DirectionChangeDecelerationRate;
+                }
+            }
+
+            if (!isGrounded)
+            {
+                rate *= speedStatus.AirControlMultiplier;
+            }
+
+            Vector3 newHorizontalVel = Vector3.MoveTowards(
+                currentHorizontalVel,
+                targetHorizontalVel,
+                rate * deltaTime);
 
             Vector3 newVelocity = currentVel;
             newVelocity.x = newHorizontalVel.x;
@@ -204,9 +210,15 @@ namespace Shinzui.Domain.Entities
             }
             else
             {
-                newVelocity.y = -1.0f; // 接地時は軽く地面に押し付ける
+                newVelocity.y = PlayerSpeedStatus.GroundStickVelocity;
             }
             Velocity.Value = newVelocity;
+        }
+
+        public bool HasMovementInput(Vector2 input)
+        {
+            float deadZone = Mathf.Max(0.0f, PlayerSpeedStatus.InputDeadZone);
+            return input.sqrMagnitude > deadZone * deadZone;
         }
 
         /// <summary>

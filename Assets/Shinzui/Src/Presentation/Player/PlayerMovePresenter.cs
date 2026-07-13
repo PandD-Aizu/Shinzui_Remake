@@ -14,6 +14,8 @@ namespace Shinzui.Presentation
         private readonly PlayerView _view;
 
         private IDisposable _disposable;
+        private bool _wasControllerGrounded;
+        private float _peakFallVelocity;
 
         public Vector3 PlayerPosition => _view != null ? _view.transform.position : Vector3.zero;
 
@@ -52,18 +54,25 @@ namespace Shinzui.Presentation
                 .AddTo(ref disposableBuilder);
 
             _disposable = disposableBuilder.Build();
+            _wasControllerGrounded = _view.IsControllerGrounded;
+            _peakFallVelocity = 0.0f;
         }
 
         public void Tick()
         {
             // 強制しゃがみフラグがあれば適用
-            bool forceCrouch = false; 
+            bool forceCrouch = !_useCase.CrouchPressed && !_view.CanStand();
 
             // カメラ方向と設置状態をViewから取得
             Vector3 right = _view.CameraRight;
             Vector3 forward = _view.CameraForward;
             bool isGrounded = _view.IsGrounded;
+            bool isControllerGrounded = _view.IsControllerGrounded;
+            Vector3 groundNormal = _view.GroundNormal;
             float deltaTime = Time.deltaTime;
+            float landingSpeed = isControllerGrounded && !_wasControllerGrounded
+                ? Mathf.Max(0.0f, -_peakFallVelocity)
+                : 0.0f;
 
             // ユースケースを通して状態を更新
             _useCase.Move(
@@ -71,15 +80,27 @@ namespace Shinzui.Presentation
                 isGrounded,
                 right,
                 forward,
+                groundNormal,
                 deltaTime
             );
 
             // 計算された速度をUseCaseから取得し、Viewに適用して物理移動を実行
             Vector3 currentVelocity = _useCase.Velocity.CurrentValue;
             _view.Move(currentVelocity);
+            _view.UpdateCameraMotion(currentVelocity, isGrounded, _useCase.IsRunning, landingSpeed);
 
             // Y回転をカメラに合わせる
-            _view.AlignYRotationWithCamera();
+            _view.AlignYRotationWithCamera(currentVelocity);
+
+            if (isControllerGrounded)
+            {
+                _peakFallVelocity = 0.0f;
+            }
+            else
+            {
+                _peakFallVelocity = Mathf.Min(_peakFallVelocity, currentVelocity.y);
+            }
+            _wasControllerGrounded = isControllerGrounded;
             
             // 現在のトンネルの判定
             _useCase.CheckCurrentTunnel(_view.transform.position);
