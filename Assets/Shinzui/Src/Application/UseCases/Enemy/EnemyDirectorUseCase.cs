@@ -1,6 +1,8 @@
 using System;
+using Shinzui.Application.Interfaces;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Domain.ValueObjects.Enemy;
+using Shinzui.Domain.ValueObjects.FMOD;
 using UnityEngine;
 
 namespace Shinzui.Application.UseCases.Enemy
@@ -10,7 +12,14 @@ namespace Shinzui.Application.UseCases.Enemy
     /// </summary>
     public class EnemyDirectorUseCase
     {
+        private readonly IFMODSEService _seService;
         private EnemyCommand[] _commands = Array.Empty<EnemyCommand>();
+        private bool _wasPlayerFound;
+
+        public EnemyDirectorUseCase(IFMODSEService seService)
+        {
+            _seService = seService;
+        }
 
         /// <summary>
         /// 現在のゲーム状態からEnemyごとの命令を決定する
@@ -28,6 +37,14 @@ namespace Shinzui.Application.UseCases.Enemy
             }
 
             int chaseEnemyIndex = FindNearestEnemyInChaseRange(worldState.PlayerPosition, reports);
+            bool isPlayerFound = chaseEnemyIndex >= 0;
+            if (isPlayerFound && !_wasPlayerFound)
+            {
+                _seService.PlayOneShot(FMODEventPath.SE_ON_ENEMY_FOUND.Reference);
+            }
+
+            _wasPlayerFound = isPlayerFound;
+
             if (chaseEnemyIndex >= 0)
             {
                 int enemyId = reports[chaseEnemyIndex].Id;
