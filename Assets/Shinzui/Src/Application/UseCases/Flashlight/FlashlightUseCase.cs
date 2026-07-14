@@ -47,7 +47,7 @@ namespace Shinzui.Application.UseCases.Flashlight
         public void ToggleFlashlight()
         {
             _flashlightEntity.Toggle();
-            _fmodSeService.PlayOneShot(FMODEventPath.FLASH_LIGHT_BUTTON_SE.Reference);
+            _fmodSeService.PlayOneShot(FMODEventPath.SE_FLASH_LIGHT_BUTTON_SE.Reference);
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Shinzui.Application.UseCases.Flashlight
                     fired = true;
                     
                     // 発光時の演出SE
-                    _fmodSeService.PlayOneShot(FMODEventPath.FLASH_LIGHT_BUTTON_SE.Reference);
+                    _fmodSeService.PlayOneShot(FMODEventPath.SE_FLASH_LIGHT_BUTTON_SE.Reference);
                 }
 
                 // チャージリセット

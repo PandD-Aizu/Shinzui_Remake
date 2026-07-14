@@ -49,7 +49,11 @@ float GetLuminanceFromEV100(float ev100)
 // EV100値を[0, 255]のヒストグラムビンインデックスに変換
 uint GetHistogramBin(float ev)
 {
-    float t = saturate((ev - _MinLogLuminance) / (_MaxLogLuminance - _MinLogLuminance));
+    float range = max(_MaxLogLuminance - _MinLogLuminance, 0.0001f);
+    if (ev < _MinLogLuminance) return 0;
+    if (ev >= _MaxLogLuminance) return 255;
+
+    float t = saturate((ev - _MinLogLuminance) / range);
     return (uint)(t * 254.0f + 1.0f); // 1 ~ 255 にマッピング (0は超暗所)
 }
 
@@ -127,7 +131,7 @@ void KComputeExposure(uint3 itemID : SV_GroupThreadID)
             if (_AdaptationMode == 1 && _DeltaTime > 0.0f) // Progressive
             {
                 float pastExposure = _ExposureResultBuffer[1];
-                float speed = (targetExposure > pastExposure) ? _AdaptationSpeedDown : _AdaptationSpeedUp;
+                float speed = (targetExposure > pastExposure) ? _AdaptationSpeedUp : _AdaptationSpeedDown;
                 float finalExposure = pastExposure + (targetExposure - pastExposure) * (1.0f - exp(-_DeltaTime * speed));
                 _ExposureResultBuffer[0] = finalExposure;
                 _ExposureResultBuffer[1] = finalExposure;
@@ -222,7 +226,7 @@ void KComputeExposure(uint3 itemID : SV_GroupThreadID)
         
         if (_AdaptationMode == 1 && _DeltaTime > 0.0f)
         {
-            float speed = (targetExposure > pastExposure) ? _AdaptationSpeedDown : _AdaptationSpeedUp;
+            float speed = (targetExposure > pastExposure) ? _AdaptationSpeedUp : _AdaptationSpeedDown;
             finalExposure = pastExposure + (targetExposure - pastExposure) * (1.0f - exp(-_DeltaTime * speed));
         }
         

@@ -17,7 +17,7 @@ namespace Shinzui.Application.UseCases
         /// </summary>
         public void PlayStoneHitSound()
         {
-            _seService.PlayOneShot(FMODEventPath.STONE_BREAKING_SE.Reference);
+            _seService.PlayOneShot(FMODEventPath.SE_STONE_BREAKING_SE.Reference);
         }
     }
 }

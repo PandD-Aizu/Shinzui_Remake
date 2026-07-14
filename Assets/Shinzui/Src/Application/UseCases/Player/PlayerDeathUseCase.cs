@@ -38,6 +38,7 @@ namespace Shinzui.Application.UseCases
 
             _isDead.Value = true;
             _seService.PlayOneShot(FMODEventPath.SE_ON_DEAD.Reference);
+            _seService.PlayOneShot(FMODEventPath.SE_TINNITUS.Reference);
             return true;
         }
     }

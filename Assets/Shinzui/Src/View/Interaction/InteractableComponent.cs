@@ -8,7 +8,7 @@ namespace Shinzui.View.Interaction
     public class InteractableComponent : MonoBehaviour
     {
         [Header("Interaction Settings")]
-        [SerializeField] private string displayName = "[E] Examine";
+        [SerializeField] private string displayName = "[E] 調べる";
         [SerializeField] private string interactableId = "InteractionTest";
         [SerializeField] private bool isOneTime = false;
         [SerializeField] private bool destroyOnInteract = false;

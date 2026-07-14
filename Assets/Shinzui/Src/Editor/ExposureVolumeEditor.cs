@@ -16,6 +16,7 @@ namespace Shinzui.Editor.Rendering.Exposure
         private SerializedDataParameter m_EyeAdaptation;
         private SerializedDataParameter m_SpeedUp;
         private SerializedDataParameter m_SpeedDown;
+        private SerializedDataParameter m_PortalExposureCompensation;
 
         public override void OnEnable()
         {
@@ -27,6 +28,7 @@ namespace Shinzui.Editor.Rendering.Exposure
             m_EyeAdaptation = Unpack(serializedObject.FindProperty("eyeAdaptation"));
             m_SpeedUp = Unpack(serializedObject.FindProperty("speedUp"));
             m_SpeedDown = Unpack(serializedObject.FindProperty("speedDown"));
+            m_PortalExposureCompensation = Unpack(serializedObject.FindProperty("portalExposureCompensation"));
         }
 
         public override void OnInspectorGUI()
@@ -44,6 +46,7 @@ namespace Shinzui.Editor.Rendering.Exposure
             PropertyField(m_EyeAdaptation);
             PropertyField(m_SpeedUp);
             PropertyField(m_SpeedDown);
+            PropertyField(m_PortalExposureCompensation);
         }
 
         private void DrawFilteringField()

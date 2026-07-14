@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0, g: 0, b: 0, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.2
+  m_FogDensity: 0.3
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
@@ -151,10 +151,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 168151107}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1000, y: 35}
+  m_SizeDelta: {x: 0, y: -1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &116290380
 MonoBehaviour:
@@ -176,10 +176,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Interaction Message Here
+  m_text: "\u3053\u3053\u306B\u30A4\u30F3\u30BF\u30E9\u30AF\u30B7\u30E7\u30F3"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 601c4f4e8a99e5d4eba6ddaa8420dc45, type: 2}
+  m_sharedMaterial: {fileID: -5132032862225239069, guid: 601c4f4e8a99e5d4eba6ddaa8420dc45, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -203,10 +203,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 31.3
-  m_fontSizeBase: 36
+  m_fontSize: 23
+  m_fontSizeBase: 23
   m_fontWeight: 400
-  m_enableAutoSizing: 1
+  m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -294,6 +294,13 @@ MonoBehaviour:
   playerCollider: {fileID: 119550614}
   mainCamera: {fileID: 632997464}
   rotationSpeed: 270
+  movingRotationSmoothTime: 0.12
+  idleRotationSmoothTime: 0.2
+  bodyFreeLookAngle: 8
+  groundProbeDistance: 0.25
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
   staminaSlider: {fileID: 1958970259}
   staminaFillImage: {fileID: 148840333}
   staminaColorGradient:
@@ -447,6 +454,7 @@ Transform:
   - {fileID: 2108891097}
   - {fileID: 1217330892}
   - {fileID: 1679333298}
+  - {fileID: 2133416721}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &119550618
@@ -501,11 +509,11 @@ MonoBehaviour:
   CollisionTag: 
   EventReference:
     Guid:
-      Data1: 1100711871
-      Data2: 1193503330
-      Data3: 717296560
-      Data4: 1239062893
-    Path: event:/Test
+      Data1: -642031058
+      Data2: 1282907238
+      Data3: 1194389122
+      Data4: -385361412
+    Path: event:/BGM/TunnelAmbient
   Event: 
   EventPlayTrigger: 1
   EventStopTrigger: 2
@@ -525,12 +533,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 128163229}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 518334742}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &128163232
 MonoBehaviour:
@@ -806,6 +814,9 @@ MonoBehaviour:
   m_IntensityMultiplier: 1
   m_DisplayEmissiveMesh: 0
   m_IncludeForRayTracing: 1
+  m_Initialized: 1
+  m_LastLightType: 0
+  m_LastSpotAngle: 30
 --- !u!1 &168151106
 GameObject:
   m_ObjectHideFlags: 0
@@ -839,10 +850,10 @@ RectTransform:
   - {fileID: 116290379}
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -450}
-  m_SizeDelta: {x: 1000, y: 35}
+  m_SizeDelta: {x: -920, y: -1045}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &168151108
 CanvasGroup:
@@ -1279,6 +1290,8 @@ GameObject:
   m_Component:
   - component: {fileID: 396944460}
   - component: {fileID: 396944459}
+  - component: {fileID: 396944462}
+  - component: {fileID: 396944461}
   m_Layer: 5
   m_Name: GameOverPanel
   m_TagString: Untagged
@@ -1301,6 +1314,8 @@ MonoBehaviour:
   jumpscareDelay: 0.8
   pauseGameOnGameOver: 1
   gameOverCanvasGroup: {fileID: 0}
+  gameOverDissolveView: {fileID: 396944461}
+  waitForDissolveBeforeGameOverUi: 1
   onJumpscareRequested:
     m_PersistentCalls:
       m_Calls: []
@@ -1321,11 +1336,67 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: -1820, y: -980}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &396944461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396944458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63ebaf2a261f4d17b0ae6ff88b74a1a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GameOverDissolveView
+  targetVolume: {fileID: 396944462}
+  duration: 1.35
+  progressCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 3.1020408
+      outSlope: 3.1020408
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.058333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  resetOnAwake: 1
+--- !u!114 &396944462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396944458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: c72846b6b2e89c543b2fba68734f27f1, type: 2}
 --- !u!1 &467162262
 GameObject:
   m_ObjectHideFlags: 0
@@ -1393,10 +1464,10 @@ RectTransform:
   - {fileID: 858249418}
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: -1820, y: -980}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &483773076
 GameObject:
@@ -1646,7 +1717,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 1.559, z: 0.248}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 128163231}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &526712091
@@ -1886,11 +1958,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a89f50f4e81476241b1e005514b65216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Interaction.ItemTest
-  displayName: '[E] Pick up'
+  displayName: "[E] \u62FE\u3046"
   interactableId: special_speed_boots
   isOneTime: 1
   destroyOnInteract: 1
-  interactMessage: Get Red Potion
+  interactMessage: "\u53E4\u3073\u305F\u9774\u3092\u5165\u624B\u3057\u305F"
 --- !u!1 &608900463
 GameObject:
   m_ObjectHideFlags: 0
@@ -2402,11 +2474,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a89f50f4e81476241b1e005514b65216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Interaction.ItemTest
-  displayName: '[E] Pick up'
+  displayName: "[E] \u62FE\u3046"
   interactableId: stone
   isOneTime: 1
   destroyOnInteract: 1
-  interactMessage: You get a stone.
+  interactMessage: "\u3044\u3057\u3092\u5165\u624B\u3057\u305F"
 --- !u!65 &690180212
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2760,10 +2832,10 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 0.9607843, b: 0.9019608, a: 1}
-  m_Intensity: 1
-  m_Range: 40
+  m_Intensity: 849.3496
+  m_Range: 20
   m_SpotAngle: 50
-  m_InnerSpotAngle: 15
+  m_InnerSpotAngle: 20
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 2
@@ -2826,7 +2898,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c8bca95f7c947b4db5fb152a0d693d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.cqf.urpvolumetricfog.runtime::VolumetricAdditionalLight
-  anisotropy: 0.25
+  anisotropy: 0.9
   scattering: 0.25
   radius: 0.2
 --- !u!114 &775528542
@@ -2841,8 +2913,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 657d28f71bf5f2141a0df5e7c482cb76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Lighting.PhysicalLight
-  m_Unit: 1
-  m_PhysicalIntensity: 1
+  m_Unit: 0
+  m_PhysicalIntensity: 500
   m_IesProfile: {fileID: 0}
   m_IesCutoffAngle: 100
   m_MoreOptions: 0
@@ -2853,6 +2925,9 @@ MonoBehaviour:
   m_IntensityMultiplier: 1
   m_DisplayEmissiveMesh: 0
   m_IncludeForRayTracing: 1
+  m_Initialized: 1
+  m_LastLightType: 0
+  m_LastSpotAngle: 50
 --- !u!1 &838556333
 GameObject:
   m_ObjectHideFlags: 0
@@ -3206,7 +3281,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 657d28f71bf5f2141a0df5e7c482cb76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Lighting.PhysicalLight
-  m_Unit: 1
+  m_Unit: 2
   m_PhysicalIntensity: 1
   m_IesProfile: {fileID: 0}
   m_IesCutoffAngle: 100
@@ -3218,6 +3293,9 @@ MonoBehaviour:
   m_IntensityMultiplier: 1
   m_DisplayEmissiveMesh: 0
   m_IncludeForRayTracing: 1
+  m_Initialized: 1
+  m_LastLightType: 1
+  m_LastSpotAngle: 30
 --- !u!1 &858249417
 GameObject:
   m_ObjectHideFlags: 0
@@ -3250,10 +3328,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 476488852}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -400}
-  m_SizeDelta: {x: 500, y: 40}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 280, y: 0}
+  m_SizeDelta: {x: 400, y: -60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &858249419
 MonoBehaviour:
@@ -3275,10 +3353,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Prompt Here
+  m_text: "\u3053\u3053\u306B\u30AD\u30E3\u30D7\u30B7\u30E7\u30F3"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 601c4f4e8a99e5d4eba6ddaa8420dc45, type: 2}
+  m_sharedMaterial: {fileID: -5132032862225239069, guid: 601c4f4e8a99e5d4eba6ddaa8420dc45, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3302,14 +3380,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 35.8
-  m_fontSizeBase: 36
+  m_fontSize: 25
+  m_fontSizeBase: 25
   m_fontWeight: 400
-  m_enableAutoSizing: 1
+  m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 4096
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -3400,10 +3478,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 15, y: 15}
+  m_SizeDelta: {x: -1905, y: -1065}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &877069339
 MonoBehaviour:
@@ -3563,10 +3641,10 @@ RectTransform:
   - {fileID: 1173013357}
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: -1820, y: -980}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &972126109
 MonoBehaviour:
@@ -3805,10 +3883,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 972126108}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 50, y: 50}
+  m_SizeDelta: {x: -50, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1173013358
 MonoBehaviour:
@@ -4010,8 +4088,8 @@ MonoBehaviour:
   swaySpeed: 1.8
   swayAmount: 0.8
   enableVolumetric: 1
-  anisotropy: 0.25
-  scattering: 1
+  anisotropy: 0.9
+  scattering: 0.25
   radius: 0.2
   maxStrobeBoost: 15
   volumetricScatteringBoost: 8
@@ -4194,6 +4272,9 @@ MonoBehaviour:
   m_IntensityMultiplier: 1
   m_DisplayEmissiveMesh: 0
   m_IncludeForRayTracing: 1
+  m_Initialized: 1
+  m_LastLightType: 0
+  m_LastSpotAngle: 30
 --- !u!1 &1292731142
 GameObject:
   m_ObjectHideFlags: 0
@@ -4456,6 +4537,8 @@ MonoBehaviour:
   interactionMessageView: {fileID: 168151109}
   specialItemHudView: {fileID: 929750188}
   playerDeathView: {fileID: 396944459}
+  enemyViews: []
+  horrorDetectionView: {fileID: 2133416720}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0
@@ -4639,6 +4722,9 @@ MonoBehaviour:
   m_IntensityMultiplier: 1
   m_DisplayEmissiveMesh: 0
   m_IncludeForRayTracing: 1
+  m_Initialized: 1
+  m_LastLightType: 0
+  m_LastSpotAngle: 30
 --- !u!1 &1550227529
 GameObject:
   m_ObjectHideFlags: 0
@@ -5796,11 +5882,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 893f7f84ed057e748ac6005fa3ddc09c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Interaction.InteractionTest
-  displayName: '[E] Search'
+  displayName: "[E] \u8ABF\u3079\u308B"
   interactableId: InteractionTest
   isOneTime: 0
   destroyOnInteract: 0
-  interactMessage: '>_<'
+  interactMessage: "\u3069\u3053\u304B\u304B\u3089\u90AA\u60AA\u306A\u7B11\u3044\u58F0\u304C\u805E\u3053\u3048\u308B\n\u307C\u305F\u3082\uFF5E\u3061\u3082\u3061\u3082\u3061\u3082\u3061"
+--- !u!1 &2133416719
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2133416721}
+  - component: {fileID: 2133416720}
+  m_Layer: 0
+  m_Name: ScreenEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2133416720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133416719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d85daf4b879e22a479c69eaf9a8913e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.HorrorDetectionView
+  maxDistortionIntensity: 0.03
+  maxChromaticAberrationIntensity: 0.015
+  maxScanlineIntensity: 0.15
+--- !u!4 &2133416721
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2133416719}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 119550617}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2135961575
 GameObject:
   m_ObjectHideFlags: 0
@@ -6051,6 +6184,5 @@ SceneRoots:
   - {fileID: 1431612332}
   - {fileID: 1309310119}
   - {fileID: 1964403825}
-  - {fileID: 128163231}
   - {fileID: 483773079}
   - {fileID: 1977063035}

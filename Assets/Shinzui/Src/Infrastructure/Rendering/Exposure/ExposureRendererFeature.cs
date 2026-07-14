@@ -9,7 +9,7 @@ namespace Shinzui.Infrastructure.Rendering.Exposure
     {
         public Shader shader;
         public ComputeShader computeShader;
-        public RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingPostProcessing;
+        public RenderPassEvent injectionPoint = RenderPassEvent.BeforeRenderingPostProcessing;
     }
     
     public class ExposureRendererFeature : ScriptableRendererFeature

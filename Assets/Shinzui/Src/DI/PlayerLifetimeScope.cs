@@ -38,6 +38,7 @@ namespace Shinzui.DI
         [SerializeField] private SpecialItemHudView specialItemHudView;
         [SerializeField] private PlayerDeathView playerDeathView;
         [SerializeField] private EnemyView[] enemyViews;
+        [SerializeField] private HorrorDetectionView horrorDetectionView;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -197,6 +198,24 @@ namespace Shinzui.DI
             }
 
             builder.RegisterEntryPoint<InteractionPresenter>();
+
+            // ==========================================
+            // ホラー演出（敵発見時の画面ノイズ）のDI登録
+            // ==========================================
+            var horrorViewInstance = horrorDetectionView;
+            if (horrorViewInstance == null)
+            {
+                horrorViewInstance = FindFirstObjectByType<HorrorDetectionView>();
+            }
+
+            if (horrorViewInstance == null)
+            {
+                var horrorViewObject = new GameObject("HorrorDetectionView");
+                horrorViewInstance = horrorViewObject.AddComponent<HorrorDetectionView>();
+            }
+
+            builder.RegisterComponent(horrorViewInstance);
+            builder.RegisterEntryPoint<HorrorDetectionPresenter>();
         }
 
         private void RegisterSpecialItemHud(IContainerBuilder builder)

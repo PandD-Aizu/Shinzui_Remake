@@ -31,7 +31,7 @@ MonoBehaviour:
   settings:
     shader: {fileID: 4800000, guid: 682befa5b27f45a39ca5ba5fd80e82b2, type: 3}
     computeShader: {fileID: 7200000, guid: 6b054d4d2f7b4e08b2deb59148ce89c5, type: 3}
-    injectionPoint: 600
+    injectionPoint: 550
 --- !u!114 &-2416843845793650869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -88,6 +88,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ScreenSpaceShadows
   m_Active: 1
   m_Shader: {fileID: 4800000, guid: 0f854b35a0cf61a429bd5dcfea30eddd, type: 3}
+--- !u!114 &-636569812922321553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b00045f12942b46c698459096c89274e, type: 3}
+  m_Name: HorrorDetection
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.FullScreenPassRendererFeature
+  m_Active: 1
+  injectionPoint: 600
+  fetchColorBuffer: 1
+  requirements: 0
+  passMaterial: {fileID: 2100000, guid: 99f6e6b04bbde60489b5b9a73f44f46f, type: 2}
+  passIndex: 0
+  bindDepthStencilAttachment: 0
+  m_Version: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,7 +140,9 @@ MonoBehaviour:
   - {fileID: 6817841505760810079}
   - {fileID: -2416843845793650869}
   - {fileID: -3261005941647117757}
-  m_RendererFeatureMap: 42ebfea99763edaed1710e131777f2565f94c91dbad69d5e4b67e1c553a575de4372afa55f94bed2
+  - {fileID: -636569812922321553}
+  - {fileID: 7228978494421125303}
+  m_RendererFeatureMap: 42ebfea99763edaed1710e131777f2565f94c91dbad69d5e4b67e1c553a575de4372afa55f94bed2954710d6ddd139c36f3507ba20732af7b7c8e8d0a37d5264
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -180,4 +202,20 @@ MonoBehaviour:
   m_Active: 1
   settings:
     shader: {fileID: 4800000, guid: ec4e22da188d4bf796f6e6a12cf7ca72, type: 3}
+    injectionPoint: 600
+--- !u!114 &7228978494421125303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d35a2f8e274a1d8ae9623be143d248, type: 3}
+  m_Name: GameOverDissolveRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.GameOverDissolve.GameOverDissolveRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 52b927b00b1446369a65b5eb00e74c3d, type: 3}
     injectionPoint: 600
