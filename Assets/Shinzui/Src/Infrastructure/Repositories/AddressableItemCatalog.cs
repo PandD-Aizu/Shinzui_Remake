@@ -9,16 +9,13 @@ namespace Shinzui.Infrastructure.Repositories
     {
         private readonly Dictionary<string, ItemDefinition> _itemDatabase = new()
         {
-            { "stone", new ItemDefinition("stone", "Stone", "A stone.", "Sprite/Medicine", ItemType.Equipment, 99) },
-            { "potion_red", new ItemDefinition("potion_red", "Red Potion", "A red potion that restores health.", "Sprite/Medicine", ItemType.Consumable, 99) },
-            { "potion_blue", new ItemDefinition("potion_blue", "Blue Potion", "A blue potion that restores magic energy.", "Sprite/Medicine", ItemType.Consumable, 99) },
-            { "potion_stamina", new ItemDefinition("potion_stamina", "Stamina Potion", "A stamina potion that restores stamina.", "Sprite/Medicine", ItemType.Consumable, 99) },
-            { "sword_iron", new ItemDefinition("sword_iron", "Iron Sword", "A common sword made of iron.", "Sprite/Medicine", ItemType.Equipment, 1) },
-            { "key_old", new ItemDefinition("key_old", "Old Key", "A rusty old iron key.", "Sprite/Medicine", ItemType.Key, 1) },
-            { "FlashlightBattery", new ItemDefinition("FlashlightBattery", "Spare Battery", "A spare battery for the flashlight.", "Sprite/Medicine", ItemType.Consumable, 99) },
-            { "special_death_charm", new SpecialItemDefinition("special_death_charm", "Death Charm", "Prevents death once, then disappears.", "Sprite/Medicine", new SpecialItemModifiers(1.0f, 1.0f, true)) },
-            { "special_speed_boots", new SpecialItemDefinition("special_speed_boots", "Speed Boots", "Increases movement speed while held.", "Sprite/Medicine", new SpecialItemModifiers(1.2f, 1.0f, false)) },
-            { "special_stamina_core", new SpecialItemDefinition("special_stamina_core", "Stamina Core", "Increases stamina recovery speed while held.", "Sprite/Medicine", new SpecialItemModifiers(1.0f, 1.5f, false)) }
+            { "石", new ItemDefinition("stone", "石", "ただの石", "Sprite/Medicine", ItemType.Equipment, 99) },
+            { "スタミナ剤", new ItemDefinition("potion_stamina", "スタミナ剤", "スタミナが一時的に減少しなくなる", "Sprite/Medicine", ItemType.Consumable, 99) },
+            { "鍵", new ItemDefinition("key_old", "古びた鍵", "トンネル内のどこかで使用できる鍵", "Sprite/Medicine", ItemType.Key, 1) },
+            { "乾電池", new ItemDefinition("FlashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/Medicine", ItemType.Consumable, 99) },
+            { "古びたお守り", new SpecialItemDefinition("special_death_charm", "古びたお守り", "一回だけ死を防ぐ", "Sprite/Medicine", new SpecialItemModifiers(1.0f, 1.0f, true)) },
+            { "古びた靴", new SpecialItemDefinition("special_speed_boots", "古びた靴", "移動速度が上昇する", "Sprite/Medicine", new SpecialItemModifiers(1.2f, 1.0f, false)) },
+            { "古びた水筒", new SpecialItemDefinition("special_stamina_core", "古びた水筒", "スタミナ回復速度が上昇する", "Sprite/Medicine", new SpecialItemModifiers(1.0f, 1.5f, false)) }
         };
 
         public Task<ItemDefinition> GetItemAsync(string itemId)

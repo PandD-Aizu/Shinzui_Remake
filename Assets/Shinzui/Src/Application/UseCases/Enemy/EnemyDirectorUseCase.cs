@@ -4,21 +4,30 @@ using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Domain.ValueObjects.Enemy;
 using Shinzui.Domain.ValueObjects.FMOD;
 using UnityEngine;
+using R3;
 
 namespace Shinzui.Application.UseCases.Enemy
 {
     /// <summary>
     /// ゲーム全体を監視して個別Enemyへ命令を割り当てる統括AI
     /// </summary>
-    public class EnemyDirectorUseCase
+    public class EnemyDirectorUseCase : IDisposable
     {
         private readonly IFMODSEService _seService;
         private EnemyCommand[] _commands = Array.Empty<EnemyCommand>();
         private bool _wasPlayerFound;
+        private readonly ReactiveProperty<bool> _isPlayerFound = new(false);
+
+        public ReadOnlyReactiveProperty<bool> IsPlayerFound => _isPlayerFound;
 
         public EnemyDirectorUseCase(IFMODSEService seService)
         {
             _seService = seService;
+        }
+
+        public void Dispose()
+        {
+            _isPlayerFound.Dispose();
         }
 
         /// <summary>
@@ -44,6 +53,7 @@ namespace Shinzui.Application.UseCases.Enemy
             }
 
             _wasPlayerFound = isPlayerFound;
+            _isPlayerFound.Value = isPlayerFound;
 
             if (chaseEnemyIndex >= 0)
             {

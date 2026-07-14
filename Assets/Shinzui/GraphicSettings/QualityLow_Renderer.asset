@@ -44,7 +44,8 @@ MonoBehaviour:
   - {fileID: 3875538281453395524}
   - {fileID: 153602252903091045}
   - {fileID: -3478492315338128240}
-  m_RendererFeatureMap: 441e759388adc835650bfd686fb4210290445846abe9b9cf
+  - {fileID: 7228978494421125305}
+  m_RendererFeatureMap: 441e759388adc835650bfd686fb4210290445846abe9b9cfb9c8e8d0a37d5264
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -104,3 +105,19 @@ MonoBehaviour:
   m_Active: 1
   downsampleDepthShader: {fileID: 4800000, guid: cffeaeec0396a2c4dad475266cc8dfeb, type: 3}
   volumetricFogShader: {fileID: 4800000, guid: 08f816187f9af0244a95556ee0cab83f, type: 3}
+--- !u!114 &7228978494421125305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d35a2f8e274a1d8ae9623be143d248, type: 3}
+  m_Name: GameOverDissolveRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.GameOverDissolve.GameOverDissolveRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 52b927b00b1446369a65b5eb00e74c3d, type: 3}
+    injectionPoint: 600

@@ -17,64 +17,61 @@ namespace Shinzui.Editor.Lighting
             Light light = (Light)target;
             if (light == null) return;
 
-            // 1. 各ライトに PhysicalLight を自動アタッチ (非表示設定)
-            PhysicalLight data = light.GetComponent<PhysicalLight>();
-            if (data == null)
+            foreach (var t in targets)
             {
-                data = light.gameObject.AddComponent<PhysicalLight>();
-                data.hideFlags = HideFlags.HideInInspector;
+                GetOrCreatePhysicalLight((Light)t);
             }
 
-            // 外部要因（タイムライン等）による強度変更を同期
-            data.SyncFromLight();
+            // 各ライトに PhysicalLight を自動アタッチ (非表示設定)
+            PhysicalLight data = GetOrCreatePhysicalLight(light);
+            data.EnsureValidUnitForCurrentLight();
 
-            // 2. More Options のトグル描画
+            // More Options のトグル描画
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
             bool moreOptions = EditorGUILayout.ToggleLeft("More Options", data.MoreOptions, GUILayout.Width(100));
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Toggle More Options");
+                Undo.RecordObjects(GetUndoTargets(), "Toggle More Options");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.MoreOptions = moreOptions;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.MoreOptions = moreOptions;
+                    EditorUtility.SetDirty(pl);
                 }
             }
             EditorGUILayout.EndHorizontal();
 
-            // 3. Light Type の描画
+            // Light Type の描画
             EditorGUI.BeginChangeCheck();
             LightType type = (LightType)EditorGUILayout.EnumPopup("Light Type", light.type);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Change Light Type");
+                Undo.RecordObjects(GetUndoTargets(), "Change Light Type");
                 foreach (var t in targets)
                 {
                     Light l = (Light)t;
                     l.type = type;
                     EditorUtility.SetDirty(l);
                     
-                    var pl = l.GetComponent<PhysicalLight>();
-                    if (pl != null) pl.UpdateIntensityFromPhysical();
+                    var pl = GetOrCreatePhysicalLight(l);
+                    pl.EnsureValidUnitForCurrentLight();
+                    pl.UpdateIntensityFromPhysical();
+                    EditorUtility.SetDirty(pl);
                 }
             }
             EditorGUILayout.Space(5);
 
-            // 4. Color Temperature / Color の描画
+            // Color Temperature / Color の描画
             DrawColorTemperatureSection(light, data);
             EditorGUILayout.Space(5);
 
-            // 5. Intensity（物理単位連動）の描画
+            // Intensity（物理単位連動）の描画
             DrawPhysicalIntensitySection(light, data);
             EditorGUILayout.Space(5);
 
-            // 6. Range の描画（Directional以外）
+            // Range の描画（Directional以外）
             if (light.type != LightType.Directional)
             {
                 EditorGUI.BeginChangeCheck();
@@ -92,7 +89,13 @@ namespace Shinzui.Editor.Lighting
                 EditorGUILayout.Space(5);
             }
 
-            // 7. Indirect Multiplier
+            if (light.type == LightType.Spot)
+            {
+                DrawSpotShapeSection(light);
+                EditorGUILayout.Space(5);
+            }
+
+            // Indirect Multiplier
             EditorGUI.BeginChangeCheck();
             float bounce = EditorGUILayout.FloatField("Indirect Multiplier", light.bounceIntensity);
             if (EditorGUI.EndChangeCheck())
@@ -107,7 +110,7 @@ namespace Shinzui.Editor.Lighting
             }
             EditorGUILayout.Space(5);
 
-            // 8. Cookie (Spot, Area, Directional, Pointで表示)
+            // Cookie (Spot, Area, Directional, Pointで表示)
             if (light.type != LightType.Rectangle && light.type != LightType.Disc)
             {
                 EditorGUI.BeginChangeCheck();
@@ -141,22 +144,19 @@ namespace Shinzui.Editor.Lighting
                 EditorGUILayout.Space(5);
             }
 
-            // 9. IES Profile & Cutoff (Point, Spot, Areaで表示)
+            // IES Profile & Cutoff (Point, Spot, Areaで表示)
             if (light.type != LightType.Directional)
             {
                 EditorGUI.BeginChangeCheck();
                 Texture2D iesProfile = (Texture2D)EditorGUILayout.ObjectField("IES Profile", data.IesProfile, typeof(Texture2D), false);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObjects(targets, "Change IES Profile");
+                    Undo.RecordObjects(GetUndoTargets(), "Change IES Profile");
                     foreach (var t in targets)
                     {
-                        var pl = ((Light)t).GetComponent<PhysicalLight>();
-                        if (pl != null)
-                        {
-                            pl.IesProfile = iesProfile;
-                            EditorUtility.SetDirty(pl);
-                        }
+                        var pl = GetOrCreatePhysicalLight((Light)t);
+                        pl.IesProfile = iesProfile;
+                        EditorUtility.SetDirty(pl);
                     }
                 }
 
@@ -166,26 +166,23 @@ namespace Shinzui.Editor.Lighting
                     float iesCutoff = EditorGUILayout.Slider("IES Cutoff Angle (%)", data.IesCutoffAngle, 0.0f, 100.0f);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        Undo.RecordObjects(targets, "Change IES Cutoff Angle");
+                        Undo.RecordObjects(GetUndoTargets(), "Change IES Cutoff Angle");
                         foreach (var t in targets)
                         {
-                            var pl = ((Light)t).GetComponent<PhysicalLight>();
-                            if (pl != null)
-                            {
-                                pl.IesCutoffAngle = iesCutoff;
-                                EditorUtility.SetDirty(pl);
-                            }
+                            var pl = GetOrCreatePhysicalLight((Light)t);
+                            pl.IesCutoffAngle = iesCutoff;
+                            EditorUtility.SetDirty(pl);
                         }
                     }
                 }
                 EditorGUILayout.Space(5);
             }
 
-            // 10. Shadows セクション
+            // Shadows セクション
             DrawShadowsSection(light);
             EditorGUILayout.Space(5);
 
-            // 11. More Options がONのときの項目
+            // More Options がONのときの項目
             if (data.MoreOptions)
             {
                 DrawMoreOptionsSection(light, data);
@@ -196,10 +193,40 @@ namespace Shinzui.Editor.Lighting
             {
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null) pl.UpdateIntensityFromPhysical();
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.UpdateIntensityFromPhysical();
                 }
             }
+        }
+
+        private PhysicalLight GetOrCreatePhysicalLight(Light light)
+        {
+            PhysicalLight data = light.GetComponent<PhysicalLight>();
+            if (data == null)
+            {
+                data = Undo.AddComponent<PhysicalLight>(light.gameObject);
+            }
+
+            if (data.hideFlags != HideFlags.HideInInspector)
+            {
+                data.hideFlags = HideFlags.HideInInspector;
+                EditorUtility.SetDirty(data);
+            }
+
+            return data;
+        }
+
+        private Object[] GetUndoTargets()
+        {
+            var objects = new Object[targets.Length * 2];
+            for (int i = 0; i < targets.Length; i++)
+            {
+                Light light = (Light)targets[i];
+                objects[i * 2] = light;
+                objects[i * 2 + 1] = GetOrCreatePhysicalLight(light);
+            }
+
+            return objects;
         }
 
         private void DrawColorTemperatureSection(Light light, PhysicalLight data)
@@ -210,7 +237,7 @@ namespace Shinzui.Editor.Lighting
             bool useTemp = EditorGUILayout.Toggle("Use Color Temperature", light.useColorTemperature);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Toggle Color Temperature");
+                Undo.RecordObjects(GetUndoTargets(), "Toggle Color Temperature");
                 foreach (var t in targets)
                 {
                     Light l = (Light)t;
@@ -226,7 +253,7 @@ namespace Shinzui.Editor.Lighting
                 Color filterColor = EditorGUILayout.ColorField("Filter", light.color);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObjects(targets, "Change Filter Color");
+                    Undo.RecordObjects(GetUndoTargets(), "Change Filter Color");
                     foreach (var t in targets)
                     {
                         Light l = (Light)t;
@@ -241,7 +268,7 @@ namespace Shinzui.Editor.Lighting
                 float temp = EditorGUILayout.Slider(new GUIContent("Temperature (K)"), light.colorTemperature, 1500f, 20000f);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObjects(targets, "Change Color Temperature");
+                    Undo.RecordObjects(GetUndoTargets(), "Change Color Temperature");
                     foreach (var t in targets)
                     {
                         Light l = (Light)t;
@@ -263,7 +290,7 @@ namespace Shinzui.Editor.Lighting
                 Color color = EditorGUILayout.ColorField("Color", light.color);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObjects(targets, "Change Light Color");
+                    Undo.RecordObjects(GetUndoTargets(), "Change Light Color");
                     foreach (var t in targets)
                     {
                         Light l = (Light)t;
@@ -315,15 +342,12 @@ namespace Shinzui.Editor.Lighting
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Change Light Unit");
+                Undo.RecordObjects(GetUndoTargets(), "Change Light Unit");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.Unit = selectedUnit;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.Unit = selectedUnit;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 
@@ -332,22 +356,19 @@ namespace Shinzui.Editor.Lighting
             
             float physicalInt = data.PhysicalIntensity;
             
-            float maxSliderLimit = 20000f;
-            if (selectedUnit == PhysicalLight.LightUnit.EV100) maxSliderLimit = 20f;
+            float minSliderLimit = selectedUnit == PhysicalLight.LightUnit.EV100 ? -16f : 0f;
+            float maxSliderLimit = GetIntensitySliderMax(selectedUnit, light.type);
 
             EditorGUI.BeginChangeCheck();
-            physicalInt = EditorGUILayout.Slider(new GUIContent("Intensity"), physicalInt, 0.0f, maxSliderLimit);
+            physicalInt = EditorGUILayout.Slider(new GUIContent("Intensity"), physicalInt, minSliderLimit, maxSliderLimit);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Change Physical Intensity");
+                Undo.RecordObjects(GetUndoTargets(), "Change Physical Intensity");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.PhysicalIntensity = physicalInt;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.PhysicalIntensity = physicalInt;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 
@@ -356,6 +377,62 @@ namespace Shinzui.Editor.Lighting
                 ShowIntensityPresetMenu(data, light, selectedUnit);
             }
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawSpotShapeSection(Light light)
+        {
+            EditorGUILayout.LabelField("Shape Settings", EditorStyles.boldLabel);
+
+            EditorGUI.BeginChangeCheck();
+            float spotAngle = EditorGUILayout.Slider("Spot Angle", light.spotAngle, 1.0f, 179.0f);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObjects(GetUndoTargets(), "Change Spot Angle");
+                foreach (var t in targets)
+                {
+                    Light l = (Light)t;
+                    l.spotAngle = spotAngle;
+                    if (l.innerSpotAngle > spotAngle)
+                    {
+                        l.innerSpotAngle = spotAngle;
+                    }
+
+                    var pl = GetOrCreatePhysicalLight(l);
+                    pl.UpdateIntensityFromPhysical();
+                    EditorUtility.SetDirty(l);
+                    EditorUtility.SetDirty(pl);
+                }
+            }
+
+            EditorGUI.BeginChangeCheck();
+            float innerSpotAngle = EditorGUILayout.Slider("Inner Spot Angle", light.innerSpotAngle, 0.0f, light.spotAngle);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObjects(GetUndoTargets(), "Change Inner Spot Angle");
+                foreach (var t in targets)
+                {
+                    Light l = (Light)t;
+                    l.innerSpotAngle = Mathf.Clamp(innerSpotAngle, 0.0f, l.spotAngle);
+                    EditorUtility.SetDirty(l);
+                }
+            }
+        }
+
+        private float GetIntensitySliderMax(PhysicalLight.LightUnit unit, LightType type)
+        {
+            switch (unit)
+            {
+                case PhysicalLight.LightUnit.Lumen:
+                    return type == LightType.Rectangle || type == LightType.Disc ? 100000.0f : 50000.0f;
+                case PhysicalLight.LightUnit.Lux:
+                    return type == LightType.Directional ? 120000.0f : 20000.0f;
+                case PhysicalLight.LightUnit.EV100:
+                    return 20.0f;
+                case PhysicalLight.LightUnit.Nits:
+                    return 10000.0f;
+                default:
+                    return 20000.0f;
+            }
         }
 
         private void DrawShadowsSection(Light light)
@@ -444,15 +521,12 @@ namespace Shinzui.Editor.Lighting
             bool affectDiffuse = EditorGUILayout.Toggle("Affect Diffuse", data.AffectDiffuse);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Toggle Affect Diffuse");
+                Undo.RecordObjects(GetUndoTargets(), "Toggle Affect Diffuse");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.AffectDiffuse = affectDiffuse;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.AffectDiffuse = affectDiffuse;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 
@@ -460,15 +534,12 @@ namespace Shinzui.Editor.Lighting
             bool affectSpecular = EditorGUILayout.Toggle("Affect Specular", data.AffectSpecular);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Toggle Affect Specular");
+                Undo.RecordObjects(GetUndoTargets(), "Toggle Affect Specular");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.AffectSpecular = affectSpecular;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.AffectSpecular = affectSpecular;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 
@@ -476,15 +547,12 @@ namespace Shinzui.Editor.Lighting
             bool rangeAtten = EditorGUILayout.Toggle("Range Attenuation", data.RangeAttenuation);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Toggle Range Attenuation");
+                Undo.RecordObjects(GetUndoTargets(), "Toggle Range Attenuation");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.RangeAttenuation = rangeAtten;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.RangeAttenuation = rangeAtten;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 
@@ -494,15 +562,12 @@ namespace Shinzui.Editor.Lighting
                 float fadeDist = EditorGUILayout.FloatField("Fade Distance", data.FadeDistance);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObjects(targets, "Change Fade Distance");
+                    Undo.RecordObjects(GetUndoTargets(), "Change Fade Distance");
                     foreach (var t in targets)
                     {
-                        var pl = ((Light)t).GetComponent<PhysicalLight>();
-                        if (pl != null)
-                        {
-                            pl.FadeDistance = fadeDist;
-                            EditorUtility.SetDirty(pl);
-                        }
+                        var pl = GetOrCreatePhysicalLight((Light)t);
+                        pl.FadeDistance = fadeDist;
+                        EditorUtility.SetDirty(pl);
                     }
                 }
             }
@@ -511,15 +576,12 @@ namespace Shinzui.Editor.Lighting
             float intMult = EditorGUILayout.FloatField("Intensity Multiplier", data.IntensityMultiplier);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Change Intensity Multiplier");
+                Undo.RecordObjects(GetUndoTargets(), "Change Intensity Multiplier");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.IntensityMultiplier = intMult;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.IntensityMultiplier = intMult;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 
@@ -529,15 +591,12 @@ namespace Shinzui.Editor.Lighting
                 bool displayEmissive = EditorGUILayout.Toggle("Display Emissive Mesh", data.DisplayEmissiveMesh);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObjects(targets, "Toggle Display Emissive Mesh");
+                    Undo.RecordObjects(GetUndoTargets(), "Toggle Display Emissive Mesh");
                     foreach (var t in targets)
                     {
-                        var pl = ((Light)t).GetComponent<PhysicalLight>();
-                        if (pl != null)
-                        {
-                            pl.DisplayEmissiveMesh = displayEmissive;
-                            EditorUtility.SetDirty(pl);
-                        }
+                        var pl = GetOrCreatePhysicalLight((Light)t);
+                        pl.DisplayEmissiveMesh = displayEmissive;
+                        EditorUtility.SetDirty(pl);
                     }
                 }
             }
@@ -546,15 +605,12 @@ namespace Shinzui.Editor.Lighting
             bool rayTracing = EditorGUILayout.Toggle("Include For Ray Tracing", data.IncludeForRayTracing);
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObjects(targets, "Toggle Include For Ray Tracing");
+                Undo.RecordObjects(GetUndoTargets(), "Toggle Include For Ray Tracing");
                 foreach (var t in targets)
                 {
-                    var pl = ((Light)t).GetComponent<PhysicalLight>();
-                    if (pl != null)
-                    {
-                        pl.IncludeForRayTracing = rayTracing;
-                        EditorUtility.SetDirty(pl);
-                    }
+                    var pl = GetOrCreatePhysicalLight((Light)t);
+                    pl.IncludeForRayTracing = rayTracing;
+                    EditorUtility.SetDirty(pl);
                 }
             }
 

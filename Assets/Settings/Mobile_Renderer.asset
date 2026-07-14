@@ -26,8 +26,9 @@ MonoBehaviour:
     probeSamplingDebugMesh: {fileID: 0}
     probeSamplingDebugTexture: {fileID: 0}
     probeVolumeBlendStatesCS: {fileID: 0}
-  m_RendererFeatures: []
-  m_RendererFeatureMap: 
+  m_RendererFeatures:
+  - {fileID: 7228978494421125302}
+  m_RendererFeatureMap: b6c8e8d0a37d5264
   m_UseNativeRenderPass: 1
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 2
@@ -50,3 +51,19 @@ MonoBehaviour:
   m_CopyDepthMode: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
+--- !u!114 &7228978494421125302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d35a2f8e274a1d8ae9623be143d248, type: 3}
+  m_Name: GameOverDissolveRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.GameOverDissolve.GameOverDissolveRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 52b927b00b1446369a65b5eb00e74c3d, type: 3}
+    injectionPoint: 600

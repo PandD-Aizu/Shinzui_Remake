@@ -15,6 +15,10 @@ namespace Shinzui.View
         [Header("Game Over UI")]
         [SerializeField] private CanvasGroup gameOverCanvasGroup;
 
+        [Header("Game Over Dissolve")]
+        [SerializeField] private GameOverDissolveView gameOverDissolveView;
+        [SerializeField] private bool waitForDissolveBeforeGameOverUi = true;
+
         [Header("Hooks")]
         [SerializeField] private UnityEvent onJumpscareRequested;
         [SerializeField] private UnityEvent onGameOverShown;
@@ -63,6 +67,18 @@ namespace Shinzui.View
                     DelayType.UnscaledDeltaTime,
                     PlayerLoopTiming.Update,
                     this.GetCancellationTokenOnDestroy());
+            }
+
+            if (gameOverDissolveView != null)
+            {
+                if (waitForDissolveBeforeGameOverUi)
+                {
+                    await gameOverDissolveView.PlayAsync();
+                }
+                else
+                {
+                    gameOverDissolveView.Play();
+                }
             }
 
             SetGameOverVisible(true);
