@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using R3;
 using Shinzui.Application.DTOs.Inventory;
 using Shinzui.Application.Interfaces.Inventory;
+using Shinzui.Domain.Entities;
 using Shinzui.Domain.Entities.Inventory;
 using Shinzui.Domain.ValueObjects.Inventory;
 
@@ -13,6 +14,7 @@ namespace Shinzui.Application.UseCases.Inventory
         private readonly InventoryEntity _inventory;
         private readonly IItemCatalog _catalog;
         private readonly IInventoryRepository _repository;
+        private readonly PlayerEntity _playerEntity;
 
         private readonly ReactiveProperty<InventorySlotDto>[] _slotDtos;
         public ReadOnlyReactiveProperty<InventorySlotDto> GetSlotDto(int index) => _slotDtos[index];
@@ -34,11 +36,13 @@ namespace Shinzui.Application.UseCases.Inventory
         public InventoryUseCase(
             InventoryEntity inventory,
             IItemCatalog catalog,
-            IInventoryRepository repository)
+            IInventoryRepository repository,
+            PlayerEntity playerEntity)
         {
             _inventory = inventory;
             _catalog = catalog;
             _repository = repository;
+            _playerEntity = playerEntity;
 
             // 装備アイテムIDのストリームを構築
             EquippedItemId = _equippedSlotIndex
@@ -205,6 +209,20 @@ namespace Shinzui.Application.UseCases.Inventory
             if (slot == null || !slot.Item.IsConsumable) return false;
 
             // TODO: ここでアイテム効果を適用する
+            // アイテム効果の適用 (ぼたもち消費時にスタミナを全回復)
+            if (slot.Item.Id == "potion_botamochi")
+            {
+                if (_playerEntity != null)
+                {
+                    var stamina = _playerEntity.PlayerStamina;
+                    _playerEntity.PlayerStamina = stamina with 
+                    { 
+                        CurrentStamina = stamina.MaxStamina
+                    };
+                    _playerEntity.CurrentStamina.Value = stamina.MaxStamina;
+                    _playerEntity.IsExhausted.Value = false;
+                }
+            }
             
             // 使用したため個数を1減らす
             bool success = _inventory.TryRemoveItem(slotIndex, 1);
