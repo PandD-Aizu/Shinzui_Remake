@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Shinzui.View.GenerateTunnel
 {
@@ -41,7 +44,11 @@ namespace Shinzui.View.GenerateTunnel
     [DefaultExecutionOrder(-100)]
     public sealed class GenerateTunnelTestBootstrap : MonoBehaviour
     {
-        private const string TargetSceneName = "GenerateTunnelTest";
+        private static readonly HashSet<string> TargetSceneNames = new()
+        {
+            "GenerateTunnelTest",
+            "LatestStageGenerateTemp"
+        };
         private const string InstanceName = "[Generated Tunnel Map]";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -64,7 +71,7 @@ namespace Shinzui.View.GenerateTunnel
 
         private static void TryCreate(Scene scene)
         {
-            if (!scene.IsValid() || scene.name != TargetSceneName || GameObject.Find(InstanceName) != null)
+            if (!scene.IsValid() || !TargetSceneNames.Contains(scene.name) || GameObject.Find(InstanceName) != null)
             {
                 return;
             }
@@ -94,6 +101,8 @@ namespace Shinzui.View.GenerateTunnel
         [Min(0.0f)] [SerializeField] private float placementMargin = 2.0f;
 
         private const float ShellThickness = 0.2f;
+        private const string TunnelTemplateAssetPath = "Assets/Shinzui/3DModels/tunnelBase_tmp.fbx";
+        private const string CorridorTemplateAssetPath = "Assets/Shinzui/3DModels/Tunnel_Path_Long.fbx";
 
         private readonly List<TunnelNode> _tunnels = new();
         private readonly List<OpenEntrance> _openEntrances = new();
@@ -105,6 +114,8 @@ namespace Shinzui.View.GenerateTunnel
         private Material _markerMaterial;
         private System.Random _random;
         private GameObject _tunnelTemplate;
+        private GameObject _corridorTemplate;
+        private bool _corridorTemplateLongAxisIsX;
         private TunnelNode _specialTunnel;
 
         private static readonly Entrance[] Entrances =
@@ -128,6 +139,7 @@ namespace Shinzui.View.GenerateTunnel
             ClearGeneratedObjects();
             _random = new System.Random(seed);
             ConfigureFromTunnelTemplate();
+            ConfigureFromCorridorTemplate();
             CreateMaterials();
 
             _geometryRoot = new GameObject("Tunnel Map Geometry").transform;
@@ -271,13 +283,14 @@ namespace Shinzui.View.GenerateTunnel
                 {
                     renderer.sharedMaterial = shellMaterial;
                 }
+                ApplyStageCollisionRecursive(model);
             }
             else
             {
-                CreateBox(root, "Floor", Vector3.zero, new Vector3(tunnelWidth, ShellThickness, tunnelLength), shellMaterial);
-                CreateBox(root, "Ceiling", new Vector3(0.0f, tunnelHeight, 0.0f), new Vector3(tunnelWidth, ShellThickness, tunnelLength), shellMaterial);
-                CreateBox(root, "Left Wall", new Vector3(-tunnelWidth * 0.5f, tunnelHeight * 0.5f, 0.0f), new Vector3(ShellThickness, tunnelHeight, tunnelLength), shellMaterial);
-                CreateBox(root, "Right Wall", new Vector3(tunnelWidth * 0.5f, tunnelHeight * 0.5f, 0.0f), new Vector3(ShellThickness, tunnelHeight, tunnelLength), shellMaterial);
+                CreateStageBox(root, "Floor", Vector3.zero, new Vector3(tunnelWidth, ShellThickness, tunnelLength), shellMaterial);
+                CreateStageBox(root, "Ceiling", new Vector3(0.0f, tunnelHeight, 0.0f), new Vector3(tunnelWidth, ShellThickness, tunnelLength), shellMaterial);
+                CreateStageBox(root, "Left Wall", new Vector3(-tunnelWidth * 0.5f, tunnelHeight * 0.5f, 0.0f), new Vector3(ShellThickness, tunnelHeight, tunnelLength), shellMaterial);
+                CreateStageBox(root, "Right Wall", new Vector3(tunnelWidth * 0.5f, tunnelHeight * 0.5f, 0.0f), new Vector3(ShellThickness, tunnelHeight, tunnelLength), shellMaterial);
             }
 
             var node = new TunnelNode(position, root);
@@ -502,8 +515,24 @@ namespace Shinzui.View.GenerateTunnel
 
         private void CreatePassageShell(Transform corridor, float length, Material material)
         {
-            CreateBox(corridor, "Floor", Vector3.zero, new Vector3(corridorWidth, ShellThickness * 1.5f, length), material);
-            CreateBox(corridor, "Ceiling", new Vector3(0.0f, tunnelHeight, 0.0f), new Vector3(corridorWidth, ShellThickness, length), material);
+            if (_corridorTemplate != null)
+            {
+                GameObject model = Instantiate(_corridorTemplate, corridor, false);
+                model.name = "Tunnel_Path_Long";
+                model.SetActive(true);
+                model.transform.localRotation = _corridorTemplateLongAxisIsX
+                    ? Quaternion.Euler(0.0f, 90.0f, 0.0f)
+                    : Quaternion.identity;
+                CenterModelOnCorridor(model.transform, corridor);
+
+                ApplyStageCollisionRecursive(model);
+                CreateInvisibleStageCollider(corridor, "Walkable Floor Collider", Vector3.zero,
+                    new Vector3(corridorWidth, ShellThickness * 1.5f, length));
+                return;
+            }
+
+            CreateStageBox(corridor, "Floor", Vector3.zero, new Vector3(corridorWidth, ShellThickness * 1.5f, length), material);
+            CreateStageBox(corridor, "Ceiling", new Vector3(0.0f, tunnelHeight, 0.0f), new Vector3(corridorWidth, ShellThickness, length), material);
         }
 
         private bool OverlapsExistingTunnel(Vector3 candidate)
@@ -586,6 +615,10 @@ namespace Shinzui.View.GenerateTunnel
             }
             if (_tunnelTemplate == null)
             {
+                _tunnelTemplate = LoadProjectAsset(TunnelTemplateAssetPath);
+            }
+            if (_tunnelTemplate == null)
+            {
                 Debug.LogWarning("[GenerateTunnelTest] tunnelBase_tmp was not found. Using the fallback tunnel dimensions.", this);
                 return;
             }
@@ -601,7 +634,57 @@ namespace Shinzui.View.GenerateTunnel
                 tunnelHeight = Mathf.Max(tunnelHeight, bounds.size.y);
             }
 
-            _tunnelTemplate.SetActive(false);
+            if (_tunnelTemplate.scene.IsValid())
+            {
+                _tunnelTemplate.SetActive(false);
+            }
+            DisableTemplateMapRootForGeneratedStage();
+        }
+
+        private void ConfigureFromCorridorTemplate()
+        {
+            if (_corridorTemplate == null)
+            {
+                _corridorTemplate = GameObject.Find("Tunnel_Path_Long");
+            }
+            if (_corridorTemplate == null)
+            {
+                _corridorTemplate = LoadProjectAsset(CorridorTemplateAssetPath);
+            }
+            if (_corridorTemplate == null)
+            {
+                Debug.LogWarning("[GenerateTunnelTest] Tunnel_Path_Long was not found. Using the fallback corridor boxes.", this);
+                return;
+            }
+
+            Renderer templateRenderer = _corridorTemplate.GetComponentInChildren<Renderer>();
+            if (templateRenderer != null)
+            {
+                Bounds bounds = templateRenderer.bounds;
+                _corridorTemplateLongAxisIsX = bounds.size.x >= bounds.size.z;
+                corridorLength = Mathf.Max(bounds.size.x, bounds.size.z);
+                corridorWidth = Mathf.Max(1.0f, Mathf.Min(bounds.size.x, bounds.size.z));
+                tunnelHeight = Mathf.Max(tunnelHeight, bounds.size.y);
+            }
+
+            if (_corridorTemplate.scene.IsValid())
+            {
+                _corridorTemplate.SetActive(false);
+            }
+        }
+
+        private void DisableTemplateMapRootForGeneratedStage()
+        {
+            if (SceneManager.GetActiveScene().name != "LatestStageGenerateTemp" || _tunnelTemplate == null)
+            {
+                return;
+            }
+
+            Transform parent = _tunnelTemplate.transform.parent;
+            if (parent != null && parent.name == "MapRoot")
+            {
+                parent.gameObject.SetActive(false);
+            }
         }
 
         private static Material CreateMaterial(string materialName, Color color)
@@ -626,6 +709,143 @@ namespace Shinzui.View.GenerateTunnel
                 Destroy(collider);
             }
             return box;
+        }
+
+        private static GameObject CreateStageBox(Transform parent, string objectName, Vector3 localPosition, Vector3 localScale, Material material)
+        {
+            GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            box.name = objectName;
+            box.transform.SetParent(parent, false);
+            box.transform.localPosition = localPosition;
+            box.transform.localScale = localScale;
+            box.GetComponent<Renderer>().sharedMaterial = material;
+
+            int stageLayer = LayerMask.NameToLayer("Stage");
+            if (stageLayer >= 0)
+            {
+                box.layer = stageLayer;
+            }
+
+            return box;
+        }
+
+        private static GameObject CreateInvisibleStageCollider(Transform parent, string objectName, Vector3 localPosition, Vector3 localScale)
+        {
+            GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            box.name = objectName;
+            box.transform.SetParent(parent, false);
+            box.transform.localPosition = localPosition;
+            box.transform.localScale = localScale;
+
+            Renderer renderer = box.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.enabled = false;
+            }
+
+            int stageLayer = LayerMask.NameToLayer("Stage");
+            if (stageLayer >= 0)
+            {
+                box.layer = stageLayer;
+            }
+
+            return box;
+        }
+
+        private static void CenterModelOnCorridor(Transform model, Transform corridor)
+        {
+            if (!TryGetMeshBoundsInLocalSpace(model, corridor, out Bounds localBounds))
+            {
+                return;
+            }
+
+            Vector3 localPosition = model.localPosition;
+            localPosition.x -= localBounds.center.x;
+            localPosition.z -= localBounds.center.z;
+            model.localPosition = localPosition;
+        }
+
+        private static bool TryGetMeshBoundsInLocalSpace(
+            Transform model,
+            Transform localSpace,
+            out Bounds localBounds)
+        {
+            localBounds = default;
+            MeshFilter[] meshFilters = model.GetComponentsInChildren<MeshFilter>(true);
+            bool hasBounds = false;
+
+            foreach (MeshFilter meshFilter in meshFilters)
+            {
+                Mesh mesh = meshFilter.sharedMesh;
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                Bounds meshBounds = mesh.bounds;
+                Vector3 min = meshBounds.min;
+                Vector3 max = meshBounds.max;
+                Vector3[] corners =
+                {
+                    new(min.x, min.y, min.z),
+                    new(min.x, min.y, max.z),
+                    new(min.x, max.y, min.z),
+                    new(min.x, max.y, max.z),
+                    new(max.x, min.y, min.z),
+                    new(max.x, min.y, max.z),
+                    new(max.x, max.y, min.z),
+                    new(max.x, max.y, max.z)
+                };
+
+                foreach (Vector3 corner in corners)
+                {
+                    Vector3 worldCorner = meshFilter.transform.TransformPoint(corner);
+                    Vector3 localCorner = localSpace.InverseTransformPoint(worldCorner);
+                    if (!hasBounds)
+                    {
+                        localBounds = new Bounds(localCorner, Vector3.zero);
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        localBounds.Encapsulate(localCorner);
+                    }
+                }
+            }
+
+            return hasBounds;
+        }
+
+        private static void ApplyStageCollisionRecursive(GameObject root)
+        {
+            int stageLayer = LayerMask.NameToLayer("Stage");
+            foreach (Transform transform in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (stageLayer >= 0)
+                {
+                    transform.gameObject.layer = stageLayer;
+                }
+            }
+
+            foreach (MeshFilter meshFilter in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (meshFilter.sharedMesh == null || meshFilter.GetComponent<Collider>() != null)
+                {
+                    continue;
+                }
+
+                MeshCollider collider = meshFilter.gameObject.AddComponent<MeshCollider>();
+                collider.sharedMesh = meshFilter.sharedMesh;
+            }
+        }
+
+        private static GameObject LoadProjectAsset(string assetPath)
+        {
+#if UNITY_EDITOR
+            return AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+#else
+            return null;
+#endif
         }
 
         private void FrameSceneCamera()

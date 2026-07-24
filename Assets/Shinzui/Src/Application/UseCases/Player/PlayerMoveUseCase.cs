@@ -82,9 +82,18 @@ namespace Shinzui.Application.UseCases
             LayerMask stageMask = LayerMask.GetMask("Stage");
             if (Physics.Raycast(ray, out hit, rayDistance, stageMask))
             {
-                currentTunnelStart = hit.collider.transform.parent.Find("TunnelStart").gameObject;
-                currentTunnelEnd = hit.collider.transform.parent.Find("TunnelEnd").gameObject;
-                if(currentTunnelEnd == null || currentTunnelStart == null) Debug.Log("currentTunnel is null");
+                Transform tunnelRoot = hit.collider.transform.parent;
+                Transform tunnelStart = tunnelRoot != null ? tunnelRoot.Find("TunnelStart") : null;
+                Transform tunnelEnd = tunnelRoot != null ? tunnelRoot.Find("TunnelEnd") : null;
+                if (tunnelStart == null || tunnelEnd == null)
+                {
+                    currentTunnelStart = null;
+                    currentTunnelEnd = null;
+                    return;
+                }
+
+                currentTunnelStart = tunnelStart.gameObject;
+                currentTunnelEnd = tunnelEnd.gameObject;
             }
         }
     }
