@@ -279,6 +279,7 @@ namespace Shinzui.View.GenerateTunnel
                 GameObject model = Instantiate(_tunnelTemplate, root, false);
                 model.name = "tunnelBase_tmp";
                 model.SetActive(true);
+                CenterModelOnLocalSpace(model.transform, root);
                 foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>())
                 {
                     renderer.sharedMaterial = shellMaterial;
@@ -523,7 +524,10 @@ namespace Shinzui.View.GenerateTunnel
                 model.transform.localRotation = _corridorTemplateLongAxisIsX
                     ? Quaternion.Euler(0.0f, 90.0f, 0.0f)
                     : Quaternion.identity;
-                CenterModelOnCorridor(model.transform, corridor);
+                CenterModelOnLocalSpace(model.transform, corridor);
+
+                // 廊下の高さ調整用
+                model.transform.localPosition += new Vector3(0.0f, -0.8f, 0.0f);
 
                 ApplyStageCollisionRecursive(model);
                 CreateInvisibleStageCollider(corridor, "Walkable Floor Collider", Vector3.zero,
@@ -752,9 +756,9 @@ namespace Shinzui.View.GenerateTunnel
             return box;
         }
 
-        private static void CenterModelOnCorridor(Transform model, Transform corridor)
+        private static void CenterModelOnLocalSpace(Transform model, Transform localSpace)
         {
-            if (!TryGetMeshBoundsInLocalSpace(model, corridor, out Bounds localBounds))
+            if (!TryGetMeshBoundsInLocalSpace(model, localSpace, out Bounds localBounds))
             {
                 return;
             }
