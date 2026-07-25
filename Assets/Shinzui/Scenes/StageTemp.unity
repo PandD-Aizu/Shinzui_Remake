@@ -272,6 +272,7 @@ GameObject:
   - component: {fileID: 119550612}
   - component: {fileID: 119550619}
   - component: {fileID: 119550618}
+  - component: {fileID: 119550620}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -491,6 +492,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.PlayerThrowView
   throwForce: 15
   equipVisualOffset: {x: 0.2, y: -0.25, z: 0.4}
+--- !u!114 &119550620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119550611}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afaaf79c869349d2b9ec62af0ebcee9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.PlayerQuickItemSlotView
+  specialItemSlot: {fileID: 1550227531}
+  specialItemIcon: {fileID: 381390589}
+  normalItemSlot: {fileID: 1626533799}
+  normalItemIcon: {fileID: 2067962106}
 --- !u!1 &128163229
 GameObject:
   m_ObjectHideFlags: 0
@@ -1433,7 +1450,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1472,10 +1489,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 929750189}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &396944458
 GameObject:
@@ -2882,8 +2899,8 @@ RectTransform:
   - {fileID: 972126108}
   - {fileID: 1958970260}
   - {fileID: 196527158}
-  - {fileID: 1177533874}
   - {fileID: 929750189}
+  - {fileID: 1177533874}
   - {fileID: 396944460}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3767,7 +3784,7 @@ GameObject:
   - component: {fileID: 929750189}
   - component: {fileID: 929750188}
   m_Layer: 5
-  m_Name: SpecialItem
+  m_Name: QuickAccessSpecialItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3802,10 +3819,10 @@ RectTransform:
   - {fileID: 381390591}
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 875, y: -450}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: -1820, y: -980}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &972126107
 GameObject:
@@ -4135,7 +4152,7 @@ GameObject:
   - component: {fileID: 1177533874}
   - component: {fileID: 1177533875}
   m_Layer: 5
-  m_Name: Item
+  m_Name: QuickAccessItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4157,10 +4174,10 @@ RectTransform:
   - {fileID: 2067962105}
   m_Father: {fileID: 761664889}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 735, y: -460}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: -1820, y: -980}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1177533875
 MonoBehaviour:
@@ -4816,6 +4833,7 @@ MonoBehaviour:
   interactionView: {fileID: 119550618}
   interactionMessageView: {fileID: 168151109}
   specialItemHudView: {fileID: 929750188}
+  playerQuickItemSlotView: {fileID: 119550620}
   playerDeathView: {fileID: 396944459}
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
@@ -5099,10 +5117,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 929750189}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1550227531
 MonoBehaviour:
@@ -5280,10 +5298,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1177533874}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1626533799
 MonoBehaviour:
@@ -6174,10 +6192,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1177533874}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2067962106
 MonoBehaviour:
@@ -6192,7 +6210,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

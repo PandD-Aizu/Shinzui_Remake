@@ -65,10 +65,10 @@ namespace Shinzui.Application.UseCases.Inventory
                     {
                         _slotDtos[index].Value = CreateDto(index, stack);
 
-                        // 装備中のスロットが空になったか、装備品でなくなった場合は装備を解除
+                        // 装備中のスロットが空になった場合は装備を解除
                         if (_equippedSlotIndex.Value == index)
                         {
-                            if (stack == null || stack.Item.Type != ItemType.Equipment)
+                            if (stack == null)
                             {
                                 _equippedSlotIndex.Value = -1;
                             }
@@ -128,7 +128,7 @@ namespace Shinzui.Application.UseCases.Inventory
             }
 
             var slot = _inventory.GetSlot(slotIndex).CurrentValue;
-            if (slot == null || slot.Item.Type != ItemType.Equipment)
+            if (slot == null || slot.Item.Type == ItemType.Special)
             {
                 _equippedSlotIndex.Value = -1;
                 return;
