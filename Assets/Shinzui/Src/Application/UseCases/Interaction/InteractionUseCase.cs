@@ -63,8 +63,12 @@ namespace Shinzui.Application.UseCases.Interaction
                 
                 if (success)
                 {
-                    string displayName = item != null ? item.Name : itemId;
-                    _onShowMessage.OnNext(string.IsNullOrEmpty(message) ? $"Obtained {displayName}." : message);
+                    // カスタムメッセージが指定されていない場合は、デフォルトの取得メッセージを表示
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        string displayName = item != null ? item.Name : itemId;
+                        _onShowMessage.OnNext($"Obtained {displayName}.");
+                    }
                 }
 
                 return success;
@@ -77,9 +81,35 @@ namespace Shinzui.Application.UseCases.Interaction
                 {
                     _onShowMessage.OnNext(message);
                 }
-
+                
                 // 将来的な他のオブジェクトに対するインタラクトロジック拡張用のプレースホルダー
-                return true;
+                
+                // カタログからアイテム情報を非同期で取得
+                var item = await _itemCatalog.GetItemAsync(interactableId);
+                
+                bool success = false;
+                if (item != null && item.Type == ItemType.Special)
+                {
+                    var result = await _specialItemUseCase.AcquireAsync(interactableId);
+                    success = result.Succeeded;
+                }
+                else
+                {
+                    // インベントリへアイテムを追加
+                    success = await _inventoryUseCase.AddItemAsync(interactableId, 1);
+                }
+                
+                if (success)
+                {
+                    // カスタムメッセージが指定されていない場合は、デフォルトの取得メッセージを表示
+                    if (string.IsNullOrEmpty(message))
+                    {
+                        string displayName = item != null ? item.Name : interactableId;
+                        _onShowMessage.OnNext($"Obtained {displayName}.");
+                    }
+                }
+                
+                return success;
             }
         }
     }

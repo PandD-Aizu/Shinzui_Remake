@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using R3;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases.Flashlight;
+using Shinzui.Application.UseCases.Inventory;
+using Shinzui.Presentation.Inventory;
 using Shinzui.View.Flashlight;
+using Shinzui.View.Interaction;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -16,6 +19,8 @@ namespace Shinzui.Presentation.Flashlight
         private readonly IInputService _inputService;
         private readonly StrobeGaugeView _strobeGaugeView;
         private readonly EnemyPresenter _enemyPresenter;
+        private readonly InventoryUseCase _inventoryUseCase;
+        private readonly InteractionMessageView _messageView;
 
         private IDisposable _disposable;
 
@@ -24,13 +29,17 @@ namespace Shinzui.Presentation.Flashlight
             FlashlightView view,
             IInputService inputService,
             StrobeGaugeView strobeGaugeView,
-            EnemyPresenter enemyPresenter)
+            EnemyPresenter enemyPresenter,
+            InventoryUseCase inventoryUseCase,
+            InteractionMessageView messageView)
         {
             _useCase = useCase;
             _view = view;
             _inputService = inputService;
             _strobeGaugeView = strobeGaugeView;
             _enemyPresenter = enemyPresenter;
+            _inventoryUseCase =  inventoryUseCase;
+            _messageView = messageView;
         }
 
         private bool _wasAttackHeld;
@@ -75,6 +84,12 @@ namespace Shinzui.Presentation.Flashlight
         public void Tick()
         {
             float deltaTime = UnityEngine.Time.deltaTime;
+            
+            if (_inventoryUseCase == null)
+            {
+                Debug.LogError("_inventoryUseCase is NULL");
+                return;
+            }
 
             if (_inputService.FlashlightTogglePressed)
             {
@@ -82,10 +97,18 @@ namespace Shinzui.Presentation.Flashlight
             }
 
             // ストロボ入力処理
+            var idx = _inventoryUseCase.CheckItem("FlashlightBattery");
             bool isAttackHeld = _inputService.AttackHeld;
             if (isAttackHeld)
             {
-                _useCase.Charge(deltaTime);
+                if (idx >= 0)
+                {
+                    _useCase.Charge(deltaTime);
+                }
+                else
+                {
+                    _messageView.ShowMessage("乾電池切れのようだ");
+                }
             }
             else if (_wasAttackHeld)
             {
@@ -93,6 +116,7 @@ namespace Shinzui.Presentation.Flashlight
                 if (result.Fired)
                 {
                     ApplyStrobeToEnemies(result.Charge);
+                    _inventoryUseCase.UseItemAsync(idx);
                 }
             }
             _wasAttackHeld = isAttackHeld;
