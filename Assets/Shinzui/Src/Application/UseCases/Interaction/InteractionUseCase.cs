@@ -37,16 +37,9 @@ namespace Shinzui.Application.UseCases.Interaction
         /// </summary>
         /// <param name="interactableId">インタラクト対象のID</param>
         /// <param name="message">インスペクター等で指定された表示メッセージ</param>
-        public async Task InteractAsync(string interactableId, string message)
+        public async Task<bool> InteractAsync(string interactableId, string message)
         {
-            if (string.IsNullOrEmpty(interactableId)) return;
-
-            // メッセージ表示処理
-            // インスペクターで設定されたカスタムメッセージがあれば優先表示
-            if (!string.IsNullOrEmpty(message))
-            {
-                _onShowMessage.OnNext(message);
-            }
+            if (string.IsNullOrEmpty(interactableId)) return false;
 
             // アイテム取得の処理
             if (interactableId.StartsWith("ItemTest_"))
@@ -77,10 +70,20 @@ namespace Shinzui.Application.UseCases.Interaction
                         _onShowMessage.OnNext($"Obtained {displayName}.");
                     }
                 }
+
+                return success;
             }
             else
             {
+                // メッセージ表示処理
+                // インスペクターで設定されたカスタムメッセージがあれば表示
+                if (!string.IsNullOrEmpty(message))
+                {
+                    _onShowMessage.OnNext(message);
+                }
+                
                 // 将来的な他のオブジェクトに対するインタラクトロジック拡張用のプレースホルダー
+                
                 // カタログからアイテム情報を非同期で取得
                 var item = await _itemCatalog.GetItemAsync(interactableId);
                 
@@ -105,6 +108,8 @@ namespace Shinzui.Application.UseCases.Interaction
                         _onShowMessage.OnNext($"Obtained {displayName}.");
                     }
                 }
+                
+                return success;
             }
         }
     }
