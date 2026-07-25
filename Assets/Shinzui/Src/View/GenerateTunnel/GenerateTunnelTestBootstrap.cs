@@ -25,15 +25,58 @@ namespace Shinzui.View.GenerateTunnel
         public int WarpPairId => warpPairId;
         public GeneratedCorridorInfo PairedCorridor => pairedCorridor;
 
+        // 通路の種別とワープペアIDを初期化する。
         public void Initialize(GeneratedCorridorKind corridorKind, int pairId = -1)
         {
             kind = corridorKind;
             warpPairId = pairId;
         }
 
+        // このワープ通路と対になる通路情報を登録する。
         public void SetPair(GeneratedCorridorInfo pair)
         {
             pairedCorridor = pair;
+        }
+    }
+
+    public sealed class GeneratedWarpCorridorTrigger : MonoBehaviour
+    {
+        private const float WarpCooldown = 0.35f;
+        private static float _lastWarpTime = -WarpCooldown;
+
+        private GeneratedCorridorInfo _sourceCorridor;
+
+        // ワープ判定の起点になる通路情報を登録する。
+        public void Initialize(GeneratedCorridorInfo sourceCorridor)
+        {
+            _sourceCorridor = sourceCorridor;
+        }
+
+        // プレイヤーが中心トリガーに入ったら、対応するワープ通路へ移動させる。
+        private void OnTriggerEnter(Collider other)
+        {
+            if (Time.time - _lastWarpTime < WarpCooldown)
+            {
+                return;
+            }
+
+            if (_sourceCorridor == null || _sourceCorridor.PairedCorridor == null)
+            {
+                return;
+            }
+
+            PlayerView player = other.GetComponentInParent<PlayerView>();
+            if (player == null)
+            {
+                return;
+            }
+
+            Vector3 targetForward = _sourceCorridor.PairedCorridor.transform.forward;
+            Vector3 offset = _sourceCorridor.PairedCorridor.transform.position
+                             - targetForward * 1.25f
+                             - _sourceCorridor.transform.position;
+            player.Warp(offset);
+            _lastWarpTime = Time.time;
         }
     }
 
@@ -51,6 +94,7 @@ namespace Shinzui.View.GenerateTunnel
         };
         private const string InstanceName = "[Generated Tunnel Map]";
 
+        // シーン読み込みイベントへ登録し、対象シーンで生成器を自動作成できるようにする。
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterSceneLoaded()
         {
@@ -58,17 +102,20 @@ namespace Shinzui.View.GenerateTunnel
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
+        // すでに読み込まれているアクティブシーンに対して生成器の作成を試みる。
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void BootstrapActiveScene()
         {
             TryCreate(SceneManager.GetActiveScene());
         }
 
+        // シーン読み込み完了時に、対象シーンなら生成器の作成を試みる。
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             TryCreate(scene);
         }
 
+        // 対象シーンで未生成の場合だけ、ランダムトンネル生成用ルートを作成する。
         private static void TryCreate(Scene scene)
         {
             if (!scene.IsValid() || !TargetSceneNames.Contains(scene.name) || GameObject.Find(InstanceName) != null)
@@ -111,6 +158,7 @@ namespace Shinzui.View.GenerateTunnel
         private Material _tunnelMaterial;
         private Material _corridorMaterial;
         private Material _warpCorridorMaterial;
+        private Material _warpTriggerMaterial;
         private Material _markerMaterial;
         private System.Random _random;
         private GameObject _tunnelTemplate;
@@ -128,11 +176,13 @@ namespace Shinzui.View.GenerateTunnel
             new("Right -Z", new Vector2(0.5f, -1.0f / 3.0f), Vector2.right)
         };
 
+        // コンポーネント生成時にトンネルマップを作成する。
         private void Awake()
         {
             Generate();
         }
 
+        // 現在の生成物を消して、シードと設定に基づくトンネルマップを再生成する。
         [ContextMenu("Regenerate")]
         public void Generate()
         {
@@ -168,6 +218,7 @@ namespace Shinzui.View.GenerateTunnel
             Debug.Log($"[GenerateTunnelTest] Generated {_tunnels.Count} connected tunnels and {_tunnels.Count - 1} corridors (seed: {seed}).", this);
         }
 
+        // 既存トンネルの空き入口から新しいトンネルを1つ接続して配置する。
         private bool TryAddConnectedTunnel(int index, TunnelNode requiredParent = null)
         {
             for (int attempt = 0; attempt < placementAttemptsPerTunnel && _openEntrances.Count > 0; attempt++)
@@ -209,6 +260,7 @@ namespace Shinzui.View.GenerateTunnel
             return false;
         }
 
+        // Special Tunnel の接続先候補にできる、開始地点以外の端トンネルをランダムに取得する。
         private TunnelNode GetRandomNonStartEndTunnel()
         {
             var candidates = new List<TunnelNode>();
@@ -222,6 +274,7 @@ namespace Shinzui.View.GenerateTunnel
             return candidates.Count == 0 ? null : candidates[_random.Next(candidates.Count)];
         }
 
+        // 通常接続が2本ありワープ先候補も足りているトンネルを、Special Tunnel として選ぶ。
         private void AssignRandomSpecialTunnel()
         {
             var candidates = new List<TunnelNode>();
@@ -254,6 +307,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // 指定した Special Tunnel からワープ接続できる候補トンネル数を数える。
         private int CountWarpDestinationCandidates(TunnelNode specialTunnel)
         {
             int count = 0;
@@ -267,6 +321,7 @@ namespace Shinzui.View.GenerateTunnel
             return count;
         }
 
+        // 指定位置にトンネル本体を生成し、入口候補マーカーを登録する。
         private TunnelNode AddTunnel(Vector3 position, bool isSpecial, string objectName)
         {
             var root = new GameObject(objectName).transform;
@@ -306,6 +361,7 @@ namespace Shinzui.View.GenerateTunnel
             return node;
         }
 
+        // トンネルの入口候補位置を可視化する小さなマーカーを作成する。
         private GameObject CreateEntranceMarker(Transform tunnelRoot, Entrance entrance, int index)
         {
             Vector3 localPosition = GetPortOffset(entrance);
@@ -314,6 +370,7 @@ namespace Shinzui.View.GenerateTunnel
                 new Vector3(0.7f, 0.12f, 0.7f), _markerMaterial);
         }
 
+        // 2つの入口位置の間に通常通路を生成する。
         private void CreateCorridor(Vector3 start, Vector3 end, int index)
         {
             Vector3 delta = end - start;
@@ -327,6 +384,7 @@ namespace Shinzui.View.GenerateTunnel
             CreatePassageShell(corridor, delta.magnitude, _corridorMaterial);
         }
 
+        // Special Tunnel から離れたトンネルへ向かうワープ通路ペアを作成する。
         private void CreateSpecialWarpCorridors()
         {
             if (_specialTunnel == null)
@@ -371,6 +429,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // 通常接続が1本だけの端トンネル同士を、ワープ通路ペアとして接続する。
         private void CreateWarpCorridorsBetweenEnds()
         {
             var endTunnels = new List<TunnelNode>();
@@ -404,6 +463,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // 2つの端トンネルにワープ通路を作成し、互いをペアとして登録する。
         private void PairWarpCorridors(TunnelNode firstTunnel, TunnelNode secondTunnel, int pairId)
         {
             GeneratedCorridorInfo first = CreateWarpCorridorStub(firstTunnel, pairId, "End A");
@@ -415,6 +475,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // トンネルの空き入口から外側へ伸びるワープ通路を1本作成する。
         private GeneratedCorridorInfo CreateWarpCorridorStub(TunnelNode tunnel, int pairId, string sideName, int requiredEntranceIndex = -1)
         {
             int openIndex = requiredEntranceIndex >= 0
@@ -440,10 +501,12 @@ namespace Shinzui.View.GenerateTunnel
 
             GeneratedCorridorInfo info = corridor.gameObject.AddComponent<GeneratedCorridorInfo>();
             info.Initialize(GeneratedCorridorKind.Warp, pairId);
+            CreateWarpTrigger(corridor, info, delta.magnitude);
             RemoveOpenEntrance(openIndex);
             return info;
         }
 
+        // 指定トンネルに残っている空き入口インデックスをすべて取得する。
         private List<int> GetOpenEntranceIndices(TunnelNode tunnel)
         {
             var result = new List<int>();
@@ -457,6 +520,7 @@ namespace Shinzui.View.GenerateTunnel
             return result;
         }
 
+        // 指定トンネルの指定入口が、空き入口リストの何番目にあるかを探す。
         private int FindOpenEntranceIndex(TunnelNode tunnel, int entranceIndex)
         {
             for (int i = 0; i < _openEntrances.Count; i++)
@@ -470,6 +534,7 @@ namespace Shinzui.View.GenerateTunnel
             return -1;
         }
 
+        // Special Tunnel でワープに使わない入口候補を消し、通常接続対象からも外す。
         private void DisableUnusedSpecialEntrances(List<int> warpEntranceIndices)
         {
             for (int i = _openEntrances.Count - 1; i >= 0; i--)
@@ -489,6 +554,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // 指定トンネルにまだ使える入口候補が残っているか確認する。
         private bool HasOpenEntrance(TunnelNode tunnel)
         {
             foreach (OpenEntrance open in _openEntrances)
@@ -501,6 +567,7 @@ namespace Shinzui.View.GenerateTunnel
             return false;
         }
 
+        // 指定トンネルに残っている空き入口をランダムに1つ選ぶ。
         private int GetRandomOpenEntranceIndex(TunnelNode tunnel)
         {
             var candidates = new List<int>();
@@ -514,6 +581,7 @@ namespace Shinzui.View.GenerateTunnel
             return candidates.Count == 0 ? -1 : candidates[_random.Next(candidates.Count)];
         }
 
+        // 通路モデルまたはフォールバック形状を、通路ルートの子として配置する。
         private void CreatePassageShell(Transform corridor, float length, Material material)
         {
             if (_corridorTemplate != null)
@@ -539,6 +607,45 @@ namespace Shinzui.View.GenerateTunnel
             CreateStageBox(corridor, "Ceiling", new Vector3(0.0f, tunnelHeight, 0.0f), new Vector3(corridorWidth, ShellThickness, length), material);
         }
 
+        // ワープ通路の中心に暗いトリガー領域と逆走防止用の見えない壁を作成する。
+        private void CreateWarpTrigger(Transform corridor, GeneratedCorridorInfo info, float length)
+        {
+            float triggerLength = Mathf.Min(Mathf.Max(2.0f, length * 0.18f), 6.0f);
+            GameObject trigger = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            trigger.name = "Warp Trigger Center";
+            trigger.transform.SetParent(corridor, false);
+            trigger.transform.localPosition = new Vector3(0.0f, tunnelHeight * 0.5f, 0.0f);
+            trigger.transform.localScale = new Vector3(corridorWidth * 0.85f, tunnelHeight, triggerLength);
+
+            Renderer renderer = trigger.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = _warpTriggerMaterial;
+            }
+
+            Collider collider = trigger.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.isTrigger = true;
+            }
+
+            int stageLayer = LayerMask.NameToLayer("Stage");
+            if (stageLayer >= 0)
+            {
+                trigger.layer = stageLayer;
+            }
+
+            trigger.AddComponent<GeneratedWarpCorridorTrigger>().Initialize(info);
+
+            const float backstopThickness = 0.35f;
+            CreateInvisibleStageCollider(
+                corridor,
+                "Warp Backstop Collider",
+                new Vector3(0.0f, tunnelHeight * 0.5f, triggerLength * 0.5f + backstopThickness * 0.5f),
+                new Vector3(corridorWidth * 1.1f, tunnelHeight, backstopThickness));
+        }
+
+        // 新しく置こうとしているトンネルが既存トンネルの範囲と重なるか調べる。
         private bool OverlapsExistingTunnel(Vector3 candidate)
         {
             float minimumX = tunnelWidth + placementMargin;
@@ -555,6 +662,7 @@ namespace Shinzui.View.GenerateTunnel
             return false;
         }
 
+        // 指定方向と反対側を向いている入口候補のインデックス一覧を取得する。
         private List<int> GetOppositeEntrances(Vector2 direction)
         {
             var result = new List<int>(3);
@@ -568,27 +676,32 @@ namespace Shinzui.View.GenerateTunnel
             return result;
         }
 
+        // トンネル中心座標と入口定義から、ワールド上の入口位置を計算する。
         private Vector3 GetPortPosition(Vector3 tunnelPosition, Entrance entrance)
         {
             return tunnelPosition + GetPortOffset(entrance);
         }
 
+        // 入口定義の正規化座標を、現在のトンネル寸法に合わせたローカルオフセットへ変換する。
         private Vector3 GetPortOffset(Entrance entrance)
         {
             return new Vector3(entrance.NormalizedPosition.x * tunnelWidth, 0.0f,
                 entrance.NormalizedPosition.y * tunnelLength);
         }
 
+        // 2Dの入口方向を、XZ平面上の3D方向ベクトルへ変換する。
         private static Vector3 ToWorldDirection(Vector2 direction)
         {
             return new Vector3(direction.x, 0.0f, direction.y);
         }
 
+        // 空き入口リストから指定位置の要素を削除する。
         private void RemoveOpenEntrance(int index)
         {
             _openEntrances.RemoveAt(index);
         }
 
+        // 指定トンネルの指定入口を空き入口リストから削除する。
         private void RemoveOpenEntrance(TunnelNode tunnel, int entranceIndex)
         {
             for (int i = _openEntrances.Count - 1; i >= 0; i--)
@@ -602,15 +715,18 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // 生成物に使う一時マテリアルを作成する。
         private void CreateMaterials()
         {
             _specialMaterial = CreateMaterial("Special Tunnel", new Color(0.16f, 0.48f, 0.68f));
             _tunnelMaterial = CreateMaterial("Tunnel", new Color(0.23f, 0.26f, 0.29f));
             _corridorMaterial = CreateMaterial("Connecting Corridor", new Color(0.72f, 0.48f, 0.13f));
             _warpCorridorMaterial = CreateMaterial("Warp Corridor", new Color(0.62f, 0.2f, 0.82f));
+            _warpTriggerMaterial = CreateMaterial("Warp Trigger Center", new Color(0.01f, 0.0f, 0.015f));
             _markerMaterial = CreateMaterial("Entrance Candidate", new Color(0.1f, 0.9f, 0.65f));
         }
 
+        // シーン内またはプロジェクト内のトンネルモデルを取得し、生成寸法へ反映する。
         private void ConfigureFromTunnelTemplate()
         {
             if (_tunnelTemplate == null)
@@ -645,6 +761,7 @@ namespace Shinzui.View.GenerateTunnel
             DisableTemplateMapRootForGeneratedStage();
         }
 
+        // シーン内またはプロジェクト内の通路モデルを取得し、接続距離と通路幅へ反映する。
         private void ConfigureFromCorridorTemplate()
         {
             if (_corridorTemplate == null)
@@ -677,6 +794,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // LatestStageGenerateTemp に残っている手動配置の MapRoot を、生成マップと重ならないよう非表示にする。
         private void DisableTemplateMapRootForGeneratedStage()
         {
             if (SceneManager.GetActiveScene().name != "LatestStageGenerateTemp" || _tunnelTemplate == null)
@@ -691,6 +809,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // 指定色のランタイム用マテリアルを作成する。
         private static Material CreateMaterial(string materialName, Color color)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
@@ -698,6 +817,7 @@ namespace Shinzui.View.GenerateTunnel
             return material;
         }
 
+        // 見た目用のCubeを作成し、コライダーを削除して配置する。
         private static GameObject CreateBox(Transform parent, string objectName, Vector3 localPosition, Vector3 localScale, Material material)
         {
             GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -715,6 +835,7 @@ namespace Shinzui.View.GenerateTunnel
             return box;
         }
 
+        // Stageレイヤーの当たり判定を持つCubeを作成する。
         private static GameObject CreateStageBox(Transform parent, string objectName, Vector3 localPosition, Vector3 localScale, Material material)
         {
             GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -733,6 +854,7 @@ namespace Shinzui.View.GenerateTunnel
             return box;
         }
 
+        // 見えないStageレイヤーのBoxColliderを作成する。
         private static GameObject CreateInvisibleStageCollider(Transform parent, string objectName, Vector3 localPosition, Vector3 localScale)
         {
             GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -756,6 +878,7 @@ namespace Shinzui.View.GenerateTunnel
             return box;
         }
 
+        // モデルのメッシュ中心が指定ローカル空間の原点に合うよう、モデル位置を補正する。
         private static void CenterModelOnLocalSpace(Transform model, Transform localSpace)
         {
             if (!TryGetMeshBoundsInLocalSpace(model, localSpace, out Bounds localBounds))
@@ -769,6 +892,7 @@ namespace Shinzui.View.GenerateTunnel
             model.localPosition = localPosition;
         }
 
+        // モデル配下の全メッシュBoundsを、指定ローカル空間でまとめて取得する。
         private static bool TryGetMeshBoundsInLocalSpace(
             Transform model,
             Transform localSpace,
@@ -820,6 +944,7 @@ namespace Shinzui.View.GenerateTunnel
             return hasBounds;
         }
 
+        // モデル配下をStageレイヤーにし、不足しているMeshColliderを追加する。
         private static void ApplyStageCollisionRecursive(GameObject root)
         {
             int stageLayer = LayerMask.NameToLayer("Stage");
@@ -843,6 +968,7 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
+        // Unity Editor上でプロジェクト内アセットをGameObjectとして読み込む。
         private static GameObject LoadProjectAsset(string assetPath)
         {
 #if UNITY_EDITOR
@@ -852,6 +978,7 @@ namespace Shinzui.View.GenerateTunnel
 #endif
         }
 
+        // 生成されたトンネル全体が見えるよう、メインカメラの位置とクリップ距離を調整する。
         private void FrameSceneCamera()
         {
             Camera camera = Camera.main;
@@ -871,6 +998,7 @@ namespace Shinzui.View.GenerateTunnel
             camera.farClipPlane = Mathf.Max(camera.farClipPlane, bounds.size.magnitude * 3.0f);
         }
 
+        // 現在保持している生成データと生成済みオブジェクトを破棄する。
         private void ClearGeneratedObjects()
         {
             _tunnels.Clear();
@@ -889,6 +1017,7 @@ namespace Shinzui.View.GenerateTunnel
             public readonly Vector2 NormalizedPosition;
             public readonly Vector2 Direction;
 
+            // 入口候補の表示名、トンネル内の正規化位置、外向き方向を保持する。
             public Entrance(string name, Vector2 normalizedPosition, Vector2 direction)
             {
                 Name = name;
@@ -905,6 +1034,7 @@ namespace Shinzui.View.GenerateTunnel
             public HashSet<TunnelNode> Neighbors { get; } = new();
             public GameObject[] EntranceMarkers { get; } = new GameObject[Entrances.Length];
 
+            // 生成済みトンネルの中心位置とルートTransformを保持する。
             public TunnelNode(Vector3 position, Transform root)
             {
                 Position = position;
@@ -917,6 +1047,7 @@ namespace Shinzui.View.GenerateTunnel
             public readonly TunnelNode Tunnel;
             public readonly int EntranceIndex;
 
+            // まだ接続に使えるトンネル入口を表す。
             public OpenEntrance(TunnelNode tunnel, int entranceIndex)
             {
                 Tunnel = tunnel;
