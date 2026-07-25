@@ -43,7 +43,7 @@ namespace Shinzui.View.Inventory
             _equipButton = Instantiate(useButton, useButton.transform.parent);
             _equipButton.name = "EquipButton";
             
-            var tmpText = _equipButton.GetComponentInChildren<TMPro.TMP_Text>();
+            var tmpText = _equipButton.GetComponentInChildren<TMP_Text>();
             if (tmpText != null)
             {
                 tmpText.text = "Equip";
