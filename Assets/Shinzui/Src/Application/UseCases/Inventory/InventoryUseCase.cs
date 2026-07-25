@@ -279,5 +279,19 @@ namespace Shinzui.Application.UseCases.Inventory
                 }
             }
         }
+        
+        /// <summary>
+        /// インベントリ内のアイテムの情報取得
+        /// </summary>
+        /// <param name="itemId">調査対象のアイテムID</param>
+        /// <returns></returns>
+        public int CheckItem(string itemId)
+        {
+            //　TODO: (必要なら)カタログからitemIdで取得するように変更する
+            var item =  new ItemDefinition("FlashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/Medicine", ItemType.Consumable, 99);
+            var idx = _inventory.CheckItemSlotIndex(item);
+            
+            return idx;
+        }
     }
 }

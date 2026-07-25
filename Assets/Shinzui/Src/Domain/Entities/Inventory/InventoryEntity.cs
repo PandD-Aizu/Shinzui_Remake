@@ -1,6 +1,9 @@
 using System;
+using System.Linq;
+using FMOD;
 using R3;
 using Shinzui.Domain.ValueObjects.Inventory;
+using UnityEditor.Search;
 
 namespace Shinzui.Domain.Entities.Inventory
 {
@@ -115,6 +118,18 @@ namespace Shinzui.Domain.Entities.Inventory
             // 単純入れ替え
             _slots[fromIndex].Value = target;
             _slots[toIndex].Value = source;
+        }
+
+        /// <summary>
+        /// 指定したアイテムのスロットインデックスを返す
+        /// 持っていない場合は-1を返す
+        /// </summary>
+        /// <param name="item">調査対象のアイテム</param>
+        /// <returns></returns>
+        public int CheckItemSlotIndex(ItemDefinition item)
+        {
+            var idx = Array.FindIndex(_slots, s => s != null && s.Value != null && s.Value.Item != null && s.Value.Item == item);
+            return idx;
         }
     }
 }
