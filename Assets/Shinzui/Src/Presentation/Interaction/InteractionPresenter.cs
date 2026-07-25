@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using R3;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases.Interaction;
@@ -20,6 +21,7 @@ namespace Shinzui.Presentation.Interaction
         private readonly PlayerView _playerView;
 
         private IDisposable _disposable;
+        private bool _isInteracting;
 
         public InteractionPresenter(
             InteractionUseCase useCase,
@@ -56,17 +58,34 @@ namespace Shinzui.Presentation.Interaction
         public void Tick()
         {
             // Eキー（またはコントローラーボタン）が押されたか判定
-            if (_inputService.ItemUsePressed)
+            if (!_isInteracting && _inputService.ItemUsePressed)
             {
                 var target = _interactionView.CurrentInteractable;
                 if (target != null && target.CanInteract)
                 {
-                    // UseCaseへインタラクトIDと表示メッセージを流す
-                    _ = _useCase.InteractAsync(target.InteractableId, target.InteractMessage);
-                    
+                    _ = HandleInteractAsync(target);
+                }
+            }
+        }
+
+        private async Task HandleInteractAsync(InteractableComponent target)
+        {
+            _isInteracting = true;
+
+            try
+            {
+                // UseCaseへインタラクトIDと表示メッセージを流す
+                bool success = await _useCase.InteractAsync(target.InteractableId, target.InteractMessage);
+
+                if (success && target != null && target.CanInteract)
+                {
                     // View側の物理的変化（一回限り化、オブジェクト破壊等）を実行
                     target.ExecuteInteractEffect();
                 }
+            }
+            finally
+            {
+                _isInteracting = false;
             }
         }
 

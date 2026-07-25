@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Shinzui.View
@@ -17,6 +18,23 @@ namespace Shinzui.View
             OnCollide?.Invoke();
 
             // 衝突した瞬間に石オブジェクトを破棄
+            DestroyStone();
+        }
+
+        public void DestroyAfter(float delay)
+        {
+            StartCoroutine(DestroyAfterDelay(delay));
+        }
+
+        private IEnumerator DestroyAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            DestroyStone();
+        }
+
+        private void DestroyStone()
+        {
+            EditorSelectionGuard.ClearIfSelected(gameObject);
             Destroy(gameObject);
         }
     }
