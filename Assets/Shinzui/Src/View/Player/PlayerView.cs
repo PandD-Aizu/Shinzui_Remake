@@ -10,6 +10,7 @@ namespace Shinzui.View
         [SerializeField] private CharacterController characterController;
         [SerializeField] private CapsuleCollider playerCollider;
         [SerializeField] private Camera mainCamera;
+        [SerializeField] private Transform cameraTarget;
 
         [Header("Movement Settings")]
         [SerializeField] private float rotationSpeed = 220.0f;
@@ -32,6 +33,7 @@ namespace Shinzui.View
         private Vector3 _standingCharacterCenter;
         private float _standingColliderHeight;
         private Vector3 _standingColliderCenter;
+        private Vector3 _standingCameraLocalPosition;
         private PlayerCameraMotionExtension _cameraMotion;
         private const float StaminaFadeDelay = 2.0f;
         private const float StaminaFadeInSpeed = 10.0f;
@@ -81,6 +83,11 @@ namespace Shinzui.View
                 _standingColliderCenter = playerCollider.center;
             }
 
+            if (_standingCharacterHeight <= 0.0f)
+            {
+                _standingCharacterHeight = _standingColliderHeight > 0.0f ? _standingColliderHeight : 2.0f;
+            }
+
             if (staminaFillImage == null && staminaSlider != null && staminaSlider.fillRect != null)
             {
                 staminaFillImage = staminaSlider.fillRect.GetComponent<Image>();
@@ -92,6 +99,30 @@ namespace Shinzui.View
                 if (_staminaCanvasGroup == null)
                 {
                     _staminaCanvasGroup = staminaSlider.gameObject.AddComponent<CanvasGroup>();
+                }
+            }
+
+            if (cameraTarget == null)
+            {
+                Transform foundTarget = transform.Find("PlayerHead");
+                if (foundTarget == null)
+                {
+                    foundTarget = transform.Find("CameraTarget");
+                }
+                if (foundTarget != null)
+                {
+                    cameraTarget = foundTarget;
+                }
+            }
+
+            if (cameraTarget != null)
+            {
+                _standingCameraLocalPosition = cameraTarget.localPosition;
+                if (mainCamera != null && mainCamera.transform.parent == transform)
+                {
+                    mainCamera.transform.SetParent(cameraTarget, false);
+                    mainCamera.transform.localPosition = Vector3.zero;
+                    mainCamera.transform.localRotation = Quaternion.identity;
                 }
             }
 
@@ -221,6 +252,15 @@ namespace Shinzui.View
                     _standingCharacterHeight,
                     height);
             }
+
+            float standingH = _standingCharacterHeight > 0.0f ? _standingCharacterHeight : 2.0f;
+            if (cameraTarget != null)
+            {
+                float ratio = height / standingH;
+                Vector3 targetPos = _standingCameraLocalPosition;
+                targetPos.y = _standingCameraLocalPosition.y * ratio;
+                cameraTarget.localPosition = targetPos;
+            }
         }
 
         public bool CanStand()
@@ -317,9 +357,14 @@ namespace Shinzui.View
             foreach (CinemachineCamera camera in cameras)
             {
                 Transform follow = camera.Follow;
-                if (follow == null || (follow != transform && !follow.IsChildOf(transform)))
+                if (follow != null && follow != transform && !follow.IsChildOf(transform))
                 {
                     continue;
+                }
+
+                if ((follow == null || follow == transform) && cameraTarget != null)
+                {
+                    camera.Follow = cameraTarget;
                 }
 
                 _cameraMotion = camera.GetComponent<PlayerCameraMotionExtension>();

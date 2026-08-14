@@ -20,7 +20,20 @@ namespace Shinzui.Infrastructure.Services
 
         public Vector2 MoveInput => !_isBlocked && _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
         public bool SprintPressed => !_isBlocked && _sprintAction != null && _sprintAction.IsPressed();
-        public bool CrouchPressed => !_isBlocked && _crouchAction != null && _crouchAction.IsPressed();
+        public bool CrouchPressed
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                bool keyboardCtrl = Keyboard.current != null && (
+                    Keyboard.current.leftCtrlKey.isPressed ||
+                    Keyboard.current.rightCtrlKey.isPressed ||
+                    Keyboard.current.ctrlKey.isPressed ||
+                    Keyboard.current.cKey.isPressed);
+                bool actionPressed = _crouchAction != null && _crouchAction.IsPressed();
+                return keyboardCtrl || actionPressed;
+            }
+        }
 
         public bool InventoryTogglePressed
         {
@@ -112,7 +125,9 @@ namespace Shinzui.Infrastructure.Services
 
             // Crouchアクション (Button) の作成とバインディング
             _crouchAction = playerMap.AddAction("Crouch", type: InputActionType.Button);
-            // キーボード (C)
+            // キーボード (Ctrl, C)
+            _crouchAction.AddBinding("<Keyboard>/leftCtrl");
+            _crouchAction.AddBinding("<Keyboard>/rightCtrl");
             _crouchAction.AddBinding("<Keyboard>/c");
             // コントローラー (B/○ボタン)
             _crouchAction.AddBinding("<Gamepad>/buttonEast");
