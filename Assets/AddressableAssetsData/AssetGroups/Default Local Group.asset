@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 629d707b85a3eca4bb9a0ae0212ac845
+    m_Address: TunnelBaseModel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fcd678fb651f70b4e8f4a2009f0c4800
     m_Address: Sprite/Medicine
     m_ReadOnly: 0

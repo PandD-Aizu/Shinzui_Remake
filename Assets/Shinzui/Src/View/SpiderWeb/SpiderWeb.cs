@@ -139,7 +139,7 @@ namespace Shinzui.View
 
         private void OnEnable()
         {
-            _sourceId = GetInstanceID();
+            _sourceId = GetEntityId().GetHashCode();
             CacheComponents();
             ConfigureTrigger();
             EnsureMaterial();
@@ -1433,7 +1433,7 @@ namespace Shinzui.View
                 int hash = 17;
                 foreach (Transform anchor in manualAnchors)
                 {
-                    hash = hash * 31 + (anchor == null ? 0 : anchor.GetInstanceID());
+                    hash = hash * 31 + (anchor == null ? 0 : anchor.GetEntityId().GetHashCode());
                     if (anchor != null)
                     {
                         hash = hash * 31 + anchor.position.GetHashCode();
