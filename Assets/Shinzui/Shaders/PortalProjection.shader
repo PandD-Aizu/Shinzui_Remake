@@ -3,6 +3,7 @@ Shader "Custom/PortalProjection"
     Properties
     {
         _MainTex ("Portal Texture", 2D) = "white" {}
+        _PortalExposureMultiplier ("Portal Exposure Multiplier", Float) = 1.0
     }
     SubShader
     {
@@ -47,6 +48,7 @@ Shader "Custom/PortalProjection"
 
             Texture2D _MainTex;
             SamplerState sampler_MainTex;
+            float _PortalExposureMultiplier;
 
             Varyings vert(Attributes input)
             {
@@ -60,6 +62,7 @@ Shader "Custom/PortalProjection"
             {
                 float2 uv = input.screenPos.xy / input.screenPos.w;
                 half4 color = _MainTex.Sample(sampler_MainTex, uv);
+                color.rgb *= _PortalExposureMultiplier;
                 return color;
             }
             ENDHLSL

@@ -20,7 +20,7 @@ namespace Shinzui.View
         [SerializeField] private float groundProbeDistance = 0.25f;
         [SerializeField] private LayerMask groundLayers = ~0;
 
-        [Header("Stamina UI")] 
+        [Header("Stamina UI")]
         [SerializeField] private Slider staminaSlider;
         [SerializeField] private Image staminaFillImage;
         [SerializeField] private Gradient staminaColorGradient = CreateDefaultStaminaGradient();
@@ -56,7 +56,7 @@ namespace Shinzui.View
         public Vector3 CameraPosition => mainCamera != null ? mainCamera.transform.position : transform.position;
         public float CameraNearClipPlane => mainCamera != null ? mainCamera.nearClipPlane : 0.3f;
         public Vector3 CameraNearPosition => CameraPosition + CameraForward * CameraNearClipPlane;
-        
+
         public bool IsGrounded => TryGetGroundNormal(out _);
         public bool IsControllerGrounded => characterController != null && characterController.isGrounded;
         public Vector3 GroundNormal => TryGetGroundNormal(out Vector3 normal) ? normal : Vector3.up;
@@ -196,8 +196,8 @@ namespace Shinzui.View
                 transform.position += offset;
             }
 
-            // カメラ自体も即座にワープさせることで、同フレーム内での他スクリプトによるカメラ座標参照のズレを防ぐ
-            if (mainCamera != null)
+            // カメラがプレイヤー配下（子オブジェクト）ではない場合のみ直接移動し、二重適用を防ぐ
+            if (mainCamera != null && !mainCamera.transform.IsChildOf(transform))
             {
                 mainCamera.transform.position += offset;
             }
