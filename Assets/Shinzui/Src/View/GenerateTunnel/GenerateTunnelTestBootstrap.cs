@@ -94,6 +94,47 @@ namespace Shinzui.View.GenerateTunnel
         };
         private const string InstanceName = "[Generated Tunnel Map]";
 
+        [Header("Generation")]
+        [Min(5)] [SerializeField] private int tunnelCount = 8;
+        [SerializeField] private int seed = 2777;
+        [Min(1)] [SerializeField] private int placementAttemptsPerTunnel = 80;
+
+        [Header("Small rooms")]
+        [Min(0)] [SerializeField] private int smallRoomCount = 1;
+        [Min(1.0f)] [SerializeField] private float smallRoomWidth = 8.0f;
+        [Min(1.0f)] [SerializeField] private float smallRoomLength = 6.0f;
+
+        [Header("Fixed tunnel size")]
+        [Min(4.0f)] [SerializeField] private float tunnelLength = 153.12695f;
+        [Min(3.0f)] [SerializeField] private float tunnelWidth = 14.800003f;
+        [Min(2.0f)] [SerializeField] private float tunnelHeight = 5.0f;
+        [Min(1.0f)] [SerializeField] private float corridorLength = 8.0f;
+        [Min(1.0f)] [SerializeField] private float corridorWidth = 3.0f;
+        [Min(0.0f)] [SerializeField] private float placementMargin = 2.0f;
+
+        [Header("Overlap prevention")]
+        [Min(0.1f)] [SerializeField] private float tunnelOverlapSizeMultiplier = 1.0f;
+        [Min(0.1f)] [SerializeField] private float corridorOverlapSizeMultiplier = 1.0f;
+        [Min(0.1f)] [SerializeField] private float smallRoomOverlapSizeMultiplier = 1.0f;
+
+        // シーンに保存された設定コンポーネントから、実際の生成器を起動する。
+        private void Awake()
+        {
+            if (GetComponent<GenerateTunnelTestRuntime>() == null)
+            {
+                gameObject.AddComponent<GenerateTunnelTestRuntime>();
+            }
+        }
+
+        internal void ApplyTo(GenerateTunnelTestRuntime runtime)
+        {
+            runtime.Configure(tunnelCount, seed, placementAttemptsPerTunnel,
+                smallRoomCount, smallRoomWidth, smallRoomLength,
+                tunnelLength, tunnelWidth, tunnelHeight,
+                corridorLength, corridorWidth, placementMargin,
+                tunnelOverlapSizeMultiplier, corridorOverlapSizeMultiplier, smallRoomOverlapSizeMultiplier);
+        }
+
         // シーン読み込みイベントへ登録し、対象シーンで生成器を自動作成できるようにする。
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterSceneLoaded()
@@ -139,6 +180,11 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private int seed = 2777;
         [Min(1)] [SerializeField] private int placementAttemptsPerTunnel = 80;
 
+        [Header("Small rooms")]
+        [Min(0)] [SerializeField] private int smallRoomCount = 1;
+        [Min(1.0f)] [SerializeField] private float smallRoomWidth = 8.0f;
+        [Min(1.0f)] [SerializeField] private float smallRoomLength = 6.0f;
+
         [Header("Fixed tunnel size")]
         [Min(4.0f)] [SerializeField] private float tunnelLength = 153.12695f;
         [Min(3.0f)] [SerializeField] private float tunnelWidth = 14.800003f;
@@ -147,16 +193,25 @@ namespace Shinzui.View.GenerateTunnel
         [Min(1.0f)] [SerializeField] private float corridorWidth = 3.0f;
         [Min(0.0f)] [SerializeField] private float placementMargin = 2.0f;
 
+        [Header("Overlap prevention")]
+        [Min(0.1f)] [SerializeField] private float tunnelOverlapSizeMultiplier = 1.0f;
+        [Min(0.1f)] [SerializeField] private float corridorOverlapSizeMultiplier = 1.0f;
+        [Min(0.1f)] [SerializeField] private float smallRoomOverlapSizeMultiplier = 1.0f;
+
         private const float ShellThickness = 0.2f;
         private const string TunnelTemplateAssetPath = "Assets/Shinzui/3DModels/tunnelBase_tmp.fbx";
         private const string CorridorTemplateAssetPath = "Assets/Shinzui/3DModels/Tunnel_Path_Long.fbx";
 
         private readonly List<TunnelNode> _tunnels = new();
         private readonly List<OpenEntrance> _openEntrances = new();
+        private readonly List<NormalCorridor> _normalCorridors = new();
+        private readonly HashSet<int> _smallRoomConnectionIndices = new();
+        private readonly List<OccupiedArea> _occupiedAreas = new();
         private Transform _geometryRoot;
         private Material _specialMaterial;
         private Material _tunnelMaterial;
         private Material _corridorMaterial;
+        private Material _smallRoomMaterial;
         private Material _warpCorridorMaterial;
         private Material _warpTriggerMaterial;
         private Material _markerMaterial;
@@ -179,7 +234,36 @@ namespace Shinzui.View.GenerateTunnel
         // コンポーネント生成時にトンネルマップを作成する。
         private void Awake()
         {
+            GenerateTunnelTestBootstrap settings = GetComponent<GenerateTunnelTestBootstrap>();
+            if (settings != null)
+            {
+                settings.ApplyTo(this);
+            }
             Generate();
+        }
+
+        internal void Configure(int configuredTunnelCount, int configuredSeed, int configuredPlacementAttempts,
+            int configuredSmallRoomCount, float configuredSmallRoomWidth, float configuredSmallRoomLength,
+            float configuredTunnelLength, float configuredTunnelWidth, float configuredTunnelHeight,
+            float configuredCorridorLength, float configuredCorridorWidth, float configuredPlacementMargin,
+            float configuredTunnelOverlapSizeMultiplier, float configuredCorridorOverlapSizeMultiplier,
+            float configuredSmallRoomOverlapSizeMultiplier)
+        {
+            tunnelCount = configuredTunnelCount;
+            seed = configuredSeed;
+            placementAttemptsPerTunnel = configuredPlacementAttempts;
+            smallRoomCount = configuredSmallRoomCount;
+            smallRoomWidth = configuredSmallRoomWidth;
+            smallRoomLength = configuredSmallRoomLength;
+            tunnelLength = configuredTunnelLength;
+            tunnelWidth = configuredTunnelWidth;
+            tunnelHeight = configuredTunnelHeight;
+            corridorLength = configuredCorridorLength;
+            corridorWidth = configuredCorridorWidth;
+            placementMargin = configuredPlacementMargin;
+            tunnelOverlapSizeMultiplier = configuredTunnelOverlapSizeMultiplier;
+            corridorOverlapSizeMultiplier = configuredCorridorOverlapSizeMultiplier;
+            smallRoomOverlapSizeMultiplier = configuredSmallRoomOverlapSizeMultiplier;
         }
 
         // 現在の生成物を消して、シードと設定に基づくトンネルマップを再生成する。
@@ -199,6 +283,7 @@ namespace Shinzui.View.GenerateTunnel
             AddTunnel(Vector3.zero, false, "Player Start Tunnel 00");
 
             int requestedTunnelCount = Mathf.Max(5, tunnelCount);
+            SelectSmallRoomConnections(requestedTunnelCount - 1);
             for (int i = 1; i < requestedTunnelCount; i++)
             {
                 // 最後の1本は既存の端へ接続し、Special候補となる「通常接続2本」の
@@ -212,6 +297,7 @@ namespace Shinzui.View.GenerateTunnel
             }
 
             AssignRandomSpecialTunnel();
+            CreateSmallRooms();
             CreateSpecialWarpCorridors();
             CreateWarpCorridorsBetweenEnds();
             FrameSceneCamera();
@@ -239,15 +325,20 @@ namespace Shinzui.View.GenerateTunnel
                 int childEntranceIndex = candidates[_random.Next(candidates.Count)];
                 Entrance childEntrance = Entrances[childEntranceIndex];
                 Vector3 childPortOffset = GetPortOffset(childEntrance);
-                Vector3 childPosition = parentPort + outward * corridorLength - childPortOffset;
+                float connectionLength = _smallRoomConnectionIndices.Contains(index)
+                    ? corridorLength * 2.0f + Mathf.Max(1.0f, smallRoomLength)
+                    : corridorLength;
+                Vector3 childPosition = parentPort + outward * connectionLength - childPortOffset;
 
-                if (OverlapsExistingTunnel(childPosition))
+                Vector3 childPort = GetPortPosition(childPosition, childEntrance);
+                if (!CanPlaceTunnelAndConnection(parentOpen.Tunnel, childPosition, parentPort, childPort,
+                        _smallRoomConnectionIndices.Contains(index)))
                 {
                     continue;
                 }
 
                 TunnelNode child = AddTunnel(childPosition, false, $"Tunnel {index:00}");
-                CreateCorridor(parentPort, GetPortPosition(child.Position, childEntrance), index);
+                CreateCorridor(parentPort, childPort, index);
                 parentOpen.Tunnel.ConnectionCount++;
                 child.ConnectionCount++;
                 parentOpen.Tunnel.Neighbors.Add(child);
@@ -258,6 +349,29 @@ namespace Shinzui.View.GenerateTunnel
             }
 
             return false;
+        }
+
+        // 生成予定の通常接続から、小部屋を挟む接続番号を重複なしで先に選ぶ。
+        private void SelectSmallRoomConnections(int connectionCount)
+        {
+            _smallRoomConnectionIndices.Clear();
+            int count = Mathf.Min(Mathf.Max(0, smallRoomCount), connectionCount);
+            var indices = new List<int>(connectionCount);
+            for (int i = 1; i <= connectionCount; i++)
+            {
+                indices.Add(i);
+            }
+
+            for (int i = indices.Count - 1; i > 0; i--)
+            {
+                int swapIndex = _random.Next(i + 1);
+                (indices[i], indices[swapIndex]) = (indices[swapIndex], indices[i]);
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                _smallRoomConnectionIndices.Add(indices[i]);
+            }
         }
 
         // Special Tunnel の接続先候補にできる、開始地点以外の端トンネルをランダムに取得する。
@@ -351,6 +465,7 @@ namespace Shinzui.View.GenerateTunnel
 
             var node = new TunnelNode(position, root);
             _tunnels.Add(node);
+            _occupiedAreas.Add(CreateTunnelArea(position, node));
 
             for (int i = 0; i < Entrances.Length; i++)
             {
@@ -382,6 +497,53 @@ namespace Shinzui.View.GenerateTunnel
             corridor.gameObject.AddComponent<GeneratedCorridorInfo>().Initialize(GeneratedCorridorKind.Normal);
 
             CreatePassageShell(corridor, delta.magnitude, _corridorMaterial);
+            _normalCorridors.Add(new NormalCorridor(corridor, delta.magnitude, index));
+            AddConnectionAreas(start, end, _smallRoomConnectionIndices.Contains(index));
+        }
+
+        // 通常通路を重複なしで選び、その中央に実際に歩ける小部屋の床を生成する。
+        private void CreateSmallRooms()
+        {
+            int roomNumber = 0;
+            foreach (NormalCorridor candidate in _normalCorridors)
+            {
+                if (!_smallRoomConnectionIndices.Contains(candidate.ConnectionIndex))
+                {
+                    continue;
+                }
+
+                roomNumber++;
+                float width = Mathf.Max(corridorWidth, smallRoomWidth);
+                float roomLength = Mathf.Max(1.0f, smallRoomLength);
+
+                // 先に作られていた通常通路モデルを除去し、同じ接続区間を3分割して作り直す。
+                for (int childIndex = candidate.Root.childCount - 1; childIndex >= 0; childIndex--)
+                {
+                    Destroy(candidate.Root.GetChild(childIndex).gameObject);
+                }
+
+                candidate.Root.name = $"Small Room Connection {roomNumber:00}";
+                float passageLength = corridorLength;
+                CreateRoomPassage(candidate.Root, "Corridor Before Room",
+                    -(roomLength + passageLength) * 0.5f, passageLength);
+                CreateRoomPassage(candidate.Root, "Corridor After Room",
+                    (roomLength + passageLength) * 0.5f, passageLength);
+
+                var room = new GameObject($"Small Room {roomNumber:00}").transform;
+                room.SetParent(candidate.Root, false);
+                float floorThickness = ShellThickness * 1.5f;
+                CreateStageBox(room, "Walkable Room Floor",
+                    Vector3.zero,
+                    new Vector3(width, floorThickness, roomLength), _smallRoomMaterial);
+            }
+        }
+
+        private void CreateRoomPassage(Transform connectionRoot, string objectName, float localZ, float length)
+        {
+            var passage = new GameObject(objectName).transform;
+            passage.SetParent(connectionRoot, false);
+            passage.localPosition = new Vector3(0.0f, 0.0f, localZ);
+            CreatePassageShell(passage, length, _corridorMaterial);
         }
 
         // Special Tunnel から離れたトンネルへ向かうワープ通路ペアを作成する。
@@ -478,11 +640,10 @@ namespace Shinzui.View.GenerateTunnel
         // トンネルの空き入口から外側へ伸びるワープ通路を1本作成する。
         private GeneratedCorridorInfo CreateWarpCorridorStub(TunnelNode tunnel, int pairId, string sideName, int requiredEntranceIndex = -1)
         {
-            int openIndex = requiredEntranceIndex >= 0
-                ? FindOpenEntranceIndex(tunnel, requiredEntranceIndex)
-                : GetRandomOpenEntranceIndex(tunnel);
+            int openIndex = FindAvailableWarpEntranceIndex(tunnel, requiredEntranceIndex);
             if (openIndex < 0)
             {
+                Debug.LogWarning($"[GenerateTunnelTest] No non-overlapping warp corridor entrance was available on {tunnel.Root.name}.", this);
                 return null;
             }
 
@@ -502,8 +663,59 @@ namespace Shinzui.View.GenerateTunnel
             GeneratedCorridorInfo info = corridor.gameObject.AddComponent<GeneratedCorridorInfo>();
             info.Initialize(GeneratedCorridorKind.Warp, pairId);
             CreateWarpTrigger(corridor, info, delta.magnitude);
+            AddConnectionAreas(start, end, false);
             RemoveOpenEntrance(openIndex);
             return info;
+        }
+
+        private int FindAvailableWarpEntranceIndex(TunnelNode tunnel, int requiredEntranceIndex)
+        {
+            var candidates = new List<int>();
+            if (requiredEntranceIndex >= 0)
+            {
+                int requiredOpenIndex = FindOpenEntranceIndex(tunnel, requiredEntranceIndex);
+                if (requiredOpenIndex >= 0)
+                {
+                    candidates.Add(requiredOpenIndex);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _openEntrances.Count; i++)
+                {
+                    if (_openEntrances[i].Tunnel == tunnel)
+                    {
+                        candidates.Add(i);
+                    }
+                }
+                for (int i = candidates.Count - 1; i > 0; i--)
+                {
+                    int swapIndex = _random.Next(i + 1);
+                    (candidates[i], candidates[swapIndex]) = (candidates[swapIndex], candidates[i]);
+                }
+            }
+
+            foreach (int candidateIndex in candidates)
+            {
+                OpenEntrance open = _openEntrances[candidateIndex];
+                Entrance entrance = Entrances[open.EntranceIndex];
+                Vector3 start = GetPortPosition(tunnel.Position, entrance);
+                Vector3 end = start + ToWorldDirection(entrance.Direction) * corridorLength;
+                bool overlaps = false;
+                foreach (OccupiedArea area in BuildConnectionAreas(start, end, false))
+                {
+                    if (OverlapsAny(area, tunnel))
+                    {
+                        overlaps = true;
+                        break;
+                    }
+                }
+                if (!overlaps)
+                {
+                    return candidateIndex;
+                }
+            }
+            return -1;
         }
 
         // 指定トンネルに残っている空き入口インデックスをすべて取得する。
@@ -592,6 +804,10 @@ namespace Shinzui.View.GenerateTunnel
                 model.transform.localRotation = _corridorTemplateLongAxisIsX
                     ? Quaternion.Euler(0.0f, 90.0f, 0.0f)
                     : Quaternion.identity;
+                float lengthScale = corridorLength > Mathf.Epsilon ? length / corridorLength : 1.0f;
+                model.transform.localScale = _corridorTemplateLongAxisIsX
+                    ? new Vector3(lengthScale, 1.0f, 1.0f)
+                    : new Vector3(1.0f, 1.0f, lengthScale);
                 CenterModelOnLocalSpace(model.transform, corridor);
 
                 // 廊下の高さ調整用
@@ -646,20 +862,90 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         // 新しく置こうとしているトンネルが既存トンネルの範囲と重なるか調べる。
-        private bool OverlapsExistingTunnel(Vector3 candidate)
+        private bool CanPlaceTunnelAndConnection(TunnelNode parent, Vector3 childPosition,
+            Vector3 start, Vector3 end, bool hasSmallRoom)
         {
-            float minimumX = tunnelWidth + placementMargin;
-            float minimumZ = tunnelLength + placementMargin;
-            foreach (TunnelNode tunnel in _tunnels)
+            if (OverlapsAny(CreateTunnelArea(childPosition, null), null))
             {
-                Vector3 delta = candidate - tunnel.Position;
-                if (Mathf.Abs(delta.x) < minimumX && Mathf.Abs(delta.z) < minimumZ)
+                return false;
+            }
+
+            foreach (OccupiedArea area in BuildConnectionAreas(start, end, hasSmallRoom))
+            {
+                if (OverlapsAny(area, parent))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private OccupiedArea CreateTunnelArea(Vector3 position, TunnelNode owner)
+        {
+            Vector2 size = new Vector2(tunnelWidth, tunnelLength)
+                           * Mathf.Max(0.1f, tunnelOverlapSizeMultiplier)
+                           + Vector2.one * placementMargin;
+            return new OccupiedArea(new Vector2(position.x, position.z), size, owner);
+        }
+
+        private List<OccupiedArea> BuildConnectionAreas(Vector3 start, Vector3 end, bool hasSmallRoom)
+        {
+            var result = new List<OccupiedArea>(hasSmallRoom ? 3 : 1);
+            Vector3 delta = end - start;
+            float totalLength = delta.magnitude;
+            if (totalLength <= Mathf.Epsilon)
+            {
+                return result;
+            }
+
+            Vector3 direction = delta / totalLength;
+            if (!hasSmallRoom)
+            {
+                result.Add(CreateSegmentArea((start + end) * 0.5f, direction, totalLength,
+                    corridorWidth, corridorOverlapSizeMultiplier));
+                return result;
+            }
+
+            float roomLength = Mathf.Max(1.0f, smallRoomLength);
+            float passageLength = corridorLength;
+            result.Add(CreateSegmentArea(start + direction * (passageLength * 0.5f), direction,
+                passageLength, corridorWidth, corridorOverlapSizeMultiplier));
+            result.Add(CreateSegmentArea(start + direction * (passageLength + roomLength * 0.5f), direction,
+                roomLength, Mathf.Max(corridorWidth, smallRoomWidth), smallRoomOverlapSizeMultiplier));
+            result.Add(CreateSegmentArea(start + direction * (passageLength + roomLength + passageLength * 0.5f),
+                direction, passageLength, corridorWidth, corridorOverlapSizeMultiplier));
+            return result;
+        }
+
+        private OccupiedArea CreateSegmentArea(Vector3 center, Vector3 direction, float length,
+            float width, float sizeMultiplier)
+        {
+            var size = new Vector2(
+                Mathf.Abs(direction.x) * length + Mathf.Abs(direction.z) * width,
+                Mathf.Abs(direction.z) * length + Mathf.Abs(direction.x) * width);
+            size = size * Mathf.Max(0.1f, sizeMultiplier) + Vector2.one * placementMargin;
+            return new OccupiedArea(new Vector2(center.x, center.z), size, null);
+        }
+
+        private bool OverlapsAny(OccupiedArea candidate, TunnelNode ignoredTunnel)
+        {
+            foreach (OccupiedArea occupied in _occupiedAreas)
+            {
+                if (ignoredTunnel != null && occupied.OwnerTunnel == ignoredTunnel)
+                {
+                    continue;
+                }
+                if (candidate.Overlaps(occupied))
                 {
                     return true;
                 }
             }
-
             return false;
+        }
+
+        private void AddConnectionAreas(Vector3 start, Vector3 end, bool hasSmallRoom)
+        {
+            _occupiedAreas.AddRange(BuildConnectionAreas(start, end, hasSmallRoom));
         }
 
         // 指定方向と反対側を向いている入口候補のインデックス一覧を取得する。
@@ -721,6 +1007,7 @@ namespace Shinzui.View.GenerateTunnel
             _specialMaterial = CreateMaterial("Special Tunnel", new Color(0.16f, 0.48f, 0.68f));
             _tunnelMaterial = CreateMaterial("Tunnel", new Color(0.23f, 0.26f, 0.29f));
             _corridorMaterial = CreateMaterial("Connecting Corridor", new Color(0.72f, 0.48f, 0.13f));
+            _smallRoomMaterial = CreateMaterial("Small Room Floor", new Color(0.38f, 0.34f, 0.25f));
             _warpCorridorMaterial = CreateMaterial("Warp Corridor", new Color(0.62f, 0.2f, 0.82f));
             _warpTriggerMaterial = CreateMaterial("Warp Trigger Center", new Color(0.01f, 0.0f, 0.015f));
             _markerMaterial = CreateMaterial("Entrance Candidate", new Color(0.1f, 0.9f, 0.65f));
@@ -1003,11 +1290,50 @@ namespace Shinzui.View.GenerateTunnel
         {
             _tunnels.Clear();
             _openEntrances.Clear();
+            _normalCorridors.Clear();
+            _smallRoomConnectionIndices.Clear();
+            _occupiedAreas.Clear();
             _specialTunnel = null;
             if (_geometryRoot != null)
             {
                 Destroy(_geometryRoot.gameObject);
                 _geometryRoot = null;
+            }
+        }
+
+        private readonly struct OccupiedArea
+        {
+            public Vector2 Center { get; }
+            public Vector2 Size { get; }
+            public TunnelNode OwnerTunnel { get; }
+
+            public OccupiedArea(Vector2 center, Vector2 size, TunnelNode ownerTunnel)
+            {
+                Center = center;
+                Size = size;
+                OwnerTunnel = ownerTunnel;
+            }
+
+            public bool Overlaps(OccupiedArea other)
+            {
+                Vector2 distance = Center - other.Center;
+                Vector2 minimumDistance = (Size + other.Size) * 0.5f;
+                return Mathf.Abs(distance.x) < minimumDistance.x
+                       && Mathf.Abs(distance.y) < minimumDistance.y;
+            }
+        }
+
+        private readonly struct NormalCorridor
+        {
+            public Transform Root { get; }
+            public float Length { get; }
+            public int ConnectionIndex { get; }
+
+            public NormalCorridor(Transform root, float length, int connectionIndex)
+            {
+                Root = root;
+                Length = length;
+                ConnectionIndex = connectionIndex;
             }
         }
 
