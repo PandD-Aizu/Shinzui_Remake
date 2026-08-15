@@ -504,8 +504,7 @@ namespace Shinzui.View.GenerateTunnel
                 model.transform.localScale = _corridorTemplateLongAxisIsX
                     ? new Vector3(lengthScale, 1.0f, 1.0f)
                     : new Vector3(1.0f, 1.0f, lengthScale);
-                CenterModelOnLocalSpace(model.transform, corridor);
-                model.transform.localPosition += new Vector3(0.0f, -0.8f, 0.0f);
+                AlignModelToPassageLocalSpace(model.transform, corridor);
 
                 ApplyStageCollisionRecursive(model);
                 CreateInvisibleStageCollider(corridor, "Walkable Floor Collider", Vector3.zero,
@@ -624,7 +623,11 @@ namespace Shinzui.View.GenerateTunnel
             return box;
         }
 
-        private static void CenterModelOnLocalSpace(Transform model, Transform localSpace)
+        /// <summary>
+        /// Imported corridor assets may use an arbitrary pivot. Align their horizontal center
+        /// and lowest mesh point to the generated passage origin after rotation and scaling.
+        /// </summary>
+        private static void AlignModelToPassageLocalSpace(Transform model, Transform localSpace)
         {
             if (!TryGetMeshBoundsInLocalSpace(model, localSpace, out Bounds localBounds))
             {
@@ -633,6 +636,7 @@ namespace Shinzui.View.GenerateTunnel
 
             Vector3 localPosition = model.localPosition;
             localPosition.x -= localBounds.center.x;
+            localPosition.y -= localBounds.min.y;
             localPosition.z -= localBounds.center.z;
             model.localPosition = localPosition;
         }
