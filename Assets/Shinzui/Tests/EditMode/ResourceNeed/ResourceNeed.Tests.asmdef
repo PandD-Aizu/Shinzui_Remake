@@ -1,0 +1,25 @@
+{
+    "name": "ResourceNeed.Tests",
+    "rootNamespace": "Shinzui.Tests.ResourceNeed",
+    "references": [
+        "GUID:b5b42ada7c4c5104f8c868951c2e3654",
+        "GUID:11ca5201f2811b14086b120a09e65b3b",
+        "GUID:5513a911fe0c1bc49b43b58556f80be7",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:0c752da273b17c547ae705acf0f2adf2"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

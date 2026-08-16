@@ -1692,7 +1692,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &583186508
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2301,7 +2301,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &690180211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4150,6 +4150,8 @@ MonoBehaviour:
   playerDeathView: {fileID: 396944459}
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
+  needWeightSettings: {fileID: 11400000, guid: c8a8bc2f4cef6e74593e9f7b646a8e1b, type: 2}
+  itemCategoryClassifier: {fileID: 0}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0
@@ -4160,6 +4162,104 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1433029500
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1433029504}
+  - component: {fileID: 1433029503}
+  - component: {fileID: 1433029502}
+  - component: {fileID: 1433029501}
+  m_Layer: 0
+  m_Name: ItemSpawnLifetimeScope
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1433029501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433029500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a01111a0014001b001c00000000062, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PresentationLayer::Shinzui.Presentation.ItemSpawn.ItemSpawnManager
+  spawnConfig:
+    Seed: 2777
+    Budget: 100
+    MinTotalSpawns: 1
+    MaxTotalSpawns: 50
+    MaxPlacementAttemptsPerItem: 30
+    MaxTotalPlacementAttempts: 300
+    PlayerStartMinDistance: 5
+    PlayerStartX: 0
+    PlayerStartY: 0
+    PlayerStartZ: 0
+    GuaranteedRules: []
+  itemTargets: []
+  itemPrefabs: []
+  containerView: {fileID: 1433029502}
+  playerTransform: {fileID: 119550617}
+  generateOnStart: 0
+--- !u!114 &1433029502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433029500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a01111a0014001b001c00000000051, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.ItemSpawn.ItemSpawnContainerView
+  generatedRoot: {fileID: 1923252013}
+  spawnSurfaces: []
+--- !u!114 &1433029503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433029500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a01111a0014001b001c00000000071, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DILayer::Shinzui.DI.ItemSpawn.ItemSpawnLifetimeScope
+  parentReference:
+    TypeName: Shinzui.DI.RootLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []
+  spawnConfig: {fileID: 11400000, guid: d7ae3e0f4ec278747839a76a55087bbe, type: 2}
+  itemDefinitions:
+  - {fileID: 11400000, guid: 835b343855f4b9d4dba0461967a4926a, type: 2}
+  containerView: {fileID: 1433029502}
+  manager: {fileID: 1433029501}
+--- !u!4 &1433029504
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433029500}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5204,7 +5304,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &2114893963
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5502,5 +5602,6 @@ SceneRoots:
   - {fileID: 1309310119}
   - {fileID: 1964403825}
   - {fileID: 570344941}
+  - {fileID: 1433029504}
   - {fileID: 483773079}
   - {fileID: 1977063035}

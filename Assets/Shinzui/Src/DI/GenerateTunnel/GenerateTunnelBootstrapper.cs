@@ -5,7 +5,9 @@ using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.Application.UseCases.Tunnel;
 using Shinzui.Domain.DomainServices.Tunnel;
 using Shinzui.Presentation.GenerateTunnel;
+using Shinzui.Presentation.ItemSpawn;
 using Shinzui.View.GenerateTunnel;
+using Shinzui.View.ItemSpawn;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,6 +17,8 @@ namespace Shinzui.DI.GenerateTunnel
     /// 対象シーン（GenerateTunnelTest / LatestStageGenerateTemp）開始時に
     /// Domain・Application・Presentation・View の全層を結線し、
     /// 厳密に1回だけトンネルマップ生成を実行するComposition Root / Scene Bootstrapper。
+    /// マップ生成成功後、MapRoot配下のWeightedSpawnSurfaceを収集し、
+    /// ItemSpawnContainerViewおよびItemSpawnManagerによるアイテムスポーンを厳密に1回起動する。
     /// 重複起動（RuntimeInitializeOnLoadMethod / sceneLoaded / Awake）を防止し、
     /// シーン再ロード時には新しい開始として再度1回だけ実行する。
     /// </summary>
@@ -30,9 +34,25 @@ namespace Shinzui.DI.GenerateTunnel
         private static readonly object ExecutionLock = new();
         private static bool _isExecuting;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            lock (ExecutionLock)
+            {
+                HandledSceneHandles.Clear();
+                _isExecuting = false;
+            }
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterSceneCallbacks()
         {
+            lock (ExecutionLock)
+            {
+                HandledSceneHandles.Clear();
+                _isExecuting = false;
+            }
+
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded -= OnSceneUnloaded;
@@ -132,10 +152,111 @@ namespace Shinzui.DI.GenerateTunnel
             if (success)
             {
                 Debug.Log($"[GenerateTunnelBootstrapper] Successfully generated tunnel map for scene '{scene.name}' (handle: {scene.handle.GetRawData()}).");
+
+                // 5. マップ生成成功後にアイテムスポーンを連携実行
+                BootstrapItemSpawn(scene, mapView);
             }
             else
             {
                 Debug.LogWarning($"[GenerateTunnelBootstrapper] Tunnel map generation was skipped or already completed for scene '{scene.name}'.");
+            }
+        }
+
+        /// <summary>
+        /// マップ生成完了後にMapRoot配下のWeightedSpawnSurfaceを収集し、ItemSpawnManagerを厳密に1回起動する。
+        /// </summary>
+        private static void BootstrapItemSpawn(Scene scene, TunnelMapView mapView)
+        {
+            try
+            {
+                // 1. MapRoot GameObjectの取得
+                GameObject mapRoot = mapView != null ? mapView.MapRootObject : null;
+                if (mapRoot == null)
+                {
+                    foreach (GameObject rootObj in scene.GetRootGameObjects())
+                    {
+                        if (string.Equals(rootObj.name, "MapRoot", StringComparison.Ordinal))
+                        {
+                            mapRoot = rootObj;
+                            break;
+                        }
+                    }
+                }
+
+                if (mapRoot == null)
+                {
+                    Debug.LogWarning($"[GenerateTunnelBootstrapper] MapRoot was not found for scene '{scene.name}'. Item spawning skipped.");
+                    return;
+                }
+
+                // 2. MapRoot配下の有効なWeightedSpawnSurfaceを収集
+                WeightedSpawnSurface[] surfaces = mapRoot.GetComponentsInChildren<WeightedSpawnSurface>(true);
+                var validSurfaces = new List<WeightedSpawnSurface>();
+                if (surfaces != null)
+                {
+                    for (int i = 0; i < surfaces.Length; i++)
+                    {
+                        if (surfaces[i] != null && surfaces[i].gameObject.activeInHierarchy && surfaces[i].IsDataValid)
+                        {
+                            validSurfaces.Add(surfaces[i]);
+                        }
+                    }
+                }
+
+                if (validSurfaces.Count == 0)
+                {
+                    Debug.LogWarning($"[GenerateTunnelBootstrapper] No valid WeightedSpawnSurface found under MapRoot in scene '{scene.name}'. Item spawning skipped.");
+                    return;
+                }
+
+                // 3. シーン内のItemSpawnContainerViewおよびItemSpawnManagerを探索
+                ItemSpawnContainerView containerView = null;
+                ItemSpawnManager spawnManager = null;
+
+                foreach (GameObject rootObj in scene.GetRootGameObjects())
+                {
+                    if (containerView == null)
+                    {
+                        containerView = rootObj.GetComponentInChildren<ItemSpawnContainerView>(true);
+                    }
+                    if (spawnManager == null)
+                    {
+                        spawnManager = rootObj.GetComponentInChildren<ItemSpawnManager>(true);
+                    }
+                    if (containerView != null && spawnManager != null) break;
+                }
+
+                if (containerView == null)
+                {
+                    containerView = UnityEngine.Object.FindFirstObjectByType<ItemSpawnContainerView>();
+                }
+                if (spawnManager == null)
+                {
+                    spawnManager = UnityEngine.Object.FindFirstObjectByType<ItemSpawnManager>();
+                }
+
+                if (containerView == null)
+                {
+                    Debug.LogWarning($"[GenerateTunnelBootstrapper] ItemSpawnContainerView was not found in scene '{scene.name}'. Item spawning skipped.");
+                    return;
+                }
+
+                if (spawnManager == null)
+                {
+                    Debug.LogWarning($"[GenerateTunnelBootstrapper] ItemSpawnManager was not found in scene '{scene.name}'. Item spawning skipped.");
+                    return;
+                }
+
+                // 4. 収集したサーフェスをItemSpawnContainerViewへ設定
+                containerView.SetSurfaces(validSurfaces);
+
+                // 5. ItemSpawnManager.RequestGenerateAfterMapReady() を呼び出してマップ完了後の自動生成を要求
+                spawnManager.RequestGenerateAfterMapReady();
+                Debug.Log($"[GenerateTunnelBootstrapper] Successfully requested item spawn after map ready for scene '{scene.name}' with {validSurfaces.Count} surfaces.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[GenerateTunnelBootstrapper] Exception during item spawn bootstrapping in scene '{scene.name}': {ex.Message}\n{ex.StackTrace}");
             }
         }
 

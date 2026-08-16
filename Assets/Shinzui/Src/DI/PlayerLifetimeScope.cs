@@ -19,6 +19,11 @@ using Shinzui.View.Flashlight;
 using Shinzui.Application.UseCases.Interaction;
 using Shinzui.Presentation.Interaction;
 using Shinzui.View.Interaction;
+using Shinzui.Application.Interfaces.ResourceNeed;
+using Shinzui.Application.UseCases.ResourceNeed;
+using Shinzui.Domain.DomainServices.ResourceNeed;
+using Shinzui.Domain.ValueObjects.ResourceNeed;
+using Shinzui.Infrastructure.ResourceNeed;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -40,6 +45,10 @@ namespace Shinzui.DI
         [SerializeField] private PlayerDeathView playerDeathView;
         [SerializeField] private EnemyView[] enemyViews;
         [SerializeField] private HorrorDetectionView horrorDetectionView;
+
+        [Header("Resource Need")]
+        [SerializeField] private PlayerNeedWeightSettingsSO needWeightSettings;
+        [SerializeField] private ItemCategoryClassifierSO itemCategoryClassifier;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -218,6 +227,24 @@ namespace Shinzui.DI
 
             builder.RegisterComponent(horrorViewInstance);
             builder.RegisterEntryPoint<HorrorDetectionPresenter>();
+
+            // ==========================================
+            // プレイヤー資源不足度（Need Weight）評価システムのDI登録
+            // ==========================================
+            var classifierInstance = itemCategoryClassifier != null
+                ? itemCategoryClassifier
+                : ItemCategoryClassifierSO.CreateDefault();
+            builder.RegisterInstance(classifierInstance).As<IItemCategoryClassifier>();
+
+            var needSettingsInstance = needWeightSettings != null
+                ? needWeightSettings
+                : PlayerNeedWeightSettingsSO.CreateDefault();
+            builder.RegisterInstance(needSettingsInstance);
+            builder.RegisterInstance(needSettingsInstance.ToDomainConfig());
+
+            builder.Register<PlayerResourceNeedEvaluator>(Lifetime.Singleton);
+            builder.Register<PlayerResourceSnapshotProvider>(Lifetime.Singleton).As<IPlayerResourceSnapshotProvider>();
+            builder.Register<PlayerResourceNeedUseCase>(Lifetime.Singleton).As<IPlayerResourceNeedUseCase>().AsSelf();
         }
 
         private void RegisterSpecialItemHud(IContainerBuilder builder)
