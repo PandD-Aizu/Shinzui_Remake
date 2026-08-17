@@ -41,6 +41,11 @@ namespace Shinzui.Presentation
 
         public void Initialize()
         {
+            if (_view != null)
+            {
+                _useCase.SetCrouchRatio(_view.CrouchRatio, _view.HeightChangeRate);
+            }
+
             var disposableBuilder = Disposable.CreateBuilder();
 
             // UseCaseを介してコライダーの高さ更新を監視し、Viewに流す
@@ -60,6 +65,11 @@ namespace Shinzui.Presentation
 
         public void Tick()
         {
+            if (_view != null)
+            {
+                _useCase.SetCrouchRatio(_view.CrouchRatio, _view.HeightChangeRate);
+            }
+
             // 強制しゃがみフラグがあれば適用
             bool forceCrouch = !_useCase.CrouchPressed && !_view.CanStand();
 

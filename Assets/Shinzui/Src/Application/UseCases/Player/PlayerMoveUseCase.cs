@@ -37,6 +37,20 @@ namespace Shinzui.Application.UseCases
         }
 
         /// <summary>
+        /// しゃがみ時の高さ倍率と変化速度を設定
+        /// </summary>
+        public void SetCrouchRatio(float crouchRatio, float heightChangeRate)
+        {
+            if (crouchRatio <= 0.0f) return;
+            float standingH = _playerEntityEntity.PlayerCrouchStatus.StandingHeight;
+            _playerEntityEntity.PlayerCrouchStatus = new Shinzui.Domain.ValueObjects.Player.PlayerCrouchStatus(
+                standingH,
+                crouchRatio,
+                heightChangeRate
+            );
+        }
+
+        /// <summary>
         /// プレイヤーの移動および重力、コライダー高さの更新処理を調整
         /// </summary>
         public void Move(

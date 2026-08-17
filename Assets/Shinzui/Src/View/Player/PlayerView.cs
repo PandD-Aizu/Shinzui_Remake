@@ -20,6 +20,12 @@ namespace Shinzui.View
         [SerializeField] private float groundProbeDistance = 0.25f;
         [SerializeField] private LayerMask groundLayers = ~0;
 
+        [Header("Crouch Settings")]
+        [Tooltip("しゃがみ時の高さ倍率")]
+        [Range(0.01f, 1.0f)]
+        [SerializeField] private float crouchRatio = 0.5f;
+        [SerializeField] private float heightChangeRate = 10.0f;
+
         [Header("Stamina UI")] 
         [SerializeField] private Slider staminaSlider;
         [SerializeField] private Image staminaFillImage;
@@ -30,10 +36,14 @@ namespace Shinzui.View
         private float _staminaChangeTimer = 0.0f;
         private float _rotationVelocity;
         private float _standingCharacterHeight;
+        private float _standingCharacterRadius = 0.5f;
         private Vector3 _standingCharacterCenter;
         private float _standingColliderHeight;
+        private float _standingColliderRadius = 0.5f;
         private Vector3 _standingColliderCenter;
         private Vector3 _standingCameraLocalPosition;
+        private float _footLocalY;
+        private float _standingHeadHeightFromFeet;
         private PlayerCameraMotionExtension _cameraMotion;
         private const float StaminaFadeDelay = 2.0f;
         private const float StaminaFadeInSpeed = 10.0f;
@@ -64,6 +74,9 @@ namespace Shinzui.View
         /// </summary>
         public Camera MainCamera => mainCamera;
 
+        public float CrouchRatio => crouchRatio > 0.0f ? crouchRatio : 0.5f;
+        public float HeightChangeRate => heightChangeRate > 0.01f ? heightChangeRate : 10.0f;
+
         /// <summary>
         /// プレイヤーの現在の移動速度を取得します。
         /// </summary>
@@ -74,12 +87,14 @@ namespace Shinzui.View
             if (characterController != null)
             {
                 _standingCharacterHeight = characterController.height;
+                _standingCharacterRadius = characterController.radius;
                 _standingCharacterCenter = characterController.center;
             }
 
             if (playerCollider != null)
             {
                 _standingColliderHeight = playerCollider.height;
+                _standingColliderRadius = playerCollider.radius;
                 _standingColliderCenter = playerCollider.center;
             }
 
@@ -115,9 +130,12 @@ namespace Shinzui.View
                 }
             }
 
+            _footLocalY = _standingCharacterCenter.y - (_standingCharacterHeight * 0.5f);
+
             if (cameraTarget != null)
             {
                 _standingCameraLocalPosition = cameraTarget.localPosition;
+                _standingHeadHeightFromFeet = _standingCameraLocalPosition.y - _footLocalY;
                 if (mainCamera != null && mainCamera.transform.parent == transform)
                 {
                     mainCamera.transform.SetParent(cameraTarget, false);
@@ -238,6 +256,7 @@ namespace Shinzui.View
         {
             if (playerCollider != null)
             {
+                playerCollider.radius = Mathf.Min(_standingColliderRadius, height * 0.5f);
                 playerCollider.height = height;
                 playerCollider.center = GetBottomAnchoredCenter(
                     _standingColliderCenter,
@@ -246,6 +265,7 @@ namespace Shinzui.View
             }
             if (characterController != null)
             {
+                characterController.radius = Mathf.Min(_standingCharacterRadius, height * 0.5f);
                 characterController.height = height;
                 characterController.center = GetBottomAnchoredCenter(
                     _standingCharacterCenter,
@@ -258,7 +278,7 @@ namespace Shinzui.View
             {
                 float ratio = height / standingH;
                 Vector3 targetPos = _standingCameraLocalPosition;
-                targetPos.y = _standingCameraLocalPosition.y * ratio;
+                targetPos.y = _footLocalY + (_standingHeadHeightFromFeet * ratio);
                 cameraTarget.localPosition = targetPos;
             }
         }
