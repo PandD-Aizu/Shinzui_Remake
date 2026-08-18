@@ -1157,12 +1157,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Temp::Shinzui.Temp.TempEnemyVision
   playerTarget: {fileID: 119550617}
-  viewDistance: 10
-  viewAngle: 90
-  eyePoint: {fileID: 575557237}
+  viewDistance: 7.5
+  viewAngle: 65
+  eyePoint: {fileID: 0}
   obstacleMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  detectionDelay: 0.35
+  requireFullBodyVisible: 1
   isPlayerDetected: 0
 --- !u!23 &219652777
 MeshRenderer:
@@ -4598,12 +4600,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Temp::Shinzui.Temp.TempEnemyVision
   playerTarget: {fileID: 119550617}
-  viewDistance: 10
-  viewAngle: 90
-  eyePoint: {fileID: 697460762}
+  viewDistance: 7.5
+  viewAngle: 65
+  eyePoint: {fileID: 0}
   obstacleMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  detectionDelay: 0.35
+  requireFullBodyVisible: 1
   isPlayerDetected: 0
 --- !u!1 &1217330891
 GameObject:

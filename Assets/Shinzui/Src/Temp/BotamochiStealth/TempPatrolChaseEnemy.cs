@@ -61,7 +61,6 @@ namespace Shinzui.Temp
         {
             bool isPlayerDetected = enemyVision != null && enemyVision.IsPlayerDetected;
 
-            // 状態切り替えロジック
             if (isPlayerDetected)
             {
                 currentState = EnemyState.Chase;
@@ -74,12 +73,10 @@ namespace Shinzui.Temp
             }
             else if (currentState == EnemyState.Chase)
             {
-                // 見失ったらSearch状態へ移行
                 currentState = EnemyState.Search;
                 _searchTimer = lostTargetDelay;
             }
 
-            // 状態に応じた行動実行
             switch (currentState)
             {
                 case EnemyState.Patrol:
@@ -95,14 +92,14 @@ namespace Shinzui.Temp
         }
 
         #region Patrol Logic
+        /// <summary>
+        /// 巡回（徘徊）状態の移動およびウェイポイント待機処理を実行する
+        /// </summary>
         private void UpdatePatrol()
         {
             SetSpeed(patrolSpeed);
 
-            if (waypoints == null || waypoints.Length == 0)
-            {
-                return;
-            }
+            if (waypoints == null || waypoints.Length == 0) return;
 
             Transform targetWaypoint = waypoints[_currentWaypointIndex];
             if (targetWaypoint == null)
@@ -111,7 +108,6 @@ namespace Shinzui.Temp
                 return;
             }
 
-            // XZ平面での距離チェック
             Vector3 posXZ = new Vector3(transform.position.x, 0.0f, transform.position.z);
             Vector3 wpXZ = new Vector3(targetWaypoint.position.x, 0.0f, targetWaypoint.position.z);
             float distanceToWaypoint = Vector3.Distance(posXZ, wpXZ);
@@ -132,6 +128,9 @@ namespace Shinzui.Temp
             }
         }
 
+        /// <summary>
+        /// 現在インデックスのウェイポイント座標に向かって移動を開始する
+        /// </summary>
         private void MoveToCurrentWaypoint()
         {
             if (waypoints != null && waypoints.Length > _currentWaypointIndex)
@@ -146,6 +145,9 @@ namespace Shinzui.Temp
         #endregion
 
         #region Chase Logic
+        /// <summary>
+        /// プレイヤー追跡状態の移動処理を実行する
+        /// </summary>
         private void UpdateChase()
         {
             SetSpeed(chaseSpeed);
@@ -159,6 +161,9 @@ namespace Shinzui.Temp
         #endregion
 
         #region Search Logic
+        /// <summary>
+        /// プレイヤー見失い後の最終確認位置への捜索移動を実行する
+        /// </summary>
         private void UpdateSearch()
         {
             SetSpeed(patrolSpeed);
@@ -167,7 +172,6 @@ namespace Shinzui.Temp
             _searchTimer -= Time.deltaTime;
             if (_searchTimer <= 0.0f)
             {
-                // 探索時間終了、徘徊に戻る
                 currentState = EnemyState.Patrol;
                 MoveToCurrentWaypoint();
             }
@@ -175,6 +179,10 @@ namespace Shinzui.Temp
         #endregion
 
         #region Movement Helper
+        /// <summary>
+        /// NavMeshAgentの移動速度を設定する
+        /// </summary>
+        /// <param name="speed">移動速度</param>
         private void SetSpeed(float speed)
         {
             if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
@@ -184,8 +192,9 @@ namespace Shinzui.Temp
         }
 
         /// <summary>
-        /// 障害物の迂回および貫通防止移動
+        /// 目標座標に向けて移動する（NavMeshAgentまたはCharacterControllerでの衝突回避移動）
         /// </summary>
+        /// <param name="targetPosition">目標座標</param>
         private void MoveToward(Vector3 targetPosition)
         {
             if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
@@ -204,14 +213,12 @@ namespace Shinzui.Temp
             Vector3 desiredDir = direction.normalized;
             Vector3 moveDir = desiredDir;
 
-            // 障害物の検知と迂回（SphereCast）
             float rayRadius = characterController != null ? characterController.radius : 0.4f;
             float checkDistance = 1.0f;
             Vector3 rayOrigin = transform.position + Vector3.up * 0.8f;
 
             if (Physics.SphereCast(rayOrigin, rayRadius, desiredDir, out RaycastHit hit, checkDistance, ~0, QueryTriggerInteraction.Ignore))
             {
-                // ターゲット（プレイヤー）本人でなければ壁・障害物とみなしてスライド
                 if (currentTarget == null || (hit.transform != currentTarget && !hit.transform.IsChildOf(currentTarget)))
                 {
                     Vector3 avoidDir = Vector3.ProjectOnPlane(desiredDir, hit.normal).normalized;
@@ -222,14 +229,12 @@ namespace Shinzui.Temp
                 }
             }
 
-            // 回転を滑らかに合わせる
             if (moveDir.sqrMagnitude > 0.01f)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(moveDir);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 360.0f * Time.deltaTime);
             }
 
-            // 衝突判定（CharacterController）による安全な移動（壁貫通防止）
             if (characterController != null)
             {
                 if (!characterController.enabled)
@@ -238,7 +243,6 @@ namespace Shinzui.Temp
                 }
 
                 Vector3 velocity = moveDir * moveSpeed;
-                // 接地判定と重力追加
                 velocity.y = characterController.isGrounded ? -2.0f : Physics.gravity.y;
                 characterController.Move(velocity * Time.deltaTime);
             }
