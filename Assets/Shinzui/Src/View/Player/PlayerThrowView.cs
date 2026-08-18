@@ -1,11 +1,15 @@
 using System;
 using R3;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Shinzui.View
 {
     public class PlayerThrowView : MonoBehaviour
     {
+        private const string StonePrefabAddress = "StonePrefab";
+
         private readonly Subject<Unit> _onStoneCollision = new();
         public Observable<Unit> OnStoneCollision => _onStoneCollision;
         [Header("Settings")]
@@ -15,6 +19,8 @@ namespace Shinzui.View
         private Camera _mainCamera;
         private Collider _playerCollider;
         private GameObject _equippedVisual;
+        private AsyncOperationHandle<GameObject> _stonePrefabLoadHandle;
+        private bool _isDestroyed;
 
         private void Start()
         {
@@ -85,47 +91,91 @@ namespace Shinzui.View
                                     _mainCamera.transform.forward * 0.5f + 
                                     _mainCamera.transform.right * 0.2f + 
                                     _mainCamera.transform.up * -0.2f;
+            Vector3 throwDirection = _mainCamera.transform.forward;
 
-            GameObject rock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            rock.name = "ThrownStone";
-            rock.transform.position = spawnPosition;
-            rock.transform.localScale = new Vector3(0.12f, 0.12f, 0.12f);
-
-            // 色をグレーにする
-            var renderer = rock.GetComponent<Renderer>();
-            if (renderer != null)
+            if (!_stonePrefabLoadHandle.IsValid())
             {
-                renderer.material.color = Color.gray;
+                _stonePrefabLoadHandle = Addressables.LoadAssetAsync<GameObject>(StonePrefabAddress);
             }
 
+            if (_stonePrefabLoadHandle.IsDone)
+            {
+                SpawnAndThrowRock(_stonePrefabLoadHandle, spawnPosition, throwDirection);
+                return;
+            }
+
+            _stonePrefabLoadHandle.Completed += handle =>
+            {
+                SpawnAndThrowRock(handle, spawnPosition, throwDirection);
+            };
+        }
+
+        private void SpawnAndThrowRock(AsyncOperationHandle<GameObject> handle, Vector3 spawnPosition, Vector3 throwDirection)
+        {
+            if (_isDestroyed)
+            {
+                return;
+            }
+
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Debug.LogError($"Failed to load addressable stone prefab: {StonePrefabAddress}");
+                if (_stonePrefabLoadHandle.IsValid())
+                {
+                    Addressables.Release(_stonePrefabLoadHandle);
+                    _stonePrefabLoadHandle = default;
+                }
+                return;
+            }
+
+            GameObject rock = Instantiate(handle.Result, spawnPosition, Quaternion.LookRotation(throwDirection));
+            rock.name = "ThrownStone";
+
             // Rigidbodyを追加して投げる
-            var rb = rock.AddComponent<Rigidbody>();
+            var rb = rock.GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                rb = rock.AddComponent<Rigidbody>();
+            }
+            rb.isKinematic = false;
             rb.mass = 0.2f;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
             // プレイヤーのコライダーと衝突無視
-            var rockCollider = rock.GetComponent<Collider>();
-            if (rockCollider != null && _playerCollider != null)
+            if (_playerCollider != null)
             {
-                Physics.IgnoreCollision(rockCollider, _playerCollider);
+                foreach (var rockCollider in rock.GetComponentsInChildren<Collider>())
+                {
+                    Physics.IgnoreCollision(rockCollider, _playerCollider);
+                }
             }
 
             // 衝突ハンドラーの追加
-            var handler = rock.AddComponent<StoneCollisionHandler>();
+            var handler = rock.GetComponent<StoneCollisionHandler>();
+            if (handler == null)
+            {
+                handler = rock.AddComponent<StoneCollisionHandler>();
+            }
             handler.OnCollide += () => _onStoneCollision.OnNext(Unit.Default);
 
             // カメラの正面方向に力をかける
-            rb.AddForce(_mainCamera.transform.forward * throwForce, ForceMode.Impulse);
+            rb.AddForce(throwDirection * throwForce, ForceMode.Impulse);
 
             // 5秒後に破棄
-            Destroy(rock, 5f);
+            handler.DestroyAfter(5f);
         }
 
         private void OnDestroy()
         {
+            _isDestroyed = true;
+
             if (_equippedVisual != null)
             {
                 Destroy(_equippedVisual);
+            }
+            if (_stonePrefabLoadHandle.IsValid())
+            {
+                Addressables.Release(_stonePrefabLoadHandle);
             }
             _onStoneCollision.OnCompleted();
         }

@@ -42,10 +42,9 @@ public sealed class VolumetricFogRendererFeature : ScriptableRendererFeature
 	/// <param name="renderingData"></param>
 	public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
 	{
-		bool isPortalCamera = renderingData.cameraData.camera != null && renderingData.cameraData.camera.name.Contains("[Portal");
-		bool isPostProcessEnabled = (renderingData.postProcessingEnabled && renderingData.cameraData.postProcessEnabled) || isPortalCamera;
+		bool isPostProcessEnabled = renderingData.postProcessingEnabled && renderingData.cameraData.postProcessEnabled;
 		bool shouldAddVolumetricFogRenderPass = isPostProcessEnabled && ShouldAddVolumetricFogRenderPass(renderingData.cameraData.cameraType);
-		
+
 		if (shouldAddVolumetricFogRenderPass)
 		{
 			volumetricFogRenderPass.renderPassEvent = GetRenderPassEvent();
@@ -95,7 +94,7 @@ public sealed class VolumetricFogRendererFeature : ScriptableRendererFeature
 
 		bool okDepth = downsampleDepthShader != null && downsampleDepthMaterial != null;
 		bool okVolumetric = volumetricFogShader != null && volumetricFogMaterial != null;
-		
+
 		return okDepth && okVolumetric;
 	}
 
@@ -122,7 +121,7 @@ public sealed class VolumetricFogRendererFeature : ScriptableRendererFeature
 	private RenderPassEvent GetRenderPassEvent()
 	{
 		VolumetricFogVolumeComponent fogVolume = VolumeManager.instance.stack.GetComponent<VolumetricFogVolumeComponent>();
-		
+
 		return (RenderPassEvent)fogVolume.renderPassEvent.value;
 	}
 

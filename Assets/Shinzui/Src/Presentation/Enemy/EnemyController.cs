@@ -102,22 +102,28 @@ namespace Shinzui.Presentation
             TryKillPlayerIfClose(playerPos);
 
             var tunnelBounds = playerTracker.CurrentTunnelBounds;
-            if (!tunnelBounds.HasValue)
-            {
-                return;
-            }
-
-            Vector3 tunnelStartPos = tunnelBounds.Value.start;
-            Vector3 tunnelEndPos = tunnelBounds.Value.end;
-            Vector3 dummy = CreateLoopDummyPosition(playerPos, tunnelStartPos, tunnelEndPos);
-
             Vector3 enemyPosition = _view.EnemyPosition;
             float distanceToPlayer = Vector3.Distance(enemyPosition, playerPos);
-            float distanceToDummy = Vector3.Distance(enemyPosition, dummy);
+
+            // CurrentTunnelBounds is a legacy loop-tunnel concept. Randomly generated maps do
+            // not expose those bounds, so use the real player position and skip loop warping.
+            Vector3 dummy = playerPos;
+            float distanceToDummy = float.PositiveInfinity;
+            if (tunnelBounds.HasValue)
+            {
+                Vector3 tunnelStartPos = tunnelBounds.Value.start;
+                Vector3 tunnelEndPos = tunnelBounds.Value.end;
+                dummy = CreateLoopDummyPosition(playerPos, tunnelStartPos, tunnelEndPos);
+                distanceToDummy = Vector3.Distance(enemyPosition, dummy);
+            }
 
             ApplyCommand(command);
             TickMovement(deltaTime, enemyPosition, command, dummy, distanceToPlayer, distanceToDummy);
-            WarpIfOutsideTunnel(tunnelStartPos, tunnelEndPos);
+
+            if (tunnelBounds.HasValue)
+            {
+                WarpIfOutsideTunnel(tunnelBounds.Value.start, tunnelBounds.Value.end);
+            }
         }
 
         /// <summary>
@@ -282,9 +288,26 @@ namespace Shinzui.Presentation
         /// <param name="targetPosition"></param>
         private void SetDestination(Vector3 targetPosition)
         {
-            if (_agent != null)
+            if (_agent == null || !_agent.enabled)
             {
-                _agent.SetDestination(targetPosition);
+                return;
+            }
+
+            // Runtime NavMesh baking can leave a scene-authored agent just outside the new
+            // surface. Recover it onto the generated mesh before assigning a destination.
+            if (!_agent.isOnNavMesh)
+            {
+                if (!NavMesh.SamplePosition(_agent.transform.position, out NavMeshHit agentHit, 3.0f, _agent.areaMask))
+                {
+                    return;
+                }
+
+                _agent.Warp(agentHit.position);
+            }
+
+            if (NavMesh.SamplePosition(targetPosition, out NavMeshHit targetHit, 3.0f, _agent.areaMask))
+            {
+                _agent.SetDestination(targetHit.position);
             }
         }
 
@@ -299,8 +322,9 @@ namespace Shinzui.Presentation
             Vector3 randomDirection = Random.insideUnitSphere * radius;
             randomDirection += origin;
 
-            NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, radius, NavMesh.AllAreas);
-            return hit.position;
+            return NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, radius, NavMesh.AllAreas)
+                ? hit.position
+                : origin;
         }
 
         /// <summary>

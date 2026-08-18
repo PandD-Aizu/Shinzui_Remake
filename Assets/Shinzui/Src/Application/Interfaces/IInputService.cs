@@ -19,6 +19,16 @@ namespace Shinzui.Application.Interfaces
         bool ItemUsePressed { get; }
 
         /// <summary>
+        /// クイックアイテム切り替え修飾キー（Ctrlなど）が押されているか
+        /// </summary>
+        bool QuickItemModifierHeld { get; }
+
+        /// <summary>
+        /// クイックアイテム切り替え用のホイール入力。上方向が正、下方向が負。
+        /// </summary>
+        int QuickItemScrollDelta { get; }
+
+        /// <summary>
         /// プレイヤーの移動やカメラ回転入力（Playerアクションマップ）の入力をブロックするか制御します。
         /// </summary>
         /// <param name="blocked">true の場合、移動や視点移動の入力を無効化します。</param>

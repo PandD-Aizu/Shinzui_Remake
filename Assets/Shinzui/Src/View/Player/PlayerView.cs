@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Cinemachine;
@@ -45,16 +46,29 @@ namespace Shinzui.View
         private float _footLocalY;
         private float _standingHeadHeightFromFeet;
         private PlayerCameraMotionExtension _cameraMotion;
+        private readonly Dictionary<int, MotionModifier> _motionModifiers = new();
         private const float StaminaFadeDelay = 2.0f;
         private const float StaminaFadeInSpeed = 10.0f;
         private const float StaminaFadeOutSpeed = 1.0f;
+
+        private readonly struct MotionModifier
+        {
+            public readonly float HorizontalSpeedMultiplier;
+            public readonly Vector3 AdditiveVelocity;
+
+            public MotionModifier(float horizontalSpeedMultiplier, Vector3 additiveVelocity)
+            {
+                HorizontalSpeedMultiplier = horizontalSpeedMultiplier;
+                AdditiveVelocity = additiveVelocity;
+            }
+        }
 
         public Vector3 CameraForward => mainCamera != null ? mainCamera.transform.forward : transform.forward;
         public Vector3 CameraRight => mainCamera != null ? mainCamera.transform.right : transform.right;
         public Vector3 CameraPosition => mainCamera != null ? mainCamera.transform.position : transform.position;
         public float CameraNearClipPlane => mainCamera != null ? mainCamera.nearClipPlane : 0.3f;
         public Vector3 CameraNearPosition => CameraPosition + CameraForward * CameraNearClipPlane;
-        
+
         public bool IsGrounded => TryGetGroundNormal(out _);
         public bool IsControllerGrounded => characterController != null && characterController.isGrounded;
         public Vector3 GroundNormal => TryGetGroundNormal(out Vector3 normal) ? normal : Vector3.up;
@@ -193,6 +207,11 @@ namespace Shinzui.View
             EnsureCameraMotionExtension();
         }
 
+        private void OnDisable()
+        {
+            _motionModifiers.Clear();
+        }
+
         private static Gradient CreateDefaultStaminaGradient()
         {
             var gradient = new Gradient();
@@ -226,8 +245,8 @@ namespace Shinzui.View
                 transform.position += offset;
             }
 
-            // カメラ自体も即座にワープさせることで、同フレーム内での他スクリプトによるカメラ座標参照のズレを防ぐ
-            if (mainCamera != null)
+            // カメラがプレイヤー配下（子オブジェクト）ではない場合のみ直接移動し、二重適用を防ぐ
+            if (mainCamera != null && !mainCamera.transform.IsChildOf(transform))
             {
                 mainCamera.transform.position += offset;
             }
@@ -245,8 +264,44 @@ namespace Shinzui.View
         {
             if (characterController != null && characterController.enabled)
             {
-                characterController.Move(velocity * Time.deltaTime);
+                float horizontalMultiplier = 1.0f;
+                Vector3 additiveVelocity = Vector3.zero;
+                foreach (MotionModifier modifier in _motionModifiers.Values)
+                {
+                    horizontalMultiplier = Mathf.Min(
+                        horizontalMultiplier,
+                        modifier.HorizontalSpeedMultiplier);
+                    additiveVelocity += modifier.AdditiveVelocity;
+                }
+
+                Vector3 modifiedVelocity = velocity;
+                modifiedVelocity.x *= horizontalMultiplier;
+                modifiedVelocity.z *= horizontalMultiplier;
+                modifiedVelocity += additiveVelocity;
+                characterController.Move(modifiedVelocity * Time.deltaTime);
             }
+        }
+
+        /// <summary>
+        /// 蜘蛛の巣など、環境側から一時的な移動補正を登録する。
+        /// sourceId ごとに上書きされるため、同じオブジェクトから毎フレーム更新できる
+        /// </summary>
+        public void SetMotionModifier(
+            int sourceId,
+            float horizontalSpeedMultiplier,
+            Vector3 additiveVelocity)
+        {
+            _motionModifiers[sourceId] = new MotionModifier(
+                Mathf.Clamp01(horizontalSpeedMultiplier),
+                additiveVelocity);
+        }
+
+        /// <summary>
+        /// 環境側から登録された移動補正を解除する
+        /// </summary>
+        public void RemoveMotionModifier(int sourceId)
+        {
+            _motionModifiers.Remove(sourceId);
         }
 
         /// <summary>

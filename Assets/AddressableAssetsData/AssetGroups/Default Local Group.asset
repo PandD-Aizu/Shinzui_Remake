@@ -15,6 +15,16 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 764789efa4f1cf64dac1ef091bd99925
   m_SerializeEntries:
+  - m_GUID: 41337b98b2b5d3546a7a9d1f5545fb4c
+    m_Address: StonePrefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 629d707b85a3eca4bb9a0ae0212ac845
+    m_Address: TunnelBaseModel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fcd678fb651f70b4e8f4a2009f0c4800
     m_Address: Sprite/Medicine
     m_ReadOnly: 0

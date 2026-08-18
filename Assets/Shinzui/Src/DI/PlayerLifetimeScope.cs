@@ -19,6 +19,11 @@ using Shinzui.View.Flashlight;
 using Shinzui.Application.UseCases.Interaction;
 using Shinzui.Presentation.Interaction;
 using Shinzui.View.Interaction;
+using Shinzui.Application.Interfaces.ResourceNeed;
+using Shinzui.Application.UseCases.ResourceNeed;
+using Shinzui.Domain.DomainServices.ResourceNeed;
+using Shinzui.Domain.ValueObjects.ResourceNeed;
+using Shinzui.Infrastructure.ResourceNeed;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -36,9 +41,14 @@ namespace Shinzui.DI
         [SerializeField] private PlayerInteractionView interactionView;
         [SerializeField] private InteractionMessageView interactionMessageView;
         [SerializeField] private SpecialItemHudView specialItemHudView;
+        [SerializeField] private PlayerQuickItemSlotView playerQuickItemSlotView;
         [SerializeField] private PlayerDeathView playerDeathView;
         [SerializeField] private EnemyView[] enemyViews;
         [SerializeField] private HorrorDetectionView horrorDetectionView;
+
+        [Header("Resource Need")]
+        [SerializeField] private PlayerNeedWeightSettingsSO needWeightSettings;
+        [SerializeField] private ItemCategoryClassifierSO itemCategoryClassifier;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -122,6 +132,7 @@ namespace Shinzui.DI
             // Presentation
             builder.RegisterEntryPoint<InventoryPresenter>();
             RegisterSpecialItemHud(builder);
+            RegisterPlayerQuickItemSlot(builder);
             RegisterPlayerDeath(builder);
             RegisterEnemies(builder);
             
@@ -216,6 +227,24 @@ namespace Shinzui.DI
 
             builder.RegisterComponent(horrorViewInstance);
             builder.RegisterEntryPoint<HorrorDetectionPresenter>();
+
+            // ==========================================
+            // プレイヤー資源不足度（Need Weight）評価システムのDI登録
+            // ==========================================
+            var classifierInstance = itemCategoryClassifier != null
+                ? itemCategoryClassifier
+                : ItemCategoryClassifierSO.CreateDefault();
+            builder.RegisterInstance(classifierInstance).As<IItemCategoryClassifier>();
+
+            var needSettingsInstance = needWeightSettings != null
+                ? needWeightSettings
+                : PlayerNeedWeightSettingsSO.CreateDefault();
+            builder.RegisterInstance(needSettingsInstance);
+            builder.RegisterInstance(needSettingsInstance.ToDomainConfig());
+
+            builder.Register<PlayerResourceNeedEvaluator>(Lifetime.Singleton);
+            builder.Register<PlayerResourceSnapshotProvider>(Lifetime.Singleton).As<IPlayerResourceSnapshotProvider>();
+            builder.Register<PlayerResourceNeedUseCase>(Lifetime.Singleton).As<IPlayerResourceNeedUseCase>().AsSelf();
         }
 
         private void RegisterSpecialItemHud(IContainerBuilder builder)
@@ -262,6 +291,133 @@ namespace Shinzui.DI
 
             view.Configure(itemImage);
             return view;
+        }
+
+        private void RegisterPlayerQuickItemSlot(IContainerBuilder builder)
+        {
+            var quickItemSlotViewInstance = playerQuickItemSlotView;
+            if (quickItemSlotViewInstance == null)
+            {
+                quickItemSlotViewInstance = FindFirstObjectByType<PlayerQuickItemSlotView>();
+            }
+
+            if (quickItemSlotViewInstance == null)
+            {
+                quickItemSlotViewInstance = CreatePlayerQuickItemSlotViewFromScenePath();
+            }
+
+            if (quickItemSlotViewInstance != null)
+            {
+                builder.RegisterComponent(quickItemSlotViewInstance);
+                builder.RegisterEntryPoint<PlayerQuickItemSlotPresenter>();
+            }
+            else
+            {
+                Debug.LogWarning("PlayerQuickItemSlotView was not assigned and HUDCanvas could not be found or created.");
+            }
+        }
+
+        private static PlayerQuickItemSlotView CreatePlayerQuickItemSlotViewFromScenePath()
+        {
+            var hudCanvas = GameObject.Find("HUDCanvas");
+            if (hudCanvas == null)
+            {
+                return null;
+            }
+
+            var quickItemRoot = hudCanvas.transform.Find("QuickItemSlot") ?? hudCanvas.transform.Find("PlayerQuickItemSlot");
+            if (quickItemRoot == null)
+            {
+                var quickItemObject = new GameObject("QuickItemSlot", typeof(RectTransform));
+                quickItemObject.transform.SetParent(hudCanvas.transform, false);
+                quickItemRoot = quickItemObject.transform;
+            }
+
+            var rootRect = quickItemRoot.GetComponent<RectTransform>();
+            if (rootRect == null)
+            {
+                rootRect = quickItemRoot.gameObject.AddComponent<RectTransform>();
+            }
+            rootRect.anchorMin = new Vector2(1f, 0f);
+            rootRect.anchorMax = new Vector2(1f, 0f);
+            rootRect.pivot = new Vector2(1f, 0f);
+            rootRect.anchoredPosition = new Vector2(-32f, 32f);
+            rootRect.sizeDelta = new Vector2(160f, 78f);
+
+            var view = quickItemRoot.GetComponent<PlayerQuickItemSlotView>();
+            if (view == null)
+            {
+                view = quickItemRoot.gameObject.AddComponent<PlayerQuickItemSlotView>();
+            }
+
+            Image normalSlot = EnsureSlot(quickItemRoot, "NormalItemSlot", new Vector2(-50f, 0f), new Vector2(72f, 72f), new Color(0.08f, 0.08f, 0.08f, 0.72f));
+            Image normalIcon = EnsureIcon(normalSlot.transform, "ItemIcon", new Vector2(52f, 52f));
+            Image specialSlot = EnsureSlot(quickItemRoot, "SpecialItemSlot", new Vector2(-126f, 6f), new Vector2(48f, 48f), new Color(0.12f, 0.09f, 0.04f, 0.72f));
+            Image specialIcon = EnsureIcon(specialSlot.transform, "ItemIcon", new Vector2(34f, 34f));
+
+            view.Configure(normalSlot, normalIcon, specialSlot, specialIcon);
+            return view;
+        }
+
+        private static Image EnsureSlot(Transform parent, string name, Vector2 anchoredPosition, Vector2 sizeDelta, Color color)
+        {
+            var child = parent.Find(name);
+            if (child == null)
+            {
+                var childObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+                childObject.transform.SetParent(parent, false);
+                child = childObject.transform;
+            }
+
+            var rect = child.GetComponent<RectTransform>();
+            if (rect == null)
+            {
+                rect = child.gameObject.AddComponent<RectTransform>();
+            }
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = sizeDelta;
+
+            var image = child.GetComponent<Image>();
+            if (image == null)
+            {
+                image = child.gameObject.AddComponent<Image>();
+            }
+            image.color = color;
+            return image;
+        }
+
+        private static Image EnsureIcon(Transform parent, string name, Vector2 sizeDelta)
+        {
+            var child = parent.Find(name);
+            if (child == null)
+            {
+                var childObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+                childObject.transform.SetParent(parent, false);
+                child = childObject.transform;
+            }
+
+            var rect = child.GetComponent<RectTransform>();
+            if (rect == null)
+            {
+                rect = child.gameObject.AddComponent<RectTransform>();
+            }
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = sizeDelta;
+
+            var image = child.GetComponent<Image>();
+            if (image == null)
+            {
+                image = child.gameObject.AddComponent<Image>();
+            }
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+            return image;
         }
 
         private void RegisterEnemies(IContainerBuilder builder)

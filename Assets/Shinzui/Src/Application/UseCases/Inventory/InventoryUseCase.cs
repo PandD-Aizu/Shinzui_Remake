@@ -65,10 +65,10 @@ namespace Shinzui.Application.UseCases.Inventory
                     {
                         _slotDtos[index].Value = CreateDto(index, stack);
 
-                        // 装備中のスロットが空になったか、装備品でなくなった場合は装備を解除
+                        // 装備中のスロットが空になった場合は装備を解除
                         if (_equippedSlotIndex.Value == index)
                         {
-                            if (stack == null || stack.Item.Type != ItemType.Equipment)
+                            if (stack == null)
                             {
                                 _equippedSlotIndex.Value = -1;
                             }
@@ -128,7 +128,7 @@ namespace Shinzui.Application.UseCases.Inventory
             }
 
             var slot = _inventory.GetSlot(slotIndex).CurrentValue;
-            if (slot == null || slot.Item.Type != ItemType.Equipment)
+            if (slot == null || slot.Item.Type == ItemType.Special)
             {
                 _equippedSlotIndex.Value = -1;
                 return;
@@ -278,6 +278,20 @@ namespace Shinzui.Application.UseCases.Inventory
                     _inventory.SetSlotForce(slotData.SlotIndex, new ItemStack(item, slotData.Quantity));
                 }
             }
+        }
+        
+        /// <summary>
+        /// インベントリ内のアイテムの情報取得
+        /// </summary>
+        /// <param name="itemId">調査対象のアイテムID</param>
+        /// <returns></returns>
+        public int CheckItem(string itemId)
+        {
+            //　TODO: (必要なら)カタログからitemIdで取得するように変更する
+            var item =  new ItemDefinition("FlashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/Medicine", ItemType.Consumable, 99);
+            var idx = _inventory.CheckItemSlotIndex(item);
+            
+            return idx;
         }
     }
 }

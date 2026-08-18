@@ -59,6 +59,29 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        public bool QuickItemModifierHeld
+        {
+            get
+            {
+                if (_isBlocked) return false;
+                return Keyboard.current != null &&
+                       (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
+            }
+        }
+
+        public int QuickItemScrollDelta
+        {
+            get
+            {
+                if (_isBlocked || Mouse.current == null) return 0;
+
+                float scrollY = Mouse.current.scroll.ReadValue().y;
+                if (scrollY > 0f) return 1;
+                if (scrollY < 0f) return -1;
+                return 0;
+            }
+        }
+
         public bool FlashlightTogglePressed
         {
             get
