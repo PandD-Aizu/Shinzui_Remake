@@ -133,15 +133,7 @@ namespace Shinzui.View
 
             if (cameraTarget == null)
             {
-                Transform foundTarget = transform.Find("PlayerHead");
-                if (foundTarget == null)
-                {
-                    foundTarget = transform.Find("CameraTarget");
-                }
-                if (foundTarget != null)
-                {
-                    cameraTarget = foundTarget;
-                }
+                cameraTarget = transform;
             }
 
             _footLocalY = _standingCharacterCenter.y - (_standingCharacterHeight * 0.5f);

@@ -97,8 +97,17 @@ namespace Shinzui.Application.UseCases
             if (Physics.Raycast(ray, out hit, rayDistance, stageMask))
             {
                 Transform tunnelRoot = hit.collider.transform.parent;
-                Transform tunnelStart = tunnelRoot != null ? tunnelRoot.Find("TunnelStart") : null;
-                Transform tunnelEnd = tunnelRoot != null ? tunnelRoot.Find("TunnelEnd") : null;
+                Transform tunnelStart = null;
+                Transform tunnelEnd = null;
+                if (tunnelRoot != null)
+                {
+                    for (int i = 0; i < tunnelRoot.childCount; i++)
+                    {
+                        Transform child = tunnelRoot.GetChild(i);
+                        if (child.name == "TunnelStart") tunnelStart = child;
+                        else if (child.name == "TunnelEnd") tunnelEnd = child;
+                    }
+                }
                 if (tunnelStart == null || tunnelEnd == null)
                 {
                     currentTunnelStart = null;

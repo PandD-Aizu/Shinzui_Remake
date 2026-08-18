@@ -44,114 +44,16 @@ namespace Shinzui.Temp
 
         private void Awake()
         {
-            AutoSetupReferences();
-        }
-
-        private void Reset()
-        {
-            AutoSetupReferences();
-        }
-
-        private void OnValidate()
-        {
-            AutoSetupReferences();
-        }
-
-        [ContextMenu("Auto Setup Enemy References")]
-        public void AutoSetupReferences()
-        {
-            if (enemyVision == null)
-            {
-                enemyVision = GetComponent<TempEnemyVision>();
-                if (enemyVision == null)
-                {
-                    enemyVision = gameObject.AddComponent<TempEnemyVision>();
-                }
-            }
-
-            if (navMeshAgent == null)
-            {
-                navMeshAgent = GetComponent<NavMeshAgent>();
-                if (navMeshAgent == null)
-                {
-                    navMeshAgent = gameObject.AddComponent<NavMeshAgent>();
-                }
-            }
-
-            // NavMeshAgentの初期パラメーター調整
-            if (navMeshAgent != null)
-            {
-                navMeshAgent.speed = patrolSpeed;
-                navMeshAgent.angularSpeed = 360.0f;
-                navMeshAgent.acceleration = 8.0f;
-                navMeshAgent.stoppingDistance = 0.5f;
-                navMeshAgent.radius = 0.5f;
-                navMeshAgent.height = 2.0f;
-            }
-
-            if (characterController == null)
-            {
-                characterController = GetComponent<CharacterController>();
-                if (characterController == null)
-                {
-                    characterController = gameObject.AddComponent<CharacterController>();
-                }
-            }
-
-            if (characterController != null)
-            {
-                characterController.height = 2.0f;
-                characterController.center = new Vector3(0, 1.0f, 0);
-                characterController.radius = 0.5f;
-            }
-
-            AutoFindWaypointsIfNeeded();
+            if (enemyVision == null) enemyVision = GetComponent<TempEnemyVision>();
+            if (navMeshAgent == null) navMeshAgent = GetComponent<NavMeshAgent>();
+            if (characterController == null) characterController = GetComponent<CharacterController>();
         }
 
         private void Start()
         {
-            AutoFindWaypointsIfNeeded();
-
             if (waypoints != null && waypoints.Length > 0)
             {
                 MoveToCurrentWaypoint();
-            }
-        }
-
-        private void AutoFindWaypointsIfNeeded()
-        {
-            bool needsWaypoints = false;
-            if (waypoints == null || waypoints.Length == 0)
-            {
-                needsWaypoints = true;
-            }
-            else
-            {
-                bool allNull = true;
-                foreach (Transform wp in waypoints)
-                {
-                    if (wp != null) { allNull = false; break; }
-                }
-                if (allNull) needsWaypoints = true;
-            }
-
-            if (needsWaypoints)
-            {
-                var foundList = new System.Collections.Generic.List<Transform>();
-                int index = 1;
-                while (true)
-                {
-                    GameObject wpObj = GameObject.Find("EnemyWaypoint" + index);
-                    if (wpObj == null) wpObj = GameObject.Find("Waypoint" + index);
-                    if (wpObj == null) break;
-                    foundList.Add(wpObj.transform);
-                    index++;
-                }
-
-                if (foundList.Count > 0)
-                {
-                    waypoints = foundList.ToArray();
-                }
             }
         }
 
@@ -164,11 +66,10 @@ namespace Shinzui.Temp
             {
                 currentState = EnemyState.Chase;
                 _searchTimer = 0.0f;
-                GameObject playerObj = GameObject.FindWithTag("Player");
-                if (playerObj != null)
+                if (enemyVision != null && enemyVision.PlayerTarget != null)
                 {
-                    _lastKnownPlayerPosition = playerObj.transform.position;
-                    currentTarget = playerObj.transform;
+                    currentTarget = enemyVision.PlayerTarget;
+                    _lastKnownPlayerPosition = currentTarget.position;
                 }
             }
             else if (currentState == EnemyState.Chase)
