@@ -37,6 +37,20 @@ namespace Shinzui.Application.UseCases
         }
 
         /// <summary>
+        /// しゃがみ時の高さ倍率と変化速度を設定
+        /// </summary>
+        public void SetCrouchRatio(float crouchRatio, float heightChangeRate)
+        {
+            if (crouchRatio <= 0.0f) return;
+            float standingH = _playerEntityEntity.PlayerCrouchStatus.StandingHeight;
+            _playerEntityEntity.PlayerCrouchStatus = new Shinzui.Domain.ValueObjects.Player.PlayerCrouchStatus(
+                standingH,
+                crouchRatio,
+                heightChangeRate
+            );
+        }
+
+        /// <summary>
         /// プレイヤーの移動および重力、コライダー高さの更新処理を調整
         /// </summary>
         public void Move(
@@ -83,8 +97,17 @@ namespace Shinzui.Application.UseCases
             if (Physics.Raycast(ray, out hit, rayDistance, stageMask))
             {
                 Transform tunnelRoot = hit.collider.transform.parent;
-                Transform tunnelStart = tunnelRoot != null ? tunnelRoot.Find("TunnelStart") : null;
-                Transform tunnelEnd = tunnelRoot != null ? tunnelRoot.Find("TunnelEnd") : null;
+                Transform tunnelStart = null;
+                Transform tunnelEnd = null;
+                if (tunnelRoot != null)
+                {
+                    for (int i = 0; i < tunnelRoot.childCount; i++)
+                    {
+                        Transform child = tunnelRoot.GetChild(i);
+                        if (child.name == "TunnelStart") tunnelStart = child;
+                        else if (child.name == "TunnelEnd") tunnelEnd = child;
+                    }
+                }
                 if (tunnelStart == null || tunnelEnd == null)
                 {
                     currentTunnelStart = null;
