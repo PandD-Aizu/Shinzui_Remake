@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 764789efa4f1cf64dac1ef091bd99925
   m_SerializeEntries:
+  - m_GUID: 34766443b32b544d0a3a98adc304fe29
+    m_Address: MatchStickPrefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 41337b98b2b5d3546a7a9d1f5545fb4c
     m_Address: StonePrefab
     m_ReadOnly: 0

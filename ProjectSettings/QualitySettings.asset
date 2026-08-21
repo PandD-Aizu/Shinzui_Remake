@@ -7,7 +7,7 @@ QualitySettings:
   m_CurrentQuality: 0
   m_QualitySettings:
   - serializedVersion: 5
-    name: High
+    name: Low
     pixelLightCount: 2
     shadows: 2
     shadowResolution: 1
@@ -61,6 +61,7 @@ QualitySettings:
     excludedTargetPlatforms:
     - Android
     - iPhone
+    - Standalone
   - serializedVersion: 5
     name: Midium
     pixelLightCount: 2
@@ -116,6 +117,7 @@ QualitySettings:
     excludedTargetPlatforms:
     - Android
     - iPhone
+    - Standalone
   - serializedVersion: 5
     name: Low
     pixelLightCount: 2
