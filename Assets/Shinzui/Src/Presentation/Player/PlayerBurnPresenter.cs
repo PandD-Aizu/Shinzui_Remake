@@ -4,7 +4,9 @@ using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases;
 using Shinzui.Application.UseCases.Inventory;
 using Shinzui.View;
+using UnityEngine;
 using VContainer.Unity;
+using Object = System.Object;
 
 namespace Shinzui.Presentation
 {
@@ -16,7 +18,7 @@ namespace Shinzui.Presentation
         private readonly IInputService _inputService;
 
         private IDisposable _disposable;
-        private bool _isStoneEquipped;
+        private bool _isMatchStickEquipped;
 
         public PlayerBurnPresenter(
             InventoryUseCase inventoryUseCase,
@@ -38,8 +40,8 @@ namespace Shinzui.Presentation
             _inventoryUseCase.EquippedItemId
                 .Subscribe(itemId =>
                 {
-                    _isStoneEquipped = (itemId == "stone");
-                    _view.SetEquippedVisualActive(_isStoneEquipped);
+                    _isMatchStickEquipped = (itemId == "matchStick");
+                    _view.SetEquippedVisualActive(_isMatchStickEquipped);
                 })
                 .AddTo(ref builder);
 
@@ -48,6 +50,7 @@ namespace Shinzui.Presentation
                 .Subscribe(_ =>
                 {
                     _burnUseCase.PlayBurningSpiderwebSound();
+                    ConsumeItem();
                 })
                 .AddTo(ref builder);
 
@@ -57,14 +60,18 @@ namespace Shinzui.Presentation
         public void Tick()
         {
             // インベントリが開いておらず、マッチ棒が装備されていて、左クリック入力があった場合
-            if (!_inventoryUseCase.IsOpen.CurrentValue && _isStoneEquipped && _inputService.AttackPressed)
+            if (!_inventoryUseCase.IsOpen.CurrentValue && _isMatchStickEquipped && _inputService.AttackPressed)
             {
+                Debug.Log("has match and E click");
                 // 蜘蛛の巣を燃やす
                 _view.BurnSpiderweb();
-
-                // 装備スロットから消費する
-                _ = _inventoryUseCase.ConsumeEquippedItemAsync();
             }
+        }
+
+        private void ConsumeItem()
+        {
+            // 装備スロットから消費する
+            _ = _inventoryUseCase.ConsumeEquippedItemAsync();
         }
 
         public void Dispose()

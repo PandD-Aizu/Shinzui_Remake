@@ -7,7 +7,7 @@ namespace Shinzui.View.Interaction
     /// </summary>
     public class FlashlightBattery : InteractableComponent
     {
-        public override string InteractableId => "FlashlightBattery";
+        public override string InteractableId => "flashlightBattery";
         
     }
 }

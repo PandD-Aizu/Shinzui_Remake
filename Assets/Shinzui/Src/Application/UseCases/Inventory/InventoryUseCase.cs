@@ -288,7 +288,7 @@ namespace Shinzui.Application.UseCases.Inventory
         public int CheckItem(string itemId)
         {
             //　TODO: (必要なら)カタログからitemIdで取得するように変更する
-            var item =  new ItemDefinition("FlashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/Medicine", ItemType.Consumable, 99);
+            var item =  new ItemDefinition("flashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/Medicine", ItemType.Consumable, 99);
             var idx = _inventory.CheckItemSlotIndex(item);
             
             return idx;

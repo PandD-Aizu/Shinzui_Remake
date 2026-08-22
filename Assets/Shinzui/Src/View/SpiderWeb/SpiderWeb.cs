@@ -229,7 +229,7 @@ namespace Shinzui.View
             //マッチ棒が触れたら3.5秒後に蜘蛛の巣を削除する
             if (other.gameObject.name == "MatchStick")
             {
-                Destroy(other.gameObject, 3.5f);
+                Destroy(this.gameObject, 3.5f);
             }
             
             if (!Application.isPlaying)

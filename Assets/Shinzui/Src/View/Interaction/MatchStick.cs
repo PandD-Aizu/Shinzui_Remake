@@ -7,6 +7,6 @@ namespace Shinzui.View.Interaction
     /// </summary>
     public class MatchStick : InteractableComponent
     {
-        public override string InteractableId => "MatchStick";
+        public override string InteractableId => "matchStick";
     }
 }
