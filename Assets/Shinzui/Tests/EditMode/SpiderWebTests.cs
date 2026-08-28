@@ -13,6 +13,12 @@ namespace Shinzui.Tests
             try
             {
                 var web = webObject.AddComponent<SpiderWeb>();
+
+                Assert.That(webObject.GetComponent<SpiderWebInteractable>(), Is.Not.Null);
+                Assert.That(webObject.GetComponent<SpiderWebBurnVfx>(), Is.Not.Null);
+                Assert.That(
+                    webObject.GetComponent<SpiderWebInteractable>().InteractableId,
+                    Is.EqualTo("spider_web"));
                 Vector3[] positions =
                 {
                     new(-3.0f, -1.0f, 0.0f),
@@ -48,6 +54,27 @@ namespace Shinzui.Tests
             finally
             {
                 Object.DestroyImmediate(webObject);
+            }
+        }
+
+        [Test]
+        public void BurnVfx_Play_CreatesOnlyConfiguredParticleSystems()
+        {
+            var vfxObject = new GameObject("Spider Web Burn VFX Test");
+            try
+            {
+                var burnVfx = vfxObject.AddComponent<SpiderWebBurnVfx>();
+
+                burnVfx.Play(5.5f, 4.0f);
+
+                Assert.That(
+                    vfxObject.GetComponentsInChildren<ParticleSystem>(true).Length,
+                    Is.EqualTo(3));
+                Assert.That(vfxObject.transform.Find("Ember VFX Graph"), Is.Null);
+            }
+            finally
+            {
+                Object.DestroyImmediate(vfxObject);
             }
         }
     }

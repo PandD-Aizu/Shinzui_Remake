@@ -31,7 +31,7 @@ namespace Shinzui.Tests.ResourceNeed
         #region Canonical Items & Classifier Tests
 
         [Test]
-        public void Classifier_AllNineCanonicalItems_AreClassifiedToCorrectCategories()
+        public void Classifier_AllCanonicalItems_AreClassifiedToCorrectCategories()
         {
             var classifier = ItemCategoryClassifierSO.CreateDefault();
 
@@ -43,6 +43,7 @@ namespace Shinzui.Tests.ResourceNeed
 
             // 3. ユーティリティ (Utility)
             Assert.That(classifier.ClassifyItem("stone"), Is.EqualTo(ResourceCategory.Utility));
+            Assert.That(classifier.ClassifyItem("match_stick"), Is.EqualTo(ResourceCategory.Utility));
             Assert.That(classifier.ClassifyItem("potion_stamina"), Is.EqualTo(ResourceCategory.Utility));
             Assert.That(classifier.ClassifyItem("potion_botamochi"), Is.EqualTo(ResourceCategory.Utility));
 

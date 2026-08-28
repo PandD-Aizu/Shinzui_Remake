@@ -18,11 +18,11 @@ namespace Shinzui.View.Interaction
 
         private bool _canInteract = true;
 
-        public string DisplayName => displayName;
+        public virtual string DisplayName => displayName;
         public virtual string InteractableId => interactableId;
         public bool IsOneTime => isOneTime;
         public bool DestroyOnInteract => destroyOnInteract;
-        public string InteractMessage => interactMessage;
+        public virtual string InteractMessage => interactMessage;
 
         public bool CanInteract
         {
