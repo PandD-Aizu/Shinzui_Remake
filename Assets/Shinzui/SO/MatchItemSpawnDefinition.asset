@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a01111a0014001b001c00000000041, type: 3}
+  m_Name: MatchItemSpawnDefinition
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.ItemSpawn.ItemSpawnDefinitionSO
+  itemId: match_stick
+  displayName: "\u30DE\u30C3\u30C1\u68D2"
+  category: 4
+  prefab: {fileID: 591341853658295970, guid: 4051156de198f3949a8a0df51a14f73f, type: 3}
+  baseWeight: 0.5
+  spawnCost: 1
+  isNormalRandomCandidate: 1
+  minCount: 0
+  maxCount: 10
+  categoryMaxCount: 30
+  minDistance: 1
+  collisionRadius: 0.3
+  surfaceOffset: 0.05
+  rotationPolicy: 0
