@@ -1,5 +1,6 @@
+using LitMotion.Extensions;
 using System.Collections.Generic;
-using DG.Tweening;
+using LitMotion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,26 +12,26 @@ namespace Shinzui.Src.Title
         [SerializeField] private List<Image> fadeInObjects;
         [SerializeField] private List<TextMeshProUGUI> fadeInTexts;
 
-        [Header("共通設定")] 
+        [Header("共通設定")]
         [SerializeField] private float fadeDuration = 3.0f;
         [SerializeField] private Ease fadeEase = Ease.OutQuad;
 
-        [Header("Image スライド設定")] 
+        [Header("Image スライド設定")]
         [SerializeField] private float imageSlideOffsetX = 130f; // 左(マイナス方向)から入ってくる距離
-        [SerializeField] private float imageStartDelay = 0.5f;    // 画像全体の開始ディレイ
+        [SerializeField] private float imageStartDelay = 0.5f; // 画像全体の開始ディレイ
 
-        [Header("Text スライド & ディレイ設定")] 
+        [Header("Text スライド & ディレイ設定")]
         [SerializeField] private float textSlideOffsetX = 80f;
-        [SerializeField] private float textStartDelay = 0.2f;  // 最初のテキスト開始ディレイ
-        [SerializeField] private float textStagger = 0.15f;    // テキスト間の追加ディレイ
+        [SerializeField] private float textStartDelay = 0.2f; // 最初のテキスト開始ディレイ
+        [SerializeField] private float textStagger = 0.15f; // テキスト間の追加ディレイ
 
-        [Header("Layout 対策 / オプション")] 
+        [Header("Layout 対策 / オプション")]
         [SerializeField] private bool disableLayoutGroupDuringAnimation = true; // trueなら開始時にLayoutGroupを無効化
-        [SerializeField] private LayoutGroup targetLayoutGroup;                 // 手動で割り当て。nullなら自動探索を試みる
-        [SerializeField] private bool sequentialTextMode = false;               // true=テキストを完全に一つずつ順番に再生 / false=スタッガー
-        [SerializeField] private bool debugLogDelays = false;                   // ディレイ確認用デバッグログ
+        [SerializeField] private LayoutGroup targetLayoutGroup; // 手動で割り当て。nullなら自動探索を試みる
+        [SerializeField] private bool sequentialTextMode = false; // true=テキストを完全に一つずつ順番に再生 / false=スタッガー
+        [SerializeField] private bool debugLogDelays = false; // ディレイ確認用デバッグログ
 
-        private readonly List<Tween> runningTweens = new();
+        private readonly List<MotionHandle> runningMotions = new();
 
         private void Start()
         {
@@ -47,30 +48,44 @@ namespace Shinzui.Src.Title
 
         public void KillAll()
         {
-            if (runningTweens.Count == 0) return;
-            for (int i = 0; i < runningTweens.Count; i++)
+            if (runningMotions.Count == 0) return;
+
+            for (int i = 0; i < runningMotions.Count; i++)
             {
-                var t = runningTweens[i];
-                if (t != null && t.IsActive()) t.Kill();
+                var motion = runningMotions[i];
+
+                if (motion.IsActive())
+                {
+                    motion.Cancel();
+                }
             }
-            runningTweens.Clear();
+
+            runningMotions.Clear();
         }
 
         private void PrepareLayoutGroup()
         {
             if (!disableLayoutGroupDuringAnimation) return;
+
             if (targetLayoutGroup == null)
             {
                 // 自動で同階層か親から探す
                 targetLayoutGroup = GetComponent<LayoutGroup>();
+
                 if (targetLayoutGroup == null)
+                {
                     targetLayoutGroup = GetComponentInParent<LayoutGroup>();
+                }
             }
+
             if (targetLayoutGroup != null)
             {
                 // 先にレイアウト確定
-                LayoutRebuilder.ForceRebuildLayoutImmediate(targetLayoutGroup.GetComponent<RectTransform>());
-                // 無効化してこれ以降Tweenで位置を動かせるようにする
+                LayoutRebuilder.ForceRebuildLayoutImmediate(
+                    targetLayoutGroup.GetComponent<RectTransform>()
+                );
+
+                // 無効化してこれ以降Motionで位置を動かせるようにする
                 targetLayoutGroup.enabled = false;
             }
         }
@@ -78,43 +93,57 @@ namespace Shinzui.Src.Title
         private void AnimateImages()
         {
             if (fadeInObjects == null) return;
+
             for (int i = 0; i < fadeInObjects.Count; i++)
             {
                 var img = fadeInObjects[i];
+
                 if (img == null) continue;
+
                 var rt = img.rectTransform;
 
                 // 目標座標を保持
                 Vector2 targetPos = rt.anchoredPosition;
+
                 // 開始位置を左にオフセット
-                rt.anchoredPosition = targetPos + new Vector2(-Mathf.Abs(imageSlideOffsetX), 0f);
+                rt.anchoredPosition =
+                    targetPos + new Vector2(-Mathf.Abs(imageSlideOffsetX), 0f);
 
                 // アルファ初期化
-                var col = img.color; col.a = 0f; img.color = col;
+                var col = img.color;
+                col.a = 0f;
+                img.color = col;
 
-                // Sequence内でTween生成
-                Sequence seq = DOTween.Sequence();
+                // LitMotion Sequence
+                MotionSequenceBuilder sequence = LSequence.Create();
+
                 if (imageStartDelay > 0f)
                 {
-                    seq.AppendInterval(imageStartDelay);
+                    sequence.AppendInterval(imageStartDelay);
                 }
 
-                // 同時開始
-                seq.Join(DOTween.To(
-                    () => img.color.a,
-                    a => { var c = img.color; c.a = a; img.color = c; },
-                    1f,
-                    fadeDuration
-                ).SetEase(fadeEase).SetTarget(img));
+                // アルファと位置を同時開始
+                sequence.Join(
+                    LMotion.Create(0f, 1f, fadeDuration)
+                        .WithEase(fadeEase)
+                        .Bind(
+                            img,
+                            (a, target) =>
+                            {
+                                var c = target.color;
+                                c.a = a;
+                                target.color = c;
+                            }
+                        )
+                );
 
-                seq.Join(DOTween.To(
-                    () => rt.anchoredPosition,
-                    p => rt.anchoredPosition = p,
-                    targetPos,
-                    fadeDuration
-                ).SetEase(fadeEase).SetTarget(rt));
+                sequence.Join(
+                    LMotion.Create(rt.anchoredPosition, targetPos, fadeDuration)
+                        .WithEase(fadeEase)
+                        .BindToAnchoredPosition(rt)
+                );
 
-                runningTweens.Add(seq);
+                runningMotions.Add(sequence.Run());
             }
         }
 
@@ -125,41 +154,62 @@ namespace Shinzui.Src.Title
             if (sequentialTextMode)
             {
                 // 各テキストを開始時間にInsertする
-                Sequence master = DOTween.Sequence();
+                MotionSequenceBuilder master = LSequence.Create();
+
                 for (int i = 0; i < fadeInTexts.Count; i++)
                 {
                     var txt = fadeInTexts[i];
+
                     if (txt == null) continue;
+
                     var rt = txt.rectTransform;
 
                     Vector2 targetPos = rt.anchoredPosition;
-                    rt.anchoredPosition = targetPos + new Vector2(-Mathf.Abs(textSlideOffsetX), 0f);
 
-                    var col = txt.color; col.a = 0f; txt.color = col;
+                    rt.anchoredPosition =
+                        targetPos + new Vector2(-Mathf.Abs(textSlideOffsetX), 0f);
+
+                    var col = txt.color;
+                    col.a = 0f;
+                    txt.color = col;
 
                     // 内部では即開始させ、外側で開始時刻を制御
-                    Sequence one = DOTween.Sequence();
-                    one.Join(DOTween.To(
-                        () => txt.color.a,
-                        a => { var c = txt.color; c.a = a; txt.color = c; },
-                        1f,
-                        fadeDuration
-                    ).SetEase(fadeEase).SetTarget(txt));
+                    MotionSequenceBuilder one = LSequence.Create();
 
-                    one.Join(DOTween.To(
-                        () => rt.anchoredPosition,
-                        p => rt.anchoredPosition = p,
-                        targetPos,
-                        fadeDuration
-                    ).SetEase(fadeEase).SetTarget(rt));
+                    one.Join(
+                        LMotion.Create(0f, 1f, fadeDuration)
+                            .WithEase(fadeEase)
+                            .Bind(
+                                txt,
+                                (a, target) =>
+                                {
+                                    var c = target.color;
+                                    c.a = a;
+                                    target.color = c;
+                                }
+                            )
+                    );
+
+                    one.Join(
+                        LMotion.Create(rt.anchoredPosition, targetPos, fadeDuration)
+                            .WithEase(fadeEase)
+                            .BindToAnchoredPosition(rt)
+                    );
 
                     float startTime = textStartDelay + textStagger * i;
-                    master.Insert(startTime, one);
+
+                    MotionHandle oneHandle = one.Run();
+                    master.Insert(startTime, oneHandle);
 
                     if (debugLogDelays)
-                        Debug.Log($"[FadeController] Sequential(Overlap) Text index={i} startTime={startTime:F2}");
+                    {
+                        Debug.Log(
+                            $"[FadeController] Sequential(Overlap) Text index={i} startTime={startTime:F2}"
+                        );
+                    }
                 }
-                runningTweens.Add(master);
+
+                runningMotions.Add(master.Run());
             }
             else
             {
@@ -167,36 +217,57 @@ namespace Shinzui.Src.Title
                 for (int i = 0; i < fadeInTexts.Count; i++)
                 {
                     var txt = fadeInTexts[i];
+
                     if (txt == null) continue;
+
                     var rt = txt.rectTransform;
 
                     Vector2 targetPos = rt.anchoredPosition;
-                    rt.anchoredPosition = targetPos + new Vector2(-Mathf.Abs(textSlideOffsetX), 0f);
 
-                    var col = txt.color; col.a = 0f; txt.color = col;
+                    rt.anchoredPosition =
+                        targetPos + new Vector2(-Mathf.Abs(textSlideOffsetX), 0f);
+
+                    var col = txt.color;
+                    col.a = 0f;
+                    txt.color = col;
 
                     float delay = textStartDelay + textStagger * i;
-                    Sequence seq = DOTween.Sequence();
-                    if (delay > 0f) seq.AppendInterval(delay);
 
-                    seq.Join(DOTween.To(
-                        () => txt.color.a,
-                        a => { var c = txt.color; c.a = a; txt.color = c; },
-                        1f,
-                        fadeDuration
-                    ).SetEase(fadeEase).SetTarget(txt));
+                    MotionSequenceBuilder sequence = LSequence.Create();
 
-                    seq.Join(DOTween.To(
-                        () => rt.anchoredPosition,
-                        p => rt.anchoredPosition = p,
-                        targetPos,
-                        fadeDuration
-                    ).SetEase(fadeEase).SetTarget(rt));
+                    if (delay > 0f)
+                    {
+                        sequence.AppendInterval(delay);
+                    }
+
+                    sequence.Join(
+                        LMotion.Create(0f, 1f, fadeDuration)
+                            .WithEase(fadeEase)
+                            .Bind(
+                                txt,
+                                (a, target) =>
+                                {
+                                    var c = target.color;
+                                    c.a = a;
+                                    target.color = c;
+                                }
+                            )
+                    );
+
+                    sequence.Join(
+                        LMotion.Create(rt.anchoredPosition, targetPos, fadeDuration)
+                            .WithEase(fadeEase)
+                            .BindToAnchoredPosition(rt)
+                    );
 
                     if (debugLogDelays)
-                        Debug.Log($"[FadeController] Stagger Text index={i} delay={delay:F2}");
+                    {
+                        Debug.Log(
+                            $"[FadeController] Stagger Text index={i} delay={delay:F2}"
+                        );
+                    }
 
-                    runningTweens.Add(seq);
+                    runningMotions.Add(sequence.Run());
                 }
             }
         }

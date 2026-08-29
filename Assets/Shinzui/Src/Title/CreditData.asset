@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ed9d208de223474185df6c9e8b23fba, type: 3}
   m_Name: CreditData
   m_EditorClassIdentifier: Assembly-CSharp::Minge2025Summer.Scripts.Title.CreditData
-  gameTitle: 
+  gameTitle: Shinzui
   creditSections: []
   scrollSpeed: 50
   delayBeforeStart: 2

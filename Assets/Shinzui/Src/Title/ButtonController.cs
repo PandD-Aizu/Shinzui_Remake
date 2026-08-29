@@ -1,4 +1,5 @@
-using DG.Tweening;
+using LitMotion;
+using LitMotion.Extensions;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.InputSystem;
@@ -24,13 +25,13 @@ namespace Shinzui.Src.Title
         [SerializeField, Tooltip("画面全体を覆うパネル")] private GameObject creditsPanel;
         [SerializeField, Tooltip("フェード秒数")] private float creditsFadeDuration = 0.5f;
         [SerializeField, Tooltip("Escでスキップ案内テキストのCanvasGroup（パネル外に置いた場合に指定）")]
-        private CanvasGroup creditsSkipHintCanvasGroup;
+        private CanvasGroup creditsSkipHintCanvasGroup;*/
 
         [Header("パネル")]
         [SerializeField] private GameObject titlePanel;
         [SerializeField] private GameObject optionPanel;
 
-        [Header("オプションに表示するオブジェクトグループ")]
+        /*[Header("オプションに表示するオブジェクトグループ")]
         [SerializeField] private GameObject controlOptionObject;
         [SerializeField] private GameObject cameraOptionObject;
         [SerializeField] private GameObject gameSettingOptionObject;
@@ -41,30 +42,52 @@ namespace Shinzui.Src.Title
 
         private GameObject currentOptionObject;*/
 
+        private MotionHandle _screenFadeMotion;
+        private MotionHandle _creditsFadeMotion;
+        private MotionHandle _creditsSkipHintFadeMotion;
+
         private void Start()
         {
-            /*currentOptionObject = controlOptionObject;
-            optionPanel.SetActive(false);*/
+            //currentOptionObject = controlOptionObject;
+            optionPanel.SetActive(false);
             screenBackgroundImage.gameObject.SetActive(false);
         }
 
         public void StartGame()
         {
             screenBackgroundImage.gameObject.SetActive(true);
+
             var c = screenBackgroundImage.color;
             c.a = 0f;
             screenBackgroundImage.color = c;
-            var target = c; target.a = 1f;
-            DOTween.To(
-                () => screenBackgroundImage.color,
-                col => screenBackgroundImage.color = col,
-                target,
-                fadeDuration
-            ).OnComplete(() =>
-            {
-                AsyncOperationHandle handle = Addressables.LoadSceneAsync(gameSceneAddress, LoadSceneMode.Single);
-                handle.Completed += OnSceneLoaded;
-            });
+
+            var target = c;
+            target.a = 1f;
+
+            _screenFadeMotion = LMotion.Create(
+                                           c.a,
+                                           target.a,
+                                           fadeDuration
+                                       )
+                                       .WithOnComplete(() =>
+                                       {
+                                           AsyncOperationHandle handle =
+                                               Addressables.LoadSceneAsync(
+                                                   gameSceneAddress,
+                                                   LoadSceneMode.Single
+                                               );
+
+                                           handle.Completed += OnSceneLoaded;
+                                       })
+                                       .Bind(
+                                           screenBackgroundImage,
+                                           (alpha, image) =>
+                                           {
+                                               var color = image.color;
+                                               color.a = alpha;
+                                               image.color = color;
+                                           }
+                                       );
         }
 
         // CREDITSのフェードイン（案内テキストも一緒にフェード）
@@ -73,9 +96,18 @@ namespace Shinzui.Src.Title
             creditsPanel.SetActive(true);
 
             var cg = creditsPanel.GetComponent<CanvasGroup>();
-            if (cg == null) cg = creditsPanel.AddComponent<CanvasGroup>();
 
-            cg.DOKill();
+            if (cg == null)
+            {
+                cg = creditsPanel.AddComponent<CanvasGroup>();
+            }
+
+            // 前回のフェードを停止
+            if (_creditsFadeMotion.IsActive())
+            {
+                _creditsFadeMotion.Cancel();
+            }
+
             cg.alpha = 0f;
             cg.interactable = false;
             cg.blocksRaycasts = true;
@@ -84,17 +116,48 @@ namespace Shinzui.Src.Title
             if (creditsSkipHintCanvasGroup != null)
             {
                 creditsSkipHintCanvasGroup.gameObject.SetActive(true);
-                creditsSkipHintCanvasGroup.DOKill();
+
+                if (_creditsSkipHintFadeMotion.IsActive())
+                {
+                    _creditsSkipHintFadeMotion.Cancel();
+                }
+
                 creditsSkipHintCanvasGroup.alpha = 0f;
                 creditsSkipHintCanvasGroup.interactable = false;
                 creditsSkipHintCanvasGroup.blocksRaycasts = false;
-                creditsSkipHintCanvasGroup.DOFade(1f, creditsFadeDuration);
+
+                _creditsSkipHintFadeMotion = LMotion.Create(
+                                                        0f,
+                                                        1f,
+                                                        creditsFadeDuration
+                                                    )
+                                                    .Bind(
+                                                        creditsSkipHintCanvasGroup,
+                                                        (alpha, canvasGroup) =>
+                                                        {
+                                                            canvasGroup.alpha = alpha;
+                                                        }
+                                                    );
             }
 
             creditScreenPresenter.StartCreditsForButton();
 
-            cg.DOFade(1f, creditsFadeDuration)
-              .OnComplete(() => cg.interactable = true);
+            _creditsFadeMotion = LMotion.Create(
+                                            0f,
+                                            1f,
+                                            creditsFadeDuration
+                                        )
+                                        .WithOnComplete(() =>
+                                        {
+                                            cg.interactable = true;
+                                        })
+                                        .Bind(
+                                            cg,
+                                            (alpha, canvasGroup) =>
+                                            {
+                                                canvasGroup.alpha = alpha;
+                                            }
+                                        );
         }
 
         public void OpenOptions()
@@ -112,20 +175,24 @@ namespace Shinzui.Src.Title
         }*/
 
         public void QuitGame()
-        {
+        { 
             #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
+            UnityEditor.EditorApplication.isPlaying = false;
             #else
-                Application.Quit();
+            Application.Quit();
             #endif
         }
 
         private void OnSceneLoaded(AsyncOperationHandle handle)
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
                 Debug.Log("Load Complete");
+            }
             else
+            {
                 Debug.LogError("Load Failed");
+            }
         }
 
         /*public void AlignControlOption() => ShowOptionObject(controlOptionObject);
@@ -142,5 +209,23 @@ namespace Shinzui.Src.Title
             targetObject.SetActive(true);
             currentOptionObject = targetObject;
         }*/
+
+        private void OnDisable()
+        {
+            if (_screenFadeMotion.IsActive())
+            {
+                _screenFadeMotion.Cancel();
+            }
+
+            if (_creditsFadeMotion.IsActive())
+            {
+                _creditsFadeMotion.Cancel();
+            }
+
+            if (_creditsSkipHintFadeMotion.IsActive())
+            {
+                _creditsSkipHintFadeMotion.Cancel();
+            }
+        }
     }
 }
