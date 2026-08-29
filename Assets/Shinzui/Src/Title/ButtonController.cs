@@ -13,7 +13,7 @@ namespace Shinzui.Src.Title
     {
         [Header("依存関係")]
         [SerializeField, Tooltip("タイトルのフェードコントローラ")] private FadeController titleFadeController;
-        //[SerializeField, Tooltip("オプションのフェードコントローラ")] private FadeController optionFadeController;
+        [SerializeField, Tooltip("オプションのフェードコントローラ")] private FadeController optionFadeController;
 
         [Header("STARTボタン")]
         [SerializeField] private string gameSceneAddress;
@@ -31,7 +31,7 @@ namespace Shinzui.Src.Title
         [SerializeField] private GameObject titlePanel;
         [SerializeField] private GameObject optionPanel;
 
-        /*[Header("オプションに表示するオブジェクトグループ")]
+        [Header("オプションに表示するオブジェクトグループ")]
         [SerializeField] private GameObject controlOptionObject;
         [SerializeField] private GameObject cameraOptionObject;
         [SerializeField] private GameObject gameSettingOptionObject;
@@ -40,7 +40,7 @@ namespace Shinzui.Src.Title
         [SerializeField] private GameObject languageOptionObject;
         [SerializeField] private GameObject accessibilityOptionObject;
 
-        private GameObject currentOptionObject;*/
+        private GameObject currentOptionObject;
 
         private MotionHandle _screenFadeMotion;
         private MotionHandle _creditsFadeMotion;
@@ -48,7 +48,7 @@ namespace Shinzui.Src.Title
 
         private void Start()
         {
-            //currentOptionObject = controlOptionObject;
+            currentOptionObject = controlOptionObject;
             optionPanel.SetActive(false);
             screenBackgroundImage.gameObject.SetActive(false);
         }
@@ -158,7 +158,7 @@ namespace Shinzui.Src.Title
                                                 canvasGroup.alpha = alpha;
                                             }
                                         );
-        }
+        }*/
 
         public void OpenOptions()
         {
@@ -172,7 +172,7 @@ namespace Shinzui.Src.Title
             optionPanel.SetActive(false);
             titlePanel.SetActive(true);
             titleFadeController.Play();
-        }*/
+        }
 
         public void QuitGame()
         { 
@@ -195,7 +195,7 @@ namespace Shinzui.Src.Title
             }
         }
 
-        /*public void AlignControlOption() => ShowOptionObject(controlOptionObject);
+        public void AlignControlOption() => ShowOptionObject(controlOptionObject);
         public void AlignCameraOption() => ShowOptionObject(cameraOptionObject);
         public void AlignGameSettingOption() => ShowOptionObject(gameSettingOptionObject);
         public void AlignGraphicOption() => ShowOptionObject(graphicOptionObject);
@@ -208,7 +208,7 @@ namespace Shinzui.Src.Title
             currentOptionObject?.SetActive(false);
             targetObject.SetActive(true);
             currentOptionObject = targetObject;
-        }*/
+        }
 
         private void OnDisable()
         {
