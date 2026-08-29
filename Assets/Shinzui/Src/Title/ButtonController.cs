@@ -1,5 +1,7 @@
+using System;
 using LitMotion;
 using LitMotion.Extensions;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.InputSystem;
@@ -20,16 +22,25 @@ namespace Shinzui.Src.Title
         [SerializeField, Tooltip("画面全体を覆う画像")] private Image screenBackgroundImage;
         [SerializeField, Tooltip("フェード秒数")] private float fadeDuration = 0.5f;
 
-        /*[Header("CREDITSボタン")]
+        [Header("CREDITSボタン")]
         [SerializeField] private CreditScreenPresenter creditScreenPresenter;
         [SerializeField, Tooltip("画面全体を覆うパネル")] private GameObject creditsPanel;
         [SerializeField, Tooltip("フェード秒数")] private float creditsFadeDuration = 0.5f;
         [SerializeField, Tooltip("Escでスキップ案内テキストのCanvasGroup（パネル外に置いた場合に指定）")]
-        private CanvasGroup creditsSkipHintCanvasGroup;*/
+        private CanvasGroup creditsSkipHintCanvasGroup;
 
         [Header("パネル")]
         [SerializeField] private GameObject titlePanel;
         [SerializeField] private GameObject optionPanel;
+        
+        [Header("ボタンのテキスト")]
+        [SerializeField] private TextMeshProUGUI controlOptionText;
+        [SerializeField] private TextMeshProUGUI cameraOptionText;
+        [SerializeField] private TextMeshProUGUI gameSettingOptionText;
+        [SerializeField] private TextMeshProUGUI graphicOptionText;
+        [SerializeField] private TextMeshProUGUI audioOptionText;
+        [SerializeField] private TextMeshProUGUI languageOptionText;
+        [SerializeField] private TextMeshProUGUI accessibilityOptionText;
 
         [Header("オプションに表示するオブジェクトグループ")]
         [SerializeField] private GameObject controlOptionObject;
@@ -40,6 +51,7 @@ namespace Shinzui.Src.Title
         [SerializeField] private GameObject languageOptionObject;
         [SerializeField] private GameObject accessibilityOptionObject;
 
+        private TextMeshProUGUI currentOptionText;
         private GameObject currentOptionObject;
 
         private MotionHandle _screenFadeMotion;
@@ -49,6 +61,7 @@ namespace Shinzui.Src.Title
         private void Start()
         {
             currentOptionObject = controlOptionObject;
+            currentOptionText = controlOptionText;
             cameraOptionObject.SetActive(false);
             gameSettingOptionObject.SetActive(false);
             graphicOptionObject.SetActive(false);
@@ -57,6 +70,7 @@ namespace Shinzui.Src.Title
             accessibilityOptionObject.SetActive(false);
             screenBackgroundImage.gameObject.SetActive(false);
             optionPanel.SetActive(false);
+            creditsPanel.SetActive(false);
             titlePanel.SetActive(true);
         }
 
@@ -98,9 +112,10 @@ namespace Shinzui.Src.Title
         }
 
         // CREDITSのフェードイン（案内テキストも一緒にフェード）
-        /*public void StartCredits()
+        public void StartCredits()
         {
             creditsPanel.SetActive(true);
+            titlePanel.SetActive(false);
 
             var cg = creditsPanel.GetComponent<CanvasGroup>();
 
@@ -165,7 +180,7 @@ namespace Shinzui.Src.Title
                                                 canvasGroup.alpha = alpha;
                                             }
                                         );
-        }*/
+        }
 
         public void OpenOptions()
         {
@@ -204,18 +219,23 @@ namespace Shinzui.Src.Title
             }
         }
 
-        public void AlignControlOption() => ShowOptionObject(controlOptionObject);
-        public void AlignCameraOption() => ShowOptionObject(cameraOptionObject);
-        public void AlignGameSettingOption() => ShowOptionObject(gameSettingOptionObject);
-        public void AlignGraphicOption() => ShowOptionObject(graphicOptionObject);
-        public void AlignAudioOption() => ShowOptionObject(audioOptionObject);
-        public void AlignLanguageOption() => ShowOptionObject(languageOptionObject);
-        public void AlignAccessibilityOption() => ShowOptionObject(accessibilityOptionObject);
+        public void AlignControlOption() => ShowOptionObject(controlOptionText, controlOptionObject);
+        public void AlignCameraOption() => ShowOptionObject(cameraOptionText, cameraOptionObject);
+        public void AlignGameSettingOption() => ShowOptionObject(gameSettingOptionText, gameSettingOptionObject);
+        public void AlignGraphicOption() => ShowOptionObject(graphicOptionText, graphicOptionObject);
+        public void AlignAudioOption() => ShowOptionObject(audioOptionText, audioOptionObject);
+        public void AlignLanguageOption() => ShowOptionObject(languageOptionText, languageOptionObject);
+        public void AlignAccessibilityOption() => ShowOptionObject(accessibilityOptionText, accessibilityOptionObject);
 
-        private void ShowOptionObject(GameObject targetObject)
+        private void ShowOptionObject(TextMeshProUGUI targetText, GameObject targetObject)
         {
+            if(currentOptionText != null) currentOptionText.color = Color.white;
             currentOptionObject?.SetActive(false);
+            
+            targetText.color = Color.red;
             targetObject.SetActive(true);
+            
+            currentOptionText = targetText;
             currentOptionObject = targetObject;
         }
 

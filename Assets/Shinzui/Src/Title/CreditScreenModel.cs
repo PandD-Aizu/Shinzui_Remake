@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Shinzui.Src.Title
 {
     /// <summary>

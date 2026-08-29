@@ -2,6 +2,7 @@ using System.Collections;
 using LitMotion;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using FMODUnity;
 
@@ -9,10 +10,11 @@ namespace Shinzui.Src.Title
 {
     public class CreditScreenPresenter : MonoBehaviour
     {
-        [Header("References")] [SerializeField]
-        private CreditScreenView view;
+        [Header("References")] 
+        [SerializeField] private CreditScreenView view;
+        [SerializeField] private GameObject titlePanel;
 
-        [SerializeField] private StudioEventEmitter eventEmitter;
+        //[SerializeField] private StudioEventEmitter eventEmitter;
         [SerializeField] private CreditData creditData;
 
         [SerializeField, Tooltip("親のクレジットパネル（終了時に非表示にする）")]
@@ -32,7 +34,7 @@ namespace Shinzui.Src.Title
         private bool autoStart = false;
 
         [Header("Fade")] [SerializeField, Tooltip("クレジット終了時のフェードアウト秒数")]
-        private float fadeOutDuration = 0.5f;
+        private float fadeOutDuration = 1.0f;
 
         private CreditScreenModel model;
         private Coroutine endDelayCoroutine;
@@ -40,6 +42,8 @@ namespace Shinzui.Src.Title
 
         private MotionHandle _skipHintFadeMotion;
         private MotionHandle _creditsPanelFadeMotion;
+
+        private bool isSkip = false;
 
         private void Awake()
         {
@@ -71,7 +75,7 @@ namespace Shinzui.Src.Title
 
         private void OnDisable()
         {
-            eventEmitter.Stop();
+            //eventEmitter.Stop();
 
             CancelFadeMotions();
         }
@@ -123,9 +127,11 @@ namespace Shinzui.Src.Title
             model.ResetScroll();
             model.StartScrolling();
 
-            eventEmitter.Play();
+            //eventEmitter.Play();
 
             initRoutine = null;
+
+            isSkip = false;
         }
 
         private void Update()
@@ -148,11 +154,17 @@ namespace Shinzui.Src.Title
                     OnCreditsEnd();
                 }
             }
-
-            if (allowSkip && Input.GetKeyDown(skipKey))
+            
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null)
             {
-                SkipCredits();
+                if (allowSkip && !isSkip && keyboard.escapeKey.isPressed)
+                {
+                    isSkip = true;
+                    SkipCredits();
+                }
             }
+            
         }
 
         private void OnCreditsEnd()
@@ -171,7 +183,7 @@ namespace Shinzui.Src.Title
         {
             yield return new WaitForSeconds(creditData.delayAfterEnd);
 
-            eventEmitter.Stop();
+            //eventEmitter.Stop();
 
             if (loopCredits)
             {
@@ -193,7 +205,7 @@ namespace Shinzui.Src.Title
             view.ResetScrollPosition();
             model.StartScrolling();
 
-            eventEmitter.Play();
+            //eventEmitter.Play();
         }
 
         private void SkipCredits()
@@ -205,7 +217,7 @@ namespace Shinzui.Src.Title
 
             model.StopScrolling();
 
-            eventEmitter.Stop();
+            //eventEmitter.Stop();
 
             if (!string.IsNullOrEmpty(nextSceneName))
             {
@@ -308,6 +320,8 @@ namespace Shinzui.Src.Title
                                                      }
                                                  }
                                              );
+            
+            titlePanel.SetActive(true);
         }
 
         private void CancelSkipHintFade()

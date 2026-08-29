@@ -214,6 +214,7 @@ namespace Shinzui.Src.Title
             float viewportHeight = 0f;
             if (scrollRect != null)
             {
+                if(scrollRect.viewport == null) Debug.Log("viewport is null");
                 viewportHeight = scrollRect.viewport != null
                     ? scrollRect.viewport.rect.height
                     : scrollRect.GetComponent<RectTransform>().rect.height;

@@ -17,11 +17,11 @@ public class OnOffText : MonoBehaviour
     {
         if (targetToggle.isOn)
         {
-            onOffText.text = "OFF";
+            onOffText.text = "ON";
         }
         else
         {
-            onOffText.text = "ON";
+            onOffText.text = "OFF";
         }
     }
 }
