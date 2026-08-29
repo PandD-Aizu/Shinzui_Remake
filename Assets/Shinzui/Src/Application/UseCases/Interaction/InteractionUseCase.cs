@@ -12,6 +12,9 @@ namespace Shinzui.Application.UseCases.Interaction
     /// </summary>
     public class InteractionUseCase
     {
+        private const string SpiderWebInteractionId = "spider_web";
+        private const string MatchStickItemId = "match_stick";
+
         private readonly InventoryUseCase _inventoryUseCase;
         private readonly SpecialItemUseCase _specialItemUseCase;
         private readonly IItemCatalog _itemCatalog;
@@ -40,6 +43,29 @@ namespace Shinzui.Application.UseCases.Interaction
         public async Task<bool> InteractAsync(string interactableId, string message)
         {
             if (string.IsNullOrEmpty(interactableId)) return false;
+
+            // 蜘蛛の巣は、装備中のマッチ棒を1本消費した場合だけ燃やせる。
+            if (string.Equals(interactableId, SpiderWebInteractionId, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.Equals(
+                        _inventoryUseCase.EquippedItemId.CurrentValue,
+                        MatchStickItemId,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    _onShowMessage.OnNext("火をつけるにはマッチ棒を装備する必要がある。");
+                    return false;
+                }
+
+                if (!await _inventoryUseCase.ConsumeEquippedItemAsync())
+                {
+                    return false;
+                }
+
+                _onShowMessage.OnNext(string.IsNullOrEmpty(message)
+                    ? "蜘蛛の巣に火をつけた。"
+                    : message);
+                return true;
+            }
 
             // アイテム取得の処理
             if (interactableId.StartsWith("ItemTest_"))

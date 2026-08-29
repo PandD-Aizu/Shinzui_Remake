@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -12,6 +13,7 @@ namespace Shinzui.View
     [ExecuteAlways]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(BoxCollider))]
+    [RequireComponent(typeof(SpiderWebInteractable), typeof(SpiderWebBurnVfx))]
     public sealed class SpiderWeb : MonoBehaviour
     {
         [Serializable]
@@ -88,6 +90,9 @@ namespace Shinzui.View
         [SerializeField, Min(0.0f)] private float deformationResponse = 12.0f;
         [SerializeField, Min(0.0f)] private float releaseImpulse = 0.28f;
 
+        [Header("Burning")]
+        [SerializeField, Min(0.1f)] private float burnFadeDuration = 1.35f;
+
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
 
@@ -112,6 +117,8 @@ namespace Shinzui.View
         private bool _isConfiguringTrigger;
         private bool _allowTriggerComponentChanges = true;
         private int _manualAnchorPoseHash;
+        private bool _isBurning;
+        private Material _burnMaterial;
 
         public float Width => width;
         public float Height => height;
@@ -121,6 +128,7 @@ namespace Shinzui.View
         public float SurfaceOffset => surfaceOffset;
         public IReadOnlyList<Transform> ManualAnchors => manualAnchors;
         public bool UsesManualAnchors => GetValidManualAnchorCount() >= 3;
+        public bool IsBurning => _isBurning;
         public int InteractionColliderCount
         {
             get
@@ -484,6 +492,94 @@ namespace Shinzui.View
             }
 
             UpdateMeshGeometry();
+        }
+
+        /// <summary>
+        /// 巣全体へ燃焼VFXを広げ、糸を焼失させてGameObjectを破棄する。
+        /// </summary>
+        public void Burn()
+        {
+            if (_isBurning || !Application.isPlaying)
+            {
+                return;
+            }
+
+            _isBurning = true;
+            StartCoroutine(BurnRoutine());
+        }
+
+        private IEnumerator BurnRoutine()
+        {
+            ReleaseAllPlayers();
+            DisableInteractionColliders();
+
+            SpiderWebBurnVfx burnVfx = GetComponent<SpiderWebBurnVfx>();
+            if (burnVfx != null)
+            {
+                burnVfx.Play(width, height);
+            }
+
+            Color startColor = webColor;
+            if (_meshRenderer != null && _meshRenderer.sharedMaterial != null)
+            {
+                _burnMaterial = new Material(_meshRenderer.sharedMaterial)
+                {
+                    name = "Spider Web Burning Material",
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+                _meshRenderer.material = _burnMaterial;
+                if (_burnMaterial.HasProperty("_BaseColor"))
+                {
+                    startColor = _burnMaterial.GetColor("_BaseColor");
+                }
+            }
+
+            float elapsed = 0.0f;
+            while (elapsed < burnFadeDuration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = Mathf.Clamp01(elapsed / burnFadeDuration);
+                Color charred = Color.Lerp(
+                    startColor,
+                    new Color(0.08f, 0.015f, 0.0f, 0.0f),
+                    progress);
+                if (_burnMaterial != null && _burnMaterial.HasProperty("_BaseColor"))
+                {
+                    _burnMaterial.SetColor("_BaseColor", charred);
+                }
+                yield return null;
+            }
+
+            if (_meshRenderer != null)
+            {
+                _meshRenderer.enabled = false;
+            }
+
+            float residualDuration = burnVfx != null
+                ? Mathf.Max(0.0f, burnVfx.Duration - burnFadeDuration)
+                : 0.0f;
+            if (residualDuration > 0.0f)
+            {
+                yield return new WaitForSeconds(residualDuration);
+            }
+
+            Destroy(gameObject);
+        }
+
+        private void DisableInteractionColliders()
+        {
+            if (_trigger != null)
+            {
+                _trigger.enabled = false;
+            }
+
+            foreach (MeshCollider trigger in _manualTriggers)
+            {
+                if (trigger != null)
+                {
+                    trigger.enabled = false;
+                }
+            }
         }
 
         /// <summary>
@@ -1489,6 +1585,11 @@ namespace Shinzui.View
             {
                 DestroyRuntimeObject(_runtimeMaterial);
                 _runtimeMaterial = null;
+            }
+            if (_burnMaterial != null)
+            {
+                DestroyRuntimeObject(_burnMaterial);
+                _burnMaterial = null;
             }
         }
 
