@@ -49,8 +49,15 @@ namespace Shinzui.Src.Title
         private void Start()
         {
             currentOptionObject = controlOptionObject;
-            optionPanel.SetActive(false);
+            cameraOptionObject.SetActive(false);
+            gameSettingOptionObject.SetActive(false);
+            graphicOptionObject.SetActive(false);
+            audioOptionObject.SetActive(false);
+            languageOptionObject.SetActive(false);
+            accessibilityOptionObject.SetActive(false);
             screenBackgroundImage.gameObject.SetActive(false);
+            optionPanel.SetActive(false);
+            titlePanel.SetActive(true);
         }
 
         public void StartGame()
@@ -165,6 +172,8 @@ namespace Shinzui.Src.Title
             optionPanel.SetActive(true);
             titlePanel.SetActive(false);
             optionFadeController.Play();
+            
+            AlignControlOption();
         }
 
         public void CloseOptions()
