@@ -15,8 +15,8 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 764789efa4f1cf64dac1ef091bd99925
   m_SerializeEntries:
-  - m_GUID: 4051156de198f3949a8a0df51a14f73f
-    m_Address: MatchPrefab
+  - m_GUID: 1710700f8b26b3e4688e71693567bafb
+    m_Address: Assets/Shinzui/Scenes/StageTemp.unity
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

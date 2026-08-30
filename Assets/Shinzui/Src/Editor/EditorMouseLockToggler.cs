@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Shinzui.Editor
 {
@@ -30,6 +31,8 @@ namespace Shinzui.Editor
 
         private void Update()
         {
+            if (SceneManager.GetActiveScene().name == "Title") return;
+            
             var keyboard = Keyboard.current;
             if (keyboard != null)
             {

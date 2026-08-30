@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ed9d208de223474185df6c9e8b23fba, type: 3}
+  m_Name: CreditData
+  m_EditorClassIdentifier: Assembly-CSharp::Minge2025Summer.Scripts.Title.CreditData
+  gameTitle: "\u300C \u6DF1\u96A7 -Shinzui- \u300D"
+  creditSections:
+  - sectionTitle: Executive Producer
+    credits:
+    - name
+  - sectionTitle: Director
+    credits:
+    - name
+  - sectionTitle: Game Designer
+    credits:
+    - name
+  - sectionTitle: Programmer
+    credits:
+    - name
+    - name
+    - name
+    - name
+  - sectionTitle: Character Designer
+    credits:
+    - name
+  - sectionTitle: 3D Modeler
+    credits:
+    - name
+    - name
+  - sectionTitle: Technical Artist
+    credits:
+    - name
+  - sectionTitle: UI Designer
+    credits:
+    - name
+  - sectionTitle: Graphic Designer
+    credits:
+    - name
+  - sectionTitle: Effect Designer
+    credits:
+    - name
+  - sectionTitle: Sound Desinger
+    credits:
+    - name
+  - sectionTitle: Scenario Writer
+    credits:
+    - name
+  - sectionTitle: Scenario Writer
+    credits:
+    - name
+  - sectionTitle: Asset Credits
+    credits:
+    - LitMotion
+    - VContainer
+  - sectionTitle: Software & Tools
+    credits:
+    - Unity
+    - FMOD
+    - Rider
+    - Git
+  - sectionTitle: Specisl Thanks
+    credits:
+    - You
+  scrollSpeed: 80
+  delayBeforeStart: 2
+  delayAfterEnd: 3
