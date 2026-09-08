@@ -66533,7 +66533,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.TunnelGateView
   targetGate: {fileID: 1469907477453106641}
   nearClipOffset: 0.04
-  portalExposureEV: 0.5
+  portalExposureEV: 0
   useDynamicNearClip: 1
   portalMaterialTemplate: {fileID: 2100000, guid: 7ba127dcae30bb94a9238b4d8e48d04b, type: 2}
   maskMaterialTemplate: {fileID: 2100000, guid: e158715d617348b4098fe636c94b5848, type: 2}
@@ -66605,7 +66605,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.TunnelGateView
   targetGate: {fileID: 788142696935485448}
   nearClipOffset: 0.04
-  portalExposureEV: 0.5
+  portalExposureEV: 0
   useDynamicNearClip: 1
   portalMaterialTemplate: {fileID: 2100000, guid: 7ba127dcae30bb94a9238b4d8e48d04b, type: 2}
   maskMaterialTemplate: {fileID: 2100000, guid: e158715d617348b4098fe636c94b5848, type: 2}
