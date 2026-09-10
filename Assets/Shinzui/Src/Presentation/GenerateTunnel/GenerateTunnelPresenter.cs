@@ -53,6 +53,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                 SmallRoomWidth = request.SmallRoomWidth,
                 SmallRoomLength = request.SmallRoomLength,
                 TunnelLength = tLen,
+                ConnectionPointSpacing = request.ConnectionPointSpacing,
                 TunnelWidth = tWidth,
                 TunnelHeight = tHeight,
                 CorridorLength = cLen,
