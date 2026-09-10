@@ -51,9 +51,23 @@ namespace Shinzui.View.GenerateTunnel
         private GameObject _tunnelPrefab;
         private bool _tunnelPrefabLoadAttempted;
         private GameObject _corridorTemplate;
+        private GameObject _smallRoomTemplate;
+        private GameObject _warpCorridorTemplate;
         private bool _corridorTemplateLongAxisIsX;
+        private bool _warpCorridorTemplateLongAxisIsX;
+        private TunnelGenerator _generator;
 
         public GameObject MapRootObject => _mapRootObject;
+
+        public void Configure(TunnelGenerator generator)
+        {
+            _generator = generator;
+            _tunnelPrefab = null;
+            _tunnelPrefabLoadAttempted = false;
+            _corridorTemplate = null;
+            _smallRoomTemplate = null;
+            _warpCorridorTemplate = null;
+        }
 
         private void OnDestroy()
         {
@@ -75,38 +89,39 @@ namespace Shinzui.View.GenerateTunnel
         {
             FindTemplates();
 
-            if (_tunnelPrefab != null)
+            if (_generator != null && !_generator.UseModelBoundsForLayout)
             {
-                Renderer[] renderers = _tunnelPrefab.GetComponentsInChildren<Renderer>(true);
-                if (renderers != null && renderers.Length > 0)
-                {
-                    Bounds bounds = renderers[0].bounds;
-                    for (int i = 1; i < renderers.Length; i++)
-                    {
-                        bounds.Encapsulate(renderers[i].bounds);
-                    }
-                    tunnelLength = Mathf.Max(bounds.size.x, bounds.size.z);
-                    tunnelWidth = Mathf.Min(bounds.size.x, bounds.size.z);
-                    tunnelHeight = Mathf.Max(tunnelHeight, bounds.size.y);
-                }
+                return;
             }
 
-            if (_corridorTemplate != null)
+            if (_tunnelPrefab != null && TryCalculateRendererBounds(_tunnelPrefab, Vector3.one, out Bounds tunnelBounds))
             {
-                Renderer templateRenderer = _corridorTemplate.GetComponentInChildren<Renderer>();
-                if (templateRenderer != null)
-                {
-                    Bounds bounds = templateRenderer.bounds;
-                    _corridorTemplateLongAxisIsX = bounds.size.x >= bounds.size.z;
-                    corridorLength = Mathf.Max(bounds.size.x, bounds.size.z);
-                    corridorWidth = Mathf.Max(1.0f, Mathf.Min(bounds.size.x, bounds.size.z));
-                    tunnelHeight = Mathf.Max(tunnelHeight, bounds.size.y);
-                }
+                tunnelLength = Mathf.Max(tunnelBounds.size.x, tunnelBounds.size.z);
+                tunnelWidth = Mathf.Min(tunnelBounds.size.x, tunnelBounds.size.z);
+                tunnelHeight = Mathf.Max(tunnelHeight, tunnelBounds.size.y);
+            }
 
-                if (_corridorTemplate.scene.IsValid())
-                {
-                    _corridorTemplate.SetActive(false);
-                }
+            if (_corridorTemplate != null && TryCalculateRendererBounds(_corridorTemplate, Vector3.one, out Bounds corridorBounds))
+            {
+                _corridorTemplateLongAxisIsX = corridorBounds.size.x >= corridorBounds.size.z;
+                corridorLength = Mathf.Max(corridorBounds.size.x, corridorBounds.size.z);
+                corridorWidth = Mathf.Max(1.0f, Mathf.Min(corridorBounds.size.x, corridorBounds.size.z));
+                tunnelHeight = Mathf.Max(tunnelHeight, corridorBounds.size.y);
+            }
+
+            if (_warpCorridorTemplate != null && TryCalculateRendererBounds(_warpCorridorTemplate, Vector3.one, out Bounds warpBounds))
+            {
+                _warpCorridorTemplateLongAxisIsX = warpBounds.size.x >= warpBounds.size.z;
+            }
+
+            if (_corridorTemplate != null && _corridorTemplate.scene.IsValid())
+            {
+                _corridorTemplate.SetActive(false);
+            }
+
+            if (_warpCorridorTemplate != null && _warpCorridorTemplate.scene.IsValid())
+            {
+                _warpCorridorTemplate.SetActive(false);
             }
         }
 
@@ -175,9 +190,13 @@ namespace Shinzui.View.GenerateTunnel
                 model.name = "TunnelBaseModel";
                 model.SetActive(true);
                 model.transform.localPosition = Vector3.zero;
-                model.transform.localRotation = Quaternion.Euler(0.0f, 90.0f, 0.0f);
+                model.transform.localRotation = GetTunnelModelRotation();
+                model.transform.localScale = GetTunnelModelScale();
 
-                ConfigureTunnelExits(model, openEntrances);
+                if (_generator == null || _generator.ConfigureBasicTunnelExitParts)
+                {
+                    ConfigureTunnelExits(model, openEntrances);
+                }
 
                 if (isSpecial)
                 {
@@ -338,8 +357,25 @@ namespace Shinzui.View.GenerateTunnel
 
             var room = new GameObject($"Small Room {roomNumber:00}").transform;
             room.SetParent(connection, false);
-            float floorThickness = ShellThickness * 1.5f;
-            CreateStageBox(room, "Walkable Room Floor", Vector3.zero, new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
+
+            if (_smallRoomTemplate != null)
+            {
+                GameObject model = Instantiate(_smallRoomTemplate, room, false);
+                model.name = _smallRoomTemplate.name;
+                model.SetActive(true);
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localRotation = _generator != null ? _generator.SmallRoomModelRotation : Quaternion.identity;
+                model.transform.localScale = _generator != null ? _generator.SmallRoomModelScale : Vector3.one;
+                AlignModelToPassageLocalSpace(model.transform, room);
+                ApplyStageCollisionRecursive(model);
+                CreateInvisibleStageCollider(room, "Walkable Room Floor Collider", Vector3.zero,
+                    new Vector3(roomWidth, ShellThickness * 1.5f, roomLength));
+            }
+            else
+            {
+                float floorThickness = ShellThickness * 1.5f;
+                CreateStageBox(room, "Walkable Room Floor", Vector3.zero, new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
+            }
 
             return info;
         }
@@ -362,7 +398,7 @@ namespace Shinzui.View.GenerateTunnel
             corridor.localPosition = center;
             corridor.localRotation = direction.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(direction, Vector3.up) : Quaternion.identity;
 
-            CreatePassageShell(corridor, length, _warpCorridorMaterial, corridorWidth, tunnelHeight, standardCorridorLength);
+            CreatePassageShell(corridor, length, _warpCorridorMaterial, corridorWidth, tunnelHeight, standardCorridorLength, true);
 
             GeneratedCorridorInfo info = corridor.gameObject.AddComponent<GeneratedCorridorInfo>();
             info.Initialize(GeneratedCorridorKind.Warp, pairId);
@@ -421,6 +457,12 @@ namespace Shinzui.View.GenerateTunnel
 
         private void FindTemplates()
         {
+            if (_generator != null && _generator.BasicTunnelModel != null)
+            {
+                _tunnelPrefab = _generator.BasicTunnelModel;
+                _tunnelPrefabLoadAttempted = true;
+            }
+
             if (!_tunnelPrefabLoadAttempted)
             {
                 _tunnelPrefabLoadAttempted = true;
@@ -450,11 +492,23 @@ namespace Shinzui.View.GenerateTunnel
 
             if (_corridorTemplate == null)
             {
-                _corridorTemplate = GameObject.Find("Tunnel_Path_Long");
+                _corridorTemplate = _generator != null && _generator.CorridorModel != null
+                    ? _generator.CorridorModel
+                    : GameObject.Find("Tunnel_Path_Long");
             }
             if (_corridorTemplate == null)
             {
                 _corridorTemplate = LoadProjectAsset(CorridorTemplateAssetPath);
+            }
+
+            if (_smallRoomTemplate == null && _generator != null)
+            {
+                _smallRoomTemplate = _generator.SmallRoomModel;
+            }
+
+            if (_warpCorridorTemplate == null && _generator != null)
+            {
+                _warpCorridorTemplate = _generator.WarpCorridorModel;
             }
         }
 
@@ -481,7 +535,7 @@ namespace Shinzui.View.GenerateTunnel
             var passage = new GameObject(objectName).transform;
             passage.SetParent(connectionRoot, false);
             passage.localPosition = new Vector3(0.0f, 0.0f, localZ);
-            CreatePassageShell(passage, length, _corridorMaterial, corridorWidth, tunnelHeight, standardCorridorLength);
+            CreatePassageShell(passage, length, _corridorMaterial, corridorWidth, tunnelHeight, standardCorridorLength, false);
         }
 
         private void CreatePassageShell(
@@ -490,20 +544,26 @@ namespace Shinzui.View.GenerateTunnel
             Material material,
             float corridorWidth,
             float tunnelHeight,
-            float standardCorridorLength)
+            float standardCorridorLength,
+            bool isWarpCorridor = false)
         {
-            if (_corridorTemplate != null)
+            GameObject template = isWarpCorridor && _warpCorridorTemplate != null ? _warpCorridorTemplate : _corridorTemplate;
+            bool longAxisIsX = isWarpCorridor && _warpCorridorTemplate != null ? _warpCorridorTemplateLongAxisIsX : _corridorTemplateLongAxisIsX;
+
+            if (template != null)
             {
-                GameObject model = Instantiate(_corridorTemplate, corridor, false);
-                model.name = "Tunnel_Path_Long";
+                GameObject model = Instantiate(template, corridor, false);
+                model.name = template.name;
                 model.SetActive(true);
-                model.transform.localRotation = _corridorTemplateLongAxisIsX
-                    ? Quaternion.Euler(0.0f, 90.0f, 0.0f)
-                    : Quaternion.identity;
+                Quaternion configuredRotation = GetCorridorModelRotation(isWarpCorridor);
+                model.transform.localRotation = longAxisIsX
+                    ? configuredRotation * Quaternion.Euler(0.0f, 90.0f, 0.0f)
+                    : configuredRotation;
                 float lengthScale = standardCorridorLength > Mathf.Epsilon ? length / standardCorridorLength : 1.0f;
-                model.transform.localScale = _corridorTemplateLongAxisIsX
-                    ? new Vector3(lengthScale, 1.0f, 1.0f)
-                    : new Vector3(1.0f, 1.0f, lengthScale);
+                Vector3 baseScale = GetCorridorModelScale(isWarpCorridor);
+                model.transform.localScale = longAxisIsX
+                    ? new Vector3(baseScale.x * lengthScale, baseScale.y, baseScale.z)
+                    : new Vector3(baseScale.x, baseScale.y, baseScale.z * lengthScale);
                 AlignModelToPassageLocalSpace(model.transform, corridor);
 
                 ApplyStageCollisionRecursive(model);
@@ -621,6 +681,82 @@ namespace Shinzui.View.GenerateTunnel
             }
 
             return box;
+        }
+
+        private Vector3 GetTunnelModelScale()
+        {
+            return _generator != null ? _generator.BasicTunnelModelScale : Vector3.one;
+        }
+
+        private Quaternion GetTunnelModelRotation()
+        {
+            return _generator != null ? _generator.BasicTunnelModelRotation : Quaternion.Euler(0.0f, 90.0f, 0.0f);
+        }
+
+        private Vector3 GetCorridorModelScale(bool isWarpCorridor)
+        {
+            if (_generator == null)
+            {
+                return Vector3.one;
+            }
+
+            return isWarpCorridor && _generator.WarpCorridorModel != null
+                ? _generator.WarpCorridorModelScale
+                : _generator.CorridorModelScale;
+        }
+
+        private Quaternion GetCorridorModelRotation(bool isWarpCorridor)
+        {
+            if (_generator == null)
+            {
+                return Quaternion.identity;
+            }
+
+            return isWarpCorridor && _generator.WarpCorridorModel != null
+                ? _generator.WarpCorridorModelRotation
+                : _generator.CorridorModelRotation;
+        }
+
+        private static bool TryCalculateRendererBounds(GameObject template, Vector3 additionalScale, out Bounds bounds)
+        {
+            bounds = default;
+            if (template == null)
+            {
+                return false;
+            }
+
+            Renderer[] renderers = template.GetComponentsInChildren<Renderer>(true);
+            bool hasBounds = false;
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                Bounds rendererBounds = renderer.bounds;
+                Vector3 center = Vector3.Scale(rendererBounds.center, additionalScale);
+                Vector3 size = Vector3.Scale(rendererBounds.size, Abs(additionalScale));
+                Bounds scaledBounds = new(center, size);
+
+                if (!hasBounds)
+                {
+                    bounds = scaledBounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(scaledBounds);
+                }
+            }
+
+            return hasBounds;
+        }
+
+        private static Vector3 Abs(Vector3 value)
+        {
+            return new Vector3(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
         }
 
         /// <summary>

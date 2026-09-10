@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 namespace Shinzui.DI.GenerateTunnel
 {
     /// <summary>
-    /// 対象シーン（GenerateTunnelTest / LatestStageGenerateTemp）開始時に
+    /// 対象シーン（GenerateTunnelTest / LatestStageGenerateTemp / StageTemp_DoorMoveCopy）開始時に
     /// Domain・Application・Presentation・View の全層を結線し、
     /// 厳密に1回だけトンネルマップ生成を実行するComposition Root / Scene Bootstrapper。
     /// マップ生成成功後、MapRoot配下のWeightedSpawnSurfaceを収集し、
@@ -27,10 +27,11 @@ namespace Shinzui.DI.GenerateTunnel
         private static readonly HashSet<string> TargetSceneNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "GenerateTunnelTest",
-            "LatestStageGenerateTemp"
+            "LatestStageGenerateTemp",
+            "StageTemp_DoorMoveCopy"
         };
 
-        private static readonly HashSet<ulong> HandledSceneHandles = new();
+        private static readonly HashSet<int> HandledSceneHandles = new();
         private static readonly object ExecutionLock = new();
         private static bool _isExecuting;
 
@@ -74,13 +75,13 @@ namespace Shinzui.DI.GenerateTunnel
         {
             lock (ExecutionLock)
             {
-                HandledSceneHandles.Remove(scene.handle.GetRawData());
+                HandledSceneHandles.Remove(scene.handle);
             }
         }
 
         /// <summary>
         /// 指定シーンに対してトンネル生成の起動を試みる。
-        /// 対象シーンまたはGenerateTunnelTestBootstrapが存在し、未実行の場合にのみ1回だけ実行する。
+        /// 対象シーンまたはTunnelGenerator/GenerateTunnelTestBootstrapが存在し、未実行の場合にのみ1回だけ実行する。
         /// </summary>
         private static bool TryBootstrapScene(Scene scene)
         {
@@ -90,14 +91,15 @@ namespace Shinzui.DI.GenerateTunnel
             }
 
             bool isTargetScene = TargetSceneNames.Contains(scene.name);
+            TunnelGenerator tunnelGenerator = FindTunnelGeneratorInScene(scene);
             GenerateTunnelTestBootstrap settingsView = FindBootstrapViewInScene(scene);
 
-            if (!isTargetScene && settingsView == null)
+            if (!isTargetScene && tunnelGenerator == null && settingsView == null)
             {
                 return false;
             }
 
-            ulong rawHandle = scene.handle.GetRawData();
+            int rawHandle = scene.handle;
 
             lock (ExecutionLock)
             {
@@ -112,7 +114,7 @@ namespace Shinzui.DI.GenerateTunnel
 
             try
             {
-                ExecuteSceneGeneration(scene, settingsView);
+                ExecuteSceneGeneration(scene, tunnelGenerator, settingsView);
                 return true;
             }
             catch (Exception ex)
@@ -129,18 +131,20 @@ namespace Shinzui.DI.GenerateTunnel
             }
         }
 
-        private static void ExecuteSceneGeneration(Scene scene, GenerateTunnelTestBootstrap settingsView)
+        private static void ExecuteSceneGeneration(Scene scene, TunnelGenerator tunnelGenerator, GenerateTunnelTestBootstrap settingsView)
         {
             // 1. 生成リクエストDTOの構築（Viewから設定値を読み取り、無ければ既定値）
-            TunnelGenerationRequestDto request = CreateRequestDto(settingsView);
+            TunnelGenerationRequestDto request = CreateRequestDto(tunnelGenerator, settingsView);
 
             // 2. TunnelMapView の取得または生成（MapRoot配下に配置）
-            TunnelMapView mapView = ResolveTunnelMapView(scene);
+            TunnelMapView mapView = ResolveTunnelMapView(scene, tunnelGenerator);
             if (mapView == null)
             {
                 Debug.LogError($"[GenerateTunnelBootstrapper] Failed to resolve or create TunnelMapView for scene '{scene.name}'.");
                 return;
             }
+
+            mapView.Configure(tunnelGenerator);
 
             // 3. 各層のインスタンスを生成・結線 (Composition Root)
             ITunnelLayoutGenerator layoutGenerator = new TunnelLayoutGenerator(); // Domain
@@ -151,7 +155,7 @@ namespace Shinzui.DI.GenerateTunnel
             bool success = presenter.ExecuteGeneration(request);
             if (success)
             {
-                Debug.Log($"[GenerateTunnelBootstrapper] Successfully generated tunnel map for scene '{scene.name}' (handle: {scene.handle.GetRawData()}).");
+                Debug.Log($"[GenerateTunnelBootstrapper] Successfully generated tunnel map for scene '{scene.name}' (handle: {scene.handle}).");
 
                 // 5. マップ生成成功後にアイテムスポーンを連携実行
                 BootstrapItemSpawn(scene, mapView);
@@ -260,8 +264,31 @@ namespace Shinzui.DI.GenerateTunnel
             }
         }
 
-        private static TunnelGenerationRequestDto CreateRequestDto(GenerateTunnelTestBootstrap settingsView)
+        private static TunnelGenerationRequestDto CreateRequestDto(TunnelGenerator tunnelGenerator, GenerateTunnelTestBootstrap settingsView)
         {
+            if (tunnelGenerator != null)
+            {
+                return new TunnelGenerationRequestDto
+                {
+                    TunnelCount = tunnelGenerator.TunnelCount,
+                    Seed = tunnelGenerator.Seed,
+                    PlacementAttemptsPerTunnel = tunnelGenerator.PlacementAttemptsPerTunnel,
+                    SmallRoomCount = tunnelGenerator.SmallRoomCount,
+                    SmallRoomWidth = tunnelGenerator.SmallRoomWidth,
+                    SmallRoomLength = tunnelGenerator.SmallRoomLength,
+                    TunnelLength = tunnelGenerator.TunnelLength,
+                    ConnectionPointSpacing = tunnelGenerator.ConnectionPointSpacing,
+                    TunnelWidth = tunnelGenerator.TunnelWidth,
+                    TunnelHeight = tunnelGenerator.TunnelHeight,
+                    CorridorLength = tunnelGenerator.CorridorLength,
+                    CorridorWidth = tunnelGenerator.CorridorWidth,
+                    PlacementMargin = tunnelGenerator.PlacementMargin,
+                    TunnelOverlapSizeMultiplier = tunnelGenerator.TunnelOverlapSizeMultiplier,
+                    CorridorOverlapSizeMultiplier = tunnelGenerator.CorridorOverlapSizeMultiplier,
+                    SmallRoomOverlapSizeMultiplier = tunnelGenerator.SmallRoomOverlapSizeMultiplier
+                };
+            }
+
             if (settingsView != null)
             {
                 return new TunnelGenerationRequestDto
@@ -273,6 +300,7 @@ namespace Shinzui.DI.GenerateTunnel
                     SmallRoomWidth = settingsView.SmallRoomWidth,
                     SmallRoomLength = settingsView.SmallRoomLength,
                     TunnelLength = settingsView.TunnelLength,
+                    ConnectionPointSpacing = settingsView.ConnectionPointSpacing,
                     TunnelWidth = settingsView.TunnelWidth,
                     TunnelHeight = settingsView.TunnelHeight,
                     CorridorLength = settingsView.CorridorLength,
@@ -287,8 +315,13 @@ namespace Shinzui.DI.GenerateTunnel
             return new TunnelGenerationRequestDto();
         }
 
-        private static TunnelMapView ResolveTunnelMapView(Scene scene)
+        private static TunnelMapView ResolveTunnelMapView(Scene scene, TunnelGenerator tunnelGenerator)
         {
+            if (tunnelGenerator != null && tunnelGenerator.MapView != null)
+            {
+                return tunnelGenerator.MapView;
+            }
+
             // シーン内の既存 TunnelMapView を検索
             foreach (GameObject rootObj in scene.GetRootGameObjects())
             {
@@ -326,6 +359,19 @@ namespace Shinzui.DI.GenerateTunnel
             }
 
             return mapView;
+        }
+
+        private static TunnelGenerator FindTunnelGeneratorInScene(Scene scene)
+        {
+            foreach (GameObject rootObj in scene.GetRootGameObjects())
+            {
+                TunnelGenerator generator = rootObj.GetComponentInChildren<TunnelGenerator>(true);
+                if (generator != null)
+                {
+                    return generator;
+                }
+            }
+            return null;
         }
 
         private static GenerateTunnelTestBootstrap FindBootstrapViewInScene(Scene scene)
