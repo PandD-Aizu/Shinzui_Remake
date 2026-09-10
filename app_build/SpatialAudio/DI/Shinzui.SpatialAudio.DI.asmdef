@@ -1,0 +1,6 @@
+{
+  "name": "Shinzui.SpatialAudio.DI",
+  "references": ["Shinzui.SpatialAudio.Application", "Shinzui.SpatialAudio.Infrastructure", "VContainer"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"],
+  "autoReferenced": true
+}

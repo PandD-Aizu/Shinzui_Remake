@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.TunnelAcoustics.Infrastructure",
+  "references": ["Shinzui.SpatialAudio.Application", "Shinzui.SpatialAudio.Infrastructure", "SteamAudioUnity", "FMODUnity"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}

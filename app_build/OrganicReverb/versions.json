@@ -1,0 +1,22 @@
+{
+  "unity": "6000.5.8f1",
+  "fmodUnityIntegration": "2.03.20",
+  "fmodStudioCli": "2.03.12",
+  "steamAudio": "4.8.1",
+  "release": "https://github.com/ValveSoftware/steam-audio/releases/tag/v4.8.1",
+  "archives": {
+    "steamaudio_unity_4.8.1.zip": "9b7e3689561670e6b4b8e0c579a2d951bb4a0589f7d46c23bc9df923d62940f0",
+    "steamaudio_fmod_4.8.1.zip": "9a7666a381a5d95b7d77f7be02b99c26bd4aab70126213159783de126965aeec"
+  },
+  "sourceEvent": "event:/OrganicReverbProbe",
+  "sourceEventGuid": "fdc830d2-c01a-42b7-a8d5-7e9c5293894e",
+  "target": "Windows x64 / IL2CPP",
+  "simulation": {
+    "rays": 8192,
+    "bounces": 16,
+    "durationSeconds": 3,
+    "ambisonicOrder": 1,
+    "maxSources": 1,
+    "updateIntervalSeconds": 0.1
+  }
+}

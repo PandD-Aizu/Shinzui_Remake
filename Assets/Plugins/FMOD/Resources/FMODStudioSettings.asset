@@ -129,7 +129,8 @@ MonoBehaviour:
       Value: 0
       HasValue: 0
     Plugins:
-      Value: []
+      Value:
+      - phonon_fmod
       HasValue: 1
     StaticPlugins:
       Value: []
@@ -634,7 +635,11 @@ MonoBehaviour:
   Plugins: []
   MasterBanks:
   - Master
-  Banks: []
+  Banks:
+  - OrganicReverbProbe
+  - SpatialAudioProbe
+  - GeneratedTunnelAudio
+  - PropagationProbe
   BanksToLoad: []
   LiveUpdatePort: 9264
   EnableMemoryTracking: 0

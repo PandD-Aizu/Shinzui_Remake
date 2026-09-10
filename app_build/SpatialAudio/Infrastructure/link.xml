@@ -1,0 +1,7 @@
+<linker>
+  <assembly fullname="SteamAudioFMODStudio">
+    <type fullname="SteamAudio.FMODStudioAudioEngineSource" preserve="all" />
+    <type fullname="SteamAudio.FMODStudioAudioEngineState" preserve="all" />
+    <type fullname="SteamAudio.FMODStudioAudioEngineStateHelpers" preserve="all" />
+  </assembly>
+</linker>

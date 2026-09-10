@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "runtimeCheckCount": 43,
+  "checks": {
+    "runtime_checks_passed": true,
+    "three_generated_seeds": true,
+    "valid_stereo_captures": true,
+    "audible_without_clipping": true,
+    "prepared_onset_under_100ms": true,
+    "preparation_removes_at_least_150ms": true
+  },
+  "measurements": {
+    "prepared-step": {
+      "seconds": 0.8,
+      "channels": 2,
+      "sampleRate": 48000,
+      "onsetMilliseconds": 46.1875,
+      "peak": 0.02484130859375,
+      "rms": 0.004913772033476287,
+      "clippedSamples": 0
+    },
+    "cold-step": {
+      "seconds": 0.8,
+      "channels": 2,
+      "sampleRate": 48000,
+      "onsetMilliseconds": 291.5,
+      "peak": 0.05084228515625,
+      "rms": 0.011880916356648182,
+      "clippedSamples": 0
+    }
+  },
+  "onsetReductionMilliseconds": 245.3125,
+  "measurementScope": "FMOD master capture from contact request; excludes OS/device/headphone latency."
+}

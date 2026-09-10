@@ -838,7 +838,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: 
+    Android: STEAMAUDIO_ENABLED
     EmbeddedLinux: 
     GameCoreScarlett: 
     GameCoreXboxOne: 
@@ -849,12 +849,12 @@ PlayerSettings:
     PS4: 
     PS5: 
     QNX: 
-    Standalone: 
+    Standalone: STEAMAUDIO_ENABLED
     VisionOS: 
-    WebGL: 
+    WebGL: STEAMAUDIO_ENABLED
     Windows Store Apps: 
     XboxOne: 
-    iPhone: 
+    iPhone: STEAMAUDIO_ENABLED
     tvOS: 
   additionalCompilerArguments: {}
   platformArchitecture: {}

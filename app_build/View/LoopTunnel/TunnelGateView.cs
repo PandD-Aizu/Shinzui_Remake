@@ -692,6 +692,16 @@ namespace Shinzui.View
             }
         }
 
+        private static bool IsBakedLight(Light light)
+        {
+#if UNITY_EDITOR
+            return light.lightmapBakeType == LightmapBakeType.Baked;
+#else
+            // The authoring property is editor-only; players retain the baked output metadata.
+            return light.bakingOutput.lightmapBakeType == LightmapBakeType.Baked;
+#endif
+        }
+
         private void RefreshCandidateLights()
         {
             float now = Time.time;
@@ -723,7 +733,7 @@ namespace Shinzui.View
                 for (int i = 0; i < _tempLightScanList.Count; i++)
                 {
                     Light l = _tempLightScanList[i];
-                    if (l != null && l.type != LightType.Directional && l.lightmapBakeType != LightmapBakeType.Baked)
+                    if (l != null && l.type != LightType.Directional && !IsBakedLight(l))
                     {
                         if (!_candidateLights.Contains(l))
                         {
@@ -741,7 +751,7 @@ namespace Shinzui.View
                 for (int i = 0; i < _tempLightScanList.Count; i++)
                 {
                     Light l = _tempLightScanList[i];
-                    if (l != null && l.type != LightType.Directional && l.lightmapBakeType != LightmapBakeType.Baked)
+                    if (l != null && l.type != LightType.Directional && !IsBakedLight(l))
                     {
                         if (!_candidateLights.Contains(l))
                         {

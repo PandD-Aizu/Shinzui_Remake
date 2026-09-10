@@ -1,0 +1,167 @@
+{
+  "passed": true,
+  "checks": {
+    "voices-1_no_output_gaps": true,
+    "voices-1_eight_seconds": true,
+    "voices-1_no_device_starvations": true,
+    "voices-8_no_output_gaps": true,
+    "voices-8_eight_seconds": true,
+    "voices-8_no_device_starvations": true,
+    "voices-12_no_output_gaps": true,
+    "voices-12_eight_seconds": true,
+    "voices-12_no_device_starvations": true,
+    "se_slider_halves_amplitude": true,
+    "foot_audible": true,
+    "foot-se-0.0_silent": true,
+    "foot-master-muted_silent": true,
+    "foot-bus-muted_silent": true,
+    "paused_silent": true,
+    "bgm_control_does_not_mute_footsteps": true,
+    "bgm_audible": true,
+    "bgm_muted": true,
+    "button_audible": true,
+    "button_muted": true,
+    "processPrivateMB_plateau": true,
+    "unityAllocatedMB_plateau": true,
+    "fmodAllocatedMB_plateau": true,
+    "runtime": true,
+    "material_count_stable": true,
+    "single_owned_navmesh": true,
+    "production_12_voice_frame_and_DSP_budget": true
+  },
+  "amplitude_half_ratio": 0.49959775573247384,
+  "audio": {
+    "voices-0": {
+      "seconds": 8.0,
+      "rms": 0.0,
+      "min_10ms_rms": 0.0,
+      "median_10ms_rms": 0.0,
+      "near_silent_10ms_bins": 800,
+      "peak": 0.0
+    },
+    "voices-1": {
+      "seconds": 8.0,
+      "rms": 0.05891626142869981,
+      "min_10ms_rms": 0.05832960017309064,
+      "median_10ms_rms": 0.05890556034538389,
+      "near_silent_10ms_bins": 0,
+      "peak": 0.14239501953125
+    },
+    "voices-8": {
+      "seconds": 8.0,
+      "rms": 0.06178065956830829,
+      "min_10ms_rms": 0.06111461769305628,
+      "median_10ms_rms": 0.06177649193219341,
+      "near_silent_10ms_bins": 0,
+      "peak": 0.139404296875
+    },
+    "voices-12": {
+      "seconds": 8.0,
+      "rms": 0.034200298264296686,
+      "min_10ms_rms": 0.033720459050375004,
+      "median_10ms_rms": 0.03419718958422842,
+      "near_silent_10ms_bins": 0,
+      "peak": 0.07708740234375
+    },
+    "voices-16": {
+      "seconds": 8.0,
+      "rms": 0.040668480153013505,
+      "min_10ms_rms": 0.04018607778013091,
+      "median_10ms_rms": 0.040667441082874574,
+      "near_silent_10ms_bins": 0,
+      "peak": 0.091644287109375
+    },
+    "voices-32": {
+      "seconds": 8.0,
+      "rms": 0.026916092461388135,
+      "min_10ms_rms": 0.011517767492874654,
+      "median_10ms_rms": 0.025884471243313775,
+      "near_silent_10ms_bins": 0,
+      "peak": 0.142333984375
+    },
+    "foot-se-1.0": {
+      "energy": 1.2363944724202156,
+      "peak": 0.0623779296875
+    },
+    "foot-se-0.5": {
+      "energy": 0.30860148556530476,
+      "peak": 0.03118896484375
+    },
+    "foot-se-0.0": {
+      "energy": 0.0,
+      "peak": 0.0
+    },
+    "foot-master-muted": {
+      "energy": 0.0,
+      "peak": 0.0
+    },
+    "foot-bus-muted": {
+      "energy": 0.0,
+      "peak": 0.0
+    },
+    "paused": {
+      "energy": 0.0,
+      "peak": 0.0
+    },
+    "foot-bgm-muted": {
+      "energy": 1.2363944724202156,
+      "peak": 0.0623779296875
+    },
+    "bgm-volume-1": {
+      "energy": 0.3690336477011442,
+      "peak": 0.00701904296875
+    },
+    "bgm-volume-0": {
+      "energy": 0.0,
+      "peak": 0.0
+    },
+    "button-volume-1": {
+      "energy": 32.19822013191879,
+      "peak": 0.1988525390625
+    },
+    "button-volume-0": {
+      "energy": 0.0,
+      "peak": 0.0
+    }
+  },
+  "memory": {
+    "processPrivateMB": {
+      "first": 1345.29296875,
+      "last": 1510.609375,
+      "peak": 1515.46484375,
+      "last_10_range": 2.49609375,
+      "last_10_slope_MB_per_cycle": -0.11074810606061355
+    },
+    "unityAllocatedMB": {
+      "first": 127.41912364959717,
+      "last": 127.54292488098145,
+      "peak": 127.59542655944824,
+      "last_10_range": 0.05941200256347656,
+      "last_10_slope_MB_per_cycle": -0.0038059523611327028
+    },
+    "fmodAllocatedMB": {
+      "first": 5.618997573852539,
+      "last": 5.618997573852539,
+      "peak": 5.618997573852539,
+      "last_10_range": 0.0,
+      "last_10_slope_MB_per_cycle": -1.0273733527528915e-16
+    }
+  },
+  "stress_checks_above_production_capacity": {
+    "voices-16_no_output_gaps": true,
+    "voices-16_eight_seconds": true,
+    "voices-16_no_device_starvations": true,
+    "voices-32_no_output_gaps": true,
+    "voices-32_eight_seconds": true,
+    "voices-32_no_device_starvations": true
+  },
+  "counts_with_p95_under_16_67ms_and_DSP_below_80pct": [
+    0,
+    1,
+    8,
+    12,
+    16,
+    32
+  ],
+  "performance_scope": "960x540, generated tunnel probe, 120 fps cap, one stationary listener; not full-game target-hardware certification"
+}

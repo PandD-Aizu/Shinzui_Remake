@@ -1,0 +1,381 @@
+{
+  "passed": true,
+  "runtimeCheckCount": 127,
+  "checks": {
+    "runtime_passed": true,
+    "stereo_captures_without_clipping": true,
+    "distance_doubling_halves_amplitude": true,
+    "wall_transmission_is_quiet_but_nonzero": true,
+    "wood_transmits_more_than_metal_and_concrete": true,
+    "transmission_off_removes_direct_leak": true,
+    "wall_filters_attenuate_high_more_than_low": true,
+    "reflections_have_late_tail": true,
+    "production_mix_reduces_tail": true,
+    "closed_door_quieter_than_open": true,
+    "bend_has_indirect_audio": true,
+    "offset_openings_change_early_direction": true,
+    "volumetric_boundary_reduces_largest_level_step": true,
+    "walking_through_doorway_has_continuous_audio": true
+  },
+  "measurements": {
+    "distance-2m": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.1946666666666668,
+      "peak": 0.11798095703125,
+      "rms": 0.04314401027429848,
+      "clippedSamples": 0,
+      "earlyRms": 0.04317268069514267,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -2.114709462862319,
+      "toneBandAmplitudes": [
+        1117.8326295887937,
+        863.0469753263585,
+        545.7605256316361
+      ],
+      "maxNormalized10msEnvelopeChange": 0.03999617495871156,
+      "min10msRms": 0.0423437398232205
+    },
+    "distance-4m": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.2053333333333334,
+      "peak": 0.058990478515625,
+      "rms": 0.02156374124153758,
+      "clippedSamples": 0,
+      "earlyRms": 0.021567812944213526,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -2.1187659402904844,
+      "toneBandAmplitudes": [
+        563.734127003765,
+        435.25480838160763,
+        275.25332416451573
+      ],
+      "maxNormalized10msEnvelopeChange": 0.04039489931233014,
+      "min10msRms": 0.02123046585055644
+    },
+    "distance-8m": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.184,
+      "peak": 0.02947998046875,
+      "rms": 0.010777073250013517,
+      "clippedSamples": 0,
+      "earlyRms": 0.01078704474378914,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -2.1223900919618504,
+      "toneBandAmplitudes": [
+        276.6989338015449,
+        213.66760572485933,
+        135.11575008768787
+      ],
+      "maxNormalized10msEnvelopeChange": 0.043303084593630164,
+      "min10msRms": 0.010532820850189192
+    },
+    "wall-concrete": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.2053333333333334,
+      "peak": 3.0517578125e-05,
+      "rms": 2.353829421430068e-05,
+      "clippedSamples": 0,
+      "earlyRms": 2.3555522448005848e-05,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -0.210088017971087,
+      "toneBandAmplitudes": [
+        0.7788610535265909,
+        0.06515974172243334,
+        0.02388699971630607
+      ],
+      "maxNormalized10msEnvelopeChange": 0.02016866530792951,
+      "min10msRms": 2.3162051033658293e-05
+    },
+    "wall-no-transmission": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.1946666666666668,
+      "peak": 0.0,
+      "rms": 0.0,
+      "clippedSamples": 0,
+      "earlyRms": 0.0,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": 0.0,
+      "toneBandAmplitudes": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxNormalized10msEnvelopeChange": 0.0,
+      "min10msRms": 0.0
+    },
+    "wall-metal": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.2053333333333334,
+      "peak": 0.000244140625,
+      "rms": 0.00012221906863820465,
+      "clippedSamples": 0,
+      "earlyRms": 0.0001222517009706816,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -0.237738547752637,
+      "toneBandAmplitudes": [
+        4.208052497537377,
+        0.9223502745061591,
+        0.20923760996827515
+      ],
+      "maxNormalized10msEnvelopeChange": 0.012497229458181214,
+      "min10msRms": 0.00012080410058722416
+    },
+    "wall-wood": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 1.1946666666666668,
+      "peak": 0.001373291015625,
+      "rms": 0.0006594447452823165,
+      "clippedSamples": 0,
+      "earlyRms": 0.0006592150955183634,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -0.5787568597102645,
+      "toneBandAmplitudes": [
+        21.94954143673881,
+        7.220777069193906,
+        1.3577869130648172
+      ],
+      "maxNormalized10msEnvelopeChange": 0.019224336557642975,
+      "min10msRms": 0.0006524552456528465
+    },
+    "room-direct": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.04595947265625,
+      "rms": 0.0007740083163205769,
+      "clippedSamples": 0,
+      "earlyRms": 0.0026820945120293554,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -2.143950715917775,
+      "toneBandAmplitudes": [
+        1.3286244562649716,
+        0.9434957880762378,
+        0.9286145325294753
+      ],
+      "maxNormalized10msEnvelopeChange": 1.0,
+      "min10msRms": 0.0
+    },
+    "room-reflections": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.05914306640625,
+      "rms": 0.002536104129907429,
+      "clippedSamples": 0,
+      "earlyRms": 0.008367825219700734,
+      "lateRms": 0.0009131708319991773,
+      "earlyLeftMinusRightDb": -0.968948195921735,
+      "toneBandAmplitudes": [
+        22.907274129105392,
+        2.7643247697502145,
+        2.4292579146614854
+      ],
+      "maxNormalized10msEnvelopeChange": 0.5652483098392875,
+      "min10msRms": 0.0
+    },
+    "room-mix": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.044525146484375,
+      "rms": 0.0011576242041300329,
+      "clippedSamples": 0,
+      "earlyRms": 0.0038934100955465554,
+      "lateRms": 0.0003295606112986271,
+      "earlyLeftMinusRightDb": -1.3213866668971985,
+      "toneBandAmplitudes": [
+        8.099298647311501,
+        1.1050446936641842,
+        1.3561458898372658
+      ],
+      "maxNormalized10msEnvelopeChange": 1.0,
+      "min10msRms": 0.0
+    },
+    "room-closed-door": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.000244140625,
+      "rms": 3.3300708622348336e-06,
+      "clippedSamples": 0,
+      "earlyRms": 1.1539365399492243e-05,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": -0.593965698465782,
+      "toneBandAmplitudes": [
+        0.022457623414335506,
+        0.01007110016394532,
+        0.0037362175076920915
+      ],
+      "maxNormalized10msEnvelopeChange": 1.0,
+      "min10msRms": 0.0
+    },
+    "opening-left": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.02899169921875,
+      "rms": 0.0019308470406087983,
+      "clippedSamples": 0,
+      "earlyRms": 0.006148650095189998,
+      "lateRms": 0.000900917783833553,
+      "earlyLeftMinusRightDb": 0.9507075613592519,
+      "toneBandAmplitudes": [
+        21.42279175705324,
+        2.0084566118888088,
+        2.4541563482381576
+      ],
+      "maxNormalized10msEnvelopeChange": 0.44546835219698583,
+      "min10msRms": 0.0
+    },
+    "opening-right": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.034393310546875,
+      "rms": 0.0019778462821459872,
+      "clippedSamples": 0,
+      "earlyRms": 0.006324297589299252,
+      "lateRms": 0.0009058892992537674,
+      "earlyLeftMinusRightDb": -1.9322653089371278,
+      "toneBandAmplitudes": [
+        21.553870954173266,
+        3.066815498307708,
+        1.9395698847992342
+      ],
+      "maxNormalized10msEnvelopeChange": 0.44538599525252065,
+      "min10msRms": 0.0
+    },
+    "bend-direct": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.0,
+      "rms": 0.0,
+      "clippedSamples": 0,
+      "earlyRms": 0.0,
+      "lateRms": 0.0,
+      "earlyLeftMinusRightDb": 0.0,
+      "toneBandAmplitudes": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "maxNormalized10msEnvelopeChange": 0.0,
+      "min10msRms": 0.0
+    },
+    "bend-reflections": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.2026666666666666,
+      "peak": 0.12677001953125,
+      "rms": 0.005160872070763741,
+      "clippedSamples": 0,
+      "earlyRms": 0.017833703905478147,
+      "lateRms": 0.0002574661887755116,
+      "earlyLeftMinusRightDb": -0.5825504177367127,
+      "toneBandAmplitudes": [
+        38.066863426681586,
+        5.823247612560324,
+        4.721037070880238
+      ],
+      "maxNormalized10msEnvelopeChange": 0.3888410175941472,
+      "min10msRms": 0.0
+    },
+    "bend-mix": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.469333333333333,
+      "peak": 0.044586181640625,
+      "rms": 0.0017478629567075285,
+      "clippedSamples": 0,
+      "earlyRms": 0.004596683211926655,
+      "lateRms": 0.0011457385017413844,
+      "earlyLeftMinusRightDb": -0.7976077714664155,
+      "toneBandAmplitudes": [
+        16.69335970322147,
+        2.6189797519013527,
+        2.0968810961958004
+      ],
+      "maxNormalized10msEnvelopeChange": 0.4545922181546403,
+      "min10msRms": 0.0
+    },
+    "boundary-raycast": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.512,
+      "peak": 0.11798095703125,
+      "rms": 0.031776849406872566,
+      "clippedSamples": 0,
+      "earlyRms": 0.0006596044991431781,
+      "lateRms": 0.03567148234656497,
+      "earlyLeftMinusRightDb": -0.5778574450122013,
+      "toneBandAmplitudes": [
+        3303.16377984275,
+        2550.341668364817,
+        1612.6800046078934
+      ],
+      "maxNormalized10msEnvelopeChange": 0.2002714190502339,
+      "min10msRms": 0.0006524552456528465
+    },
+    "boundary-volumetric": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 4.501333333333333,
+      "peak": 0.11798095703125,
+      "rms": 0.03188309900611042,
+      "clippedSamples": 0,
+      "earlyRms": 0.0006597192303747343,
+      "lateRms": 0.03593309537996754,
+      "earlyLeftMinusRightDb": -0.5774608582115901,
+      "toneBandAmplitudes": [
+        3320.3755207334716,
+        2563.409354945634,
+        1620.8665797505503
+      ],
+      "maxNormalized10msEnvelopeChange": 0.12547664214155263,
+      "min10msRms": 0.0006517813374899
+    },
+    "walk-through-doorway": {
+      "sampleRate": 48000,
+      "channels": 2,
+      "seconds": 5.493333333333333,
+      "peak": 0.322723388671875,
+      "rms": 0.11701424955352348,
+      "clippedSamples": 0,
+      "earlyRms": 0.0759461431469485,
+      "lateRms": 0.1025704678438775,
+      "earlyLeftMinusRightDb": 0.3487147414693353,
+      "toneBandAmplitudes": [
+        17781.22525175239,
+        3362.6399039229395,
+        2169.588497635953
+      ],
+      "maxNormalized10msEnvelopeChange": 0.06371620498974953,
+      "min10msRms": 0.06247247316208013
+    }
+  },
+  "transmissionBandAmplitudeRatios": {
+    "concrete": [
+      0.0006967599915320981,
+      7.549964669975628e-05,
+      4.376828039855107e-05
+    ],
+    "metal": [
+      0.0037644745609951937,
+      0.0010687138717534758,
+      0.00038338721864523626
+    ],
+    "wood": [
+      0.019635803120913706,
+      0.008366609553858168,
+      0.002487880396797445
+    ]
+  }
+}
