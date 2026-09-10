@@ -1,0 +1,2 @@
+Order: dry -> small room reverb -> corridor reverb -> outdoor reverb.
+Each segment is approximately 5 seconds. Original capture gain preserved.

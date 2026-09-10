@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "runtimeCheckCount": 72,
+  "checks": {
+    "runtime_passed": true,
+    "all_instances_released": true,
+    "valid_stereo_captures": true,
+    "no_clipping": true,
+    "both_recordings_audible": true,
+    "short_sound_has_reflection_tail": true,
+    "loop_has_sustained_audio": true
+  },
+  "measurements": {
+    "two-voices-tail": {
+      "seconds": 6.741333333333333,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 0.337188720703125,
+      "rms": 0.013325454524186688,
+      "tailRms": 0.00825941925803213,
+      "clippedSamples": 0
+    },
+    "moving-loop": {
+      "seconds": 3.6266666666666665,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 0.45159912109375,
+      "rms": 0.19857351221349528,
+      "tailRms": 0.19366848304673093,
+      "clippedSamples": 0
+    }
+  }
+}

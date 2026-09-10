@@ -1,0 +1,89 @@
+{
+    "unityVersion": "6000.5.8f1",
+    "fmodVersion": "00020314",
+    "steamAudioVersion": "4.8.1",
+    "environment": "Windows Player",
+    "passed": true,
+    "cases": [
+        {
+            "name": "small-room-dry",
+            "reflections": false,
+            "occlusion": 1.0,
+            "peak": 0.1313914656639099,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 0.9865313172340393,
+            "captureOverflow": false
+        },
+        {
+            "name": "small-room-wet",
+            "reflections": true,
+            "occlusion": 1.0,
+            "peak": 0.18776066601276399,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 4.922153949737549,
+            "captureOverflow": false
+        },
+        {
+            "name": "corridor-dry",
+            "reflections": false,
+            "occlusion": 1.0,
+            "peak": 0.1313914656639099,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 0.939424455165863,
+            "captureOverflow": false
+        },
+        {
+            "name": "corridor-wet",
+            "reflections": true,
+            "occlusion": 1.0,
+            "peak": 0.2078598588705063,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 5.5102081298828129,
+            "captureOverflow": false
+        },
+        {
+            "name": "outdoor-dry",
+            "reflections": false,
+            "occlusion": 1.0,
+            "peak": 0.1313914656639099,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 0.9712458848953247,
+            "captureOverflow": false
+        },
+        {
+            "name": "outdoor-wet",
+            "reflections": true,
+            "occlusion": 1.0,
+            "peak": 0.13733293116092683,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 5.434574127197266,
+            "captureOverflow": false
+        },
+        {
+            "name": "wall-occluded",
+            "reflections": false,
+            "occlusion": 0.0,
+            "peak": 0.0,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 0.8742823600769043,
+            "captureOverflow": false
+        },
+        {
+            "name": "wall-occluded-wet",
+            "reflections": true,
+            "occlusion": 0.0,
+            "peak": 0.11853843927383423,
+            "dspFound": true,
+            "simulationSourceReady": true,
+            "dspCpuPercent": 5.241721153259277,
+            "captureOverflow": false
+        }
+    ]
+}

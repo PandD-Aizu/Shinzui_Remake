@@ -1,0 +1,6 @@
+{
+  "name": "Shinzui.AcousticPerformance.Tests.Editor",
+  "references": ["Shinzui.AcousticPerformance.Tests", "Shinzui.SpatialAudio.Infrastructure", "Shinzui.TunnelAcoustics.Infrastructure", "FMODUnity", "FMODUnityEditor", "SteamAudioUnity", "Unity.Addressables.Editor"],
+  "includePlatforms": ["Editor"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}

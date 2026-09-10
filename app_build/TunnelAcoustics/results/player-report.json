@@ -1,0 +1,231 @@
+{
+    "passed": true,
+    "environment": "Windows IL2CPP",
+    "checks": [
+        {
+            "name": "binding_is_idempotent",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "generate_seed_2777",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "geometry_registered_2777",
+            "passed": true,
+            "detail": "triangles=3402"
+        },
+        {
+            "name": "single_geometry_root_2777",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "native_surface_blocks_ray_2777",
+            "passed": true,
+            "detail": "occlusion=0"
+        },
+        {
+            "name": "generated_passage_found_2777",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "actual_corridor_opening_passes_sound_2777",
+            "passed": true,
+            "detail": "occlusion=1"
+        },
+        {
+            "name": "clear_removes_old_faces_2777",
+            "passed": true,
+            "detail": "occlusion=1"
+        },
+        {
+            "name": "generate_seed_42",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "geometry_registered_42",
+            "passed": true,
+            "detail": "triangles=3198"
+        },
+        {
+            "name": "single_geometry_root_42",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "native_surface_blocks_ray_42",
+            "passed": true,
+            "detail": "occlusion=0"
+        },
+        {
+            "name": "generated_passage_found_42",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "actual_corridor_opening_passes_sound_42",
+            "passed": true,
+            "detail": "occlusion=1"
+        },
+        {
+            "name": "clear_removes_old_faces_42",
+            "passed": true,
+            "detail": "occlusion=1"
+        },
+        {
+            "name": "generate_seed_1234",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "geometry_registered_1234",
+            "passed": true,
+            "detail": "triangles=3198"
+        },
+        {
+            "name": "single_geometry_root_1234",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "native_surface_blocks_ray_1234",
+            "passed": true,
+            "detail": "occlusion=0"
+        },
+        {
+            "name": "generated_passage_found_1234",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "actual_corridor_opening_passes_sound_1234",
+            "passed": true,
+            "detail": "occlusion=1"
+        },
+        {
+            "name": "clear_removes_old_faces_1234",
+            "passed": true,
+            "detail": "occlusion=1"
+        },
+        {
+            "name": "closed_door_occludes",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "moving_door_excluded_from_static_mesh",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "open_door_passes_sound",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "disabled_door_unregisters",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "reenabled_door_registers_once",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "destroyed_door_leaves_no_mesh",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "two_footstep_sources_prepared",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "prepared_trigger_starts_in_same_frame",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "prepared_footstep_audible",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "cold_request_uses_preparation",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "cold_footstep_audible",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "warp_cancels_old_footstep_and_reservations",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "warp_rewarms_at_destination",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "destination_footstep_has_no_velocity_spike",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "emitted_tail_stays_at_contact",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "airborne_motion_does_not_emit",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "grounded_stride_emits_one_step",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "stationary_player_does_not_emit",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "destroy_map_releases_voices",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "destroy_map_releases_geometry",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "no_fmod_backend_errors",
+            "passed": true,
+            "detail": ""
+        }
+    ],
+    "triangleCounts": [
+        3402,
+        3198,
+        3198
+    ],
+    "seeds": [
+        2777,
+        42,
+        1234
+    ]
+}

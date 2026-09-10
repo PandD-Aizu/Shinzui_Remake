@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.SpatialAudio.Tests",
+  "references": ["Shinzui.SpatialAudio.Application", "Shinzui.SpatialAudio.Infrastructure", "Shinzui.SpatialAudio.DI", "Shinzui.AudioProbe.Infrastructure", "FMODUnity", "VContainer"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}

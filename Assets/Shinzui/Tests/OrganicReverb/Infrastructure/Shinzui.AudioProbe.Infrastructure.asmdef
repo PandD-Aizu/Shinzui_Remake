@@ -1,0 +1,6 @@
+{
+  "name": "Shinzui.AudioProbe.Infrastructure",
+  "references": ["FMODUnity", "SteamAudioUnity", "SteamAudioFMODStudio"],
+  "autoReferenced": true,
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}
