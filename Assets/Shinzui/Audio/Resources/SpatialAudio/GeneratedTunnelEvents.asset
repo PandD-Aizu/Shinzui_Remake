@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d0765a7ca4e45f7b32c0d3e8bbb3418, type: 3}
+  m_Name: GeneratedTunnelEvents
+  m_EditorClassIdentifier: Shinzui.SpatialAudio.Infrastructure::Shinzui.Infrastructure.SpatialAudio.SpatialAudioCatalog
+  Entries:
+  - Id: footstep.prototype
+    Event:
+      Guid:
+        Data1: -986610283
+        Data2: 1307509647
+        Data3: -1311481946
+        Data4: -924647483
+      Path: event:/FootstepPrototypeSpatial
+    AuthoringNotes: Synthetic placeholder for footstep timing; replace with final
+      sound-design asset. No leading silence.

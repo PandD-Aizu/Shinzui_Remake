@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.TunnelAcoustics.DI",
+  "references": ["Shinzui.TunnelAcoustics.Infrastructure", "ViewLayer"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}

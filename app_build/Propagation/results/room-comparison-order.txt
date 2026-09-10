@@ -1,0 +1,8 @@
+room-direct
+room-reflections
+room-mix
+room-closed-door
+bend-mix
+opening-left
+opening-right
+Absolute gains preserved; one second of silence between cases.

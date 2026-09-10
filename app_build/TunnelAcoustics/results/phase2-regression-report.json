@@ -1,0 +1,369 @@
+{
+    "passed": true,
+    "environment": "Editor Play Mode (CLI)",
+    "unityVersion": "6000.5.8f1",
+    "createdInstances": 41,
+    "releasedInstances": 41,
+    "checks": [
+        {
+            "name": "di_resolves_same_service",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "unknown_event_rejected",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "invalid_pose_rejected",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "nonfinite_volume_rejected",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "same_event_has_distinct_handles",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_ready_5",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "independent_native_instances",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "two_positions_and_spatializers",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "short_sound_retains_tail_ownership",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "recorded_two_voices",
+            "passed": true,
+            "detail": "peak=0.3489693"
+        },
+        {
+            "name": "voice_stopped_10",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_stopped_11",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "natural_completion_releases_instances",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_ready_13",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "pool_object_reused",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "stale_handle_cannot_control_reused_voice",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "transform_follow_updates_native_position",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "velocity_reaches_fmod",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "pause_freezes_timeline",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "resume_advances_timeline",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "authored_loop_remains_alive",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "moving_loop_is_audible",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "destroyed_follow_target_releases_voice",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_limit_rejects_equal_priority",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "higher_priority_replaces_lowest",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_ready_25",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_limit_includes_paused_voice",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "invalid_update_preserves_voice",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "fadeout_keeps_handle_while_stopping",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_stopped_29",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "fadeout_releases_when_fmod_stops",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "immediate_stop_clears_all",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "usecase_disposes_only_owned_voices",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "disposed_usecase_rejects_play",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_0",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_1",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_2",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_3",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_4",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_5",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_6",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_7",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_8",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_9",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_10",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_11",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_12",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_13",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_14",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_15",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_16",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_17",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_18",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_19",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_20",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_21",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_22",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_23",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_24",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_25",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_26",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_27",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_28",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "repeat_play_stop_29",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "pool_is_bounded_after_repeated_play",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "voice_ready_65",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "scene_contains_playing_and_preparing",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "scene_unload_disposes_service",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "scene_unload_destroys_pool",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "fmod_has_no_remaining_event_instances",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "all_owned_instances_released",
+            "passed": true,
+            "detail": ""
+        },
+        {
+            "name": "no_backend_failures",
+            "passed": true,
+            "detail": ""
+        }
+    ]
+}

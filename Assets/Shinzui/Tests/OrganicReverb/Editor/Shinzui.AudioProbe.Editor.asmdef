@@ -1,0 +1,6 @@
+{
+  "name": "Shinzui.AudioProbe.Editor",
+  "references": ["Shinzui.AudioProbe.Infrastructure", "FMODUnity", "FMODUnityEditor", "SteamAudioUnity", "Unity.Addressables.Editor"],
+  "includePlatforms": ["Editor"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}

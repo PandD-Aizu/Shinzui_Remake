@@ -38,6 +38,7 @@ namespace Shinzui.View.GenerateTunnel
 
         private GameObject _mapRootObject;
         private Transform _geometryRoot;
+        private NavMeshData _ownedNavMeshData;
 
         private Material _specialMaterial;
         private Material _tunnelMaterial;
@@ -58,6 +59,15 @@ namespace Shinzui.View.GenerateTunnel
         private TunnelGenerator _generator;
 
         public GameObject MapRootObject => _mapRootObject;
+        public Transform GeometryRoot => _geometryRoot;
+        public event Action GeometryClearing;
+        public event Action<Transform> GeometryReady;
+
+        // Explicit engine templates allow the same geometry builder to run without an Addressables load.
+        public void SetBuildTemplates(GameObject tunnel, GameObject corridor)
+        {
+            _tunnelPrefab = tunnel; _corridorTemplate = corridor; _tunnelPrefabLoadAttempted = true;
+        }
 
         public void Configure(TunnelGenerator generator)
         {
@@ -71,6 +81,16 @@ namespace Shinzui.View.GenerateTunnel
 
         private void OnDestroy()
         {
+            GeometryClearing?.Invoke();
+            foreach (var material in new[] { _specialMaterial, _tunnelMaterial, _corridorMaterial,
+                _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial })
+                if (material) Destroy(material);
+            if (_ownedNavMeshData)
+            {
+                if (_mapRootObject && _mapRootObject.TryGetComponent<NavMeshSurface>(out var surface) && surface.navMeshData == _ownedNavMeshData)
+                    surface.RemoveData();
+                Destroy(_ownedNavMeshData);
+            }
             if (_tunnelPrefabHandle.IsValid())
             {
                 Addressables.Release(_tunnelPrefabHandle);
@@ -151,6 +171,7 @@ namespace Shinzui.View.GenerateTunnel
         /// </summary>
         public void PrepareBuild()
         {
+            GeometryClearing?.Invoke();
             EnsureMapRoot();
             CreateMaterials();
             FindTemplates();
@@ -444,7 +465,14 @@ namespace Shinzui.View.GenerateTunnel
 
             try
             {
+                var previousData = surface.navMeshData;
                 surface.BuildNavMesh();
+                if (surface.navMeshData != previousData)
+                {
+                    // Only destroy data created by this view; never release an authored NavMesh asset.
+                    if (_ownedNavMeshData) Destroy(_ownedNavMeshData);
+                    _ownedNavMeshData = surface.navMeshData;
+                }
                 Debug.Log($"[TunnelMapView] Successfully built NavMesh on '{_mapRootObject.name}'.", this);
                 return true;
             }
@@ -453,6 +481,7 @@ namespace Shinzui.View.GenerateTunnel
                 Debug.LogError($"[TunnelMapView] Failed to build NavMesh on '{_mapRootObject.name}': {ex.Message}\n{ex.StackTrace}", this);
                 return false;
             }
+            finally { GeometryReady?.Invoke(_geometryRoot); }
         }
 
         private void FindTemplates()
@@ -514,6 +543,8 @@ namespace Shinzui.View.GenerateTunnel
 
         private void CreateMaterials()
         {
+            // Rebuilding geometry reuses this view's materials; dispose them with the view.
+            if (_specialMaterial) return;
             _specialMaterial = CreateMaterial("Special Tunnel", new Color(0.16f, 0.48f, 0.68f));
             _tunnelMaterial = CreateMaterial("Tunnel", new Color(0.23f, 0.26f, 0.29f));
             _corridorMaterial = CreateMaterial("Connecting Corridor", new Color(0.72f, 0.48f, 0.13f));

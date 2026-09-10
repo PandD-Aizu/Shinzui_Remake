@@ -1,0 +1,4 @@
+boundary-raycast
+boundary-volumetric
+walk-through-doorway
+Absolute gains preserved; one second of silence between cases.

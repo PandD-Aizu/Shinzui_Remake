@@ -45,6 +45,12 @@ namespace Shinzui.Infrastructure.Repositories
                 1
             ),
             new(
+                new ItemDefinition("match_stick", "マッチ棒", "蜘蛛の巣など燃えやすい物に火をつけられる。", "Sprite/Medicine", ItemType.Equipment, 99),
+                "マッチ棒",
+                ResourceCategory.Utility,
+                1
+            ),
+            new(
                 new ItemDefinition("potion_stamina", "スタミナ剤", "スタミナが一時的に減少しなくなる", "Sprite/Medicine", ItemType.Consumable, 99),
                 "スタミナ剤",
                 ResourceCategory.Utility,

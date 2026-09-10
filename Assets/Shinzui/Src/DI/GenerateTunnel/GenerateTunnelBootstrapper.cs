@@ -31,7 +31,7 @@ namespace Shinzui.DI.GenerateTunnel
             "StageTemp_DoorMoveCopy"
         };
 
-        private static readonly HashSet<int> HandledSceneHandles = new();
+        private static readonly HashSet<ulong> HandledSceneHandles = new();
         private static readonly object ExecutionLock = new();
         private static bool _isExecuting;
 
@@ -75,7 +75,7 @@ namespace Shinzui.DI.GenerateTunnel
         {
             lock (ExecutionLock)
             {
-                HandledSceneHandles.Remove(scene.handle);
+                HandledSceneHandles.Remove(scene.handle.GetRawData());
             }
         }
 
@@ -99,7 +99,7 @@ namespace Shinzui.DI.GenerateTunnel
                 return false;
             }
 
-            int rawHandle = scene.handle;
+            ulong rawHandle = scene.handle.GetRawData();
 
             lock (ExecutionLock)
             {
@@ -143,6 +143,10 @@ namespace Shinzui.DI.GenerateTunnel
                 Debug.LogError($"[GenerateTunnelBootstrapper] Failed to resolve or create TunnelMapView for scene '{scene.name}'.");
                 return;
             }
+
+#if STEAMAUDIO_ENABLED
+            Shinzui.DI.TunnelAcoustics.TunnelAudioBinding.Attach(mapView);
+#endif
 
             mapView.Configure(tunnelGenerator);
 

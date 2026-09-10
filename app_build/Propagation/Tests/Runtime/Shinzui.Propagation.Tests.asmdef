@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.Propagation.Tests",
+  "references": ["Shinzui.SpatialAudio.Application", "Shinzui.SpatialAudio.Infrastructure", "Shinzui.TunnelAcoustics.Infrastructure", "Shinzui.AudioProbe.Infrastructure", "FMODUnity", "SteamAudioUnity"],
+  "defineConstraints": ["STEAMAUDIO_ENABLED"]
+}

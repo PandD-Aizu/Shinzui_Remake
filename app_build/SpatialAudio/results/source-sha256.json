@@ -1,0 +1,19 @@
+{
+  "app_build/SpatialAudio/Application/ISpatialAudioService.cs": "800d7d68c4c10eaecd906e48ac3400df0d69c41ab66a1cce25bec0c892188721",
+  "app_build/SpatialAudio/Application/Shinzui.SpatialAudio.Application.asmdef": "b9812297fdfff9099ca926206b16dbc8a309f4c5345b96dbec1e243c380045c0",
+  "app_build/SpatialAudio/Application/SpatialAudioTypes.cs": "4ad1b9c8938989cb42a3b26f1303613a34686d55efcd5ab13ac36cf2d1082656",
+  "app_build/SpatialAudio/Application/SpatialAudioUseCase.cs": "52a14fd70971ec0f18e9633ad6ae32d447993f0f66c115cc8da22b7debee33a4",
+  "app_build/SpatialAudio/DI/Shinzui.SpatialAudio.DI.asmdef": "cd30a03b66a1acd1d7220500d9e962cbefc70525ec4363d772baf83a8c2db62d",
+  "app_build/SpatialAudio/DI/SpatialAudioLifetimeScope.cs": "00dd966fdd5bf20d1115cc157352288043c826437c08fe46a609b40cd06b2c0f",
+  "app_build/SpatialAudio/Infrastructure/FmodSpatialAudioService.cs": "b8c94a5a4c2dc946dea087c94346aae0a5876f404708a5233f0c680df19742b7",
+  "app_build/SpatialAudio/Infrastructure/link.xml": "b9f298367441ac86fddae0c015e629bdeb2427410a40fbe96f90728ad8cbe6d7",
+  "app_build/SpatialAudio/Infrastructure/ManagedSpatialEmitter.cs": "7f24f9774b8a369492df6027ca04776e0d25f16cf615a2d6875b09d7d81a3ef2",
+  "app_build/SpatialAudio/Infrastructure/Shinzui.SpatialAudio.Infrastructure.asmdef": "d2e50afa1e7b3b7b1da36807f25cb51c390d2ac52d1d5bbd105f81bf08eec55c",
+  "app_build/SpatialAudio/Infrastructure/SpatialAudioCatalog.cs": "064754015e7dee37cc93b863f11dd9a70897a44568d38f1c8150305780b12e8a",
+  "app_build/SpatialAudio/Infrastructure/SpatialAudioRuntimeOptions.cs": "7c238c12b00a2fe801901048517c9efd71f1cd6d418c740b34319cec683253c9",
+  "app_build/SpatialAudio/Infrastructure/TransformAudioPoseSource.cs": "ac3c87f41537a62dbac035ac186f1e3ccc9eeb29b8781434e86c7b036d7ac81c",
+  "app_build/SpatialAudio/Tests/Editor/Shinzui.SpatialAudio.Tests.Editor.asmdef": "5f8cf4c0e677ac6ddda51ae7a9df51bd808912e5ed8cdb353fbfed858d55a51b",
+  "app_build/SpatialAudio/Tests/Editor/SpatialAudioProbeBuilder.cs": "06d42965de12b334289dbf3d7da3144ac2eeae96079abf22728aba017b430a7f",
+  "app_build/SpatialAudio/Tests/Runtime/Shinzui.SpatialAudio.Tests.asmdef": "3493f97e5218fb0bb935300bab1b74a1b11b221026e16420b14464b4ded14e9e",
+  "app_build/SpatialAudio/Tests/Runtime/SpatialAudioLifecycleProbe.cs": "2e5a3ae8948b6f1b27aab5a92323d0d2bd53d55b98fbbba2a9615d07d1188067"
+}

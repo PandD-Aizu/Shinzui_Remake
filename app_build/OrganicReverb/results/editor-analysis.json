@@ -1,0 +1,106 @@
+{
+  "passed": true,
+  "checks": {
+    "runtime_report_passed": true,
+    "eight_cases": true,
+    "valid_captures": true,
+    "no_clipping": true,
+    "all_unoccluded_audible": true,
+    "room_tail": true,
+    "corridor_tail": true,
+    "room_vs_outdoor_tail": true,
+    "wall_occludes_direct": true,
+    "occlusion_simulation": true,
+    "wall_indirect_audible": true
+  },
+  "measurements": {
+    "small-room-dry": {
+      "seconds": 5.034666666666666,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.131378173828125,
+      "rms": 0.002022297576998514,
+      "tail_rms": 0.0,
+      "clipped_samples": 0,
+      "occlusion": 1.0,
+      "dsp_cpu_percent": 0.6533021926879883
+    },
+    "small-room-wet": {
+      "seconds": 5.045333333333334,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.187713623046875,
+      "rms": 0.007047487507771979,
+      "tail_rms": 0.0005632841070842338,
+      "clipped_samples": 0,
+      "occlusion": 1.0,
+      "dsp_cpu_percent": 5.590221405029297
+    },
+    "corridor-dry": {
+      "seconds": 5.024,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.131378173828125,
+      "rms": 0.0020244432514238096,
+      "tail_rms": 0.0,
+      "clipped_samples": 0,
+      "occlusion": 1.0,
+      "dsp_cpu_percent": 0.6045604348182678
+    },
+    "corridor-wet": {
+      "seconds": 5.034666666666666,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.208099365234375,
+      "rms": 0.006088332938453805,
+      "tail_rms": 7.311160314513628e-05,
+      "clipped_samples": 0,
+      "occlusion": 1.0,
+      "dsp_cpu_percent": 4.568539619445801
+    },
+    "outdoor-dry": {
+      "seconds": 5.024,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.131378173828125,
+      "rms": 0.0020244432514238096,
+      "tail_rms": 0.0,
+      "clipped_samples": 0,
+      "occlusion": 1.0,
+      "dsp_cpu_percent": 0.6978477835655212
+    },
+    "outdoor-wet": {
+      "seconds": 5.045333333333334,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.137298583984375,
+      "rms": 0.0025879181829665094,
+      "tail_rms": 4.4626358230956315e-05,
+      "clipped_samples": 0,
+      "occlusion": 1.0,
+      "dsp_cpu_percent": 5.604476451873779
+    },
+    "wall-occluded": {
+      "seconds": 5.024,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.0,
+      "rms": 0.0,
+      "tail_rms": 0.0,
+      "clipped_samples": 0,
+      "occlusion": 0.0,
+      "dsp_cpu_percent": 0.7305470705032349
+    },
+    "wall-occluded-wet": {
+      "seconds": 5.045333333333334,
+      "sample_rate": 48000,
+      "channels": 2,
+      "peak": 0.11810302734375,
+      "rms": 0.004560517378774439,
+      "tail_rms": 0.0004173831121370374,
+      "clipped_samples": 0,
+      "occlusion": 0.0,
+      "dsp_cpu_percent": 5.324273586273193
+    }
+  }
+}
