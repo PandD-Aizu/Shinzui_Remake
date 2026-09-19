@@ -65,6 +65,41 @@ namespace Shinzui.DI.GenerateTunnel
             TryBootstrapScene(SceneManager.GetActiveScene());
         }
 
+        /// <summary>
+        /// アクティブなシーンのトンネルマップを、シーンを再ロードせずに再生成する（次の階層への遷移用）
+        /// 既存の生成ジオメトリは即時破棄してから作り直すため、NavMesh の混線が起きない
+        /// </summary>
+        public static bool RegenerateActiveScene()
+        {
+            Scene scene = SceneManager.GetActiveScene();
+
+            lock (ExecutionLock)
+            {
+                if (_isExecuting)
+                {
+                    return false;
+                }
+                HandledSceneHandles.Remove(scene.handle.GetRawData());
+            }
+
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                TunnelMapView existing = root.GetComponentInChildren<TunnelMapView>(true);
+                if (existing == null || existing.MapRootObject == null)
+                {
+                    continue;
+                }
+                Transform geometry = existing.MapRootObject.transform.Find("Tunnel Map Geometry");
+                if (geometry != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(geometry.gameObject);
+                }
+                break;
+            }
+
+            return TryBootstrapScene(scene);
+        }
+
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             TryBootstrapScene(scene);

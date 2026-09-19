@@ -34,8 +34,15 @@ namespace Shinzui.View.GenerateTunnel
         [Min(0.1f)] [SerializeField] private float corridorOverlapSizeMultiplier = 1.0f;
         [Min(0.1f)] [SerializeField] private float smallRoomOverlapSizeMultiplier = 1.0f;
 
+        /// <summary>
+        /// 実行時にシードを差し替えるための上書き値（nullならインスペクター値を使う）
+        /// 次の階層へ進む際に、シーンをまたいで別マップを生成するために使用する
+        /// staticのためドメインリロード（プレイ開始）時に自動でクリアされる
+        /// </summary>
+        public static int? RuntimeSeedOverride { get; set; }
+
         public int TunnelCount => tunnelCount;
-        public int Seed => seed;
+        public int Seed => RuntimeSeedOverride ?? seed;
         public int PlacementAttemptsPerTunnel => placementAttemptsPerTunnel;
         public int SmallRoomCount => smallRoomCount;
         public float SmallRoomWidth => smallRoomWidth;
