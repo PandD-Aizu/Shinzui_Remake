@@ -36,11 +36,40 @@ namespace Shinzui.Temp
         [Header("Current Status")]
         [SerializeField] private EnemyState currentState = EnemyState.Patrol;
         [SerializeField] private Transform currentTarget;
+        [SerializeField] private bool isPaused = false;
 
         private int _currentWaypointIndex = 0;
         private float _waitTimer = 0.0f;
         private float _searchTimer = 0.0f;
         private Vector3 _lastKnownPlayerPosition;
+
+        public bool IsPaused => isPaused;
+
+        /// <summary>
+        /// 敵の移動・索敵更新を一時停止・再開する
+        /// </summary>
+        /// <param name="paused">一時停止フラグ</param>
+        public void SetPaused(bool paused)
+        {
+            isPaused = paused;
+            if (isPaused)
+            {
+                if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
+                {
+                    navMeshAgent.isStopped = true;
+                }
+            }
+            else
+            {
+                if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
+                {
+                    navMeshAgent.isStopped = false;
+                }
+            }
+        }
+
+        public void PauseEnemy() => SetPaused(true);
+        public void ResumeEnemy() => SetPaused(false);
 
         private void Awake()
         {
@@ -59,6 +88,8 @@ namespace Shinzui.Temp
 
         private void Update()
         {
+            if (isPaused) return;
+
             bool isPlayerDetected = enemyVision != null && enemyVision.IsPlayerDetected;
 
             if (isPlayerDetected)
