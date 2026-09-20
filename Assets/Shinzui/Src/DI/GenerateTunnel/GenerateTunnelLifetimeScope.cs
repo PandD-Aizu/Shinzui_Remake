@@ -1,58 +1,76 @@
+using System;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.Application.UseCases.Tunnel;
 using Shinzui.Domain.DomainServices.Tunnel;
+using Shinzui.Infrastructure.Tunnel;
 using Shinzui.Presentation.GenerateTunnel;
+using Shinzui.Presentation.ItemSpawn;
 using Shinzui.View.GenerateTunnel;
+using Shinzui.View.ItemSpawn;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using VContainer;
 using VContainer.Unity;
 
 namespace Shinzui.DI.GenerateTunnel
 {
-    /// <summary>
-    /// トンネルランダム生成システム関連の依存関係注入を管理するVContainerのLifetimeScope。
-    /// ドメイン・アプリケーション・プレゼンテーション・ビューの全層をClean Architectureに沿って結合する。
-    /// </summary>
+    /// <summary>Owns one stage's generation, navigation and map-ready notification.</summary>
+    [DisallowMultipleComponent]
     public sealed class GenerateTunnelLifetimeScope : LifetimeScope
     {
-        [Header("Views")]
-        [SerializeField] private GenerateTunnelTestBootstrap bootstrapView;
+        [SerializeField] private TunnelGenerator generator;
         [SerializeField] private TunnelMapView mapView;
 
         protected override void Configure(IContainerBuilder builder)
         {
-            // ドメイン層の登録
-            builder.Register<TunnelLayoutGenerator>(Lifetime.Singleton).As<ITunnelLayoutGenerator>();
-
-            // アプリケーション層の登録
-            builder.Register<GenerateTunnelUseCase>(Lifetime.Singleton).As<IGenerateTunnelUseCase>();
-
-            // ビュー層の登録
-            var resolvedMapView = mapView;
-            if (resolvedMapView == null)
+            Scene scene = gameObject.scene;
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var scope in root.GetComponentsInChildren<GenerateTunnelLifetimeScope>(true))
             {
-                resolvedMapView = FindFirstObjectByType<TunnelMapView>();
-            }
-            if (resolvedMapView != null)
-            {
-#if STEAMAUDIO_ENABLED
-                Shinzui.DI.TunnelAcoustics.TunnelAudioBinding.Attach(resolvedMapView);
-#endif
-                builder.RegisterComponent(resolvedMapView);
+                if (scope != this && scope.isActiveAndEnabled)
+                    throw new InvalidOperationException($"Scene '{scene.name}' must contain only one active GenerateTunnelLifetimeScope.");
             }
 
-            var resolvedBootstrap = bootstrapView;
-            if (resolvedBootstrap == null)
+            generator = ResolveInScene(generator, scene);
+            if (generator == null)
+                throw new InvalidOperationException($"Scene '{scene.name}' requires a TunnelGenerator settings component.");
+            mapView = ResolveInScene(mapView != null ? mapView : generator != null ? generator.MapView : null, scene);
+            if (mapView == null)
+                mapView = gameObject.AddComponent<TunnelMapView>();
+
+            mapView.Configure(generator);
+            GameObject mapRoot = mapView.EnsureMapRoot();
+            var navigation = mapRoot.GetComponent<TunnelNavigationBuilder>();
+            if (navigation == null)
+                navigation = mapRoot.AddComponent<TunnelNavigationBuilder>();
+
+            builder.Register<TunnelLayoutGenerator>(Lifetime.Scoped).As<ITunnelLayoutGenerator>();
+            builder.Register<GenerateTunnelUseCase>(Lifetime.Scoped).As<IGenerateTunnelUseCase>();
+            builder.RegisterComponent(mapView);
+            builder.RegisterComponent(navigation).As<ITunnelNavigationBuilder>();
+            builder.RegisterInstance(TunnelGenerationRequestFactory.Create(generator));
+            builder.Register<GenerateTunnelPresenter>(Lifetime.Scoped);
+            builder.RegisterInstance(new TunnelItemSpawnBinding(
+                ResolveInScene<ItemSpawnContainerView>(null, scene),
+                ResolveInScene<ItemSpawnManager>(null, scene), mapRoot));
+            builder.RegisterEntryPoint<TunnelGenerationEntryPoint>(Lifetime.Scoped).AsSelf();
+        }
+
+        private static T ResolveInScene<T>(T reference, Scene scene) where T : Component
+        {
+            if (reference != null)
             {
-                resolvedBootstrap = FindFirstObjectByType<GenerateTunnelTestBootstrap>();
-            }
-            if (resolvedBootstrap != null)
-            {
-                builder.RegisterComponent(resolvedBootstrap);
+                if (reference.gameObject.scene != scene)
+                    throw new InvalidOperationException($"{typeof(T).Name} must belong to scene '{scene.name}'.");
+                return reference;
             }
 
-            // プレゼンテーション層の登録
-            builder.Register<GenerateTunnelPresenter>(Lifetime.Singleton);
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                var component = root.GetComponentInChildren<T>();
+                if (component != null) return component;
+            }
+            return null;
         }
     }
 }

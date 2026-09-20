@@ -4,7 +4,7 @@ namespace Shinzui.View.GenerateTunnel
 {
     /// <summary>
     /// Scene-owned settings component for tunnel generation and generated model presentation.
-    /// This view component only stores inspector values; orchestration is handled by the bootstrapper.
+    /// This view only exposes inspector values; a scene LifetimeScope owns generation.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-110)]

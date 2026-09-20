@@ -1,0 +1,8 @@
+{
+    "name": "Shinzui.TunnelGeneration.Tests",
+    "references": [
+        "DILayer", "ApplicationLayer", "ViewLayer", "VContainer", "Unity.AI.Navigation"
+    ],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "autoReferenced": false
+}

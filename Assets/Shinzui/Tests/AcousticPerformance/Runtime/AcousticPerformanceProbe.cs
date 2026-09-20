@@ -98,7 +98,8 @@ namespace Shinzui.AcousticPerformance.Tests
             var root=new GameObject("MapRoot");SceneManager.MoveGameObjectToScene(root,generatedScene);
             view=root.AddComponent<TunnelMapView>();view.SetBuildTemplates(TunnelTemplate,CorridorTemplate);
             binding=TunnelAudioBinding.Attach(view,config);
-            presenter=new GenerateTunnelPresenter(new GenerateTunnelUseCase(new TunnelLayoutGenerator()),view);
+            presenter=new GenerateTunnelPresenter(new GenerateTunnelUseCase(new TunnelLayoutGenerator()),view,
+                view.EnsureMapRoot().GetComponent<Shinzui.Infrastructure.Tunnel.TunnelNavigationBuilder>() ?? view.EnsureMapRoot().AddComponent<Shinzui.Infrastructure.Tunnel.TunnelNavigationBuilder>());
             yield return Generate(2777);
             Transform corridor=null;
             foreach(var candidate in view.GeometryRoot.GetComponentsInChildren<Transform>())
@@ -146,7 +147,8 @@ namespace Shinzui.AcousticPerformance.Tests
         IEnumerator Generate(int seed)
         {
             int build=binding.BuildCount;
-            presenter=new GenerateTunnelPresenter(new GenerateTunnelUseCase(new TunnelLayoutGenerator()),view);
+            presenter=new GenerateTunnelPresenter(new GenerateTunnelUseCase(new TunnelLayoutGenerator()),view,
+                view.EnsureMapRoot().GetComponent<Shinzui.Infrastructure.Tunnel.TunnelNavigationBuilder>() ?? view.EnsureMapRoot().AddComponent<Shinzui.Infrastructure.Tunnel.TunnelNavigationBuilder>());
             CheckResult("generate_"+seed,presenter.ExecuteGeneration(new TunnelGenerationRequestDto {Seed=seed,TunnelCount=4,SmallRoomCount=1}));
             float deadline=Time.realtimeSinceStartup+10;
             while(binding.BuildCount==build && Time.realtimeSinceStartup<deadline)yield return null;

@@ -700,7 +700,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 166855939}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9357876, b: 0.7783019, a: 1}
   m_Intensity: 1338.44
@@ -752,7 +752,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -1160,6 +1160,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 377810395}
   m_CullTransparentMesh: 1
+--- !u!1 &379417647
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 379417648}
+  m_Layer: 0
+  m_Name: MapRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &379417648
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379417647}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &467162262
 GameObject:
   m_ObjectHideFlags: 0
@@ -1501,7 +1532,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &526712092
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1980,6 +2011,81 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &624134324
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 624134325}
+  - component: {fileID: 624134327}
+  - component: {fileID: 624134326}
+  m_Layer: 5
+  m_Name: StrobeGauge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &624134325
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 624134324}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2091019250}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -50, y: -50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &624134326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 624134324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0.7058824, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 3
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 0
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &624134327
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 624134324}
+  m_CullTransparentMesh: 1
 --- !u!1 &632997462
 GameObject:
   m_ObjectHideFlags: 0
@@ -2315,6 +2421,7 @@ RectTransform:
   - {fileID: 877069338}
   - {fileID: 1958970260}
   - {fileID: 196527158}
+  - {fileID: 2091019250}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2380,6 +2487,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 1
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -2456,7 +2564,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 775528537}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9607843, b: 0.9019608, a: 1}
   m_Intensity: 25
@@ -2508,7 +2616,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -2767,7 +2875,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 857730633}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 0.1
@@ -2819,7 +2927,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -3148,7 +3256,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1131143007
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3383,7 +3491,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230834971}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9357876, b: 0.7783019, a: 1}
   m_Intensity: 1338.44
@@ -3435,7 +3543,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -3712,9 +3820,9 @@ MonoBehaviour:
   playerView: {fileID: 119550612}
   inventoryView: {fileID: 196527159}
   flashlightView: {fileID: 1217330893}
-  strobeGaugeView: {fileID: 0}
-  interactionView: {fileID: 0}
-  interactionMessageView: {fileID: 0}
+  strobeGaugeView: {fileID: 2091019251}
+  interactionView: {fileID: 119550618}
+  interactionMessageView: {fileID: 168151109}
   specialItemHudView: {fileID: 0}
   playerQuickItemSlotView: {fileID: 0}
   playerDeathView: {fileID: 0}
@@ -3808,7 +3916,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1460883860}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9357876, b: 0.7783019, a: 1}
   m_Intensity: 1338.44
@@ -3860,7 +3968,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -4047,7 +4155,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1940410822
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4270,7 +4378,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1970754886
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4459,6 +4567,57 @@ PhysicsMaterial:
   m_Bounciness: 0
   m_FrictionCombine: 0
   m_BounceCombine: 0
+--- !u!1 &2091019249
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2091019250}
+  - component: {fileID: 2091019251}
+  m_Layer: 5
+  m_Name: StrobeGauge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2091019250
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091019249}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 624134325}
+  m_Father: {fileID: 761664889}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -1820, y: -980}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2091019251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091019249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e79690ac81a0c3428ef250179c084df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.StrobeGaugeView
+  gaugeImage: {fileID: 624134326}
+  rootObject: {fileID: 2091019249}
 --- !u!1 &2108891096
 GameObject:
   m_ObjectHideFlags: 0
@@ -4711,6 +4870,8 @@ GameObject:
   m_Component:
   - component: {fileID: 9001001002}
   - component: {fileID: 9001001003}
+  - component: {fileID: 9001001005}
+  - component: {fileID: 9001001004}
   m_Layer: 0
   m_Name: TunnelGenerator
   m_TagString: Untagged
@@ -4761,9 +4922,9 @@ MonoBehaviour:
   tunnelOverlapSizeMultiplier: 1
   corridorOverlapSizeMultiplier: 1
   smallRoomOverlapSizeMultiplier: 1
-  mapView: {fileID: 0}
-  basicTunnelModel: {fileID: 919132148439290259}
-  corridorModel: {fileID: 0}
+  mapView: {fileID: 9001001004}
+  basicTunnelModel: {fileID: 1225982593969228857, guid: 629d707b85a3eca4bb9a0ae0212ac845, type: 3}
+  corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
   basicTunnelModelScale: {x: 3, y: 1, z: 1}
@@ -4776,6 +4937,39 @@ MonoBehaviour:
   warpCorridorModelEuler: {x: 0, y: 0, z: 0}
   useModelBoundsForLayout: 1
   configureBasicTunnelExitParts: 1
+--- !u!114 &9001001004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9001001001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2015f49b5b69c200222222222015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelMapView
+  mapRoot: {fileID: 379417648}
+  overviewCamera: {fileID: 0}
+  showDebugGeometry: 0
+--- !u!114 &9001001005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9001001001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2018f49b5b69c200222222222018, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DILayer::Shinzui.DI.GenerateTunnel.GenerateTunnelLifetimeScope
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  generator: {fileID: 9001001003}
+  mapView: {fileID: 9001001004}
 --- !u!4 &385197037389411234
 Transform:
   m_ObjectHideFlags: 0
@@ -4832,7 +5026,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &1711813854514786374
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5397,3 +5591,4 @@ SceneRoots:
   - {fileID: 483773079}
   - {fileID: 7093387925508855648}
   - {fileID: 9001001002}
+  - {fileID: 379417648}

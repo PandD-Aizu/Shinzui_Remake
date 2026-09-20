@@ -4,17 +4,12 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
-using Unity.AI.Navigation;
-using UnityEngine.AI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Shinzui.View.GenerateTunnel
 {
     /// <summary>
     /// トンネル・通路・小部屋・ワープトリガーのUnity GameObject階層を
-    /// MapRoot配下に具体構築し、NavMeshSurfaceのベイクを実行するViewコンポーネント。
+    /// MapRoot配下に描画するViewコンポーネント。NavMeshの管理はInfrastructureが担当する。
     /// ドメイン層やプレゼンテーション層に依存せず、純粋なUnityオブジェクト構築責務を持つ。
     /// </summary>
     [DisallowMultipleComponent]
@@ -23,7 +18,6 @@ namespace Shinzui.View.GenerateTunnel
         private const string MapRootName = "MapRoot";
         private const string GeometryRootName = "Tunnel Map Geometry";
         private const string TunnelAddressableKey = "TunnelBaseModel";
-        private const string CorridorTemplateAssetPath = "Assets/Shinzui/3DModels/Tunnel_Path_Long.fbx";
         private const float ShellThickness = 0.2f;
 
         private static readonly string[] ExitPathNames =
@@ -36,9 +30,13 @@ namespace Shinzui.View.GenerateTunnel
             "tunnel_path_-x_-y"  // 5: Right -Z
         };
 
+        [SerializeField] private Transform mapRoot;
+        [Tooltip("Optional overview camera for a preview scene. Leave empty in gameplay scenes.")]
+        [SerializeField] private Camera overviewCamera;
+        [SerializeField] private bool showDebugGeometry;
+
         private GameObject _mapRootObject;
         private Transform _geometryRoot;
-        private NavMeshData _ownedNavMeshData;
 
         private Material _specialMaterial;
         private Material _tunnelMaterial;
@@ -85,12 +83,6 @@ namespace Shinzui.View.GenerateTunnel
             foreach (var material in new[] { _specialMaterial, _tunnelMaterial, _corridorMaterial,
                 _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial })
                 if (material) Destroy(material);
-            if (_ownedNavMeshData)
-            {
-                if (_mapRootObject && _mapRootObject.TryGetComponent<NavMeshSurface>(out var surface) && surface.navMeshData == _ownedNavMeshData)
-                    surface.RemoveData();
-                Destroy(_ownedNavMeshData);
-            }
             if (_tunnelPrefabHandle.IsValid())
             {
                 Addressables.Release(_tunnelPrefabHandle);
@@ -109,12 +101,8 @@ namespace Shinzui.View.GenerateTunnel
         {
             FindTemplates();
 
-            if (_generator != null && !_generator.UseModelBoundsForLayout)
-            {
-                return;
-            }
-
-            if (_tunnelPrefab != null && TryCalculateRendererBounds(_tunnelPrefab, Vector3.one, out Bounds tunnelBounds))
+            bool useBounds = _generator == null || _generator.UseModelBoundsForLayout;
+            if (useBounds && _tunnelPrefab != null && TryCalculateRendererBounds(_tunnelPrefab, Vector3.one, out Bounds tunnelBounds))
             {
                 tunnelLength = Mathf.Max(tunnelBounds.size.x, tunnelBounds.size.z);
                 tunnelWidth = Mathf.Min(tunnelBounds.size.x, tunnelBounds.size.z);
@@ -124,9 +112,12 @@ namespace Shinzui.View.GenerateTunnel
             if (_corridorTemplate != null && TryCalculateRendererBounds(_corridorTemplate, Vector3.one, out Bounds corridorBounds))
             {
                 _corridorTemplateLongAxisIsX = corridorBounds.size.x >= corridorBounds.size.z;
-                corridorLength = Mathf.Max(corridorBounds.size.x, corridorBounds.size.z);
-                corridorWidth = Mathf.Max(1.0f, Mathf.Min(corridorBounds.size.x, corridorBounds.size.z));
-                tunnelHeight = Mathf.Max(tunnelHeight, corridorBounds.size.y);
+                if (useBounds)
+                {
+                    corridorLength = Mathf.Max(corridorBounds.size.x, corridorBounds.size.z);
+                    corridorWidth = Mathf.Max(1.0f, Mathf.Min(corridorBounds.size.x, corridorBounds.size.z));
+                    tunnelHeight = Mathf.Max(tunnelHeight, corridorBounds.size.y);
+                }
             }
 
             if (_warpCorridorTemplate != null && TryCalculateRendererBounds(_warpCorridorTemplate, Vector3.one, out Bounds warpBounds))
@@ -134,15 +125,10 @@ namespace Shinzui.View.GenerateTunnel
                 _warpCorridorTemplateLongAxisIsX = warpBounds.size.x >= warpBounds.size.z;
             }
 
-            if (_corridorTemplate != null && _corridorTemplate.scene.IsValid())
-            {
-                _corridorTemplate.SetActive(false);
-            }
-
-            if (_warpCorridorTemplate != null && _warpCorridorTemplate.scene.IsValid())
-            {
-                _warpCorridorTemplate.SetActive(false);
-            }
+            HideSceneTemplate(_tunnelPrefab);
+            HideSceneTemplate(_corridorTemplate);
+            HideSceneTemplate(_smallRoomTemplate);
+            HideSceneTemplate(_warpCorridorTemplate);
         }
 
         /// <summary>
@@ -156,10 +142,25 @@ namespace Shinzui.View.GenerateTunnel
                 return _mapRootObject;
             }
 
-            _mapRootObject = GameObject.Find(MapRootName);
+            if (mapRoot != null)
+            {
+                if (mapRoot.gameObject.scene != gameObject.scene)
+                    throw new InvalidOperationException("Tunnel MapRoot must belong to the same scene as its view.");
+                _mapRootObject = mapRoot.gameObject;
+            }
+            else
+            {
+                foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+                {
+                    if (root.name != MapRootName) continue;
+                    _mapRootObject = root;
+                    break;
+                }
+            }
             if (_mapRootObject == null)
             {
                 _mapRootObject = new GameObject(MapRootName);
+                SceneManager.MoveGameObjectToScene(_mapRootObject, gameObject.scene);
             }
 
             _mapRootObject.SetActive(true);
@@ -178,6 +179,8 @@ namespace Shinzui.View.GenerateTunnel
 
             if (_geometryRoot != null)
             {
+                // Deferred destruction must not leave old colliders in the next navigation bake.
+                _geometryRoot.gameObject.SetActive(false);
                 Destroy(_geometryRoot.gameObject);
             }
 
@@ -324,6 +327,7 @@ namespace Shinzui.View.GenerateTunnel
         /// </summary>
         public GameObject CreateEntranceMarker(Transform tunnelRoot, string markerName, Vector3 localPosition)
         {
+            if (!showDebugGeometry) return null;
             return CreateBox(tunnelRoot, markerName, localPosition, new Vector3(0.7f, 0.12f, 0.7f), _markerMaterial);
         }
 
@@ -433,8 +437,8 @@ namespace Shinzui.View.GenerateTunnel
         /// </summary>
         public void FrameSceneCamera(Vector3 boundsCenter, Vector3 boundsSize)
         {
-            Camera camera = Camera.main;
-            if (camera == null || boundsSize.sqrMagnitude < 1e-6f)
+            Camera camera = overviewCamera;
+            if (camera == null || camera.gameObject.scene != gameObject.scene || boundsSize.sqrMagnitude < 1e-6f)
             {
                 return;
             }
@@ -444,45 +448,7 @@ namespace Shinzui.View.GenerateTunnel
             camera.farClipPlane = Mathf.Max(camera.farClipPlane, boundsSize.magnitude * 3.0f);
         }
 
-        /// <summary>
-        /// MapRoot 自身の NavMeshSurface を再利用（無ければ MapRoot 自身へ追加）し、
-        /// collectObjects = CollectObjects.Children および useGeometry = NavMeshCollectGeometry.PhysicsColliders を設定して
-        /// 全ジオメトリ生成完了後に一度だけ BuildNavMesh を実行する。
-        /// 失敗時は原因をログ出力する。
-        /// </summary>
-        public bool BuildNavMesh()
-        {
-            EnsureMapRoot();
-
-            NavMeshSurface surface = _mapRootObject.GetComponent<NavMeshSurface>();
-            if (surface == null)
-            {
-                surface = _mapRootObject.AddComponent<NavMeshSurface>();
-            }
-
-            surface.collectObjects = CollectObjects.Children;
-            surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
-
-            try
-            {
-                var previousData = surface.navMeshData;
-                surface.BuildNavMesh();
-                if (surface.navMeshData != previousData)
-                {
-                    // Only destroy data created by this view; never release an authored NavMesh asset.
-                    if (_ownedNavMeshData) Destroy(_ownedNavMeshData);
-                    _ownedNavMeshData = surface.navMeshData;
-                }
-                Debug.Log($"[TunnelMapView] Successfully built NavMesh on '{_mapRootObject.name}'.", this);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[TunnelMapView] Failed to build NavMesh on '{_mapRootObject.name}': {ex.Message}\n{ex.StackTrace}", this);
-                return false;
-            }
-            finally { GeometryReady?.Invoke(_geometryRoot); }
-        }
+        public void NotifyGeometryReady() => GeometryReady?.Invoke(_geometryRoot);
 
         private void FindTemplates()
         {
@@ -523,13 +489,8 @@ namespace Shinzui.View.GenerateTunnel
             {
                 _corridorTemplate = _generator != null && _generator.CorridorModel != null
                     ? _generator.CorridorModel
-                    : GameObject.Find("Tunnel_Path_Long");
+                    : null;
             }
-            if (_corridorTemplate == null)
-            {
-                _corridorTemplate = LoadProjectAsset(CorridorTemplateAssetPath);
-            }
-
             if (_smallRoomTemplate == null && _generator != null)
             {
                 _smallRoomTemplate = _generator.SmallRoomModel;
@@ -625,6 +586,7 @@ namespace Shinzui.View.GenerateTunnel
             if (renderer != null)
             {
                 renderer.sharedMaterial = _warpTriggerMaterial;
+                renderer.enabled = showDebugGeometry;
             }
 
             Collider collider = trigger.GetComponent<Collider>();
@@ -876,13 +838,9 @@ namespace Shinzui.View.GenerateTunnel
             }
         }
 
-        private static GameObject LoadProjectAsset(string assetPath)
+        private static void HideSceneTemplate(GameObject template)
         {
-#if UNITY_EDITOR
-            return AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
-#else
-            return null;
-#endif
+            if (template != null && template.scene.IsValid()) template.SetActive(false);
         }
     }
 }

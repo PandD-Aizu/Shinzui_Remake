@@ -1,0 +1,145 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &532158345352143520
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 153068482118870958}
+  - component: {fileID: 2605421958075894576}
+  - component: {fileID: 110807049658699876}
+  - component: {fileID: 6323419785561786697}
+  m_Layer: 0
+  m_Name: StageTunnelGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &153068482118870958
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 532158345352143520}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4930561835335588376}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2605421958075894576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 532158345352143520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74df90422b0f47e0b33d3dfc71db809b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
+  tunnelCount: 8
+  seed: 2777
+  placementAttemptsPerTunnel: 80
+  smallRoomCount: 1
+  smallRoomWidth: 8
+  smallRoomLength: 6
+  tunnelLength: 153.12695
+  connectionPointSpacing: 51.042316
+  tunnelWidth: 14.800003
+  tunnelHeight: 5
+  corridorLength: 8
+  corridorWidth: 3
+  placementMargin: 2
+  tunnelOverlapSizeMultiplier: 1
+  corridorOverlapSizeMultiplier: 1
+  smallRoomOverlapSizeMultiplier: 1
+  mapView: {fileID: 110807049658699876}
+  basicTunnelModel: {fileID: 1225982593969228857, guid: 629d707b85a3eca4bb9a0ae0212ac845, type: 3}
+  corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
+  smallRoomModel: {fileID: 0}
+  warpCorridorModel: {fileID: 0}
+  basicTunnelModelScale: {x: 1, y: 1, z: 1}
+  corridorModelScale: {x: 1, y: 1, z: 1}
+  smallRoomModelScale: {x: 1, y: 1, z: 1}
+  warpCorridorModelScale: {x: 1, y: 1, z: 1}
+  basicTunnelModelEuler: {x: 0, y: 90, z: 0}
+  corridorModelEuler: {x: 0, y: 0, z: 0}
+  smallRoomModelEuler: {x: 0, y: 0, z: 0}
+  warpCorridorModelEuler: {x: 0, y: 0, z: 0}
+  useModelBoundsForLayout: 1
+  configureBasicTunnelExitParts: 1
+--- !u!114 &110807049658699876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 532158345352143520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2015f49b5b69c200222222222015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelMapView
+  mapRoot: {fileID: 4930561835335588376}
+  overviewCamera: {fileID: 0}
+  showDebugGeometry: 0
+--- !u!114 &6323419785561786697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 532158345352143520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2018f49b5b69c200222222222018, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DILayer::Shinzui.DI.GenerateTunnel.GenerateTunnelLifetimeScope
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  generator: {fileID: 2605421958075894576}
+  mapView: {fileID: 110807049658699876}
+  bootstrapView: {fileID: 0}
+--- !u!1 &576532691287439161
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4930561835335588376}
+  m_Layer: 0
+  m_Name: MapRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4930561835335588376
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 576532691287439161}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 153068482118870958}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

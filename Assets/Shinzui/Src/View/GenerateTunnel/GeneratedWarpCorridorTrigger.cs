@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Shinzui.View;
 
@@ -5,15 +6,13 @@ namespace Shinzui.View.GenerateTunnel
 {
     /// <summary>
     /// ワープ通路の中心トリガー領域コンポーネント。
-    /// プレイヤーが侵入した際に対応するワープ通路へプレイヤーを移動させる。
+    /// プレイヤーの侵入イベントのみを公開する。ワープ制御はPresenterが担当する。
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class GeneratedWarpCorridorTrigger : MonoBehaviour
     {
-        private const float WarpCooldown = 0.35f;
-        private static float _lastWarpTime = -WarpCooldown;
-
         [SerializeField] private GeneratedCorridorInfo sourceCorridor;
+        public event Action<GeneratedCorridorInfo, PlayerView> PlayerEntered;
 
         /// <summary>
         /// ワープ判定の起点になる通路情報を登録する。
@@ -24,32 +23,12 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// プレイヤーが中心トリガーに入ったら、対応するワープ通路へ移動させる。
+        /// プレイヤーが中心トリガーに入ったことを通知する。
         /// </summary>
         private void OnTriggerEnter(Collider other)
         {
-            if (Time.time - _lastWarpTime < WarpCooldown)
-            {
-                return;
-            }
-
-            if (sourceCorridor == null || sourceCorridor.PairedCorridor == null)
-            {
-                return;
-            }
-
             PlayerView player = other.GetComponentInParent<PlayerView>();
-            if (player == null)
-            {
-                return;
-            }
-
-            Vector3 targetForward = sourceCorridor.PairedCorridor.transform.forward;
-            Vector3 offset = sourceCorridor.PairedCorridor.transform.position
-                             - targetForward * 1.25f
-                             - sourceCorridor.transform.position;
-            player.Warp(offset);
-            _lastWarpTime = Time.time;
+            if (player != null) PlayerEntered?.Invoke(sourceCorridor, player);
         }
     }
 }

@@ -58,7 +58,8 @@ namespace Shinzui.TunnelAcoustics.Tests
             Check("binding_is_idempotent",binding==TunnelAudioBinding.Attach(view,Configuration));
             for (int i=0;i<seeds.Length;i++)
             {
-                var presenter=new GenerateTunnelPresenter(new GenerateTunnelUseCase(new TunnelLayoutGenerator()),view);
+                var presenter=new GenerateTunnelPresenter(new GenerateTunnelUseCase(new TunnelLayoutGenerator()),view,
+                view.EnsureMapRoot().GetComponent<Shinzui.Infrastructure.Tunnel.TunnelNavigationBuilder>() ?? view.EnsureMapRoot().AddComponent<Shinzui.Infrastructure.Tunnel.TunnelNavigationBuilder>());
                 Check("generate_seed_"+seeds[i],presenter.ExecuteGeneration(new TunnelGenerationRequestDto { Seed=seeds[i],TunnelCount=4,SmallRoomCount=1 }));
                 yield return WaitFor(()=>binding.BuildCount==i+1,10);
                 var mesh=AcousticGeometryCollector.Collect(view.GeometryRoot,Configuration.MeshLibrary);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
+using Shinzui.View;
 using Shinzui.View.GenerateTunnel;
 using UnityEngine;
 
@@ -11,15 +12,21 @@ namespace Shinzui.Presentation.GenerateTunnel
     /// トンネルランダム生成ユースケース（Application）とUnity描画ビュー（View）を仲介するPresenter。
     /// ドメイン層やインフラ層には一切依存せず、DTOとViewメソッドのみを通じてマップ生成とNavMeshベイクを完結させる。
     /// </summary>
-    public sealed class GenerateTunnelPresenter
+    public sealed class GenerateTunnelPresenter : IDisposable
     {
         private readonly IGenerateTunnelUseCase _useCase;
         private readonly TunnelMapView _mapView;
+        private readonly ITunnelNavigationBuilder _navigation;
+        private readonly List<GeneratedWarpCorridorTrigger> _warpTriggers = new();
+        private const float WarpCooldown = 0.35f;
+        private float _lastWarpTime = float.NegativeInfinity;
 
-        public GenerateTunnelPresenter(IGenerateTunnelUseCase useCase, TunnelMapView mapView)
+        public GenerateTunnelPresenter(IGenerateTunnelUseCase useCase, TunnelMapView mapView,
+            ITunnelNavigationBuilder navigation)
         {
-            _useCase = useCase;
-            _mapView = mapView;
+            _useCase = useCase ?? throw new ArgumentNullException(nameof(useCase));
+            _mapView = mapView != null ? mapView : throw new ArgumentNullException(nameof(mapView));
+            _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
         }
 
         /// <summary>
@@ -72,11 +79,15 @@ namespace Shinzui.Presentation.GenerateTunnel
             }
 
             BuildSceneHierarchy(mapDto);
+            if (!_navigation.BuildNavMesh()) return false;
+            _mapView.NotifyGeometryReady();
+            Debug.Log($"[GenerateTunnelPresenter] Generated {mapDto.Tunnels.Count} tunnels with navigation in '{_mapView.gameObject.scene.name}' (seed: {mapDto.Seed}).");
             return true;
         }
 
         private void BuildSceneHierarchy(TunnelMapDto mapDto)
         {
+            Dispose();
             _mapView.PrepareBuild();
 
             // 1. トンネルノードと出入口候補マーカーの生成
@@ -166,6 +177,12 @@ namespace Shinzui.Presentation.GenerateTunnel
                 {
                     createdWarpInfos[i].SetPair(createdWarpInfos[pairedIndex]);
                 }
+                var trigger = createdWarpInfos[i].GetComponentInChildren<GeneratedWarpCorridorTrigger>();
+                if (trigger != null)
+                {
+                    trigger.PlayerEntered += OnWarpRequested;
+                    _warpTriggers.Add(trigger);
+                }
             }
 
             // 5. カメラフレーミング
@@ -176,10 +193,24 @@ namespace Shinzui.Presentation.GenerateTunnel
                 _mapView.FrameSceneCamera(boundsCenter, boundsSize);
             }
 
-            // 6. MapRoot配下のNavMeshSurfaceを一度だけベイク
-            _mapView.BuildNavMesh();
+        }
 
-            Debug.Log($"[GenerateTunnelPresenter] Successfully generated {mapDto.Tunnels.Count} connected tunnels and baked NavMesh under MapRoot (seed: {mapDto.Seed}).");
+        private void OnWarpRequested(GeneratedCorridorInfo source, PlayerView player)
+        {
+            if (source == null || source.PairedCorridor == null || player == null ||
+                player.gameObject.scene != _mapView.gameObject.scene || Time.time - _lastWarpTime < WarpCooldown)
+                return;
+
+            Transform target = source.PairedCorridor.transform;
+            player.Warp(target.position - target.forward * 1.25f - source.transform.position);
+            _lastWarpTime = Time.time;
+        }
+
+        public void Dispose()
+        {
+            foreach (var trigger in _warpTriggers)
+                if (trigger != null) trigger.PlayerEntered -= OnWarpRequested;
+            _warpTriggers.Clear();
         }
     }
 }

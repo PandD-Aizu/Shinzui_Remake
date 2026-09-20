@@ -293,6 +293,7 @@ MonoBehaviour:
   characterController: {fileID: 119550613}
   playerCollider: {fileID: 119550614}
   mainCamera: {fileID: 632997464}
+  cameraTarget: {fileID: 0}
   rotationSpeed: 270
   movingRotationSmoothTime: 0.12
   idleRotationSmoothTime: 0.2
@@ -301,6 +302,8 @@ MonoBehaviour:
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  crouchRatio: 0.5
+  heightChangeRate: 10
   staminaSlider: {fileID: 1958970259}
   staminaFillImage: {fileID: 148840333}
   staminaColorGradient:
@@ -584,6 +587,8 @@ GameObject:
   - component: {fileID: 138528202}
   - component: {fileID: 138528201}
   - component: {fileID: 138528200}
+  - component: {fileID: 138528206}
+  - component: {fileID: 138528205}
   m_Layer: 0
   m_Name: Spider Web
   m_TagString: Untagged
@@ -651,6 +656,7 @@ MonoBehaviour:
   maxPullSpeed: 2.2
   deformationResponse: 12
   releaseImpulse: 0.28
+  burnFadeDuration: 1.35
   drawGizmos: 1
 --- !u!65 &138528201
 BoxCollider:
@@ -753,6 +759,36 @@ Transform:
   - {fileID: 1391081333}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &138528205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138528199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76b0ede3473dc5c46aa0404113afa3b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.SpiderWebBurnVfx
+  duration: 2.4
+--- !u!114 &138528206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138528199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad924b4d32b9189419f31d69aba26cf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.SpiderWebInteractable
+  displayName: "[E] \u8ABF\u3079\u308B"
+  interactableId: InteractionTest
+  isOneTime: 0
+  destroyOnInteract: 0
+  interactMessage: There is a creepy figurine here. It seems covered in dust.
 --- !u!1 &148840331
 GameObject:
   m_ObjectHideFlags: 0
@@ -900,7 +936,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 166855939}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9357876, b: 0.7783019, a: 1}
   m_Intensity: 1
@@ -952,7 +988,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -1387,6 +1423,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 377810395}
   m_CullTransparentMesh: 1
+--- !u!1 &379417647
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 379417648}
+  m_Layer: 0
+  m_Name: MapRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &379417648
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379417647}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &381390588
 GameObject:
   m_ObjectHideFlags: 0
@@ -2934,6 +3001,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 1
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -3011,7 +3079,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 775528537}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9607843, b: 0.9019608, a: 1}
   m_Intensity: 849.3496
@@ -3063,7 +3131,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -3350,7 +3418,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 857730633}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
@@ -3402,7 +3470,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -4358,7 +4426,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230834971}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.8795101, b: 0.5707547, a: 1}
   m_Intensity: 822.0671
@@ -4410,7 +4478,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -4749,9 +4817,12 @@ MonoBehaviour:
   interactionView: {fileID: 119550618}
   interactionMessageView: {fileID: 168151109}
   specialItemHudView: {fileID: 929750188}
+  playerQuickItemSlotView: {fileID: 0}
   playerDeathView: {fileID: 396944459}
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
+  needWeightSettings: {fileID: 0}
+  itemCategoryClassifier: {fileID: 0}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0
@@ -4901,7 +4972,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1460883860}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9357876, b: 0.7783019, a: 1}
   m_Intensity: 1
@@ -4953,7 +5024,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -5350,6 +5421,7 @@ VisualEffect:
   m_StartSeed: 0
   m_ResetSeedOnPlay: 1
   m_AllowInstancing: 1
+  m_ReleaseInstanceOnDisable: 0
   m_ResourceVersion: 1
   m_PropertySheet:
     m_Float:
@@ -5416,12 +5488,12 @@ GameObject:
   - component: {fileID: 1923252013}
   - component: {fileID: 1923252014}
   m_Layer: 8
-  m_Name: MapRoot
+  m_Name: Legacy Static Tunnel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1923252013
 Transform:
   m_ObjectHideFlags: 0
@@ -5545,6 +5617,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.TunnelGateView
   targetGate: {fileID: 1970754890}
   nearClipOffset: 0.04
+  portalExposureEV: 0
   useDynamicNearClip: 0
   portalMaterialTemplate: {fileID: 2100000, guid: 7ba127dcae30bb94a9238b4d8e48d04b, type: 2}
   maskMaterialTemplate: {fileID: 2100000, guid: e158715d617348b4098fe636c94b5848, type: 2}
@@ -5767,6 +5840,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.TunnelGateView
   targetGate: {fileID: 1940410826}
   nearClipOffset: 0.04
+  portalExposureEV: 0
   useDynamicNearClip: 0
   portalMaterialTemplate: {fileID: 2100000, guid: 7ba127dcae30bb94a9238b4d8e48d04b, type: 2}
   maskMaterialTemplate: {fileID: 2100000, guid: e158715d617348b4098fe636c94b5848, type: 2}
@@ -6458,6 +6532,7 @@ VisualEffect:
   m_StartSeed: 0
   m_ResetSeedOnPlay: 1
   m_AllowInstancing: 1
+  m_ReleaseInstanceOnDisable: 0
   m_ResourceVersion: 1
   m_PropertySheet:
     m_Float:
@@ -6606,6 +6681,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8000000000000000001}
+  - component: {fileID: 8000000000000000004}
+  - component: {fileID: 8000000000000000003}
   - component: {fileID: 8000000000000000002}
   m_Layer: 0
   m_Name: '[Generated Tunnel Map]'
@@ -6638,9 +6715,42 @@ MonoBehaviour:
   m_GameObject: {fileID: 8000000000000000000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07c62bf955114718901ad6d711d6cc59, type: 3}
+  m_Script: {fileID: 11500000, guid: c82b2015f49b5b69c200222222222015, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.GenerateTunnelTestBootstrap
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelMapView
+  mapRoot: {fileID: 379417648}
+  overviewCamera: {fileID: 0}
+  showDebugGeometry: 0
+--- !u!114 &8000000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8000000000000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2018f49b5b69c200222222222018, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DILayer::Shinzui.DI.GenerateTunnel.GenerateTunnelLifetimeScope
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  generator: {fileID: 8000000000000000004}
+  mapView: {fileID: 8000000000000000002}
+--- !u!114 &8000000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8000000000000000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74df90422b0f47e0b33d3dfc71db809b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
   tunnelCount: 8
   seed: 2777
   placementAttemptsPerTunnel: 80
@@ -6648,6 +6758,7 @@ MonoBehaviour:
   smallRoomWidth: 12
   smallRoomLength: 12
   tunnelLength: 153.12695
+  connectionPointSpacing: 51.042316
   tunnelWidth: 14.800003
   tunnelHeight: 5
   corridorLength: 8
@@ -6656,6 +6767,21 @@ MonoBehaviour:
   tunnelOverlapSizeMultiplier: 1
   corridorOverlapSizeMultiplier: 1
   smallRoomOverlapSizeMultiplier: 1
+  mapView: {fileID: 8000000000000000002}
+  basicTunnelModel: {fileID: 1225982593969228857, guid: 629d707b85a3eca4bb9a0ae0212ac845, type: 3}
+  corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
+  smallRoomModel: {fileID: 0}
+  warpCorridorModel: {fileID: 0}
+  basicTunnelModelScale: {x: 1, y: 1, z: 1}
+  corridorModelScale: {x: 1, y: 1, z: 1}
+  smallRoomModelScale: {x: 1, y: 1, z: 1}
+  warpCorridorModelScale: {x: 1, y: 1, z: 1}
+  basicTunnelModelEuler: {x: 0, y: 90, z: 0}
+  corridorModelEuler: {x: 0, y: 0, z: 0}
+  smallRoomModelEuler: {x: 0, y: 0, z: 0}
+  warpCorridorModelEuler: {x: 0, y: 0, z: 0}
+  useModelBoundsForLayout: 1
+  configureBasicTunnelExitParts: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -6677,3 +6803,4 @@ SceneRoots:
   - {fileID: 1977063035}
   - {fileID: 138528204}
   - {fileID: 8000000000000000001}
+  - {fileID: 379417648}
