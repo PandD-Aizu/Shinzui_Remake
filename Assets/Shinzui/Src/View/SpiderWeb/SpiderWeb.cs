@@ -38,6 +38,31 @@ namespace Shinzui.View
             public float Shade;
         }
 
+        // Rendering samples interpolate existing simulation nodes only. They never add
+        // masses, constraints, collision sections or random draws to the simulation.
+        private struct RenderPoint
+        {
+            public int A;
+            public int B;
+            public int C;
+            public int D;
+            public float Around;
+            public float Along;
+        }
+
+        private struct RenderStrand
+        {
+            public int A;
+            public int B;
+            public int Segments;
+            public int FirstVertex;
+            public float Thickness;
+            public float Shade;
+            public float Sag;
+            public float Depth;
+            public float EndFraction;
+        }
+
         [Header("Shape")]
         [SerializeField, Min(0.5f)] private float width = 5.5f;
         [SerializeField, Min(0.5f)] private float height = 4.0f;
@@ -66,10 +91,19 @@ namespace Shinzui.View
         [SerializeField] private bool followSurfaceTransform = false;
 
         [Header("Thread Rendering")]
-        [SerializeField, Min(0.0005f)] private float threadWidth = 0.012f;
+        [SerializeField, Min(0.0005f)] private float threadWidth = 0.0015f;
         [SerializeField, Range(0.0f, 1.0f)] private float threadWidthVariation = 0.38f;
         [SerializeField] private Material webMaterial;
         [SerializeField] private Color webColor = new(0.82f, 0.88f, 0.9f, 0.78f);
+        [Tooltip("横糸の太さ。支え糸を1とした比率")]
+        [SerializeField, Range(0.35f, 0.8f)] private float captureThreadWidthRatio = 0.55f;
+        [Tooltip("横糸の長さに対する描画上のたわみ。物理へは影響しない")]
+        [SerializeField, Range(0.0f, 0.06f)] private float captureThreadSag = 0.025f;
+        [SerializeField, Range(3, 4)] private int captureCurveSegments = 4;
+        [Tooltip("細い糸の最小描画幅。拡張した幅は透明度で面積補正する")]
+        [SerializeField, Range(0.0f, 2.0f)] private float minimumThreadPixels = 1.5f;
+        [Tooltip("横糸の接点を放射糸に沿ってずらす量（リング間隔比）")]
+        [SerializeField, Range(0.0f, 0.35f)] private float ringPhaseVariation = 0.18f;
 
         [Header("Simulation")]
         [SerializeField, Range(1, 16)] private int constraintIterations = 7;
@@ -105,12 +139,18 @@ namespace Shinzui.View
         private Material _runtimeMaterial;
         private Vector3[] _vertices = Array.Empty<Vector3>();
         private Vector3[] _normals = Array.Empty<Vector3>();
+        private Vector4[] _tangents = Array.Empty<Vector4>();
         private Vector2[] _uvs = Array.Empty<Vector2>();
         private Color[] _colors = Array.Empty<Color>();
         private int[] _triangles = Array.Empty<int>();
+        private RenderPoint[] _renderPoints = Array.Empty<RenderPoint>();
+        private Vector3[] _renderPositions = Array.Empty<Vector3>();
+        private RenderStrand[] _renderStrands = Array.Empty<RenderStrand>();
+        private int _renderRadialCount;
         private readonly Dictionary<PlayerView, int> _playerContactCounts = new();
         private readonly List<MeshCollider> _manualTriggers = new();
         private readonly List<Mesh> _manualTriggerMeshes = new();
+        private readonly Plane[] _cameraFrustumPlanes = new Plane[6];
         private int _sourceId;
         private bool _generated;
         private bool _isRegenerating;
@@ -124,6 +164,8 @@ namespace Shinzui.View
         public float Height => height;
         public int NodeCount => _nodes.Length;
         public int ThreadCount => _constraints.Length;
+        public int RenderRadialCount => _renderRadialCount;
+        public int RenderStrandCount => _renderStrands.Length;
         public Collider AttachmentSurface => attachmentSurface;
         public float SurfaceOffset => surfaceOffset;
         public IReadOnlyList<Transform> ManualAnchors => manualAnchors;
@@ -151,7 +193,9 @@ namespace Shinzui.View
             CacheComponents();
             ConfigureTrigger();
             EnsureMaterial();
-            if (!_generated || _nodes.Length == 0)
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            if (!_generated || _nodes.Length == 0 || _mesh == null)
             {
                 Regenerate();
             }
@@ -159,6 +203,7 @@ namespace Shinzui.View
 
         private void OnDisable()
         {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
             ReleaseAllPlayers();
             DestroyRuntimeResources();
         }
@@ -173,6 +218,11 @@ namespace Shinzui.View
             maxDeflection = Mathf.Max(0.1f, maxDeflection);
             surfaceProbeDistance = Mathf.Max(0.05f, surfaceProbeDistance);
             surfaceOffset = Mathf.Max(0.0f, surfaceOffset);
+            captureThreadWidthRatio = Mathf.Clamp(captureThreadWidthRatio, 0.35f, 0.8f);
+            captureThreadSag = Mathf.Clamp(captureThreadSag, 0.0f, 0.06f);
+            captureCurveSegments = Mathf.Clamp(captureCurveSegments, 3, 4);
+            minimumThreadPixels = Mathf.Clamp(minimumThreadPixels, 0.0f, 2.0f);
+            ringPhaseVariation = Mathf.Clamp(ringPhaseVariation, 0.0f, 0.35f);
 
             bool previousAllowTriggerComponentChanges =
                 _allowTriggerComponentChanges;
@@ -226,7 +276,9 @@ namespace Shinzui.View
                 }
             }
 
-            if (_generated && _mesh != null)
+            // SRP updates immediately before each camera culls/renders the web. Avoid
+            // uploading every vertex again in LateUpdate for the same camera.
+            if (_generated && _mesh != null && GraphicsSettings.currentRenderPipeline == null)
             {
                 UpdateMeshGeometry();
             }
@@ -450,6 +502,7 @@ namespace Shinzui.View
                     ConformNodesToSurface();
                     RecalculateConstraintLengths();
                 }
+                BuildRenderTopology(generatedRadialCount);
                 BuildMesh();
                 _generated = true;
                 _manualAnchorPoseHash = ComputeManualAnchorPoseHash();
@@ -955,6 +1008,124 @@ namespace Shinzui.View
             _meshRenderer.receiveShadows = true;
         }
 
+        private void BuildRenderTopology(int physicalRadialCount)
+        {
+            var random = new System.Random(unchecked(seed ^ 0x5f3759df));
+            _renderRadialCount = Mathf.Max(radialCount, physicalRadialCount);
+            int pointsPerRadial = ringCount + 1;
+            _renderPoints = new RenderPoint[_renderRadialCount * pointsPerRadial];
+            _renderPositions = new Vector3[_renderPoints.Length];
+            var strands = new List<RenderStrand>(_renderRadialCount * ringCount * 2);
+            float phase = NextRange(random, 0.0f, Mathf.PI * 2.0f);
+            int visualRadial = 0;
+
+            // Every real anchor keeps a spoke. Intermediate spokes end on the straight
+            // perimeter support between neighbouring anchors, including uneven counts.
+            for (int physical = 0; physical < physicalRadialCount; physical++)
+            {
+                int nextPhysical = (physical + 1) % physicalRadialCount;
+                int subdivisions = _renderRadialCount / physicalRadialCount +
+                    (physical < _renderRadialCount % physicalRadialCount ? 1 : 0);
+                for (int subdivision = 0; subdivision < subdivisions; subdivision++)
+                {
+                    float around = subdivision / (float)subdivisions;
+                    float angle = visualRadial * Mathf.PI * 2.0f / _renderRadialCount;
+                    float spokeWidth = NextRange(random, 0.91f, 1.09f);
+                    float spokeShade = NextRange(random, 0.78f, 1.0f);
+                    for (int ring = 0; ring <= ringCount; ring++)
+                    {
+                        // Phase changes are coherent around the web. Capture endpoints
+                        // are shared with the spokes rather than floating beside them.
+                        float offset = subdivision > 0 && ring > 0 && ring < ringCount
+                            ? ringPhaseVariation *
+                              (Mathf.Sin(angle * 2.0f + ring * 0.67f + phase) * 0.65f +
+                               Mathf.Sin(angle * 5.0f - ring * 0.31f + phase) * 0.35f)
+                            : 0.0f;
+                        float ringPosition = Mathf.Clamp(ring + offset, 0.0f, ringCount);
+                        int lower = Mathf.Min(Mathf.FloorToInt(ringPosition), ringCount - 1);
+                        int upper = lower + 1;
+                        int point = visualRadial * pointsPerRadial + ring;
+                        _renderPoints[point] = new RenderPoint
+                        {
+                            A = lower == 0 ? 0 : GetNodeIndex(physical, lower),
+                            B = lower == 0 ? 0 : GetNodeIndex(nextPhysical, lower),
+                            C = GetNodeIndex(physical, upper),
+                            D = GetNodeIndex(nextPhysical, upper),
+                            Around = around,
+                            Along = ringPosition - lower
+                        };
+                        if (ring > 0)
+                        {
+                            strands.Add(new RenderStrand
+                            {
+                                A = point - 1,
+                                B = point,
+                                Segments = 1,
+                                Thickness = spokeWidth,
+                                Shade = spokeShade,
+                                EndFraction = 1.0f
+                            });
+                        }
+                    }
+                    visualRadial++;
+                }
+            }
+
+            float tearAngleA = NextRange(random, 0.0f, 1.0f);
+            float tearAngleB = Mathf.Repeat(tearAngleA + NextRange(random, 0.28f, 0.62f), 1.0f);
+            float tearRingA = NextRange(random, 0.42f, 0.78f);
+            float tearRingB = NextRange(random, 0.65f, 0.88f);
+            for (int radial = 0; radial < _renderRadialCount; radial++)
+            {
+                int next = (radial + 1) % _renderRadialCount;
+                for (int ring = 1; ring <= ringCount; ring++)
+                {
+                    bool support = ring == ringCount;
+                    float angle01 = (radial + 0.5f) / _renderRadialCount;
+                    float ring01 = ring / (float)ringCount;
+                    float damage = Mathf.Max(
+                        GetTearInfluence(angle01, ring01, tearAngleA, tearRingA, 0.085f, 0.24f),
+                        GetTearInfluence(angle01, ring01, tearAngleB, tearRingB, 0.065f, 0.2f));
+                    float omission = missingThreadChance * (0.04f + damage * 8.0f);
+                    if (ring01 > 0.7f)
+                    {
+                        omission += outerThreadBreakChance * damage * 0.7f;
+                    }
+                    // The perimeter supports all interpolated spokes. Damage is applied
+                    // only after this support graph is fixed, so it cannot orphan them.
+                    bool torn = !support && random.NextDouble() < Mathf.Clamp01(omission);
+                    if (torn && random.NextDouble() > 0.28)
+                    {
+                        continue;
+                    }
+                    float variation = 1.0f + NextSigned(random) *
+                        Mathf.Min(threadWidthVariation, 0.22f);
+                    strands.Add(new RenderStrand
+                    {
+                        A = radial * pointsPerRadial + ring,
+                        B = next * pointsPerRadial + ring,
+                        Segments = support ? 1 : Mathf.Clamp(captureCurveSegments, 3, 4),
+                        Thickness = support ? 1.22f : captureThreadWidthRatio * variation,
+                        Shade = support ? 0.93f : NextRange(random, 0.72f, 1.0f),
+                        Sag = support ? 0.0f : captureThreadSag * NextRange(random, 0.65f, 1.25f),
+                        Depth = NextSigned(random) * 0.2f,
+                        EndFraction = torn ? NextRange(random, 0.16f, 0.32f) : 1.0f
+                    });
+                }
+            }
+            _renderStrands = strands.ToArray();
+        }
+
+        private static float GetTearInfluence(
+            float angle, float ring, float tearAngle, float tearRing,
+            float angularRadius, float radialRadius)
+        {
+            float distance = Mathf.Abs(angle - tearAngle);
+            distance = Mathf.Min(distance, 1.0f - distance) / angularRadius;
+            float radialDistance = (ring - tearRing) / radialRadius;
+            return Mathf.Clamp01(1.0f - distance * distance - radialDistance * radialDistance);
+        }
+
         private void BuildMesh()
         {
             if (_mesh == null)
@@ -971,114 +1142,243 @@ namespace Shinzui.View
                 _mesh.Clear();
             }
 
-            int strandCount = _constraints.Length;
-            _vertices = new Vector3[strandCount * 4];
-            _normals = new Vector3[strandCount * 4];
-            _uvs = new Vector2[strandCount * 4];
-            _colors = new Color[strandCount * 4];
-            _triangles = new int[strandCount * 6];
-
-            for (int i = 0; i < strandCount; i++)
+            int vertexCount = 0;
+            int indexCount = 0;
+            for (int i = 0; i < _renderStrands.Length; i++)
             {
-                int vertex = i * 4;
-                int triangle = i * 6;
-                WebConstraint constraint = _constraints[i];
-
-                _uvs[vertex] = new Vector2(0.0f, 0.0f);
-                _uvs[vertex + 1] = new Vector2(1.0f, 0.0f);
-                _uvs[vertex + 2] = new Vector2(0.0f, constraint.RestLength);
-                _uvs[vertex + 3] = new Vector2(1.0f, constraint.RestLength);
-
-                float shadeValue = Mathf.Lerp(0.68f, 1.0f, constraint.Shade);
-                Color shade = new(shadeValue, shadeValue, shadeValue, 1.0f);
-                _colors[vertex] = shade;
-                _colors[vertex + 1] = shade;
-                _colors[vertex + 2] = shade;
-                _colors[vertex + 3] = shade;
-
-                _triangles[triangle] = vertex;
-                _triangles[triangle + 1] = vertex + 2;
-                _triangles[triangle + 2] = vertex + 1;
-                _triangles[triangle + 3] = vertex + 1;
-                _triangles[triangle + 4] = vertex + 2;
-                _triangles[triangle + 5] = vertex + 3;
+                RenderStrand strand = _renderStrands[i];
+                strand.FirstVertex = vertexCount;
+                _renderStrands[i] = strand;
+                vertexCount += (strand.Segments + 1) * 2;
+                indexCount += strand.Segments * 6;
+            }
+            _vertices = new Vector3[vertexCount];
+            _normals = new Vector3[vertexCount];
+            _tangents = new Vector4[vertexCount];
+            _uvs = new Vector2[vertexCount];
+            _colors = new Color[vertexCount];
+            _triangles = new int[indexCount];
+            int triangle = 0;
+            foreach (RenderStrand strand in _renderStrands)
+            {
+                for (int segment = 0; segment < strand.Segments; segment++)
+                {
+                    int vertex = strand.FirstVertex + segment * 2;
+                    _triangles[triangle++] = vertex;
+                    _triangles[triangle++] = vertex + 2;
+                    _triangles[triangle++] = vertex + 1;
+                    _triangles[triangle++] = vertex + 1;
+                    _triangles[triangle++] = vertex + 2;
+                    _triangles[triangle++] = vertex + 3;
+                }
             }
 
-            _mesh.indexFormat = _vertices.Length > ushort.MaxValue
+            _mesh.indexFormat = vertexCount > ushort.MaxValue
                 ? IndexFormat.UInt32
                 : IndexFormat.UInt16;
             _mesh.vertices = _vertices;
-            _mesh.normals = _normals;
-            _mesh.uv = _uvs;
-            _mesh.colors = _colors;
             _mesh.triangles = _triangles;
-            _mesh.bounds = new Bounds(
-                Vector3.zero,
-                new Vector3(width + 1.0f, height + 1.0f, maxDeflection * 2.0f + 1.0f));
             _meshFilter.sharedMesh = _mesh;
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            if (isActiveAndEnabled && _generated && _mesh != null &&
+                _meshRenderer != null && _meshRenderer.enabled &&
+                (camera.cullingMask & (1 << gameObject.layer)) != 0 &&
+                MayBeVisibleToCamera(camera))
+            {
+                UpdateMeshForCamera(camera);
+            }
+        }
+
+        private bool MayBeVisibleToCamera(Camera camera)
+        {
+            // A mono frustum is not the union of the two stereo views.
+            if (camera.stereoEnabled || _nodes.Length == 0)
+            {
+                return true;
+            }
+
+            Bounds bounds = _meshRenderer.bounds;
+            var nodeBounds = new Bounds(_nodes[0].Position, Vector3.zero);
+            for (int i = 1; i < _nodes.Length; i++)
+            {
+                nodeBounds.Encapsulate(_nodes[i].Position);
+            }
+
+            // The last rendered bounds may be stale while contact or offscreen
+            // simulation moves the nodes. Include their current convex envelope,
+            // then allow for deflection, curved/broken strands and ribbon width.
+            // 3 covers the largest sag multiplier: 1.25 * (1.8 + 0.2).
+            float margin = maxDeflection + nodeBounds.size.magnitude *
+                captureThreadSag * 3.0f + threadWidth * 1.5f;
+            nodeBounds.Expand(margin * 2.0f);
+            Matrix4x4 localToWorld = transform.localToWorldMatrix;
+            Vector3 extents = nodeBounds.extents;
+            Vector3 worldExtents = new(
+                Mathf.Abs(localToWorld.m00) * extents.x + Mathf.Abs(localToWorld.m01) * extents.y + Mathf.Abs(localToWorld.m02) * extents.z,
+                Mathf.Abs(localToWorld.m10) * extents.x + Mathf.Abs(localToWorld.m11) * extents.y + Mathf.Abs(localToWorld.m12) * extents.z,
+                Mathf.Abs(localToWorld.m20) * extents.x + Mathf.Abs(localToWorld.m21) * extents.y + Mathf.Abs(localToWorld.m22) * extents.z);
+            bounds.Encapsulate(new Bounds(localToWorld.MultiplyPoint3x4(nodeBounds.center), worldExtents * 2.0f));
+
+            // A different camera can widen subpixel ribbons beyond the previous
+            // camera's mesh. Reserve that footprint before deciding to skip it.
+            float distance = Vector3.Distance(camera.transform.position, bounds.center) + bounds.extents.magnitude;
+            float projectedHalfHeight = camera.orthographic
+                ? camera.orthographicSize
+                : Mathf.Max(camera.nearClipPlane, distance) * Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f);
+            float pixelMargin = projectedHalfHeight * minimumThreadPixels / Mathf.Max(1, camera.pixelHeight);
+            bounds.Expand(pixelMargin * 2.0f);
+            GeometryUtility.CalculateFrustumPlanes(camera, _cameraFrustumPlanes);
+            return GeometryUtility.TestPlanesAABB(_cameraFrustumPlanes, bounds);
+        }
+
+        private void OnWillRenderObject()
+        {
+            // The SRP callback runs before culling; this keeps the built-in renderer usable.
+            if (GraphicsSettings.currentRenderPipeline == null && Camera.current != null)
+            {
+                UpdateMeshForCamera(Camera.current);
+            }
         }
 
         private void UpdateMeshGeometry()
         {
-            if (_constraints.Length == 0 || _mesh == null)
+            UpdateMeshForCamera(Camera.main);
+        }
+
+        private void UpdateMeshForCamera(Camera camera)
+        {
+            if (_renderStrands.Length == 0 || _mesh == null)
             {
                 return;
             }
 
-            Camera camera = Camera.main;
-            Vector3 viewDirection = camera != null
-                ? transform.InverseTransformDirection(
-                    (transform.position - camera.transform.position).normalized)
-                : Vector3.forward;
-
-            if (viewDirection.sqrMagnitude < 0.01f)
+            for (int i = 0; i < _renderPoints.Length; i++)
             {
-                viewDirection = Vector3.forward;
+                RenderPoint point = _renderPoints[i];
+                _renderPositions[i] = Vector3.LerpUnclamped(
+                    Vector3.LerpUnclamped(_nodes[point.A].Position, _nodes[point.B].Position, point.Around),
+                    Vector3.LerpUnclamped(_nodes[point.C].Position, _nodes[point.D].Position, point.Around),
+                    point.Along);
             }
 
-            Vector3 localNormal = -viewDirection.normalized;
-            for (int i = 0; i < _constraints.Length; i++)
+            Matrix4x4 localToWorld = transform.localToWorldMatrix;
+            Matrix4x4 worldToLocal = transform.worldToLocalMatrix;
+            Matrix4x4 normalToLocal = localToWorld.transpose;
+            Vector3 cameraPosition = camera != null ? camera.transform.position : Vector3.zero;
+            Vector3 cameraForward = camera != null ? camera.transform.forward : transform.forward;
+            bool perspective = camera != null && !camera.orthographic;
+            float pixelScale = camera == null ? 0.0f : 2.0f / Mathf.Max(1, camera.pixelHeight) *
+                (perspective ? Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * 0.5f) : camera.orthographicSize);
+            Vector3 localGravity = worldToLocal.MultiplyVector(Physics.gravity);
+            // Wall-bound webs stay on their attachment plane. No added normal motion
+            // pushes the decorative curve through the wall.
+            if (conformThreadsToSurface && attachmentSurface != null)
             {
-                WebConstraint constraint = _constraints[i];
-                Vector3 a = _nodes[constraint.A].Position;
-                Vector3 b = _nodes[constraint.B].Position;
-                Vector3 tangent = b - a;
-                if (tangent.sqrMagnitude < 0.000001f)
-                {
-                    tangent = Vector3.up;
-                }
-                tangent.Normalize();
+                localGravity.z = 0.0f;
+            }
+            if (localGravity.sqrMagnitude < 0.000001f)
+            {
+                localGravity = Vector3.down;
+            }
+            localGravity.Normalize();
+            Vector3 minimum = new(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            Vector3 maximum = new(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
 
-                Vector3 side = Vector3.Cross(tangent, viewDirection).normalized;
-                if (side.sqrMagnitude < 0.01f)
+            foreach (RenderStrand strand in _renderStrands)
+            {
+                Vector3 a = _renderPositions[strand.A];
+                Vector3 b = _renderPositions[strand.B];
+                Vector3 delta = b - a;
+                float length = delta.magnitude;
+                bool broken = strand.EndFraction < 1.0f;
+                Vector3 sag = localGravity * (length * strand.Sag * (broken ? 1.8f : 1.0f));
+                if (!(conformThreadsToSurface && attachmentSurface != null))
                 {
-                    side = Vector3.Cross(tangent, Vector3.forward).normalized;
+                    sag.z += length * strand.Sag * strand.Depth;
                 }
-                if (side.sqrMagnitude < 0.01f)
+                float accumulatedLength = 0.0f;
+                Vector3 previous = a;
+                for (int sample = 0; sample <= strand.Segments; sample++)
                 {
-                    side = Vector3.right;
+                    float along = sample / (float)strand.Segments;
+                    float t = along * strand.EndFraction;
+                    Vector3 position = a + delta * t + sag * (4.0f * t * (1.0f - t));
+                    Vector3 tangent = delta + sag * (4.0f - 8.0f * t);
+                    if (tangent.sqrMagnitude < 0.00000001f)
+                    {
+                        tangent = Vector3.up;
+                    }
+                    tangent.Normalize();
+                    accumulatedLength += Vector3.Distance(previous, position);
+                    previous = position;
+                    Vector3 worldPosition = localToWorld.MultiplyPoint3x4(position);
+                    Vector3 worldTangent = localToWorld.MultiplyVector(tangent).normalized;
+                    Vector3 viewDirection = perspective
+                        ? (worldPosition - cameraPosition).normalized
+                        : cameraForward;
+                    if (viewDirection.sqrMagnitude < 0.0001f)
+                    {
+                        viewDirection = cameraForward;
+                    }
+                    Vector3 side = Vector3.Cross(worldTangent, viewDirection);
+                    if (side.sqrMagnitude < 0.000001f)
+                    {
+                        side = Vector3.Cross(worldTangent, Vector3.up);
+                    }
+                    if (side.sqrMagnitude < 0.000001f)
+                    {
+                        side = Vector3.Cross(worldTangent, Vector3.right);
+                    }
+                    side.Normalize();
+                    Vector3 localSide = worldToLocal.MultiplyVector(side);
+                    float thickness = threadWidth * strand.Thickness;
+                    if (strand.Segments > 1)
+                    {
+                        thickness *= 1.0f + 0.07f * Mathf.Sin(t * Mathf.PI);
+                    }
+                    if (broken)
+                    {
+                        thickness *= Mathf.Lerp(1.0f, 0.12f, along * along);
+                    }
+                    float physicalWorldWidth = thickness / Mathf.Max(0.00001f, localSide.magnitude);
+                    float depth = perspective
+                        ? Mathf.Max(camera.nearClipPlane, Vector3.Dot(worldPosition - cameraPosition, cameraForward))
+                        : 1.0f;
+                    float drawnWorldWidth = Mathf.Max(physicalWorldWidth,
+                        pixelScale * depth * minimumThreadPixels);
+                    float coverage = physicalWorldWidth / Mathf.Max(0.000001f, drawnWorldWidth);
+                    Vector3 offset = localSide * (drawnWorldWidth * 0.5f);
+                    int vertex = strand.FirstVertex + sample * 2;
+                    Vector3 left = position - offset;
+                    Vector3 right = position + offset;
+                    _vertices[vertex] = left;
+                    _vertices[vertex + 1] = right;
+                    minimum = Vector3.Min(minimum, Vector3.Min(left, right));
+                    maximum = Vector3.Max(maximum, Vector3.Max(left, right));
+                    Vector3 normal = normalToLocal.MultiplyVector(-viewDirection).normalized;
+                    _normals[vertex] = _normals[vertex + 1] = normal;
+                    Vector4 meshTangent = new(tangent.x, tangent.y, tangent.z, 1.0f);
+                    _tangents[vertex] = _tangents[vertex + 1] = meshTangent;
+                    _uvs[vertex] = new Vector2(0.0f, accumulatedLength);
+                    _uvs[vertex + 1] = new Vector2(1.0f, accumulatedLength);
+                    Color color = new(strand.Shade, strand.Shade, strand.Shade, coverage);
+                    _colors[vertex] = _colors[vertex + 1] = color;
                 }
-
-                float halfWidth = threadWidth * constraint.ThicknessScale * 0.5f;
-                Vector3 offset = side * halfWidth;
-                int vertex = i * 4;
-                _vertices[vertex] = a - offset;
-                _vertices[vertex + 1] = a + offset;
-                _vertices[vertex + 2] = b - offset;
-                _vertices[vertex + 3] = b + offset;
-                _normals[vertex] = localNormal;
-                _normals[vertex + 1] = localNormal;
-                _normals[vertex + 2] = localNormal;
-                _normals[vertex + 3] = localNormal;
             }
 
+            // Upload reused arrays: no Mesh getters or managed temporary arrays per frame.
             _mesh.vertices = _vertices;
             _mesh.normals = _normals;
-            _mesh.bounds = new Bounds(
-                Vector3.zero,
-                new Vector3(width + 1.0f, height + 1.0f, maxDeflection * 2.0f + 1.0f));
+            _mesh.tangents = _tangents;
+            _mesh.uv = _uvs;
+            _mesh.colors = _colors;
+            var bounds = new Bounds((minimum + maximum) * 0.5f, maximum - minimum);
+            bounds.Expand(0.002f);
+            _mesh.bounds = bounds;
         }
-
         private void Integrate(float deltaTime)
         {
             Vector3 localGravity = transform.InverseTransformDirection(Physics.gravity);

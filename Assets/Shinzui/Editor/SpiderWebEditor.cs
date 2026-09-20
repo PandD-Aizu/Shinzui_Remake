@@ -108,7 +108,8 @@ namespace Shinzui.Editor
             }
 
             EditorGUILayout.HelpBox(
-                $"Nodes: {current.NodeCount} / Threads: {current.ThreadCount}\n" +
+                $"Physics nodes: {current.NodeCount} / Constraints: {current.ThreadCount}\n" +
+                $"Rendered spokes: {current.RenderRadialCount} / Strands: {current.RenderStrandCount}\n" +
                 $"Manual anchors: {current.ManualAnchors.Count} " +
                 $"({(current.UsesManualAnchors ? "active" : "need 3")})\n" +
                 $"Interaction colliders: {current.InteractionColliderCount}\n" +
