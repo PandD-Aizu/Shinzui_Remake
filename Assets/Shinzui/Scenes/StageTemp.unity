@@ -4900,10 +4900,15 @@ MonoBehaviour:
   conformThreadsToSurface: 1
   conformOnRegenerate: 1
   followSurfaceTransform: 0
-  threadWidth: 0.012
+  threadWidth: 0.0015
   threadWidthVariation: 0.38
   webMaterial: {fileID: 0}
   webColor: {r: 0.82, g: 0.88, b: 0.9, a: 0.78}
+  captureThreadWidthRatio: 0.55
+  captureThreadSag: 0.025
+  captureCurveSegments: 4
+  minimumThreadPixels: 1.5
+  ringPhaseVariation: 0.18
   constraintIterations: 7
   stiffness: 0.88
   damping: 0.972

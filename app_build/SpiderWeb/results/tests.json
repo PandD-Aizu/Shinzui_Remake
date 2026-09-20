@@ -1,0 +1,55 @@
+{
+  "status": "completed",
+  "duration": 5.81,
+  "summary": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "results": [
+    {
+      "FullName": "Shinzui.Tests.SpiderWebRenderingTests.RuntimeContactReleaseAndBurn_PreserveAnchorsAndCleanUpRendering",
+      "Status": "Passed",
+      "Duration": 11.675108,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderWebRenderingTests.SubpixelWidth_ConservesCoverageAndReusesBuffersForEachCamera",
+      "Status": "Passed",
+      "Duration": 0.0171024,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderWebTests.BurnVfx_Play_CreatesOnlyConfiguredParticleSystems",
+      "Status": "Passed",
+      "Duration": 0.0020015,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderWebTests.ManualAnchors_CreateOneInteractionColliderPerWebSection",
+      "Status": "Passed",
+      "Duration": 0.008434,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.InteractionUseCaseTests.SpiderWeb_WithEquippedMatch_ConsumesMatchAndSucceeds",
+      "Status": "Passed",
+      "Duration": 0.0266326,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.InteractionUseCaseTests.SpiderWeb_WithoutEquippedMatch_DoesNotBurn",
+      "Status": "Passed",
+      "Duration": 0.0009587,
+      "Message": null,
+      "StackTrace": null
+    }
+  ]
+}

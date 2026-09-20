@@ -584,6 +584,8 @@ GameObject:
   - component: {fileID: 138528202}
   - component: {fileID: 138528201}
   - component: {fileID: 138528200}
+  - component: {fileID: 138528206}
+  - component: {fileID: 138528205}
   m_Layer: 0
   m_Name: Spider Web
   m_TagString: Untagged
@@ -636,6 +638,11 @@ MonoBehaviour:
   threadWidthVariation: 0.38
   webMaterial: {fileID: 0}
   webColor: {r: 0.82, g: 0.88, b: 0.9, a: 0.78}
+  captureThreadWidthRatio: 0.55
+  captureThreadSag: 0.025
+  captureCurveSegments: 4
+  minimumThreadPixels: 1.5
+  ringPhaseVariation: 0.18
   constraintIterations: 7
   stiffness: 0.88
   damping: 0.972
@@ -651,6 +658,7 @@ MonoBehaviour:
   maxPullSpeed: 2.2
   deformationResponse: 12
   releaseImpulse: 0.28
+  burnFadeDuration: 1.35
   drawGizmos: 1
 --- !u!65 &138528201
 BoxCollider:
@@ -753,6 +761,36 @@ Transform:
   - {fileID: 1391081333}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &138528205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138528199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76b0ede3473dc5c46aa0404113afa3b9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.SpiderWebBurnVfx
+  duration: 2.4
+--- !u!114 &138528206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138528199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad924b4d32b9189419f31d69aba26cf5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.SpiderWebInteractable
+  displayName: "[E] \u8ABF\u3079\u308B"
+  interactableId: InteractionTest
+  isOneTime: 0
+  destroyOnInteract: 0
+  interactMessage: There is a creepy figurine here. It seems covered in dust.
 --- !u!1 &148840331
 GameObject:
   m_ObjectHideFlags: 0
