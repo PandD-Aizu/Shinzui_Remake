@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.5752714">
+  <test-suite type="TestSuite" id="1013" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.575271" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1006" name="Shinzui.TunnelGeneration.Tests.dll" fullname="D:/Pandd/ShinShinzui/Library/ScriptAssemblies/Shinzui.TunnelGeneration.Tests.dll" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.567698" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="30940" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1007" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.566830" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1008" name="Tests" fullname="Shinzui.Tests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.566402" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1009" name="TunnelGeneration" fullname="Shinzui.Tests.TunnelGeneration" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.566043" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1001" name="StageTunnelGenerationTests" fullname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests" classname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:22Z" duration="1.564878" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1005" name="AdditiveStagesOwnTheirMapsAndReloadWithFreshContainers" fullname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.AdditiveStagesOwnTheirMapsAndReloadWithFreshContainers" methodname="AdditiveStagesOwnTheirMapsAndReloadWithFreshContainers" classname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests" runstate="Runnable" seed="529913207" result="Passed" start-time="2026-09-20 19:08:20Z" end-time="2026-09-20 19:08:21Z" duration="0.913609" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Stage A' (seed: 2777).
+[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Stage B' (seed: 2777).
+[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Stage A' (seed: 2777).
+]]></output>
+              </test-case>
+              <test-case id="1003" name="ExplicitNextFloorReplacesGeometryAndKeepsStartupIdempotent" fullname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.ExplicitNextFloorReplacesGeometryAndKeepsStartupIdempotent" methodname="ExplicitNextFloorReplacesGeometryAndKeepsStartupIdempotent" classname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests" runstate="Runnable" seed="168262204" result="Passed" start-time="2026-09-20 19:08:21Z" end-time="2026-09-20 19:08:21Z" duration="0.117003" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Next Floor Stage' (seed: 2777).
+[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Next Floor Stage' (seed: 9182).
+]]></output>
+              </test-case>
+              <test-case id="1002" name="StageStartsOnceAndPreservesGameplayCamera" fullname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.StageStartsOnceAndPreservesGameplayCamera" methodname="StageStartsOnceAndPreservesGameplayCamera" classname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests" runstate="Runnable" seed="165055385" result="Passed" start-time="2026-09-20 19:08:21Z" end-time="2026-09-20 19:08:21Z" duration="0.068203" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Stage' (seed: 2777).
+]]></output>
+              </test-case>
+              <test-case id="1004" name="WarpInputIsBoundOnceAndUnboundWithTheContainer" fullname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.WarpInputIsBoundOnceAndUnboundWithTheContainer" methodname="WarpInputIsBoundOnceAndUnboundWithTheContainer" classname="Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests" runstate="Runnable" seed="1145252291" result="Passed" start-time="2026-09-20 19:08:21Z" end-time="2026-09-20 19:08:22Z" duration="0.453879" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'Warp Stage' (seed: 2777).
+<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/koton/AppData/LocalLow/PandD_org/Shinzui\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

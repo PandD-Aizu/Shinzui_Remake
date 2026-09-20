@@ -258,6 +258,13 @@ namespace Shinzui.Domain.DomainServices.Tunnel
 
                 TunnelVector3 childPosition = parentPort + outward * connectionLength - childPortOffset;
                 TunnelVector3 childPort = GetPortPosition(childPosition, childEntrance, config);
+                if (isSmallRoom && !IsPositiveDirectionFromStart(parentOpen.Tunnel.Position, childPosition))
+                {
+                    isSmallRoom = false;
+                    connectionLength = config.CorridorLength;
+                    childPosition = parentPort + outward * connectionLength - childPortOffset;
+                    childPort = GetPortPosition(childPosition, childEntrance, config);
+                }
 
                 if (!CanPlaceTunnelAndConnection(parentOpen.Tunnel.Id, childPosition, parentPort, childPort, isSmallRoom, config, occupiedAreas))
                 {
@@ -272,6 +279,10 @@ namespace Shinzui.Domain.DomainServices.Tunnel
 
                 normalCorridors.Add(new InternalNormalCorridor(parentPort, childPort, center, direction, delta.Magnitude, index));
                 occupiedAreas.AddRange(BuildConnectionAreas(parentPort, childPort, isSmallRoom, config));
+                if (!isSmallRoom)
+                {
+                    smallRoomConnectionIndices.Remove(index);
+                }
 
                 parentOpen.Tunnel.ConnectionCount++;
                 child.ConnectionCount++;
@@ -286,6 +297,17 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             }
 
             return false;
+        }
+
+        private static bool IsPositiveDirectionFromStart(TunnelVector3 parentPosition, TunnelVector3 childPosition)
+        {
+            const float epsilon = 0.0001f;
+            return HorizontalDistanceSqr(childPosition) > HorizontalDistanceSqr(parentPosition) + epsilon;
+        }
+
+        private static float HorizontalDistanceSqr(TunnelVector3 position)
+        {
+            return position.X * position.X + position.Z * position.Z;
         }
 
         private static void SelectSmallRoomConnections(
@@ -764,10 +786,14 @@ namespace Shinzui.Domain.DomainServices.Tunnel
 
         private static TunnelVector3 GetPortOffset(TunnelEntrance entrance, TunnelGenerationConfig config)
         {
+            float longitudinalOffset = entrance.NormalizedPosition.Y == 0.0f
+                ? 0.0f
+                : Math.Sign(entrance.NormalizedPosition.Y) * config.ConnectionPointSpacing;
+
             return new TunnelVector3(
                 entrance.NormalizedPosition.X * config.TunnelWidth,
                 0.0f,
-                entrance.NormalizedPosition.Y * config.TunnelLength);
+                longitudinalOffset);
         }
 
         private static TunnelVector3 ToWorldDirection(TunnelVector2 direction)

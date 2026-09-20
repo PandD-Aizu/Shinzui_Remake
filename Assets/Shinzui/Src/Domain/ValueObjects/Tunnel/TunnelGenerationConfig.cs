@@ -17,6 +17,7 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         public float SmallRoomLength { get; init; } = 6.0f;
 
         public float TunnelLength { get; init; } = 153.12695f;
+        public float ConnectionPointSpacing { get; init; } = 51.042316f;
         public float TunnelWidth { get; init; } = 14.800003f;
         public float TunnelHeight { get; init; } = 5.0f;
         public float CorridorLength { get; init; } = 8.0f;
@@ -37,6 +38,7 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             float smallRoomWidth,
             float smallRoomLength,
             float tunnelLength,
+            float connectionPointSpacing,
             float tunnelWidth,
             float tunnelHeight,
             float corridorLength,
@@ -53,6 +55,7 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             SmallRoomWidth = Math.Max(1.0f, smallRoomWidth);
             SmallRoomLength = Math.Max(1.0f, smallRoomLength);
             TunnelLength = Math.Max(4.0f, tunnelLength);
+            ConnectionPointSpacing = Math.Max(0.0f, connectionPointSpacing);
             TunnelWidth = Math.Max(3.0f, tunnelWidth);
             TunnelHeight = Math.Max(2.0f, tunnelHeight);
             CorridorLength = Math.Max(1.0f, corridorLength);

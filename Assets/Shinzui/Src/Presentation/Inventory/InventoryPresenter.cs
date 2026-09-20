@@ -275,11 +275,17 @@ namespace Shinzui.Presentation.Inventory
 
         private Observable<Unit> OnButtonClicked(UnityEngine.UI.Button button)
         {
+            // Older stage scenes do not have a context menu; their inventory still needs to initialize.
+            if (button == null) return Observable.Empty<Unit>();
+
             return Observable.Create<Unit>(observer =>
             {
                 UnityEngine.Events.UnityAction action = () => observer.OnNext(Unit.Default);
                 button.onClick.AddListener(action);
-                return Disposable.Create(() => button.onClick.RemoveListener(action));
+                return Disposable.Create(() =>
+                {
+                    if (button != null) button.onClick.RemoveListener(action);
+                });
             });
         }
 

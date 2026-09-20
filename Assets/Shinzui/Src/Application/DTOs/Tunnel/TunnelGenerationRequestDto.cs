@@ -17,6 +17,7 @@ namespace Shinzui.Application.DTOs.Tunnel
         public float SmallRoomLength { get; init; } = 6.0f;
 
         public float TunnelLength { get; init; } = 153.12695f;
+        public float ConnectionPointSpacing { get; init; } = 51.042316f;
         public float TunnelWidth { get; init; } = 14.800003f;
         public float TunnelHeight { get; init; } = 5.0f;
         public float CorridorLength { get; init; } = 8.0f;
@@ -37,6 +38,7 @@ namespace Shinzui.Application.DTOs.Tunnel
                 SmallRoomWidth,
                 SmallRoomLength,
                 TunnelLength,
+                ConnectionPointSpacing,
                 TunnelWidth,
                 TunnelHeight,
                 CorridorLength,
