@@ -129,8 +129,7 @@ MonoBehaviour:
       Value: 0
       HasValue: 0
     Plugins:
-      Value:
-      - phonon_fmod
+      Value: []
       HasValue: 1
     StaticPlugins:
       Value: []

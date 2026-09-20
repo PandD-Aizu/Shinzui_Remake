@@ -119,10 +119,15 @@ namespace Shinzui.Application.UseCases.Interaction
                     var result = await _specialItemUseCase.AcquireAsync(interactableId);
                     success = result.Succeeded;
                 }
-                else
+                else if (item != null)
                 {
                     // インベントリへアイテムを追加
                     success = await _inventoryUseCase.AddItemAsync(interactableId, 1);
+                }
+                else
+                {
+                    // カタログに存在しないオブジェクト（調べるオブジェクト、ドキュメント等）はインタラクト成功とする
+                    success = true;
                 }
                 
                 if (success)

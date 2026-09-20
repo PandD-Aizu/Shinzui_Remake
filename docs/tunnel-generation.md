@@ -32,3 +32,8 @@ DoorMoveCopy の旧単一メッシュは接続部品を持たないため、本�
 Unity Test Runner の PlayMode で `StageTunnelGenerationTests` を実行する。
 任意名のシーンでの起動、一度限りの生成、カメラ維持、加算シーンの分離、NavMesh 解放、再読み込み、ワープ購読の破棄を検証する。
 レイアウトの既存テストは EditMode の `TunnelLayoutGeneratorTests`。
+
+## 階層遷移
+
+明示的な次階層への遷移は、同じシーンの GenerateTunnelLifetimeScope.Regenerate(seed) を呼ぶ。通常起動の一度限りの生成は維持し、再生成時だけ UseCase の生成キャッシュを更新する。既存の GeometryClearing → NavMesh → GeometryReady の順序を再利用する。
+BotamochiStageTemp も新しい Generator / LifetimeScope へ移行済み。旧固定ステージは無効化し、彼女・敵・会話のシーン参照は維持する。
