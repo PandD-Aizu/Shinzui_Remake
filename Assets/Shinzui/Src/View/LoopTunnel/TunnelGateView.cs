@@ -42,6 +42,7 @@ namespace Shinzui.View
         private RenderTexture _portalRT;
         private RenderTexture[] _recursionRTs;
         private Mesh _portalMesh;
+        private float _lastVisibleTime;
 
         // 露出倍率のキャッシュ
         private static readonly int PortalExposureMultiplierId = Shader.PropertyToID("_PortalExposureMultiplier");
@@ -108,6 +109,9 @@ namespace Shinzui.View
             UpdateMaterialExposure();
         }
 
+        /// <summary>
+        /// 描画用カメラと開口を準備し、テクスチャの確保は可視になるまで遅延する
+        /// </summary>
         private void InitializePortalResources()
         {
             if (targetGate == null) return;
@@ -134,10 +138,12 @@ namespace Shinzui.View
             BuildPortalMaskQuad(_portalMesh);
             BuildPortalQuad(_portalMesh);
             BuildPortalCamera();
-            CreateRenderTexture();
             UpdateMaterialExposure();
         }
 
+        /// <summary>
+        /// 開口の表示設定を更新し、使われていない描画バッファを解放する
+        /// </summary>
         private void Update()
         {
             if (targetGate == null) return;
@@ -150,13 +156,10 @@ namespace Shinzui.View
             _mainCamera = Camera.main;
             if (_mainCamera == null) return;
 
-            // 画面サイズ変更の追従
-            int targetWidth = _mainCamera.pixelWidth;
-            int targetHeight = _mainCamera.pixelHeight;
-
-            if (_portalRT == null || _portalRT.width != targetWidth || _portalRT.height != targetHeight)
+            // 非表示が続くゲートの描画バッファを解放し、視点移動中の再確保は抑える
+            if (_portalRT != null && Time.unscaledTime - _lastVisibleTime > 1.0f)
             {
-                CreateRenderTexture();
+                ReleasePortalTextures();
             }
         }
 
@@ -209,6 +212,11 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>
+        /// 視錐台とステージの遮蔽からポータルの更新要否を判定する
+        /// </summary>
+        /// <param name="mainCam">表示先のメインカメラ</param>
+        /// <returns>ポータルの一部が見える可能性がある場合はtrue</returns>
         private bool IsVisibleFromMainCamera(Camera mainCam)
         {
             if (mainCam == null) return false;
@@ -219,10 +227,10 @@ namespace Shinzui.View
                 gateCenter = transform.TransformPoint(box.center);
             }
 
-            // カメラがゲートの近傍（15m以内）にある場合は、通過中や斜め進入時のちらつき防止のため常に描画更新
+            // 通過直前だけ遮蔽判定を省き、壁越しの広い範囲を常時更新しない
             Vector3 camPos = mainCam.transform.position;
             float distSq = (camPos - gateCenter).sqrMagnitude;
-            if (distSq < 225.0f)
+            if (distSq < 1.0f)
             {
                 return true;
             }
@@ -246,19 +254,58 @@ namespace Shinzui.View
             targetBounds.Expand(3.0f);
 
             GeometryUtility.CalculateFrustumPlanes(mainCam, _frustumPlanesScratch);
-            return GeometryUtility.TestPlanesAABB(_frustumPlanesScratch, targetBounds);
+            if (!GeometryUtility.TestPlanesAABB(_frustumPlanesScratch, targetBounds)) return false;
+
+            // 開口の中央と端を含む格子を調べ、一点でも遮られていなければ更新する
+            if (!(_collider is BoxCollider portalBox)) return true;
+            int wallMask = LayerMask.GetMask("Stage") & mainCam.cullingMask;
+            if (wallMask == 0) return true;
+
+            for (int y = 0; y < 5; y++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    Vector3 localPoint = portalBox.center + new Vector3(
+                        (x / 4f - 0.5f) * portalBox.size.x,
+                        (y / 4f - 0.5f) * portalBox.size.y, 0f);
+                    Vector3 point = transform.TransformPoint(localPoint);
+                    Vector3 direction = point - camPos;
+                    float distance = direction.magnitude;
+
+                    // ニア面をまたぐ開口は保守的に描画して通過時の欠けを防ぐ
+                    if (mainCam.WorldToViewportPoint(point).z <= mainCam.nearClipPlane) return true;
+                    if (!Physics.Raycast(camPos, direction.normalized, distance - 0.05f,
+                            wallMask, QueryTriggerInteraction.Ignore)) return true;
+                }
+            }
+
+            return false;
         }
 
+        /// <summary>
+        /// カメラと開口を残して表示用と再帰用のテクスチャを解放する
+        /// </summary>
+        private void ReleasePortalTextures()
+        {
+            if (_portalCamera != null) _portalCamera.targetTexture = null;
+            if (_portalRenderer != null && _portalRenderer.sharedMaterial != null)
+            {
+                _portalRenderer.sharedMaterial.SetTexture("_MainTex", Texture2D.blackTexture);
+            }
+
+            ReleaseRecursionRenderTextures();
+            if (_portalRT == null) return;
+            _portalRT.Release();
+            Destroy(_portalRT);
+            _portalRT = null;
+        }
+
+        /// <summary>
+        /// ポータルの描画リソースをすべて解放する
+        /// </summary>
         private void ReleasePortalResources()
         {
-            ReleaseRecursionRenderTextures();
-
-            if (_portalRT != null)
-            {
-                _portalRT.Release();
-                Destroy(_portalRT);
-                _portalRT = null;
-            }
+            ReleasePortalTextures();
 
             if (_portalCamera != null)
             {
@@ -376,6 +423,9 @@ namespace Shinzui.View
             targetData.antialiasing = AntialiasingMode.None;
         }
 
+        /// <summary>
+        /// 可視ポータルの表示先をメインカメラの解像度に合わせて確保する
+        /// </summary>
         private void CreateRenderTexture()
         {
             if (_portalRT != null)
@@ -531,10 +581,19 @@ namespace Shinzui.View
             return -1;
         }
 
+        /// <summary>
+        /// メインカメラの設定を引き継ぎポータルに映さないレイヤーを除外
+        /// </summary>
+        /// <param name="source">メインカメラ</param>
+        /// <param name="target">ポータルカメラ</param>
         private void CopyCameraSettings(Camera source, Camera target)
         {
             RenderTexture rt = target.targetTexture;
             target.CopyFrom(source);
+            // ブラックホール敵の見た目をポータルの再帰描画から除外
+            int hiddenLayer = LayerMask.NameToLayer("PortalHidden");
+            if (hiddenLayer >= 0) target.cullingMask &= ~(1 << hiddenLayer);
+
             target.enabled = false; // 再帰描画中は自動レンダリングさせない
             target.targetTexture = rt;
             target.farClipPlane = Mathf.Max(source.farClipPlane, 150f);
@@ -576,6 +635,10 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>
+        /// ポータルの表示マテリアルを作成し、未描画の開口は黒で初期化する
+        /// </summary>
+        /// <returns>ゲート専用の表示マテリアル</returns>
         private Material CreatePortalMaterial()
         {
             Material mat;
@@ -592,6 +655,8 @@ namespace Shinzui.View
                 }
                 mat = new Material(shader) { name = $"PortalProjectionMaterial_{gameObject.name}" };
             }
+            // 初回描画前に別のポータルから見えた場合の白い面を防ぐ
+            mat.SetTexture("_MainTex", Texture2D.blackTexture);
             mat.SetFloat(PortalExposureMultiplierId, PortalExposureMultiplier);
             _lastAppliedExposureEV = portalExposureEV;
             return mat;
@@ -762,12 +827,26 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>
+        /// ポータル内の再帰像を奥から描画し、最前面を表示用テクスチャへ直接出力する
+        /// </summary>
+        /// <param name="context">現在の描画コンテキスト</param>
+        /// <param name="depth">ポータルの再帰描画回数</param>
         private void RenderPortalRecursive(ScriptableRenderContext context, int depth)
         {
             // レンダリング直前にもオンデマンド初期化を実行し、オブジェクトの生存を確実に
             InitializePortalResources();
 
             if (depth <= 0 || _portalCamera == null || targetGate == null) return;
+
+            // 可視と判定されたフレームだけ表示バッファを確保する
+            _lastVisibleTime = Time.unscaledTime;
+            if (_portalRT == null || !_portalRT.IsCreated()
+                || _portalRT.width != Mathf.Max(1, _mainCamera.pixelWidth)
+                || _portalRT.height != Mathf.Max(1, _mainCamera.pixelHeight))
+            {
+                CreateRenderTexture();
+            }
 
             // カメラ設定のコピー
             CopyCameraSettings(_mainCamera, _portalCamera);
@@ -777,7 +856,11 @@ namespace Shinzui.View
             if (width <= 0) width = 1024;
             if (height <= 0) height = 576;
 
-            EnsureRecursionRenderTextures(depth, width, height);
+            // 奥の再帰像は縦横半分にして描画負荷とメモリを抑える
+            EnsureRecursionRenderTextures(depth - 1, Mathf.Max(1, width / 2), Mathf.Max(1, height / 2));
+
+            // ポータル面が占める画面範囲だけを各再帰カメラのカリング対象にする
+            Matrix4x4 portalCrop = GetPortalCullingCrop();
 
             // プレイヤー/カメラ配下のローカルライト一覧を更新
             RefreshCandidateLights();
@@ -798,14 +881,16 @@ namespace Shinzui.View
                     RestoreDefaultProjection(_portalCamera);
                 }
 
-                _portalCamera.targetTexture = _recursionRTs[i];
+                _portalCamera.cullingMatrix = portalCrop * _portalCamera.projectionMatrix
+                    * _portalCamera.worldToCameraMatrix;
+                _portalCamera.targetTexture = i == 0 ? _portalRT : _recursionRTs[i - 1];
 
                 if (i < depth - 1)
                 {
                     // 1つ奥のレベルのRTを、自分自身の投影マテリアルに適用
                     if (PortalRenderer != null && PortalRenderer.sharedMaterial != null)
                     {
-                        PortalRenderer.sharedMaterial.SetTexture("_MainTex", _recursionRTs[i + 1]);
+                        PortalRenderer.sharedMaterial.SetTexture("_MainTex", _recursionRTs[i]);
                     }
                 }
                 else
@@ -871,17 +956,51 @@ namespace Shinzui.View
                 }
             }
 
-            // 最終結果（最前面レベル0の描画結果）をメインの RenderTexture にコピー
-            if (_portalRT != null && _recursionRTs != null && _recursionRTs.Length > 0 && _recursionRTs[0] != null)
-            {
-                Graphics.Blit(_recursionRTs[0], _portalRT);
-            }
-
             // 自分自身のマテリアル設定を本来のメインRTに戻す
             if (PortalRenderer != null && PortalRenderer.sharedMaterial != null)
             {
                 PortalRenderer.sharedMaterial.SetTexture("_MainTex", _portalRT);
             }
+        }
+
+        /// <summary>
+        /// ポータル外へ描かれる物体とライトを除外するカリング用の射影補正を求める
+        /// </summary>
+        /// <returns>画面内のポータル領域をクリップ空間全体へ広げる行列</returns>
+        private Matrix4x4 GetPortalCullingCrop()
+        {
+            // ニア面をまたぐ通過中は通常の視錐台を使い、画面端の欠けを防ぐ
+            Bounds bounds = _portalRenderer.bounds;
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            Vector2 lower = Vector2.one;
+            Vector2 upper = Vector2.zero;
+            for (int corner = 0; corner < 8; corner++)
+            {
+                Vector3 point = new Vector3(
+                    (corner & 1) == 0 ? min.x : max.x,
+                    (corner & 2) == 0 ? min.y : max.y,
+                    (corner & 4) == 0 ? min.z : max.z);
+                Vector3 viewport = _mainCamera.WorldToViewportPoint(point);
+                if (viewport.z <= _mainCamera.nearClipPlane) return Matrix4x4.identity;
+
+                lower = Vector2.Min(lower, new Vector2(viewport.x, viewport.y));
+                upper = Vector2.Max(upper, new Vector2(viewport.x, viewport.y));
+            }
+
+            // アンチエイリアス分の余白を残し、実際の描画用射影行列は変更しない
+            float left = Mathf.Clamp01(lower.x - 2f / _portalRT.width);
+            float right = Mathf.Clamp01(upper.x + 2f / _portalRT.width);
+            float bottom = Mathf.Clamp01(lower.y - 2f / _portalRT.height);
+            float top = Mathf.Clamp01(upper.y + 2f / _portalRT.height);
+            if (right <= left || top <= bottom) return Matrix4x4.identity;
+
+            Matrix4x4 crop = Matrix4x4.identity;
+            crop.m00 = 1f / (right - left);
+            crop.m03 = (1f - right - left) / (right - left);
+            crop.m11 = 1f / (top - bottom);
+            crop.m13 = (1f - top - bottom) / (top - bottom);
+            return crop;
         }
 
         private void MatchPortalCameraTransformForDepth(Transform cameraTransform, Transform source, Transform destination, int depthLevel)

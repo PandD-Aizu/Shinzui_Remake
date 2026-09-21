@@ -70,8 +70,8 @@ namespace Shinzui.Infrastructure.Rendering.Exposure
         /// </summary>
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            // シーンビューカメラではエフェクトを適用しない
-            if (renderingData.cameraData.isSceneViewCamera)
+            // ポータルへの重複適用を避け、ポストプロセスが有効なカメラだけ処理する
+            if (renderingData.cameraData.isSceneViewCamera || !renderingData.cameraData.postProcessEnabled)
                 return;
             
             // Volumeを取得

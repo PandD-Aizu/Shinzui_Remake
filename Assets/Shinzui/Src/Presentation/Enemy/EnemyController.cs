@@ -54,6 +54,13 @@ namespace Shinzui.Presentation
                 ready, ready && _runtime.CanSee(playerPosition, playerHeight));
         }
 
+        /// <summary>
+        /// 接近による死亡判定と統括AIの移動命令を処理
+        /// </summary>
+        /// <param name="deltaTime">フレーム経過時間</param>
+        /// <param name="player">プレイヤーの位置情報</param>
+        /// <param name="playerHeight">プレイヤーの現在の高さ</param>
+        /// <param name="command">統括AIの命令</param>
         public void Tick(float deltaTime, IPlayerTracker player, float playerHeight, EnemyCommand command)
         {
             if (player == null || _view == null || !_runtime.IsAvailable) return;
@@ -63,8 +70,9 @@ namespace Shinzui.Presentation
             _runtime.SetSpeed(speed * _strobeMultiplier, _strobeStops || command.Type == EnemyCommandType.Idle);
             if (_strobeStops || !_runtime.IsReady) return;
 
+            // 移動用の原点ではなく体の中心から接近距離を測定
             if (_death != null && _deathTimer <= 0f &&
-                Vector3.Distance(_runtime.Position, player.PlayerPosition) <= _view.PlayerDeathDistance &&
+                Vector3.Distance(_view.PlayerDeathPosition, player.PlayerPosition) <= _view.PlayerDeathDistance &&
                 _runtime.HasClearContact(player.PlayerPosition, playerHeight))
             {
                 _death.TryKillPlayer();

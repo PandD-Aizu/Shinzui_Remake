@@ -31,6 +31,25 @@ namespace Shinzui.View
         }
 
         /// <summary>
+        /// 接近時の死亡判定に使う敵の体の中心位置
+        /// コライダーがない敵は従来の位置を使用
+        /// </summary>
+        public Vector3 PlayerDeathPosition
+        {
+            get
+            {
+                // 足元原点の敵もプレイヤーと体の中心同士で比較
+                NavMeshAgent agent = ResolveAgent();
+                Collider bodyCollider = agent != null ? agent.GetComponent<Collider>() : null;
+                if (bodyCollider == null) bodyCollider = GetComponent<Collider>();
+
+                return bodyCollider != null && bodyCollider.enabled
+                    ? bodyCollider.bounds.center
+                    : EnemyPosition;
+            }
+        }
+
+        /// <summary>
         /// NavMeshAgentを解決する
         /// agentOverrideが設定されていればそれを返し、なければ自身のコンポーネント、親、子の順に探す。別オブジェクトのAgentは取得しない
         /// </summary>
@@ -72,6 +91,9 @@ namespace Shinzui.View
             _gizmoChaseDistance = chaseDistance;
         }
 
+        /// <summary>
+        /// 追跡範囲と実際の死亡判定位置を描画
+        /// </summary>
         private void OnDrawGizmos()
         {
             if (_gizmoChaseDistance >= 0f)
@@ -81,7 +103,7 @@ namespace Shinzui.View
             }
 
             Gizmos.color = Color.magenta;
-            Gizmos.DrawWireSphere(EnemyPosition, playerDeathDistance);
+            Gizmos.DrawWireSphere(PlayerDeathPosition, playerDeathDistance);
         }
     }
 }

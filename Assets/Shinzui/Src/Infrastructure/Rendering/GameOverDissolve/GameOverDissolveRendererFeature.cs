@@ -33,9 +33,14 @@ namespace Shinzui.Infrastructure.Rendering.GameOverDissolve
             _pass = CreatePass(settings);
         }
 
+        /// <summary>
+        /// 合成後のカメラへゲームオーバーの画面効果を追加する
+        /// </summary>
+        /// <param name="renderer">描画先のレンダラー</param>
+        /// <param name="renderingData">現在のカメラの描画情報</param>
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            if (renderingData.cameraData.isSceneViewCamera)
+            if (renderingData.cameraData.isSceneViewCamera || !renderingData.cameraData.postProcessEnabled)
             {
                 return;
             }

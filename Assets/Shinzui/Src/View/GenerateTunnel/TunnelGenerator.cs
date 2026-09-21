@@ -44,6 +44,10 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private GameObject smallRoomModel;
         [SerializeField] private GameObject warpCorridorModel;
 
+        [Header("Ceiling Lights")]
+        [Tooltip("天井中央に配置する蛍光灯の間隔（m）")]
+        [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 5.0f;
+
         [Header("Model Scale")]
         [SerializeField] private Vector3 basicTunnelModelScale = Vector3.one;
         [SerializeField] private Vector3 corridorModelScale = Vector3.one;
@@ -82,6 +86,7 @@ namespace Shinzui.View.GenerateTunnel
         public GameObject CorridorModel => corridorModel;
         public GameObject SmallRoomModel => smallRoomModel;
         public GameObject WarpCorridorModel => warpCorridorModel;
+        public float CeilingLightSpacing => Mathf.Max(1.5f, ceilingLightSpacing);
         public Vector3 BasicTunnelModelScale => SanitizeScale(basicTunnelModelScale);
         public Vector3 CorridorModelScale => SanitizeScale(corridorModelScale);
         public Vector3 SmallRoomModelScale => SanitizeScale(smallRoomModelScale);
