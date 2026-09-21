@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.Infrastructure",
+  "references": ["Shinzui.CustomSpatialAudio.Application", "Shinzui.SpatialAudio.Application", "ApplicationLayer", "FMODUnity"],
+  "autoReferenced": true
+}

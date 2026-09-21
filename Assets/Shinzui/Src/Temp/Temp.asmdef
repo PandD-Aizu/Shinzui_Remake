@@ -2,6 +2,7 @@
     "name": "Temp",
     "rootNamespace": "",
     "references": [
+        "Shinzui.CustomSpatialAudio.Application",
         "GUID:11ca5201f2811b14086b120a09e65b3b",
         "GUID:b5b42ada7c4c5104f8c868951c2e3654",
         "GUID:5513a911fe0c1bc49b43b58556f80be7",

@@ -1,0 +1,40 @@
+file,centre_hz,accepted,room_reverb_estimate_eligible,t20_seconds,extrapolated_rt60_seconds,r_squared,reason
+binaural-back.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-back.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-back.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-front.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-front.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-front.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-right.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-right.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-right.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-up.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-up.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+binaural-up.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+l-corridor-closed.wav,125,False,False,,,,No measurable band energy.
+l-corridor-closed.wav,1000,False,False,,,,No measurable band energy.
+l-corridor-closed.wav,8000,False,False,,,,No measurable band energy.
+l-corridor-open.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+l-corridor-open.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+l-corridor-open.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+l-corridor-quarter-open.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+l-corridor-quarter-open.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+l-corridor-quarter-open.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+open-boundaries-mixed.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+open-boundaries-mixed.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+open-boundaries-mixed.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-direct.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-direct.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-direct.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-early.wav,125,True,False,0.018072381752505563,0.05421714525751669,0.7387174499030422,
+small-room-early.wav,1000,True,False,0.026619238912755003,0.07985771673826501,0.35228358127576165,
+small-room-early.wav,8000,True,False,0.02188920833158484,0.06566762499475451,0.2851187922953632,
+small-room-late.wav,125,True,True,0.33123980106838635,0.9937194032051591,0.9980102434252779,
+small-room-late.wav,1000,True,True,0.15098671259345386,0.4529601377803616,0.9925741522608398,
+small-room-late.wav,8000,True,True,0.10236435749772312,0.30709307249316936,0.9837149214566476,
+small-room-mixed.wav,125,True,True,0.23270052120138315,0.6981015636041494,0.9179133230470173,
+small-room-mixed.wav,1000,True,True,0.10351120461928509,0.3105336138578553,0.8580161729740104,
+small-room-mixed.wav,8000,True,True,0.05675474782127909,0.17026424346383726,0.7473842254899874,
+straight-tunnel-mixed.wav,125,True,True,0.2904093796224927,0.8712281388674781,0.9635464691359445,
+straight-tunnel-mixed.wav,1000,True,True,0.151260002983512,0.453780008950536,0.8916379852596469,
+straight-tunnel-mixed.wav,8000,True,True,0.1548809607650091,0.46464288229502726,0.7412847488556731,

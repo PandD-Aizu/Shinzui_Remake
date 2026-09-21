@@ -3,427 +3,125 @@ using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases;
 using Shinzui.View;
 using UnityEngine;
-using UnityEngine.AI;
-using Random = UnityEngine.Random;
 
 namespace Shinzui.Presentation
 {
-    /// <summary>
-    /// 1体分の敵の行動、ストロボ効果、プレイヤー死亡判定を管理するクラス
-    /// </summary>
+    /// <summary>Binds director commands to the runtime adapter and preserves strobe/death behavior.</summary>
     internal sealed class EnemyController
     {
         private readonly EnemyView _view;
-        private readonly EnemyMoveUseCase _enemyMoveUseCase;
-        private readonly PlayerDeathUseCase _playerDeathUseCase;
+        private readonly IEnemyRuntime _runtime;
+        private readonly EnemyMoveUseCase _movement;
+        private readonly PlayerDeathUseCase _death;
+        private readonly EnemyDirectorSettings _settings;
+        private float _wanderTimer;
+        private float _wanderInterval;
+        private float _wanderRadius;
+        private float _deathTimer;
+        private float _strobeRemaining;
+        private float _strobeMultiplier = 1f;
+        private bool _strobeStops;
+        private EnemyCommand _currentCommand = EnemyCommand.Idle;
 
-        private NavMeshAgent _agent;
-        private float _timer;
-        private float _wanderInterval = -1.0f;
-        private float _wanderRadius = -1.0f;
-        private float _chaseDistance = -1.0f;
-        private float _deathAttemptTimer;
-        private float _baseAgentSpeed = -1.0f;
-        private float _strobeEffectRemaining;
-        private float _strobeSpeedMultiplier = 1.0f;
-        private bool _strobeStopsMovement;
-        private EnemyCommand _currentCommand = EnemyCommand.Wander;
-
-        public EnemyController(
-            int id,
-            EnemyView view,
-            EnemyMoveUseCase enemyMoveUseCase,
-            PlayerDeathUseCase playerDeathUseCase)
+        public EnemyController(int id, EnemyView view, IEnemyRuntime runtime, EnemyMoveUseCase movement,
+            PlayerDeathUseCase death, EnemyDirectorSettings settings)
         {
             Id = id;
             _view = view;
-            _enemyMoveUseCase = enemyMoveUseCase;
-            _playerDeathUseCase = playerDeathUseCase;
+            _runtime = runtime;
+            _movement = movement;
+            _death = death;
+            _settings = settings;
         }
 
         public int Id { get; }
+        public Vector3 StrobeTargetPosition => _runtime.Position + Vector3.up;
 
-        public Vector3 StrobeTargetPosition => _agent != null
-            ? _agent.transform.position + Vector3.up
-            : _view.EnemyPosition + Vector3.up;
-
-        /// <summary>
-        /// 統括AIへ渡す現在のEnemy状態を作成する
-        /// </summary>
-        /// <returns>Enemy状態報告</returns>
-        public EnemyReport CreateReport()
-        {
-            return new EnemyReport(
-                Id,
-                _view.EnemyPosition,
-                _currentCommand,
-                _chaseDistance,
-                _view != null);
-        }
-
-        /// <summary>
-        /// 初期化処理
-        /// NavMeshAgentの取得、徘徊情報の取得、Gizmoの設定を行う
-        /// </summary>
         public void Initialize()
         {
-            _agent = _view.ResolveAgent();
-
-            if (_agent != null)
-            {
-                _baseAgentSpeed = _agent.speed;
-            }
-
-            (_wanderInterval, _wanderRadius, _chaseDistance) = _enemyMoveUseCase.GetWanderingInfo();
-            _timer = _wanderInterval;
-            _view.SetGizmoChaseDistance(_chaseDistance);
-
-            if (_wanderInterval < 0) Debug.LogWarning("EnemyPresenter: Wander interval is negative");
-            if (_wanderRadius < 0) Debug.LogWarning("EnemyPresenter: WanderRadius is negative");
-            if (_chaseDistance < 0) Debug.LogWarning("EnemyPresenter: Chase distance is negative");
+            (_wanderInterval, _wanderRadius, _) = _movement.GetWanderingInfo();
+            _view.SetGizmoChaseDistance(_settings.sightDistance);
         }
 
-        /// <summary>
-        /// 毎フレームの更新処理
-        /// </summary>
-        /// <param name="deltaTime">経過時間</param>
-        /// <param name="playerTracker">プレイヤートラッカー</param>
-        public void Tick(float deltaTime, IPlayerTracker playerTracker, EnemyCommand command)
+        public EnemyReport CreateReport(float deltaTime, Vector3 playerPosition, float playerHeight)
         {
-            UpdateStrobeEffect(deltaTime);
-            UpdateDeathAttemptTimer(deltaTime);
+            _runtime.Tick(deltaTime);
+            _strobeRemaining = Mathf.Max(0f, _strobeRemaining - deltaTime);
+            _deathTimer = Mathf.Max(0f, _deathTimer - deltaTime);
+            if (_strobeRemaining <= 0f) { _strobeStops = false; _strobeMultiplier = 1f; }
+            bool ready = _runtime.IsReady && !_strobeStops;
+            return new EnemyReport(Id, _runtime.Position, _currentCommand, _settings.sightDistance,
+                ready, ready && _runtime.CanSee(playerPosition, playerHeight));
+        }
 
-            if (playerTracker == null)
+        public void Tick(float deltaTime, IPlayerTracker player, float playerHeight, EnemyCommand command)
+        {
+            if (player == null || _view == null || !_runtime.IsAvailable) return;
+            bool changed = command.Type != _currentCommand.Type;
+            _currentCommand = command;
+            float speed = command.Type == EnemyCommandType.ChasePlayer ? 1f : Mathf.Clamp(_settings.patrolSpeedMultiplier, .1f, 1f);
+            _runtime.SetSpeed(speed * _strobeMultiplier, _strobeStops || command.Type == EnemyCommandType.Idle);
+            if (_strobeStops || !_runtime.IsReady) return;
+
+            if (_death != null && _deathTimer <= 0f &&
+                Vector3.Distance(_runtime.Position, player.PlayerPosition) <= _view.PlayerDeathDistance &&
+                _runtime.HasClearContact(player.PlayerPosition, playerHeight))
             {
-                return;
+                _death.TryKillPlayer();
+                _deathTimer = Mathf.Max(.1f, _view.DeathAttemptCooldown);
             }
 
-            Vector3 playerPos = playerTracker.PlayerPosition;
-            TryKillPlayerIfClose(playerPos);
-
-            var tunnelBounds = playerTracker.CurrentTunnelBounds;
-            Vector3 enemyPosition = _view.EnemyPosition;
-            float distanceToPlayer = Vector3.Distance(enemyPosition, playerPos);
-
-            // CurrentTunnelBounds is a legacy loop-tunnel concept. Randomly generated maps do
-            // not expose those bounds, so use the real player position and skip loop warping.
-            Vector3 dummy = playerPos;
-            float distanceToDummy = float.PositiveInfinity;
-            if (tunnelBounds.HasValue)
+            switch (command.Type)
             {
-                Vector3 tunnelStartPos = tunnelBounds.Value.start;
-                Vector3 tunnelEndPos = tunnelBounds.Value.end;
-                dummy = CreateLoopDummyPosition(playerPos, tunnelStartPos, tunnelEndPos);
-                distanceToDummy = Vector3.Distance(enemyPosition, dummy);
+                case EnemyCommandType.Idle:
+                    _movement.Stop();
+                    _runtime.Stop();
+                    break;
+                case EnemyCommandType.Wander:
+                    _movement.StartWandering();
+                    _wanderTimer -= deltaTime;
+                    if (changed || _wanderTimer <= 0f)
+                    {
+                        _runtime.Wander(_wanderRadius);
+                        _wanderTimer = Mathf.Max(.1f, _wanderInterval);
+                    }
+                    break;
+                default:
+                    _movement.StartChasing();
+                    Vector3 target = command.TargetPosition;
+                    var bounds = player.CurrentTunnelBounds;
+                    if (command.Type == EnemyCommandType.ChasePlayer && bounds.HasValue)
+                    {
+                        Vector3 dummy = target;
+                        float length = Mathf.Abs(bounds.Value.end.z - bounds.Value.start.z);
+                        dummy.z += target.z > (bounds.Value.start.z + bounds.Value.end.z) * .5f ? -length : length;
+                        if ((_runtime.Position - dummy).sqrMagnitude < (_runtime.Position - target).sqrMagnitude) target = dummy;
+                    }
+                    _runtime.MoveTo(target);
+                    break;
             }
-
-            ApplyCommand(command);
-            TickMovement(deltaTime, enemyPosition, command, dummy, distanceToPlayer, distanceToDummy);
-
-            if (tunnelBounds.HasValue)
+            var tunnel = player.CurrentTunnelBounds;
+            if (tunnel.HasValue)
             {
-                WarpIfOutsideTunnel(tunnelBounds.Value.start, tunnelBounds.Value.end);
+                if (_runtime.Position.z > tunnel.Value.end.z) _runtime.WarpZ(tunnel.Value.start.z);
+                else if (_runtime.Position.z < tunnel.Value.start.z) _runtime.WarpZ(tunnel.Value.end.z);
             }
         }
 
-        /// <summary>
-        /// ストロボの効果を適用する
-        /// </summary>
-        /// <param name="stopMovement">移動を停止するかどうか</param>
-        /// <param name="speedMultiplier">速度の倍率</param>
-        /// <param name="duration">持続時間</param>
         public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration)
         {
-            if (_agent == null || duration <= 0f)
-            {
-                return;
-            }
-
-            if (_baseAgentSpeed < 0f)
-            {
-                _baseAgentSpeed = _agent.speed;
-            }
-
-            if (stopMovement)
-            {
-                _strobeStopsMovement = true;
-                _strobeEffectRemaining = Mathf.Max(_strobeEffectRemaining, duration);
-                ApplyCurrentStrobeAgentState();
-                return;
-            }
-
-            if (_strobeStopsMovement)
-            {
-                return;
-            }
-
-            _strobeSpeedMultiplier = Mathf.Min(_strobeSpeedMultiplier, Mathf.Clamp01(speedMultiplier));
-            _strobeEffectRemaining = Mathf.Max(_strobeEffectRemaining, duration);
-            ApplyCurrentStrobeAgentState();
+            if (!_runtime.IsAvailable || duration <= 0f) return;
+            if (!stopMovement && _strobeStops) return;
+            _strobeStops |= stopMovement;
+            _strobeMultiplier = Mathf.Min(_strobeMultiplier, Mathf.Clamp01(speedMultiplier));
+            _strobeRemaining = Mathf.Max(_strobeRemaining, duration);
+            _runtime.SetSpeed(_strobeStops ? 0f : _strobeMultiplier, _strobeStops);
         }
 
         public void Dispose()
         {
-            ClearStrobeEffect();
-        }
-
-        /// <summary>
-        /// プレイヤーがトンネルをループした際に、敵が追跡するためのダミー位置を作成する
-        /// </summary>
-        /// <param name="playerPos">プレイヤーの位置</param>
-        /// <param name="tunnelStartPos">トンネルの開始位置</param>
-        /// <param name="tunnelEndPos">トンネルの終了位置</param>
-        /// <returns>ダミー位置</returns>
-        private static Vector3 CreateLoopDummyPosition(Vector3 playerPos, Vector3 tunnelStartPos, Vector3 tunnelEndPos)
-        {
-            Vector3 dummy = playerPos;
-            float centerZ = (tunnelStartPos.z + tunnelEndPos.z) / 2.0f;
-            float tunnelDistance = Mathf.Abs(tunnelStartPos.z - tunnelEndPos.z);
-
-            if (playerPos.z > centerZ)
-            {
-                dummy.z -= tunnelDistance;
-            }
-            else
-            {
-                dummy.z += tunnelDistance;
-            }
-
-            return dummy;
-        }
-
-        /// <summary>
-        /// 統括AIから受け取った命令を移動状態へ反映する
-        /// </summary>
-        /// <param name="command">統括AIから受け取った命令</param>
-        private void ApplyCommand(EnemyCommand command)
-        {
-            _currentCommand = command;
-
-            switch (command.Type)
-            {
-                case EnemyCommandType.ChasePlayer:
-                case EnemyCommandType.InvestigatePosition:
-                    _enemyMoveUseCase.StartChasing();
-                    break;
-                case EnemyCommandType.Idle:
-                    _enemyMoveUseCase.Stop();
-                    break;
-                default:
-                    _enemyMoveUseCase.StartWandering();
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// 敵の移動を更新する
-        /// </summary>
-        /// <param name="deltaTime">経過時間</param>
-        /// <param name="enemyPosition">敵の位置</param>
-        /// <param name="command">統括AIから受け取った命令</param>
-        /// <param name="dummy">ダミー位置</param>
-        /// <param name="distanceToPlayer">プレイヤーまでの距離</param>
-        /// <param name="distanceToDummy">ダミー位置までの距離</param>
-        private void TickMovement(
-            float deltaTime,
-            Vector3 enemyPosition,
-            EnemyCommand command,
-            Vector3 dummy,
-            float distanceToPlayer,
-            float distanceToDummy)
-        {
-            if (_enemyMoveUseCase.IsWandering)
-            {
-                _timer += deltaTime;
-                if (_timer > _wanderInterval)
-                {
-                    SetDestination(RandomTarget(enemyPosition, _wanderRadius));
-                    _timer = 0;
-                }
-            }
-
-            if (_enemyMoveUseCase.IsChasing)
-            {
-                if (command.Type == EnemyCommandType.ChasePlayer)
-                {
-                    Vector3 target = distanceToPlayer < distanceToDummy ? command.TargetPosition : dummy;
-                    SetDestination(target);
-                    return;
-                }
-
-                if (command.Type == EnemyCommandType.InvestigatePosition)
-                {
-                    SetDestination(command.TargetPosition);
-                    return;
-                }
-            }
-
-            if (!_enemyMoveUseCase.IsWandering && command.Type == EnemyCommandType.Idle)
-            {
-                SetDestination(enemyPosition);
-            }
-        }
-
-        /// <summary>
-        /// 敵がトンネルの外に出た場合、トンネル内にワープさせる
-        /// </summary>
-        /// <param name="tunnelStartPos"></param>
-        /// <param name="tunnelEndPos"></param>
-        private void WarpIfOutsideTunnel(Vector3 tunnelStartPos, Vector3 tunnelEndPos)
-        {
-            if (_view.TransformPosition.z > tunnelEndPos.z)
-            {
-                _view.WarpTo(tunnelStartPos);
-            }
-
-            if (_view.TransformPosition.z < tunnelStartPos.z)
-            {
-                _view.WarpTo(tunnelEndPos);
-            }
-        }
-
-        /// <summary>
-        /// NavMeshAgentの目的地を設定する
-        /// </summary>
-        /// <param name="targetPosition"></param>
-        private void SetDestination(Vector3 targetPosition)
-        {
-            if (_agent == null || !_agent.enabled)
-            {
-                return;
-            }
-
-            // Runtime NavMesh baking can leave a scene-authored agent just outside the new
-            // surface. Recover it onto the generated mesh before assigning a destination.
-            if (!_agent.isOnNavMesh)
-            {
-                if (!NavMesh.SamplePosition(_agent.transform.position, out NavMeshHit agentHit, 3.0f, _agent.areaMask))
-                {
-                    return;
-                }
-
-                _agent.Warp(agentHit.position);
-            }
-
-            if (NavMesh.SamplePosition(targetPosition, out NavMeshHit targetHit, 3.0f, _agent.areaMask))
-            {
-                _agent.SetDestination(targetHit.position);
-            }
-        }
-
-        /// <summary>
-        /// 指定された位置を中心に、NavMesh上のランダムな目的地を生成する
-        /// </summary>
-        /// <param name="origin"></param>
-        /// <param name="radius"></param>
-        /// <returns></returns>
-        private Vector3 RandomTarget(Vector3 origin, float radius)
-        {
-            Vector3 randomDirection = Random.insideUnitSphere * radius;
-            randomDirection += origin;
-
-            return NavMesh.SamplePosition(randomDirection, out NavMeshHit hit, radius, NavMesh.AllAreas)
-                ? hit.position
-                : origin;
-        }
-
-        /// <summary>
-        /// ストロボの効果を更新する
-        /// </summary>
-        /// <param name="deltaTime"></param>
-        private void UpdateStrobeEffect(float deltaTime)
-        {
-            if (_agent == null || _strobeEffectRemaining <= 0f)
-            {
-                return;
-            }
-
-            _strobeEffectRemaining -= deltaTime;
-            if (_strobeEffectRemaining <= 0f)
-            {
-                ClearStrobeEffect();
-                return;
-            }
-
-            ApplyCurrentStrobeAgentState();
-        }
-
-        /// <summary>
-        /// 現在のストロボ効果に基づいてNavMeshAgentの状態を適用する
-        /// </summary>
-        private void ApplyCurrentStrobeAgentState()
-        {
-            if (_agent == null)
-            {
-                return;
-            }
-
-            if (_strobeStopsMovement)
-            {
-                _agent.isStopped = true;
-                _agent.speed = 0f;
-            }
-            else
-            {
-                _agent.isStopped = false;
-                _agent.speed = _baseAgentSpeed * _strobeSpeedMultiplier;
-            }
-        }
-
-        /// <summary>
-        /// ストロボの効果をクリアする
-        /// </summary>
-        private void ClearStrobeEffect()
-        {
-            _strobeEffectRemaining = 0f;
-            _strobeSpeedMultiplier = 1.0f;
-            _strobeStopsMovement = false;
-
-            if (_agent == null)
-            {
-                return;
-            }
-
-            _agent.isStopped = false;
-            if (_baseAgentSpeed >= 0f)
-            {
-                _agent.speed = _baseAgentSpeed;
-            }
-        }
-
-        /// <summary>
-        /// プレイヤーが近くにいる場合、プレイヤーを殺す試みを行う
-        /// </summary>
-        /// <param name="playerPosition">プレイヤーの位置</param>
-        private void TryKillPlayerIfClose(Vector3 playerPosition)
-        {
-            if (_playerDeathUseCase == null || _deathAttemptTimer > 0f)
-            {
-                return;
-            }
-
-            float distanceToPlayer = Vector3.Distance(_view.EnemyPosition, playerPosition);
-            if (distanceToPlayer > _view.PlayerDeathDistance)
-            {
-                return;
-            }
-
-            _playerDeathUseCase.TryKillPlayer();
-            _deathAttemptTimer = _view.DeathAttemptCooldown;
-        }
-
-        /// <summary>
-        /// プレイヤーを殺す試みのクールダウンタイマーを更新する
-        /// </summary>
-        /// <param name="deltaTime">経過時間</param>
-        private void UpdateDeathAttemptTimer(float deltaTime)
-        {
-            if (_deathAttemptTimer <= 0f)
-            {
-                return;
-            }
-
-            _deathAttemptTimer -= deltaTime;
+            _runtime.Stop();
+            _runtime.SetSpeed(1f, false);
         }
     }
 }

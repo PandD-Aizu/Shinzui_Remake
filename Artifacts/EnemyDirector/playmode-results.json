@@ -1,0 +1,55 @@
+{
+  "status": "completed",
+  "duration": 0.26,
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "results": [
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.RuntimeTests.DetectsFrontButNotBehind",
+      "Status": "Passed",
+      "Duration": 0.0196851,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.RuntimeTests.DisabledAgentAndViewAreNotAvailable",
+      "Status": "Passed",
+      "Duration": 0.0038254,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.RuntimeTests.RuntimeRecoversAfterNavMeshBecomesAvailable",
+      "Status": "Passed",
+      "Duration": 0.0890821,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.RuntimeTests.TriggerDoesNotOccludeSight",
+      "Status": "Passed",
+      "Duration": 0.0171294,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.RuntimeTests.UnreachableTargetDoesNotKeepPreviousPath",
+      "Status": "Passed",
+      "Duration": 0.0169295,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.RuntimeTests.WallBlocksBothSightAndContactKill",
+      "Status": "Passed",
+      "Duration": 0.01604,
+      "Message": null,
+      "StackTrace": null
+    }
+  ]
+}

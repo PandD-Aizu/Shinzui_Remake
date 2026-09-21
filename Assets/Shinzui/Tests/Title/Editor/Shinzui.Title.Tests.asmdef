@@ -1,0 +1,7 @@
+{
+    "name": "Shinzui.Title.Tests",
+    "references": ["ApplicationLayer", "DomainLayer", "InfrastructureLayer", "ViewLayer", "PresentationLayer", "DILayer", "VContainer", "Unity.TextMeshPro", "UnityEngine.UI", "R3.Unity"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "autoReferenced": false
+}

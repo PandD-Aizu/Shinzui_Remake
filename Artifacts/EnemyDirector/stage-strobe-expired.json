@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "command": "eval",
+  "result": {
+    "output": null,
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": {
+      "strobeExpired": true,
+      "stopped": false,
+      "speed": 0.780000031,
+      "contactDeathObserved": true
+    },
+    "executionTimeMs": 306,
+    "message": null,
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-09-20T22:55:43.3685346Z"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:55:43.3690369Z"
+}

@@ -1,0 +1,118 @@
+{
+  "status": "completed",
+  "duration": 0.05,
+  "summary": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "results": [
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.ContinuousNoiseDoesNotResetSearchBudget",
+      "Status": "Passed",
+      "Duration": 0.0200789,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.DiscoverySoundIsNotRepeatedDuringFlickeringSight",
+      "Status": "Passed",
+      "Duration": 0.0013619,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.HintsAreImpreciseAndHeldBetweenUpdates",
+      "Status": "Passed",
+      "Duration": 0.002246,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.InactiveEnemyCannotDetectOrOwnChase",
+      "Status": "Passed",
+      "Duration": 0.0003546,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.InvalidDurationsUseFiniteDefaults",
+      "Status": "Passed",
+      "Duration": 0.0005971,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.LostSightSearchesLastKnownPositionNotMovingPlayer",
+      "Status": "Passed",
+      "Duration": 0.0004324,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.OnlyOneHunterAndOwnershipRemainsStable",
+      "Status": "Passed",
+      "Duration": 0.0012118,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.PausedTimeDoesNotAdvancePacingOrDiscoverPlayer",
+      "Status": "Passed",
+      "Duration": 0.0002352,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.PressureDoesNotMakeEnemyForgetVisiblePlayer",
+      "Status": "Passed",
+      "Duration": 0.0008332,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.ProximityAloneNeverStartsChase",
+      "Status": "Passed",
+      "Duration": 0.0006119,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.RecoveryStillAllowsGenuineVisualDetection",
+      "Status": "Passed",
+      "Duration": 0.0002739,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.RemovedHunterDoesNotLeaveStalePlayerFoundState",
+      "Status": "Passed",
+      "Duration": 0.0014348,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.SearchExpiresAndRecoverySuppressesHints",
+      "Status": "Passed",
+      "Duration": 0.0004474,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.SightRequiresContinuousConfirmation",
+      "Status": "Passed",
+      "Duration": 0.0003097,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.EnemyDirector.DirectorTests.SoundInvestigatesOnlyWithinAudibleRadius",
+      "Status": "Passed",
+      "Duration": 0.0003074,
+      "Message": null,
+      "StackTrace": null
+    }
+  ]
+}

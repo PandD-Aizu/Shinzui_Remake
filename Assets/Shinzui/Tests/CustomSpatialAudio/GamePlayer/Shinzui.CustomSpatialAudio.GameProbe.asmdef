@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.GameProbe",
+  "references": ["Shinzui.CustomSpatialAudio.Infrastructure", "Shinzui.CustomSpatialAudio.Application", "Shinzui.CustomSpatialAudio.DI", "Shinzui.SpatialAudio.Application", "DILayer", "ViewLayer", "ApplicationLayer", "FMODUnity", "VContainer"],
+  "autoReferenced": true
+}

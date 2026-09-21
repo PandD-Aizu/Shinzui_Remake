@@ -1,0 +1,58 @@
+{
+  "success": true,
+  "command": "eval",
+  "result": {
+    "output": null,
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": {
+      "phase": "Hunt",
+      "pressure": 1.0,
+      "focus": 0,
+      "found": true,
+      "player": "(0.00, 1.66, 0.00)",
+      "runtimeCount": 2,
+      "runtimes": [
+        {
+          "available": true,
+          "ready": true,
+          "position": "(0.98, 1.62, 0.08)",
+          "sight": true
+        },
+        {
+          "available": true,
+          "ready": true,
+          "position": "(-6.11, 0.99, 16.48)",
+          "sight": false
+        }
+      ],
+      "agents": [
+        {
+          "name": "EnemyMovement",
+          "agent": "Enemy",
+          "path": "PathComplete",
+          "position": "(0.98, 1.62, 0.08)",
+          "destination": "(0.00, 0.60, 0.00)"
+        },
+        {
+          "name": "BlackHoleEnemy",
+          "agent": "BlackHoleEnemy",
+          "path": "PathComplete",
+          "position": "(-6.11, 0.99, 16.48)",
+          "destination": "(-6.11, 0.99, 16.48)"
+        }
+      ]
+    },
+    "executionTimeMs": 319,
+    "message": null,
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-09-20T22:54:50.4387409Z"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:54:50.4392431Z"
+}

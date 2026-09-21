@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="76" result="Passed" total="76" passed="76" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:20Z" duration="2.2514332">
+  <test-suite type="TestSuite" id="1000" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="170" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:20Z" duration="2.251433" total="76" passed="76" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1216" name="Shinzui.CustomSpatialAudio.Tests.dll" fullname="D:/Pandd/ShinShinzui/Library/ScriptAssemblies/Shinzui.CustomSpatialAudio.Tests.dll" runstate="Runnable" testcasecount="76" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:20Z" duration="2.183975" total="76" passed="76" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="58808" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1217" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="76" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:20Z" duration="2.180825" total="76" passed="76" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1218" name="Tests" fullname="Shinzui.Tests" runstate="Runnable" testcasecount="76" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:20Z" duration="2.178099" total="76" passed="76" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1219" name="CustomSpatialAudio" fullname="Shinzui.Tests.CustomSpatialAudio" runstate="Runnable" testcasecount="76" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:20Z" duration="2.176359" total="76" passed="76" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1126" name="BinauralHrirTests" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:19Z" duration="0.548096" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1128" name="AzimuthWrapAndElevationInterpolationAreContinuous" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.AzimuthWrapAndElevationInterpolationAreContinuous" methodname="AzimuthWrapAndElevationInterpolationAreContinuous" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="1099045646" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:18Z" duration="0.021516" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1135" name="BinauralImpulseCombinesFractionalTravelDelayWithMeasuredEarsWithoutExtraPan" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.BinauralImpulseCombinesFractionalTravelDelayWithMeasuredEarsWithoutExtraPan" methodname="BinauralImpulseCombinesFractionalTravelDelayWithMeasuredEarsWithoutExtraPan" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="180762482" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:18Z" duration="0.040982" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1138" name="BinauralTransitionsUseExistingHistoryAndAllocateNothingInAudioProcessing" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.BinauralTransitionsUseExistingHistoryAndAllocateNothingInAudioProcessing" methodname="BinauralTransitionsUseExistingHistoryAndAllocateNothingInAudioProcessing" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="1271573239" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:18Z" duration="0.073599" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1139" name="BundledKemarDataContainsMeasuredFrontBackElevationAndCorrectEarMirroring" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.BundledKemarDataContainsMeasuredFrontBackElevationAndCorrectEarMirroring" methodname="BundledKemarDataContainsMeasuredFrontBackElevationAndCorrectEarMirroring" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="523293379" result="Passed" start-time="2026-09-20 21:55:18Z" end-time="2026-09-20 21:55:19Z" duration="0.124732" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1127" name="FiltersAndDatasetDefensivelyOwnTheirInputs" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.FiltersAndDatasetDefensivelyOwnTheirInputs" methodname="FiltersAndDatasetDefensivelyOwnTheirInputs" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="72867839" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001558" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1129" name="ListenerYawAndPitchUseSourceRelativeDirection" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.ListenerYawAndPitchUseSourceRelativeDirection" methodname="ListenerYawAndPitchUseSourceRelativeDirection" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="30893170" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000612" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1136" name="MaximumTravelDelayCanReadTheLastSupportedHrirTap" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.MaximumTravelDelayCanReadTheLastSupportedHrirTap" methodname="MaximumTravelDelayCanReadTheLastSupportedHrirTap" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="1605972253" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.242688" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1137" name="RateMismatchIsRejectedBeforeAudioPublication" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.RateMismatchIsRejectedBeforeAudioPublication" methodname="RateMismatchIsRejectedBeforeAudioPublication" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="430940222" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000575" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1133" name="SincResamplingPreservesImpulseGainAndEarTimeDifference" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.004953" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1130" name="SincResamplingPreservesImpulseGainAndEarTimeDifference(16000)" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference(16000)" methodname="SincResamplingPreservesImpulseGainAndEarTimeDifference" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="282891034" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001061" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1131" name="SincResamplingPreservesImpulseGainAndEarTimeDifference(48000)" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference(48000)" methodname="SincResamplingPreservesImpulseGainAndEarTimeDifference" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="912987368" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000393" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1132" name="SincResamplingPreservesImpulseGainAndEarTimeDifference(96000)" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference(96000)" methodname="SincResamplingPreservesImpulseGainAndEarTimeDifference" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="1509940984" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000501" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1134" name="WavReaderHonoursChannelsAndRejectsTruncatedOrCompressedData" fullname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.WavReaderHonoursChannelsAndRejectsTruncatedOrCompressedData" methodname="WavReaderHonoursChannelsAndRejectsTruncatedOrCompressedData" classname="Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests" runstate="Runnable" seed="586422050" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.002260" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1140" name="CustomSpatialAudioServiceTests" fullname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests" classname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.181878" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1142" name="MuteAndPauseAffectTailAndFreezeExpiry" fullname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.MuteAndPauseAffectTailAndFreezeExpiry" methodname="MuteAndPauseAffectTailAndFreezeExpiry" classname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests" runstate="Runnable" seed="2073464770" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.082401" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1143" name="PoolBoundPriorityAndReuseDoNotLeakOldTailOrHandles" fullname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.PoolBoundPriorityAndReuseDoNotLeakOldTailOrHandles" methodname="PoolBoundPriorityAndReuseDoNotLeakOldTailOrHandles" classname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests" runstate="Runnable" seed="1453051346" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.032592" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1141" name="PreparedVoicesAreSilentThenDetachAndProduceAudibleTail" fullname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.PreparedVoicesAreSilentThenDetachAndProduceAudibleTail" methodname="PreparedVoicesAreSilentThenDetachAndProduceAudibleTail" classname="Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests" runstate="Runnable" seed="1775141638" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.064801" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1144" name="FmodRoomAcousticProcessorTests" fullname="Shinzui.Tests.CustomSpatialAudio.FmodRoomAcousticProcessorTests" classname="Shinzui.Tests.CustomSpatialAudio.FmodRoomAcousticProcessorTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.046826" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1145" name="NativeGroupMutesAndPausesStoredTailThenCanBeRecreated" fullname="Shinzui.Tests.CustomSpatialAudio.FmodRoomAcousticProcessorTests.NativeGroupMutesAndPausesStoredTailThenCanBeRecreated" methodname="NativeGroupMutesAndPausesStoredTailThenCanBeRecreated" classname="Shinzui.Tests.CustomSpatialAudio.FmodRoomAcousticProcessorTests" runstate="Runnable" seed="327658035" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.045466" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1146" name="GeneratedAcousticWorldTests" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.037345" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1153" name="ClosedPortalAndOutsidePositionsAreSilent" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ClosedPortalAndOutsidePositionsAreSilent" methodname="ClosedPortalAndOutsidePositionsAreSilent" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="281571022" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.003033" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1154" name="PhysicalDoorInsideACellFollowsOpeningWithoutAFalseWarpConnection" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.PhysicalDoorInsideACellFollowsOpeningWithoutAFalseWarpConnection" methodname="PhysicalDoorInsideACellFollowsOpeningWithoutAFalseWarpConnection" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="1159394589" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001745" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1152" name="ProductionDimensionsProduceConnectedNonoverlappingCells" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.029496" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1147" name="ProductionDimensionsProduceConnectedNonoverlappingCells(2777)" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(2777)" methodname="ProductionDimensionsProduceConnectedNonoverlappingCells" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="152635660" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.025092" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1148" name="ProductionDimensionsProduceConnectedNonoverlappingCells(42)" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(42)" methodname="ProductionDimensionsProduceConnectedNonoverlappingCells" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="841540611" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000819" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1149" name="ProductionDimensionsProduceConnectedNonoverlappingCells(1234)" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(1234)" methodname="ProductionDimensionsProduceConnectedNonoverlappingCells" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="1331656753" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000655" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1150" name="ProductionDimensionsProduceConnectedNonoverlappingCells(1)" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(1)" methodname="ProductionDimensionsProduceConnectedNonoverlappingCells" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="2003385203" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000592" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1151" name="ProductionDimensionsProduceConnectedNonoverlappingCells(999)" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(999)" methodname="ProductionDimensionsProduceConnectedNonoverlappingCells" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="1350425262" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000801" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1155" name="WarpPairDoesNotCreateAnAcousticTeleport" fullname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.WarpPairDoesNotCreateAnAcousticTeleport" methodname="WarpPairDoesNotCreateAnAcousticTeleport" classname="Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests" runstate="Runnable" seed="1435230569" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001253" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1156" name="PortalRoomAcousticsTests" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.019292" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1161" name="ClosedDoor_DisconnectedCellsAndZeroTransmission_AreSilent" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.ClosedDoor_DisconnectedCellsAndZeroTransmission_AreSilent" methodname="ClosedDoor_DisconnectedCellsAndZeroTransmission_AreSilent" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="1286495394" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001854" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1160" name="DoorOpeningAndBandTransmission_MultiplyAmplitudeWithoutChangingTravelTime" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.DoorOpeningAndBandTransmission_MultiplyAmplitudeWithoutChangingTravelTime" methodname="DoorOpeningAndBandTransmission_MultiplyAmplitudeWithoutChangingTravelTime" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="1825161372" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000761" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1164" name="EqualCostRoutes_AreDeterministicRegardlessOfInputOrder" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.EqualCostRoutes_AreDeterministicRegardlessOfInputOrder" methodname="EqualCostRoutes_AreDeterministicRegardlessOfInputOrder" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="949702214" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001154" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1166" name="GraphAndPath_CopyCallerArraysAndPreserveDoorSnapshot" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.GraphAndPath_CopyCallerArraysAndPreserveDoorSnapshot" methodname="GraphAndPath_CopyCallerArraysAndPreserveDoorSnapshot" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="2046249544" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000776" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1167" name="InvalidGraphGeometryAndIdentifiers_AreRejected" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.InvalidGraphGeometryAndIdentifiers_AreRejected" methodname="InvalidGraphGeometryAndIdentifiers_AreRejected" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="166797368" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001998" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1168" name="InvalidQueryAndDoorValues_AreRejectedBeforeDsp" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.InvalidQueryAndDoorValues_AreRejectedBeforeDsp" methodname="InvalidQueryAndDoorValues_AreRejectedBeforeDsp" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="1499681342" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001870" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1158" name="LBend_AccumulatesAllSegmentsAndArrivesFromLastOpening" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.LBend_AccumulatesAllSegmentsAndArrivesFromLastOpening" methodname="LBend_AccumulatesAllSegmentsAndArrivesFromLastOpening" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="996904695" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001122" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1165" name="ListenerExactlyOnOpening_UsesIncidentSegmentAndReverseRouteIsReciprocal" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.ListenerExactlyOnOpening_UsesIncidentSegmentAndReverseRouteIsReciprocal" methodname="ListenerExactlyOnOpening_UsesIncidentSegmentAndReverseRouteIsReciprocal" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="11365675" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000884" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1163" name="LossWeightCanPreferLongerOpenRoute_AndZeroWeightFindsShortestGeometry" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.LossWeightCanPreferLongerOpenRoute_AndZeroWeightFindsShortestGeometry" methodname="LossWeightCanPreferLongerOpenRoute_AndZeroWeightFindsShortestGeometry" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="154731862" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000828" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1169" name="PathBeyondDspBudget_IsNeverClampedToAnEarlierArrival" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.PathBeyondDspBudget_IsNeverClampedToAnEarlierArrival" methodname="PathBeyondDspBudget_IsNeverClampedToAnEarlierArrival" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="1487124441" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000851" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1159" name="RotationChangesPan_WhileRouteAndTravelTimeRemainStable" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.RotationChangesPan_WhileRouteAndTravelTimeRemainStable" methodname="RotationChangesPan_WhileRouteAndTravelTimeRemainStable" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="1520692983" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000580" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1157" name="SameConvexCell_UsesDirectSegmentAndDoesNotInventReflectionsOrTail" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.SameConvexCell_UsesDirectSegmentAndDoesNotInventReflectionsOrTail" methodname="SameConvexCell_UsesDirectSegmentAndDoesNotInventReflectionsOrTail" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="881670521" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001867" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1162" name="SearchIncludesFinalSegment_NotJustCheapestEntryIntoListenerCell" fullname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.SearchIncludesFinalSegment_NotJustCheapestEntryIntoListenerCell" methodname="SearchIncludesFinalSegment_NotJustCheapestEntryIntoListenerCell" classname="Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests" runstate="Runnable" seed="1494014723" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000548" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1170" name="RectangularRoomAcousticsTests" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.011486" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1174" name="AllOpenBoundaries_ProduceNoNewEarlyOrLateWetEnergy" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.AllOpenBoundaries_ProduceNoNewEarlyOrLateWetEnergy" methodname="AllOpenBoundaries_ProduceNoNewEarlyOrLateWetEnergy" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="1514555024" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000732" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1171" name="CentredSourceAndListener_HaveSixAnalyticalFirstOrderPaths" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.CentredSourceAndListener_HaveSixAnalyticalFirstOrderPaths" methodname="CentredSourceAndListener_HaveSixAnalyticalFirstOrderPaths" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="1560710547" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001029" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1175" name="FullyAbsorbedBand_DoesNotExciteLateReturnWhileOtherBandsSurvive" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.FullyAbsorbedBand_DoesNotExciteLateReturnWhileOtherBandsSurvive" methodname="FullyAbsorbedBand_DoesNotExciteLateReturnWhileOtherBandsSurvive" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="1513380120" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000496" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1180" name="InvalidNumericInputsAndBounds_AreRejectedBeforeDsp" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.InvalidNumericInputsAndBounds_AreRejectedBeforeDsp" methodname="InvalidNumericInputsAndBounds_AreRejectedBeforeDsp" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="2065937022" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.002103" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1179" name="LargestRoomAndSlowestSound_FitThreeSecondDelayBudget" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.LargestRoomAndSlowestSound_FitThreeSecondDelayBudget" methodname="LargestRoomAndSlowestSound_FitThreeSecondDelayBudget" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="66623889" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001143" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1172" name="OffCentrePath_UsesImageDistanceAndSquareRootOfEnergySurvival" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.OffCentrePath_UsesImageDistanceAndSquareRootOfEnergySurvival" methodname="OffCentrePath_UsesImageDistanceAndSquareRootOfEnergySurvival" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="621123545" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000948" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1176" name="OneWallOpening_LosesEnergyOnlyOnItsFirstOrderPathAndShortensTail" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.OneWallOpening_LosesEnergyOnlyOnItsFirstOrderPathAndShortensTail" methodname="OneWallOpening_LosesEnergyOnlyOnItsFirstOrderPathAndShortensTail" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="1396712398" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000833" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1178" name="ReflectiveAndAbsorbingExtremes_HaveExplicitBoundedDecayParameters" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.ReflectiveAndAbsorbingExtremes_HaveExplicitBoundedDecayParameters" methodname="ReflectiveAndAbsorbingExtremes_HaveExplicitBoundedDecayParameters" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="1232609711" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000446" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1173" name="RotationChangesPan_WithoutChangingWorldPathOrTravelTime" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.RotationChangesPan_WithoutChangingWorldPathOrTravelTime" methodname="RotationChangesPan_WithoutChangingWorldPathOrTravelTime" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="1601459723" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000408" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1177" name="Rt60_MatchesEyringEstimateForUniformCube_AndRespondsToScaleAndAbsorption" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.Rt60_MatchesEyringEstimateForUniformCube_AndRespondsToScaleAndAbsorption" methodname="Rt60_MatchesEyringEstimateForUniformCube_AndRespondsToScaleAndAbsorption" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests" runstate="Runnable" seed="810068579" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.000431" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1181" name="RectangularRoomDspTests" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" testcasecount="23" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:20Z" duration="1.302891" total="23" passed="23" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1206" name="BinauralBudgetDefaultsToDirectAndRejectsInvalidLimits" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetDefaultsToDirectAndRejectsInvalidLimits" methodname="BinauralBudgetDefaultsToDirectAndRejectsInvalidLimits" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1359301532" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.001205" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1202" name="BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.006809" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1200" name="BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies(1)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies(1)" methodname="BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1467484768" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.003082" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1201" name="BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies(2)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies(2)" methodname="BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="222810333" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.002439" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1182" name="DirectImpulseArrivesAtItsTravelDelayWithEqualPowerPan" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.DirectImpulseArrivesAtItsTravelDelayWithEqualPowerPan" methodname="DirectImpulseArrivesAtItsTravelDelayWithEqualPowerPan" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1015292691" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.003561" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1183" name="EachFirstOrderReflectionUsesItsOwnDelayAndPan" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.EachFirstOrderReflectionUsesItsOwnDelayAndPan" methodname="EachFirstOrderReflectionUsesItsOwnDelayAndPan" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="74943255" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.003098" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1187" name="FullyAbsorbingRoomProducesNoEarlyOrLateEnergy" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.FullyAbsorbingRoomProducesNoEarlyOrLateEnergy" methodname="FullyAbsorbingRoomProducesNoEarlyOrLateEnergy" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1858388895" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.031541" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1185" name="FullyOpenResponseDoesNotExciteALateTail" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.FullyOpenResponseDoesNotExciteALateTail" methodname="FullyOpenResponseDoesNotExciteALateTail" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="984780198" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.028762" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1193" name="GainAndDelayChangeCrossfadeWithoutAStepOnAConstantSignal" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.GainAndDelayChangeCrossfadeWithoutAStepOnAConstantSignal" methodname="GainAndDelayChangeCrossfadeWithoutAStepOnAConstantSignal" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1786084246" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.011282" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1191" name="InvalidRateDelayAndBufferInputsAreRejected" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.InvalidRateDelayAndBufferInputsAreRejected" methodname="InvalidRateDelayAndBufferInputsAreRejected" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="25120651" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.002142" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1186" name="LargeRoomLateEnergyCannotPrecedeItsFirstReflection" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LargeRoomLateEnergyCannotPrecedeItsFirstReflection" methodname="LargeRoomLateEnergyCannotPrecedeItsFirstReflection" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="700328208" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.039355" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1189" name="LongerUniformRt60PreservesMoreLateEnergy" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LongerUniformRt60PreservesMoreLateEnergy" methodname="LongerUniformRt60PreservesMoreLateEnergy" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1698632320" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:19Z" duration="0.081815" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1207" name="LongestFractionalDelayRetainsTheExtraTapOfAMaximumLengthHrir" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LongestFractionalDelayRetainsTheExtraTapOfAMaximumLengthHrir" methodname="LongestFractionalDelayRetainsTheExtraTapOfAMaximumLengthHrir" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1922458757" result="Passed" start-time="2026-09-20 21:55:19Z" end-time="2026-09-20 21:55:20Z" duration="0.510674" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1190" name="LowAndHighRt60ControlsAffectTheirExcitedBandsIndependently" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LowAndHighRt60ControlsAffectTheirExcitedBandsIndependently" methodname="LowAndHighRt60ControlsAffectTheirExcitedBandsIndependently" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="970478822" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.129208" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1198" name="NarrowBandT20DecayTracksItsConfiguredRt60" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.275062" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1195" name="NarrowBandT20DecayTracksItsConfiguredRt60(125.0f,1.008f)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60(125.0f,1.008f)" methodname="NarrowBandT20DecayTracksItsConfiguredRt60" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1888899389" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.092572" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1196" name="NarrowBandT20DecayTracksItsConfiguredRt60(1000.0f,0.448f)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60(1000.0f,0.448f)" methodname="NarrowBandT20DecayTracksItsConfiguredRt60" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="681347430" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.094691" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1197" name="NarrowBandT20DecayTracksItsConfiguredRt60(8000.0f,0.216f)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60(8000.0f,0.216f)" methodname="NarrowBandT20DecayTracksItsConfiguredRt60" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1575005731" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.086738" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1192" name="NonFiniteInputAndRepeatedRoomUpdatesStayFinite" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NonFiniteInputAndRepeatedRoomUpdatesStayFinite" methodname="NonFiniteInputAndRepeatedRoomUpdatesStayFinite" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="218879463" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.044740" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1184" name="NullDryInputContinuesTheTailAndResetClearsIt" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NullDryInputContinuesTheTailAndResetClearsIt" methodname="NullDryInputContinuesTheTailAndResetClearsIt" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1785581648" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.032135" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-suite type="ParameterizedMethod" id="1205" name="PreparedFractionalHrirKernelsMatchReferenceConvolution" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.PreparedFractionalHrirKernelsMatchReferenceConvolution" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.013167" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1203" name="PreparedFractionalHrirKernelsMatchReferenceConvolution(True)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.PreparedFractionalHrirKernelsMatchReferenceConvolution(True)" methodname="PreparedFractionalHrirKernelsMatchReferenceConvolution" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1131736605" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.006450" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1204" name="PreparedFractionalHrirKernelsMatchReferenceConvolution(False)" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.PreparedFractionalHrirKernelsMatchReferenceConvolution(False)" methodname="PreparedFractionalHrirKernelsMatchReferenceConvolution" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="88692951" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.004478" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1188" name="ProcessingIsInvariantToDryBufferChunking" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.ProcessingIsInvariantToDryBufferChunking" methodname="ProcessingIsInvariantToDryBufferChunking" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="92254593" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.032218" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1194" name="QueuedRoomChangeStartsAtSameSampleRegardlessOfCallbackSize" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.QueuedRoomChangeStartsAtSameSampleRegardlessOfCallbackSize" methodname="QueuedRoomChangeStartsAtSameSampleRegardlessOfCallbackSize" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="1603064799" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.010625" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1199" name="WarmProcessingAndQueuedTransitionsAllocateNoManagedMemory" fullname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.WarmProcessingAndQueuedTransitionsAllocateNoManagedMemory" methodname="WarmProcessingAndQueuedTransitionsAllocateNoManagedMemory" classname="Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests" runstate="Runnable" seed="2123944892" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.041345" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1208" name="TunnelAudioTemplateBoundsTests" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.021711" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="ParameterizedMethod" id="1214" name="ActualSceneModelDimensionsBuildValidAcousticGraph" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.019764" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1209" name="ActualSceneModelDimensionsBuildValidAcousticGraph(2777)" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(2777)" methodname="ActualSceneModelDimensionsBuildValidAcousticGraph" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" seed="789648808" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.015906" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1210" name="ActualSceneModelDimensionsBuildValidAcousticGraph(42)" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(42)" methodname="ActualSceneModelDimensionsBuildValidAcousticGraph" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" seed="1631913447" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.000785" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1211" name="ActualSceneModelDimensionsBuildValidAcousticGraph(1234)" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(1234)" methodname="ActualSceneModelDimensionsBuildValidAcousticGraph" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" seed="179407940" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.000934" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1212" name="ActualSceneModelDimensionsBuildValidAcousticGraph(1)" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(1)" methodname="ActualSceneModelDimensionsBuildValidAcousticGraph" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" seed="1382288768" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.000585" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1213" name="ActualSceneModelDimensionsBuildValidAcousticGraph(999)" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(999)" methodname="ActualSceneModelDimensionsBuildValidAcousticGraph" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" seed="1674311500" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.000520" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1215" name="MainPrefabDimensionsUseMeshDataAndEncloseAllSixEntrances" fullname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.MainPrefabDimensionsUseMeshDataAndEncloseAllSixEntrances" methodname="MainPrefabDimensionsUseMeshDataAndEncloseAllSixEntrances" classname="Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests" runstate="Runnable" seed="2059400193" result="Passed" start-time="2026-09-20 21:55:20Z" end-time="2026-09-20 21:55:20Z" duration="0.000828" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/koton/AppData/LocalLow/PandD_org/Shinzui\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

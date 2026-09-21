@@ -32,7 +32,7 @@ namespace Shinzui.View
 
         /// <summary>
         /// NavMeshAgentを解決する
-        /// agentOverrideが設定されていればそれを返し、なければ自身のコンポーネント、親、子の順に探す。見つからなければ近くのNavMeshAgentを探索する
+        /// agentOverrideが設定されていればそれを返し、なければ自身のコンポーネント、親、子の順に探す。別オブジェクトのAgentは取得しない
         /// </summary>
         /// <returns></returns>
         public NavMeshAgent ResolveAgent()
@@ -60,7 +60,7 @@ namespace Shinzui.View
                 return agent;
             }
 
-            return FindNearestAgent(8.0f);
+            return null;
         }
 
         /// <summary>
@@ -70,52 +70,6 @@ namespace Shinzui.View
         public void SetGizmoChaseDistance(float chaseDistance)
         {
             _gizmoChaseDistance = chaseDistance;
-        }
-
-        /// <summary>
-        /// 指定されたワールド座標にZ軸をワープさせる
-        /// 親が存在する場合は親のZ座標を変更する
-        /// </summary>
-        /// <param name="warpTarget"></param>
-        public void WarpTo(Vector3 warpTarget)
-        {
-            if (transform.parent != null)
-            {
-                Vector3 pos = transform.parent.position;
-                pos.z = warpTarget.z;
-                transform.parent.position = pos;
-                return;
-            }
-
-            Vector3 ownPos = transform.position;
-            ownPos.z = warpTarget.z;
-            transform.position = ownPos;
-        }
-
-        /// <summary>
-        /// 指定距離内で最も近いNavMeshAgentを探索する
-        /// </summary>
-        /// <param name="maxDistance">最大探索距離</param>
-        /// <returns>見つかった最も近いNavMeshAgent</returns>
-        private NavMeshAgent FindNearestAgent(float maxDistance)
-        {
-            NavMeshAgent[] agents = FindObjectsByType<NavMeshAgent>(FindObjectsSortMode.None);
-            NavMeshAgent nearestAgent = null;
-            float nearestSqrDistance = maxDistance * maxDistance;
-
-            foreach (NavMeshAgent agent in agents)
-            {
-                float sqrDistance = (agent.transform.position - transform.position).sqrMagnitude;
-                if (sqrDistance > nearestSqrDistance)
-                {
-                    continue;
-                }
-
-                nearestSqrDistance = sqrDistance;
-                nearestAgent = agent;
-            }
-
-            return nearestAgent;
         }
 
         private void OnDrawGizmos()

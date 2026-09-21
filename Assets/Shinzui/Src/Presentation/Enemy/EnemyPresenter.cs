@@ -21,6 +21,12 @@ namespace Shinzui.Presentation
         private readonly EnemyDirectorUseCase _enemyDirectorUseCase;
         private readonly Func<EnemyMoveUseCase> _enemyMoveUseCaseFactory;
         private readonly EnemyView[] _enemyViews;
+        private readonly IEnemyRuntime[] _runtimes;
+        private readonly EnemyDirectorSettings _settings;
+        private readonly PlayerMoveUseCase _playerMove;
+        private Vector3 _previousPlayerPosition;
+        private float _footstepTimer;
+        private bool _hasPreviousPosition;
         private readonly List<EnemyController> _controllers = new();
         private readonly Dictionary<EnemyView, EnemyController> _controllersByView = new();
         private EnemyReport[] _enemyReports = Array.Empty<EnemyReport>();
@@ -30,13 +36,19 @@ namespace Shinzui.Presentation
             PlayerDeathUseCase playerDeathUseCase,
             EnemyDirectorUseCase enemyDirectorUseCase,
             Func<EnemyMoveUseCase> enemyMoveUseCaseFactory,
-            EnemyView[] enemyViews)
+            EnemyView[] enemyViews,
+            IEnemyRuntime[] runtimes,
+            EnemyDirectorSettings settings,
+            PlayerMoveUseCase playerMove)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
             _enemyDirectorUseCase = enemyDirectorUseCase;
             _enemyMoveUseCaseFactory = enemyMoveUseCaseFactory;
             _enemyViews = enemyViews ?? Array.Empty<EnemyView>();
+            _runtimes = runtimes ?? Array.Empty<IEnemyRuntime>();
+            _settings = settings;
+            _playerMove = playerMove;
         }
 
         public void Initialize()
@@ -44,9 +56,10 @@ namespace Shinzui.Presentation
             _controllers.Clear();
             _controllersByView.Clear();
 
-            foreach (EnemyView enemyView in _enemyViews)
+            for (int i = 0; i < _enemyViews.Length; i++)
             {
-                if (enemyView == null || _controllersByView.ContainsKey(enemyView))
+                EnemyView enemyView = _enemyViews[i];
+                if (enemyView == null || i >= _runtimes.Length || _runtimes[i] == null || _controllersByView.ContainsKey(enemyView))
                 {
                     continue;
                 }
@@ -54,8 +67,10 @@ namespace Shinzui.Presentation
                 var controller = new EnemyController(
                     _controllers.Count,
                     enemyView,
+                    _runtimes[i],
                     _enemyMoveUseCaseFactory(),
-                    _playerDeathUseCase);
+                    _playerDeathUseCase,
+                    _settings);
                 controller.Initialize();
 
                 _controllers.Add(controller);
@@ -73,14 +88,15 @@ namespace Shinzui.Presentation
         public void Tick()
         {
             float deltaTime = Time.deltaTime;
-            EnemyCommand[] commands = DecideCommands();
+            if (deltaTime <= 0f) return;
+            EnemyCommand[] commands = DecideCommands(deltaTime);
 
             foreach (EnemyController controller in _controllers)
             {
                 EnemyCommand command = controller.Id >= 0 && controller.Id < commands.Length
                     ? commands[controller.Id]
                     : EnemyCommand.Wander;
-                controller.Tick(deltaTime, _playerTracker, command);
+                controller.Tick(deltaTime, _playerTracker, _playerMove.CurrentHeight.CurrentValue, command);
             }
         }
 
@@ -100,7 +116,7 @@ namespace Shinzui.Presentation
         /// 統括AIに現在の世界状態を渡してEnemyごとの命令を決定する
         /// </summary>
         /// <returns>EnemyのIdに対応する命令配列</returns>
-        private EnemyCommand[] DecideCommands()
+        private EnemyCommand[] DecideCommands(float deltaTime)
         {
             if (_enemyDirectorUseCase == null || _playerTracker == null)
             {
@@ -111,7 +127,8 @@ namespace Shinzui.Presentation
 
             for (int i = 0; i < _controllers.Count; i++)
             {
-                _enemyReports[i] = _controllers[i].CreateReport();
+                _enemyReports[i] = _controllers[i].CreateReport(deltaTime, _playerTracker.PlayerPosition,
+                    _playerMove.CurrentHeight.CurrentValue);
             }
 
             var tunnelBounds = _playerTracker.CurrentTunnelBounds;
@@ -120,9 +137,24 @@ namespace Shinzui.Presentation
                 _enemyReports,
                 tunnelBounds.HasValue,
                 tunnelBounds.HasValue ? tunnelBounds.Value.start : Vector3.zero,
-                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero);
+                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero,
+                GetFootstepNoiseRadius(deltaTime));
 
-            return _enemyDirectorUseCase.DecideCommands(worldState);
+            return _enemyDirectorUseCase.DecideCommands(worldState, deltaTime);
+        }
+
+        private float GetFootstepNoiseRadius(float deltaTime)
+        {
+            Vector3 position = _playerTracker.PlayerPosition;
+            Vector3 movement = position - _previousPlayerPosition;
+            movement.y = 0f;
+            bool moved = _hasPreviousPosition && movement.sqrMagnitude > .000001f && movement.sqrMagnitude < 4f;
+            _previousPlayerPosition = position;
+            _hasPreviousPosition = true;
+            _footstepTimer -= deltaTime;
+            if (!moved || _playerMove.IsCrouching || _footstepTimer > 0f) return 0f;
+            _footstepTimer = Mathf.Max(.1f, _settings.footstepInterval);
+            return Mathf.Max(0f, _playerMove.IsRunning ? _settings.runningNoiseRadius : _settings.walkingNoiseRadius);
         }
 
         /// <summary>

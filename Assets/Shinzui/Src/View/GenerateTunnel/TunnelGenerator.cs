@@ -57,7 +57,7 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private Vector3 warpCorridorModelEuler = Vector3.zero;
 
         [Header("Model Dimensions")]
-        [Tooltip("Use the unscaled model bounds for layout size. Model Scale only changes the generated visuals.")]
+        [Tooltip("Measure layout dimensions and side-mouth spacing from model meshes, including Model Scale.")]
         [SerializeField] private bool useModelBoundsForLayout = true;
         [SerializeField] private bool configureBasicTunnelExitParts = true;
 

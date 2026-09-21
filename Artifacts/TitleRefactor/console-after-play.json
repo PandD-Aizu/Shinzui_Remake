@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "command": "console",
+  "result": {
+    "entries": [],
+    "cursor": 440,
+    "returned": 0,
+    "dropped": false
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:38:03.2836938Z"
+}

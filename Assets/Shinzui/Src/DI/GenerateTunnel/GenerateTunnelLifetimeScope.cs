@@ -62,6 +62,11 @@ namespace Shinzui.DI.GenerateTunnel
             builder.RegisterComponent(mapView);
             builder.RegisterComponent(navigation).As<ITunnelNavigationBuilder>();
             builder.RegisterComponent(generator);
+            // World-audio callers depend on the Application API; the composition root owns the backend.
+            builder.Register<Shinzui.Application.SpatialAudio.ISpatialAudioService>(
+                _ => Shinzui.DI.CustomSpatialAudio.CustomTunnelAudioBinding.Attach(mapView).Runtime.Voices,
+                Lifetime.Scoped);
+            builder.Register<Shinzui.Application.SpatialAudio.SpatialAudioUseCase>(Lifetime.Scoped);
             builder.Register<GenerateTunnelPresenter>(Lifetime.Scoped);
             builder.RegisterInstance(new TunnelItemSpawnBinding(
                 ResolveInScene<ItemSpawnContainerView>(null, scene),

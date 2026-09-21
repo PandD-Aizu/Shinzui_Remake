@@ -1,0 +1,84 @@
+{
+    "unityVersion": "6000.5.8f1",
+    "environment": "Windows Player",
+    "scope": "Serial pure-DSP render of 512-frame blocks at 48 kHz, after warmup. Includes one FDN per voice. Excludes FMOD, geometry, HRIR interpolation, GPU, and gameplay. Development build timings are machine-dependent; no production voice budget is inferred.",
+    "cases": [
+        {
+            "renderer": "stereo",
+            "voices": 1,
+            "hrirPaths": 0,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 0.19658437500000004,
+            "p95BlockMilliseconds": 0.2515,
+            "maxBlockMilliseconds": 0.3786,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR direct FIR",
+            "voices": 1,
+            "hrirPaths": 1,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 0.27096250000000007,
+            "p95BlockMilliseconds": 0.3377,
+            "maxBlockMilliseconds": 0.7208,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "stereo",
+            "voices": 8,
+            "hrirPaths": 0,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 1.397675,
+            "p95BlockMilliseconds": 1.6572,
+            "maxBlockMilliseconds": 1.8932,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR direct FIR",
+            "voices": 8,
+            "hrirPaths": 1,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 2.1838921874999999,
+            "p95BlockMilliseconds": 2.7098,
+            "maxBlockMilliseconds": 2.9581,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "stereo",
+            "voices": 16,
+            "hrirPaths": 0,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 2.6864624999999999,
+            "p95BlockMilliseconds": 3.2221,
+            "maxBlockMilliseconds": 3.5719,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR direct FIR",
+            "voices": 16,
+            "hrirPaths": 1,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 4.185859374999999,
+            "p95BlockMilliseconds": 5.1775,
+            "maxBlockMilliseconds": 5.4456,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR all-path FIR (quality comparison)",
+            "voices": 1,
+            "hrirPaths": 7,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 1.494784375,
+            "p95BlockMilliseconds": 1.8561,
+            "maxBlockMilliseconds": 2.108,
+            "allocatedBytes": 0,
+            "finite": true
+        }
+    ]
+}

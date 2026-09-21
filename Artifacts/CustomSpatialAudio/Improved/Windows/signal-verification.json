@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "checks": {
+    "component_sum_max_error": 3.122502256758253e-17,
+    "open_boundaries_equal_direct": true,
+    "portal": {
+      "quarter_open_amplitude_max_error": 0.0,
+      "closed_silent": true,
+      "first_frame": 1830,
+      "expected_fractional_frame": 1830.8239109455235,
+      "arrival_from_final_portal_not_through_wall": true
+    },
+    "binaural": {
+      "directional_max_differences": {
+        "front_back": 0.1255380054935813,
+        "front_up": 0.1854342706501484
+      },
+      "right_source_left_energy": 0.012288309347560582,
+      "right_source_right_energy": 0.272815074605939,
+      "right_source_left_peak_frame": 203,
+      "right_source_right_peak_frame": 169,
+      "note": "Signal verification only; not a perceptual localization evaluation."
+    },
+    "reference_max_sample_difference": 2.2351741790771484e-08
+  }
+}

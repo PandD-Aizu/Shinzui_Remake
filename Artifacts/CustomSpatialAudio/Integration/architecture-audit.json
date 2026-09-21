@@ -1,0 +1,19 @@
+{
+  "cycles": [],
+  "customAssemblies": {
+    "Shinzui.CustomSpatialAudio.Infrastructure": [
+      "Shinzui.CustomSpatialAudio.Application",
+      "Shinzui.SpatialAudio.Application",
+      "ApplicationLayer",
+      "FMODUnity"
+    ],
+    "Shinzui.CustomSpatialAudio.DI": [
+      "Shinzui.CustomSpatialAudio.Infrastructure",
+      "Shinzui.SpatialAudio.Application",
+      "ApplicationLayer",
+      "ViewLayer"
+    ],
+    "Shinzui.CustomSpatialAudio.Application": []
+  },
+  "missingMetas": []
+}

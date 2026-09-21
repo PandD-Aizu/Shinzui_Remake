@@ -1,0 +1,17 @@
+{
+  "jobId": "df4cef5c144545f0bbe7d539fc0953dc",
+  "command": "eval",
+  "state": "completed",
+  "cancellationRequested": false,
+  "enqueuedAt": "2026-09-20T22:09:44.4540596Z",
+  "startedAt": "2026-09-20T22:09:44.4555697Z",
+  "completedAt": "2026-09-20T22:21:08.579164Z",
+  "result": {
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": "Integrated Windows IL2CPP build succeeded",
+    "executionTimeMs": 684112,
+    "executedAt": "2026-09-20T22:21:08.5781396Z"
+  }
+}

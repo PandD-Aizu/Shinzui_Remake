@@ -1,9 +1,5 @@
 using VContainer;
 using VContainer.Unity;
-using Shinzui.Application.Interfaces;
-using Shinzui.Application.UseCases;
-using Shinzui.Infrastructure.Repositories;
-using Shinzui.Infrastructure.Services;
 using Shinzui.Presentation.Settings;
 using Shinzui.View.Settings;
 using UnityEngine;
@@ -21,31 +17,22 @@ namespace Shinzui.DI
 
         protected override void Configure(IContainerBuilder builder)
         {
-            // --- インフラ層の登録 ---
-            builder.Register<FileSettingsRepository>(Lifetime.Singleton).As<ISettingsRepository>();
-            builder.Register<UnitySettingsApplier>(Lifetime.Singleton).As<ISettingsApplier>();
-
-            // --- アプリケーション層の登録 ---
-            builder.Register<SettingsUseCase>(Lifetime.Singleton);
+            SettingsRegistration.RegisterServices(builder);
 
             // --- ビュー層の登録 ---
-            var viewInstance = optionWindowView;
-            if (viewInstance == null)
+            if (optionWindowView != null)
             {
-                viewInstance = FindFirstObjectByType<OptionWindowView>();
-            }
-
-            if (viewInstance != null)
-            {
-                builder.RegisterComponent(viewInstance);
+                builder.RegisterComponent(optionWindowView);
             }
             else
             {
-                Debug.LogWarning("[Settings] OptionWindowView instance was not assigned and not found in the scene hierarchy.");
+                // VContainer searches this scene, including inactive UI, and reports a
+                // missing registration instead of selecting a view from another scene.
+                builder.RegisterComponentInHierarchy<OptionWindowView>();
             }
 
             // --- プレゼンテーション層の登録 ---
-            builder.RegisterEntryPoint<OptionPresenter>();
+            builder.RegisterEntryPoint<OptionPresenter>(Lifetime.Scoped);
         }
     }
 }

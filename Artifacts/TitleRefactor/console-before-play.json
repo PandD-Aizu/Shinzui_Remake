@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "command": "console",
+  "result": {
+    "entries": [
+      {
+        "seq": 435,
+        "timestampUtc": "2026-09-20T22:34:16.0389661Z",
+        "level": "log",
+        "message": "Executing IPostBuildCleanup for: Unity.PerformanceTesting.Editor.TestRunBuilder.",
+        "stackTrace": "UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()\n"
+      }
+    ],
+    "cursor": 435,
+    "returned": 1,
+    "dropped": false
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:35:05.5804214Z"
+}

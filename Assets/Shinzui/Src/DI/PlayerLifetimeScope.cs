@@ -2,6 +2,7 @@ using Shinzui.Application.Interfaces;
 using Shinzui.Application.Interfaces.Inventory;
 using Shinzui.Application.UseCases;
 using Shinzui.Application.UseCases.Enemy;
+using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.UseCases.Inventory;
 using Shinzui.Application.UseCases.Flashlight; // 【追加】
 using Shinzui.Domain.Entities;
@@ -46,6 +47,9 @@ namespace Shinzui.DI
         [SerializeField] private EnemyView[] enemyViews;
         [SerializeField] private HorrorDetectionView horrorDetectionView;
 
+        [Header("Enemy Director")]
+        [SerializeField] private EnemyDirectorSettings enemyDirectorSettings = new();
+
         [Header("Resource Need")]
         [SerializeField] private PlayerNeedWeightSettingsSO needWeightSettings;
         [SerializeField] private ItemCategoryClassifierSO itemCategoryClassifier;
@@ -63,6 +67,9 @@ namespace Shinzui.DI
             // UseCaseの登録
             builder.Register<PlayerMoveUseCase>(Lifetime.Scoped);
             builder.Register<PlayerThrowUseCase>(Lifetime.Scoped);
+            enemyDirectorSettings ??= new EnemyDirectorSettings();
+            builder.RegisterInstance(enemyDirectorSettings);
+            builder.Register<FMODEnemyEncounterFeedback>(Lifetime.Scoped).As<IEnemyEncounterFeedback>();
             builder.Register<EnemyDirectorUseCase>(Lifetime.Scoped);
             builder.Register<EnemyMoveUseCase>(Lifetime.Transient);
             builder.RegisterFactory<EnemyMoveUseCase>(resolver => () => resolver.Resolve<EnemyMoveUseCase>(), Lifetime.Scoped);
@@ -435,6 +442,24 @@ namespace Shinzui.DI
             }
 
             builder.RegisterInstance(enemyViewInstances);
+            var trackedPlayer = playerView != null ? playerView : FindFirstObjectByType<PlayerView>();
+            var runtimes = new IEnemyRuntime[enemyViewInstances.Length];
+            var registeredAgents = new System.Collections.Generic.HashSet<UnityEngine.AI.NavMeshAgent>();
+            for (int i = 0; i < enemyViewInstances.Length; i++)
+            {
+                var enemy = enemyViewInstances[i];
+                if (enemy == null) continue;
+                var agent = enemy.ResolveAgent();
+                if (agent == null || !registeredAgents.Add(agent))
+                {
+                    Debug.LogWarning($"Enemy Director: {enemy.name} has no unique NavMeshAgent; skipped.", enemy);
+                    continue;
+                }
+                runtimes[i] = new UnityEnemyRuntime(agent, enemy.transform,
+                    trackedPlayer != null ? trackedPlayer.transform : null,
+                    () => enemy != null && enemy.isActiveAndEnabled, enemyDirectorSettings);
+            }
+            builder.RegisterInstance(runtimes);
             builder.RegisterEntryPoint<EnemyPresenter>().AsSelf();
         }
 

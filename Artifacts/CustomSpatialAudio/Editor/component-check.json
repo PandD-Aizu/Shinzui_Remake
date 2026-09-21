@@ -1,0 +1,6 @@
+{
+  "mixed_vs_sum_max_abs_error": 3.122502256758253e-17,
+  "open_vs_direct_max_abs_error": 0.0,
+  "passed": true,
+  "sample_count_stereo_interleaved": 291840
+}

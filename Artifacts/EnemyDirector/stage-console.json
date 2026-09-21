@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "command": "get_console_logs",
+  "result": {
+    "total": 0,
+    "returned": 0,
+    "logs": []
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:55:43.4022708Z"
+}

@@ -9,10 +9,9 @@ namespace Shinzui.Application.UseCases
     public class EnemyMoveUseCase
     {
         private readonly EnemyEntity _enemyEntity = new();
-        public EnemyEntity EnemyEntity => _enemyEntity;
 
-        public bool IsWandering => _enemyEntity.MovementState.Value == EnemyMovementState.Wandering;
-        public bool IsChasing => _enemyEntity.MovementState.Value == EnemyMovementState.IsChasing;
+        public bool IsWandering => _enemyEntity.MovementState == EnemyMovementState.Wandering;
+        public bool IsChasing => _enemyEntity.MovementState == EnemyMovementState.IsChasing;
 
         /// <summary>
         /// 徘徊情報を取得する

@@ -1,0 +1,44 @@
+{
+  "missingMeta": [],
+  "assemblies": [
+    {
+      "name": "Shinzui.CustomSpatialAudio.Application",
+      "references": [],
+      "noEngineReferences": true
+    },
+    {
+      "name": "Shinzui.CustomSpatialAudio.Infrastructure",
+      "references": [
+        "Shinzui.CustomSpatialAudio.Application",
+        "FMODUnity"
+      ],
+      "noEngineReferences": null
+    },
+    {
+      "name": "Shinzui.CustomSpatialAudio.Tests",
+      "references": [
+        "Shinzui.CustomSpatialAudio.Application",
+        "Shinzui.CustomSpatialAudio.Infrastructure",
+        "FMODUnity"
+      ],
+      "noEngineReferences": null
+    },
+    {
+      "name": "Shinzui.CustomSpatialAudio.Probe.Editor",
+      "references": [
+        "Shinzui.CustomSpatialAudio.Probe",
+        "Unity.Addressables.Editor"
+      ],
+      "noEngineReferences": null
+    },
+    {
+      "name": "Shinzui.CustomSpatialAudio.Probe",
+      "references": [
+        "Shinzui.CustomSpatialAudio.Application",
+        "Shinzui.CustomSpatialAudio.Infrastructure",
+        "FMODUnity"
+      ],
+      "noEngineReferences": null
+    }
+  ]
+}

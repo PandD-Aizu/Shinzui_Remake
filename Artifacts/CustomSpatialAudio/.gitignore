@@ -1,0 +1,3 @@
+# Reproducible local recordings are linked from the phase A report; keep binary output out of commits.
+*.wav
+/build-settings-backup/

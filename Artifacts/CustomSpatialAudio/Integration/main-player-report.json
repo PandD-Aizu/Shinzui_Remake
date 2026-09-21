@@ -1,0 +1,14 @@
+{
+    "passed": true,
+    "rooms": 21,
+    "portals": 20,
+    "processors": 8,
+    "callbackErrors": 0,
+    "builds": 2,
+    "audiblePeak": 0.056847698986530307,
+    "seMutedPeak": 0.0,
+    "masterMutedPeak": 0.0,
+    "bgmMutedPeak": 0.056836601346731189,
+    "pausedPeak": 0.0,
+    "errors": []
+}

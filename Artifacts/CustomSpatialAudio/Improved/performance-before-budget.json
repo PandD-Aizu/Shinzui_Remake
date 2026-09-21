@@ -1,0 +1,67 @@
+{
+    "unityVersion": "6000.5.8f1",
+    "environment": "Editor",
+    "scope": "Serial pure-DSP render of 512-frame blocks at 48 kHz, after warmup. Includes one FDN per voice. Excludes FMOD, geometry, HRIR interpolation, GPU, and gameplay. Development build timings are machine-dependent; no production voice budget is inferred.",
+    "cases": [
+        {
+            "renderer": "stereo",
+            "voices": 1,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 0.6535500000000001,
+            "p95BlockMilliseconds": 0.8983,
+            "maxBlockMilliseconds": 0.9941,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR FIR",
+            "voices": 1,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 17.2695984375,
+            "p95BlockMilliseconds": 23.3313,
+            "maxBlockMilliseconds": 28.506,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "stereo",
+            "voices": 8,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 5.6733625000000009,
+            "p95BlockMilliseconds": 7.3909,
+            "maxBlockMilliseconds": 8.8053,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR FIR",
+            "voices": 8,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 115.52544218750002,
+            "p95BlockMilliseconds": 172.9797,
+            "maxBlockMilliseconds": 230.3071,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "stereo",
+            "voices": 16,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 7.353731249999999,
+            "p95BlockMilliseconds": 8.5368,
+            "maxBlockMilliseconds": 8.6927,
+            "allocatedBytes": 0,
+            "finite": true
+        },
+        {
+            "renderer": "MIT KEMAR FIR",
+            "voices": 16,
+            "audioBlockMilliseconds": 10.666666666666666,
+            "meanBlockMilliseconds": 212.45057031249997,
+            "p95BlockMilliseconds": 266.9719,
+            "maxBlockMilliseconds": 341.6675,
+            "allocatedBytes": 0,
+            "finite": true
+        }
+    ]
+}

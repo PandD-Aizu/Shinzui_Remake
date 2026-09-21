@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "name": "open-boundaries-mixed",
+      "max_abs_error": 2.2351741790771484e-08,
+      "passed": true
+    },
+    {
+      "name": "small-room-audition",
+      "max_abs_error": 2.0489096641540527e-08,
+      "passed": true
+    },
+    {
+      "name": "small-room-direct",
+      "max_abs_error": 2.2351741790771484e-08,
+      "passed": true
+    },
+    {
+      "name": "small-room-early",
+      "max_abs_error": 3.725290298461914e-09,
+      "passed": true
+    },
+    {
+      "name": "small-room-late",
+      "max_abs_error": 2.3283064365386963e-10,
+      "passed": true
+    },
+    {
+      "name": "small-room-mixed",
+      "max_abs_error": 2.2351741790771484e-08,
+      "passed": true
+    },
+    {
+      "name": "straight-tunnel-mixed",
+      "max_abs_error": 2.2351741790771484e-08,
+      "passed": true
+    }
+  ]
+}

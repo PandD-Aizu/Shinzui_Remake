@@ -13,6 +13,7 @@ namespace Shinzui.DI.GenerateTunnel
         private readonly TunnelItemSpawnBinding _items;
         private readonly TunnelMapView _mapView;
         private bool _started;
+        private Shinzui.DI.CustomSpatialAudio.CustomTunnelAudioBinding _audio;
 
         public TunnelGenerationEntryPoint(GenerateTunnelPresenter presenter,
             TunnelGenerator generator, TunnelItemSpawnBinding items, TunnelMapView mapView)
@@ -27,18 +28,19 @@ namespace Shinzui.DI.GenerateTunnel
         {
             if (_started) return;
             _started = true;
-#if STEAMAUDIO_ENABLED
-            // Steam Audio creates its native scene in sceneLoaded, after LifetimeScope.Awake.
-            Shinzui.DI.TunnelAcoustics.TunnelAudioBinding.Attach(_mapView);
-#endif
+            _audio = Shinzui.DI.CustomSpatialAudio.CustomTunnelAudioBinding.Attach(_mapView);
             var request = TunnelGenerationRequestFactory.Create(_generator, GenerateTunnelLifetimeScope.RuntimeSeedOverride);
             if (_presenter.ExecuteGeneration(request))
+            {
+                _audio.Rebuild(_presenter.CurrentMap);
                 _items.OnMapReady();
+            }
         }
 
         public bool Regenerate(TunnelGenerationRequestDto request)
         {
             if (!_started || !_presenter.ExecuteGeneration(request, regenerate: true)) return false;
+            _audio.Rebuild(_presenter.CurrentMap);
             _items.OnMapReady();
             return true;
         }

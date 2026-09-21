@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.DI",
+  "references": ["Shinzui.CustomSpatialAudio.Infrastructure", "Shinzui.SpatialAudio.Application", "ApplicationLayer", "ViewLayer"],
+  "autoReferenced": true
+}

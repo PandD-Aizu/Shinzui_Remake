@@ -18,6 +18,7 @@ namespace Shinzui.View.Settings
         }
 
         [Header("Category Navigation")]
+        [SerializeField] private bool generateCategoryTabs = true;
         [SerializeField] private RectTransform categoryTabParent;
         [SerializeField] private GameObject categoryTabPrefab;
 
@@ -49,6 +50,7 @@ namespace Shinzui.View.Settings
         
         // --- 外部（Presenter）公開用のプロパティ ---
         public RectTransform CategoryTabParent => categoryTabParent;
+        public bool GenerateCategoryTabs => generateCategoryTabs;
         public GameObject CategoryTabPrefab => categoryTabPrefab;
 
         public RectTransform CategoryPanelParent => categoryPanelParent;

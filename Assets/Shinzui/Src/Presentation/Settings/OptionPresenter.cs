@@ -75,6 +75,11 @@ namespace Shinzui.Presentation.Settings
             _availableCategories.Add(new CategoryDefinition("Language", "Language"));
             _availableCategories.Add(new CategoryDefinition("Accessibility", "Accessibility"));
 
+            // The title scene already has authored tabs and UnityEvents. Preserve them.
+            if (!_view.GenerateCategoryTabs) return;
+            if (_view.CategoryTabParent == null || _view.CategoryTabPrefab == null)
+                throw new InvalidOperationException("Dynamic option tabs require a parent and prefab.");
+
             // タブの動的生成
             foreach (Transform child in _view.CategoryTabParent)
             {
