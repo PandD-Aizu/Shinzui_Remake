@@ -375,10 +375,19 @@ namespace Shinzui.View.LoopTunnel
             portalCamera.projectionMatrix = portalCamera.CalculateObliqueMatrix(clipPlane);
         }
 
+        /// <summary>
+        /// メインカメラの設定を引き継ぎポータルに映さないレイヤーを除外
+        /// </summary>
+        /// <param name="source">メインカメラ</param>
+        /// <param name="target">ポータルカメラ</param>
         private void CopyCameraSettings(Camera source, Camera target)
         {
             RenderTexture renderTexture = target.targetTexture;
             target.CopyFrom(source);
+            // ブラックホール敵の見た目を両端のポータルカメラから除外
+            int hiddenLayer = LayerMask.NameToLayer("PortalHidden");
+            if (hiddenLayer >= 0) target.cullingMask &= ~(1 << hiddenLayer);
+
             target.enabled = true;
             target.targetTexture = renderTexture;
             target.stereoTargetEye = StereoTargetEyeMask.None;

@@ -1,6 +1,0 @@
-{
-  "name": "Shinzui.TunnelAcoustics.Tests.Editor",
-  "references": ["Shinzui.TunnelAcoustics.Tests", "Shinzui.TunnelAcoustics.Infrastructure", "Shinzui.SpatialAudio.Infrastructure", "FMODUnity", "FMODUnityEditor", "SteamAudioUnity", "Unity.Addressables.Editor"],
-  "includePlatforms": ["Editor"],
-  "defineConstraints": ["STEAMAUDIO_ENABLED"]
-}

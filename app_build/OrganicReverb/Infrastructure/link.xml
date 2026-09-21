@@ -1,8 +1,0 @@
-<linker>
-  <!-- The Steam Audio factory locates these bridge types by assembly-qualified name. -->
-  <assembly fullname="SteamAudioFMODStudio">
-    <type fullname="SteamAudio.FMODStudioAudioEngineSource" preserve="all" />
-    <type fullname="SteamAudio.FMODStudioAudioEngineState" preserve="all" />
-    <type fullname="SteamAudio.FMODStudioAudioEngineStateHelpers" preserve="all" />
-  </assembly>
-</linker>

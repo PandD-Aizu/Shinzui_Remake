@@ -57,6 +57,11 @@ Shader "Custom/Pixelation"
                 }
                 
                 half4 color = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv);
+                // 細い発光管などの高輝度部分をブロック中心のサンプル欠落から保護する
+                half4 detail = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, input.uv);
+                half luminance = dot(detail.rgb, half3(0.2126, 0.7152, 0.0722));
+                half highlight = smoothstep(0.75h, 1.0h, luminance);
+                color.rgb = lerp(color.rgb, max(color.rgb, detail.rgb), highlight);
                 return color;
             }
             

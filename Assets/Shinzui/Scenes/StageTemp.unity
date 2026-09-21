@@ -17,7 +17,7 @@ RenderSettings:
   m_Fog: 1
   m_FogColor: {r: 0, g: 0, b: 0, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.3
+  m_FogDensity: 0.06
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
@@ -1685,6 +1685,7 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
+  ceilingLightSpacing: 5
   basicTunnelModelScale: {x: 1, y: 1, z: 1}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}
@@ -2650,10 +2651,11 @@ Transform:
   m_GameObject: {fileID: 775528537}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.17999998, y: -0.09099996, z: 0.518}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1249017459}
   m_Father: {fileID: 1217330892}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &775528539
@@ -2695,20 +2697,20 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 0
-  m_Color: {r: 1, g: 0.9607843, b: 0.9019608, a: 1}
-  m_Intensity: 849.3496
-  m_Range: 20
-  m_SpotAngle: 50
-  m_InnerSpotAngle: 20
+  m_Color: {r: 1, g: 0.95, b: 0.86, a: 1}
+  m_Intensity: 1000
+  m_Range: 22
+  m_SpotAngle: 72
+  m_InnerSpotAngle: 68
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Strength: 0.95
+    m_Bias: 0.04
+    m_NormalBias: 0.12
+    m_NearPlane: 0.1
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -2727,7 +2729,7 @@ Light:
       e32: 0
       e33: 1
     m_UseCullingMatrixOverride: 0
-  m_Cookie: {fileID: 2800000, guid: 980ec13d805b94747b92fc6937007f19, type: 3}
+  m_Cookie: {fileID: 2800000, guid: 96bdb1d7dc8b5504f9686a2c0ad32e43, type: 2}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
   m_RenderMode: 0
@@ -2762,9 +2764,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c8bca95f7c947b4db5fb152a0d693d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: com.cqf.urpvolumetricfog.runtime::VolumetricAdditionalLight
-  anisotropy: 0.9
-  scattering: 0.25
-  radius: 0.2
+  anisotropy: 0.45
+  scattering: 0.001
+  radius: 0.12
 --- !u!114 &775528542
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -2777,8 +2779,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 657d28f71bf5f2141a0df5e7c482cb76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Lighting.PhysicalLight
-  m_Unit: 0
-  m_PhysicalIntensity: 500
+  m_Unit: 1
+  m_PhysicalIntensity: 1000
   m_IesProfile: {fileID: 0}
   m_IesCutoffAngle: 100
   m_MoreOptions: 0
@@ -2791,7 +2793,7 @@ MonoBehaviour:
   m_IncludeForRayTracing: 1
   m_Initialized: 1
   m_LastLightType: 0
-  m_LastSpotAngle: 50
+  m_LastSpotAngle: 72
 --- !u!1 &838556333
 GameObject:
   m_ObjectHideFlags: 0
@@ -3916,18 +3918,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.FlashlightView
   flashlightLight: {fileID: 775528540}
   targetCamera: {fileID: 632997464}
-  minSpeed: 2
-  maxSpeed: 45
+  flashlightModel: {fileID: 1249017459}
+  modelLightOffset: {x: -0.58, y: -0.3, z: 0.52}
+  useRealisticBeam: 1
+  beamShadows: 2
+  beamFocusDistance: 8
+  nearWallDistance: 2
+  nearWallIntensity: 0.12
+  beamObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  minSpeed: 10
+  maxSpeed: 32
   maxAngle: 30
   enableSway: 1
-  swaySpeed: 1.8
-  swayAmount: 0.8
+  swaySpeed: 1.2
+  swayAmount: 0.35
   enableVolumetric: 1
-  anisotropy: 0.9
-  scattering: 0.25
-  radius: 0.2
-  maxStrobeBoost: 15
-  volumetricScatteringBoost: 8
+  anisotropy: 0.45
+  scattering: 0.001
+  radius: 0.12
+  maxStrobeBoost: 1800
+  volumetricScatteringBoost: 0.0025
   strobeRange: 12
   strobeRadius: 1.2
   maxSlowDuration: 4
@@ -3939,6 +3951,68 @@ MonoBehaviour:
   strobeHitMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!1001 &1249017458
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 775528538}
+    m_Modifications:
+    - target: {fileID: 543762000912956386, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_Name
+      value: FlashlightModel
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+--- !u!4 &1249017459 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8632506198818743217, guid: a0e0661a8a11fae4d8b5aa3ae5a4be6c, type: 3}
+  m_PrefabInstance: {fileID: 1249017458}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1292731142
 GameObject:
   m_ObjectHideFlags: 0
@@ -4329,6 +4403,30 @@ MonoBehaviour:
   playerDeathView: {fileID: 396944459}
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
+  enemyDirectorSettings:
+    ambientDuration: 12
+    buildUpDuration: 35
+    recoveryDuration: 18
+    searchDuration: 14
+    hintInterval: 8
+    hintCellSize: 12
+    searchRadius: 7
+    searchPointInterval: 3
+    retreatDistance: 18
+    pressureDistance: 18
+    chasePressurePerSecond: 0.075
+    proximityPressurePerSecond: 0.025
+    pressureDecayPerSecond: 0.06
+    sightDistance: 16
+    fieldOfView: 110
+    detectionTime: 0.3
+    eyeHeight: 1
+    walkingNoiseRadius: 4
+    runningNoiseRadius: 13
+    footstepInterval: 0.65
+    patrolSpeedMultiplier: 0.65
+    repathInterval: 0.3
+    sightBlockingLayers: -1
   needWeightSettings: {fileID: 11400000, guid: c8a8bc2f4cef6e74593e9f7b646a8e1b, type: 2}
   itemCategoryClassifier: {fileID: 0}
 --- !u!4 &1431612332
@@ -4528,13 +4626,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6716722997384299243, guid: 4469a4d8157f02d429b62883fddee0f9, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8119663525459182946, guid: 4469a4d8157f02d429b62883fddee0f9, type: 3}
       propertyPath: m_Name
       value: BlackHoleEnemy
       objectReference: {fileID: 0}
     - target: {fileID: 8682758635763917597, guid: 4469a4d8157f02d429b62883fddee0f9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.00224
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8682758635763917597, guid: 4469a4d8157f02d429b62883fddee0f9, type: 3}
       propertyPath: m_LocalPosition.y

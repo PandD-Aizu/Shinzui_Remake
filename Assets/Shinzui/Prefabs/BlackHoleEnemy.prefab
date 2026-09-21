@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5569198219079024155}
   - component: {fileID: 3026449957274339213}
   - component: {fileID: 737975842789685220}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Left Hanging Arm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -101,7 +101,7 @@ GameObject:
   - component: {fileID: 9087163473862067821}
   - component: {fileID: 6604350030417466932}
   - component: {fileID: 7054161490854105023}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Tattered Veil
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -191,7 +191,7 @@ GameObject:
   - component: {fileID: 3151322527142319390}
   - component: {fileID: 1027124826755562814}
   - component: {fileID: 8073599886340223656}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Right Singularity
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -281,7 +281,7 @@ GameObject:
   - component: {fileID: 8224601548715977412}
   - component: {fileID: 8418405690932728095}
   - component: {fileID: 6979726844522151808}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Hood
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -371,7 +371,7 @@ GameObject:
   - component: {fileID: 1665289518912568750}
   - component: {fileID: 7417796544636388160}
   - component: {fileID: 1016375769967387520}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Right Hanging Arm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -461,7 +461,7 @@ GameObject:
   - component: {fileID: 1809738983728298180}
   - component: {fileID: 3674919620523002349}
   - component: {fileID: 7884883040321873192}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Left Singularity
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -551,7 +551,7 @@ GameObject:
   - component: {fileID: 7865941454620397948}
   - component: {fileID: 6034382371519031677}
   - component: {fileID: 4308321063116275162}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Right Shoulder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -641,7 +641,7 @@ GameObject:
   - component: {fileID: 13310078894447304}
   - component: {fileID: 1021185703068190833}
   - component: {fileID: 8325155665860463003}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Left Shoulder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -844,7 +844,7 @@ GameObject:
   - component: {fileID: 7138650125448384326}
   - component: {fileID: 9126454872399378576}
   - component: {fileID: 6386913737374799961}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Gravitational Lens
   m_TagString: Untagged
   m_Icon: {fileID: 0}

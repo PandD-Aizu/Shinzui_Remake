@@ -1,6 +1,0 @@
-{
-  "name": "Shinzui.SpatialAudio.Infrastructure",
-  "references": ["Shinzui.SpatialAudio.Application", "FMODUnity", "SteamAudioUnity", "SteamAudioFMODStudio"],
-  "defineConstraints": ["STEAMAUDIO_ENABLED"],
-  "autoReferenced": true
-}

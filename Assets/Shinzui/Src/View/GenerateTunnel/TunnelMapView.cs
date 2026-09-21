@@ -55,6 +55,78 @@ namespace Shinzui.View.GenerateTunnel
         private bool _corridorTemplateLongAxisIsX;
         private bool _warpCorridorTemplateLongAxisIsX;
         private TunnelGenerator _generator;
+        private GameObject _ceilingLightPrefab;
+
+        [Header("Ceiling Light Shadows")]
+        [SerializeField, Min(0f)] private float ceilingShadowDistance = 15f;
+        [SerializeField, Range(0, 16)] private int maxCeilingShadowLights = 8;
+        private readonly List<(Light light, LightShadows shadows, float strength)> _ceilingLights = new();
+        private readonly int[] _nearestShadowLights = new int[16];
+        private readonly float[] _nearestShadowDistances = new float[16];
+
+        /// <summary>
+        /// カメラに近い蛍光灯だけ影を描画し、照明自体は遠方でも維持する
+        /// </summary>
+        private void LateUpdate()
+        {
+            Camera camera = Camera.main;
+            int budget = camera != null ? Mathf.Clamp(maxCeilingShadowLights, 0, 16) : 0;
+            float distanceLimit = Mathf.Max(0f, ceilingShadowDistance);
+            Vector3 cameraPosition = camera != null ? camera.transform.position : Vector3.zero;
+            for (int i = 0; i < budget; i++)
+            {
+                _nearestShadowLights[i] = -1;
+                _nearestShadowDistances[i] = distanceLimit * distanceLimit;
+            }
+
+            // 距離順に固定長配列へ挿入し、毎フレームのソートとメモリ確保を避ける
+            for (int i = 0; i < _ceilingLights.Count; i++)
+            {
+                var entry = _ceilingLights[i];
+                if (entry.light == null || !entry.light.isActiveAndEnabled) continue;
+                entry.light.shadows = LightShadows.None;
+                if (entry.shadows == LightShadows.None) continue;
+
+                float distance = (entry.light.transform.position - cameraPosition).sqrMagnitude;
+                for (int slot = 0; slot < budget; slot++)
+                {
+                    if (distance >= _nearestShadowDistances[slot]) continue;
+                    for (int next = budget - 1; next > slot; next--)
+                    {
+                        _nearestShadowLights[next] = _nearestShadowLights[next - 1];
+                        _nearestShadowDistances[next] = _nearestShadowDistances[next - 1];
+                    }
+
+                    _nearestShadowLights[slot] = i;
+                    _nearestShadowDistances[slot] = distance;
+                    break;
+                }
+            }
+
+            // 距離上限の手前で影を薄くして切り替えを目立ちにくくする
+            for (int slot = 0; slot < budget; slot++)
+            {
+                int index = _nearestShadowLights[slot];
+                if (index < 0) break;
+                var entry = _ceilingLights[index];
+                entry.light.shadows = entry.shadows;
+                entry.light.shadowStrength = entry.strength * (1f - Mathf.InverseLerp(
+                    distanceLimit * 0.75f, distanceLimit, Mathf.Sqrt(_nearestShadowDistances[slot])));
+            }
+        }
+
+        /// <summary>
+        /// 管理を停止するときに蛍光灯の元の影設定を復元する
+        /// </summary>
+        private void OnDisable()
+        {
+            foreach (var entry in _ceilingLights)
+            {
+                if (entry.light == null) continue;
+                entry.light.shadows = entry.shadows;
+                entry.light.shadowStrength = entry.strength;
+            }
+        }
 
         public GameObject MapRootObject => _mapRootObject;
         public Transform GeometryRoot => _geometryRoot;
@@ -199,6 +271,7 @@ namespace Shinzui.View.GenerateTunnel
         public void PrepareBuild()
         {
             GeometryClearing?.Invoke();
+            _ceilingLights.Clear();
             EnsureMapRoot();
             CreateMaterials();
             FindTemplates();
@@ -266,6 +339,7 @@ namespace Shinzui.View.GenerateTunnel
                 CreateStageBox(root, "Right Wall", new Vector3(width * 0.5f, height * 0.5f, 0.0f), new Vector3(ShellThickness, height, length), shellMaterial);
             }
 
+            CreateCeilingLights(root, length, height);
             return root;
         }
 
@@ -582,16 +656,106 @@ namespace Shinzui.View.GenerateTunnel
                 model.transform.localScale = longAxisIsX
                     ? new Vector3(baseScale.x * lengthScale, baseScale.y, baseScale.z)
                     : new Vector3(baseScale.x, baseScale.y, baseScale.z * lengthScale);
-                AlignModelToPassageLocalSpace(model.transform, corridor);
+                // 接続先の出口と共通のモデル基準高を保持する
+                AlignModelToPassageLocalSpace(model.transform, corridor, false);
 
+                ApplyTunnelPassageMaterial(model);
                 ApplyStageCollisionRecursive(model);
                 CreateInvisibleStageCollider(corridor, "Walkable Floor Collider", Vector3.zero,
                     new Vector3(corridorWidth, ShellThickness * 1.5f, length));
+                CreateCeilingLights(corridor, length, tunnelHeight);
                 return;
             }
 
             CreateStageBox(corridor, "Floor", Vector3.zero, new Vector3(corridorWidth, ShellThickness * 1.5f, length), material);
             CreateStageBox(corridor, "Ceiling", new Vector3(0.0f, tunnelHeight, 0.0f), new Vector3(corridorWidth, ShellThickness, length), material);
+            CreateCeilingLights(corridor, length, tunnelHeight);
+        }
+
+        /// <summary>
+        /// 天井の内面を測定して通路の中央へ蛍光灯を一定間隔で配置する
+        /// </summary>
+        /// <param name="passage">配置先のトンネルまたは廊下</param>
+        /// <param name="length">通路の長さ</param>
+        /// <param name="height">天井を探索する高さ</param>
+        private void CreateCeilingLights(Transform passage, float length, float height)
+        {
+            // 共通プレハブを再利用し、短い通路でも器具が端からはみ出さないようにする
+            if (_ceilingLightPrefab == null)
+            {
+                _ceilingLightPrefab = Resources.Load<GameObject>("TunnelFluorescentLight");
+            }
+
+            const float endMargin = 0.8f;
+            if (_ceilingLightPrefab == null || length < endMargin * 2.0f) return;
+
+            float spacing = _generator != null ? _generator.CeilingLightSpacing : 5.0f;
+            int count = Mathf.FloorToInt((length - endMargin * 2.0f) / spacing) + 1;
+            float start = -(count - 1) * spacing * 0.5f;
+            Collider[] surfaces = passage.GetComponentsInChildren<Collider>(false);
+            Physics.SyncTransforms();
+
+            // 通路内から上向きに測定し、外側の境界ではなく実際の天井面へ取り付ける
+            var lightRoot = new GameObject("Ceiling Lights").transform;
+            lightRoot.SetParent(passage, false);
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, 1.5f, start + i * spacing));
+                var ray = new Ray(origin, passage.up);
+                float distance = Mathf.Infinity;
+                Vector3 ceiling = default;
+                foreach (Collider surface in surfaces)
+                {
+                    if (surface.isTrigger || !surface.enabled) continue;
+                    if (surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height, 2.0f) * passage.lossyScale.y)
+                        && hit.distance < distance && Vector3.Dot(hit.normal, passage.up) < -0.5f)
+                    {
+                        distance = hit.distance;
+                        ceiling = hit.point;
+                    }
+                }
+
+                if (float.IsPositiveInfinity(distance)) continue;
+
+                // プレハブの取付面を天井直下へ置き、通路の伸縮を器具の寸法へ伝えない
+                GameObject light = Instantiate(_ceilingLightPrefab, lightRoot, false);
+                light.name = $"Fluorescent Light {i + 1:00}";
+                light.transform.position = ceiling - passage.up * 0.02f;
+
+                // 生成した蛍光灯のみを影予算の対象にし、懐中電灯は変更しない
+                foreach (Light source in light.GetComponentsInChildren<Light>(true))
+                {
+                    _ceilingLights.Add((source, source.shadows, source.shadowStrength));
+                    source.shadows = LightShadows.None;
+                }
+            }
+        }
+
+        /// <summary>
+        /// トンネル出口のマテリアルを接続する廊下へ適用する
+        /// </summary>
+        /// <param name="model">生成した廊下モデル</param>
+        private void ApplyTunnelPassageMaterial(GameObject model)
+        {
+            // 出口と共通のマテリアルを参照して外観を揃える
+            Transform exit = _tunnelPrefab != null ? _tunnelPrefab.transform.Find(ExitPathNames[1]) : null;
+            Renderer source = exit != null ? exit.GetComponentInChildren<Renderer>(true) : null;
+            if (source == null || source.sharedMaterial == null)
+            {
+                return;
+            }
+
+            // メッシュの全サブメッシュへ同じマテリアルを割り当てる
+            foreach (MeshRenderer renderer in model.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                Material[] materials = renderer.sharedMaterials;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    materials[i] = source.sharedMaterial;
+                }
+
+                renderer.sharedMaterials = materials;
+            }
         }
 
         private void CreateWarpTrigger(
@@ -754,10 +918,12 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// Imported corridor assets may use an arbitrary pivot. Align their horizontal center
-        /// and lowest mesh point to the generated passage origin after rotation and scaling.
+        /// 回転と拡縮後のモデルの水平中心を通路原点へ揃え、必要に応じて最下端の高さも揃える
         /// </summary>
-        private static void AlignModelToPassageLocalSpace(Transform model, Transform localSpace)
+        /// <param name="model">配置するモデル</param>
+        /// <param name="localSpace">配置基準となる通路の座標系</param>
+        /// <param name="alignFloor">モデルの最下端を通路原点の高さへ揃えるか</param>
+        private static void AlignModelToPassageLocalSpace(Transform model, Transform localSpace, bool alignFloor = true)
         {
             if (!TryGetMeshBoundsInLocalSpace(model, localSpace, out Bounds localBounds))
             {
@@ -766,7 +932,11 @@ namespace Shinzui.View.GenerateTunnel
 
             Vector3 localPosition = model.localPosition;
             localPosition.x -= localBounds.center.x;
-            localPosition.y -= localBounds.min.y;
+            if (alignFloor)
+            {
+                localPosition.y -= localBounds.min.y;
+            }
+
             localPosition.z -= localBounds.center.z;
             model.localPosition = localPosition;
         }

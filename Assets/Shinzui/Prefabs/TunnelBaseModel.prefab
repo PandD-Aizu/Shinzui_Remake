@@ -65953,7 +65953,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8507106158489421174
 Transform:
   m_ObjectHideFlags: 0
@@ -65980,7 +65980,7 @@ Light:
   serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 0.9357876, b: 0.7783019, a: 1}
-  m_Intensity: 1
+  m_Intensity: 150
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -66070,7 +66070,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2181518737885122315}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c8bca95f7c947b4db5fb152a0d693d8, type: 3}
   m_Name: 
@@ -66091,7 +66091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Lighting.PhysicalLight
   m_Unit: 1
-  m_PhysicalIntensity: 1
+  m_PhysicalIntensity: 150
   m_IesProfile: {fileID: 0}
   m_IesCutoffAngle: 100
   m_MoreOptions: 0

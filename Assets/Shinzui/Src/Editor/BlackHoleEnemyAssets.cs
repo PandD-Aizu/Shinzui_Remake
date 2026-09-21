@@ -21,6 +21,9 @@ namespace Shinzui.Editor
         public const string PreviewPath = "Assets/Shinzui/Scenes/BlackHoleEnemyPreview.unity";
         private const string StagePath = "Assets/Shinzui/Scenes/StageTemp.unity";
 
+        /// <summary>
+        /// ブラックホール眼の敵とプレビュー用アセットを作成
+        /// </summary>
         [MenuItem("Shinzui/Enemies/Black Hole/Create Assets and Preview")]
         public static void CreateAssets()
         {
@@ -29,17 +32,20 @@ namespace Shinzui.Editor
             var shader = Shader.Find("Shinzui/BlackHoleEye");
             if (!shader || ShaderUtil.ShaderHasError(shader))
                 throw new InvalidOperationException("BlackHoleEye shader is missing or has compile errors.");
-            var left = MaterialAsset("EyeLeft", shader, new Color(0.72f, 0.94f, 1f));
-            var right = MaterialAsset("EyeRight", shader, new Color(0.86f, 0.95f, 1f));
+            var left = MaterialAsset("EyeLeft", shader, new Color(0.65f, 0.69f, 0.65f));
+            var right = MaterialAsset("EyeRight", shader, new Color(0.62f, 0.59f, 0.5f));
             if (!AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath))
             {
                 left.SetFloat("_Phase", 0.2f);
+                left.SetFloat("_HorizonRadius", 0.28f);
+                left.SetVector("_EyeShape", new Vector4(1.08f, 0.72f, -0.12f, 0));
+                left.SetVector("_PupilOffset", new Vector4(0.035f, 0.012f, 0, 0));
                 right.SetFloat("_Phase", 2.1f);
                 right.SetFloat("_SwirlSpeed", -0.55f);
-                right.SetFloat("_HorizonRadius", 0.34f);
-                var body = MaterialAsset("ObsidianVeil", Shader.Find("Universal Render Pipeline/Lit"), new Color(0.014f, 0.021f, 0.026f));
-                body.SetFloat("_Smoothness", 0.27f);
-                body.SetFloat("_Metallic", 0.05f);
+                right.SetFloat("_HorizonRadius", 0.21f);
+                right.SetVector("_EyeShape", new Vector4(0.86f, 0.57f, 0.18f, 0));
+                right.SetVector("_PupilOffset", new Vector4(-0.07f, 0.055f, 0, 0));
+                var body = MaterialAsset("ObsidianVeil", Shader.Find("Shinzui/BlackHoleBody"), new Color(0.014f, 0.021f, 0.026f));
                 // These are saved once and remain freely editable by artists afterwards.
                 EditorUtility.SetDirty(left);
                 EditorUtility.SetDirty(right);
@@ -113,6 +119,12 @@ namespace Shinzui.Editor
             finally { if (openedHere) EditorSceneManager.CloseScene(scene, true); }
         }
 
+        /// <summary>
+        /// ブラックホール眼と胴体を持つ敵Prefabを作成
+        /// </summary>
+        /// <param name="left">左目のマテリアル</param>
+        /// <param name="right">右目のマテリアル</param>
+        /// <param name="body">胴体のマテリアル</param>
         private static void BuildPrefab(Material left, Material right, Material body)
         {
             var staging = new GameObject("BlackHoleEnemy Authoring");
@@ -152,6 +164,12 @@ namespace Shinzui.Editor
                 Eye("Left Singularity", visual, new Vector3(-0.225f, 2.03f, 0.348f), 0.80f, left);
                 Eye("Right Singularity", visual, new Vector3(0.225f, 2.065f, 0.348f), 0.88f, right);
                 AddLensing(visual);
+
+                // 見た目だけをポータルから隠し、接触用コライダーのレイヤーは維持
+                int hiddenLayer = LayerMask.NameToLayer("PortalHidden");
+                if (hiddenLayer >= 0)
+                    foreach (var renderer in visual.GetComponentsInChildren<Renderer>(true))
+                        renderer.gameObject.layer = hiddenLayer;
 
                 var animation = root.AddComponent<Animation>();
                 var clip = HoverClip();

@@ -9,6 +9,18 @@ namespace Shinzui.View.Flashlight
         [SerializeField] private Light flashlightLight;         // スポットライト等のLightコンポーネント
         [SerializeField] private Camera targetCamera;           // 追従対象のカメラ
 
+        [Header("Held Model")]
+        [SerializeField] private Transform flashlightModel;     // ライトを親に持つ手持ちモデル
+        [SerializeField] private Vector3 modelLightOffset = new Vector3(-0.24f, -0.23f, 0.52f);
+
+        [Header("Beam Optics")]
+        [SerializeField] private bool useRealisticBeam;
+        [SerializeField] private LightShadows beamShadows = LightShadows.None;
+        [SerializeField, Min(1f)] private float beamFocusDistance = 8f;
+        [SerializeField, Min(0.1f)] private float nearWallDistance = 2f;
+        [SerializeField, Range(0.02f, 1f)] private float nearWallIntensity = 0.12f;
+        [SerializeField] private LayerMask beamObstructionMask = ~0;
+
         [Header("Tracking Ease Settings")]
         [SerializeField] private float minSpeed = 2.0f;         // 目標接近時の最低追従速度
         [SerializeField] private float maxSpeed = 45.0f;        // 動き始めの最高追従速度
@@ -47,6 +59,8 @@ namespace Shinzui.View.Flashlight
         private VolumetricAdditionalLight _volumetricLight; // ボリュメトリックライトコンポーネント参照
         private float _baseIntensity = -1f;                 // ライトの基本輝度
         private float _baseVolumetricScattering = -1f;      // ボリュメトリックライトの基本散乱強度
+        private float _nearWallGain = 1f;                  // 壁際の減光係数
+        private float _strobeFactor;                      // 現在のストロボ発光係数
 
         public Camera TargetCamera => targetCamera != null ? targetCamera : Camera.main;
         public Vector3 StrobeOrigin => TargetCamera != null ? TargetCamera.transform.position : transform.position;
@@ -81,6 +95,9 @@ namespace Shinzui.View.Flashlight
             }
         }
 
+        /// <summary>
+        /// 追従対象とライトの影、空気中の散乱を初期化する
+        /// </summary>
         private void Start()
         {
             if (targetCamera == null)
@@ -102,7 +119,7 @@ namespace Shinzui.View.Flashlight
             
             if (flashlightLight != null)
             {
-                flashlightLight.shadows = LightShadows.None;
+                flashlightLight.shadows = beamShadows;
                 _currentFollowRotation = flashlightLight.transform.rotation;
 
                 // ボリュメトリックライトコンポーネントの設定適用
@@ -122,13 +139,30 @@ namespace Shinzui.View.Flashlight
             }
         }
 
+        /// <summary>
+        /// 手持ちモデルの位置とライトの追従回転を更新する
+        /// </summary>
         private void LateUpdate()
         {
-            // ライトが有効な間、カメラの回転と同じ向きに同期する
-            if (flashlightLight != null && flashlightLight.enabled && targetCamera != null)
+            // モデル付きのライトは消灯中も視点に追従させる
+            if (flashlightModel != null && flashlightLight != null && targetCamera != null)
             {
+                flashlightLight.transform.position = targetCamera.transform.TransformPoint(modelLightOffset);
+            }
+
+            // ライトまたは手持ちモデルの回転をカメラに同期する
+            if (flashlightLight != null && (flashlightLight.enabled || flashlightModel != null) && targetCamera != null)
+            {
+                // 左端の発光位置から画面中央の注視点へ照射する
+                Quaternion targetRotation = targetCamera.transform.rotation;
+                if (useRealisticBeam)
+                {
+                    Vector3 focus = targetCamera.transform.position + targetCamera.transform.forward * beamFocusDistance;
+                    targetRotation = Quaternion.LookRotation(focus - flashlightLight.transform.position, targetCamera.transform.up);
+                }
+
                 // キャッシュされている回転とターゲットカメラの回転の角度差を計算
-                float angleDiff = Quaternion.Angle(_currentFollowRotation, targetCamera.transform.rotation);
+                float angleDiff = Quaternion.Angle(_currentFollowRotation, targetRotation);
                 
                 // 角度差を0〜1に正規化
                 float t = Mathf.Clamp01(angleDiff / maxAngle);
@@ -141,8 +175,8 @@ namespace Shinzui.View.Flashlight
                 // 計算された可変速度でSlerp補間を行い、基本追従回転を更新
                 _currentFollowRotation = Quaternion.Slerp(
                     _currentFollowRotation,
-                    targetCamera.transform.rotation,
-                    Time.deltaTime * currentSpeed
+                    targetRotation,
+                    1f - Mathf.Exp(-Time.deltaTime * currentSpeed)
                 );
 
                 // 基本追従回転に手振れを加算して最終的なライトの姿勢にする
@@ -160,18 +194,34 @@ namespace Shinzui.View.Flashlight
                     flashlightLight.transform.rotation = _currentFollowRotation;
                 }
             }
+
+            // 壁際で白飛びを抑え、ストロボと通常光に同じ減光を適用する
+            if (useRealisticBeam && flashlightLight != null && flashlightLight.enabled && targetCamera != null)
+            {
+                float gain = 1f;
+                if (Physics.Raycast(targetCamera.transform.position, targetCamera.transform.forward,
+                    out RaycastHit hit, nearWallDistance, beamObstructionMask, QueryTriggerInteraction.Ignore))
+                {
+                    gain = Mathf.Lerp(nearWallIntensity, 1f,
+                        Mathf.SmoothStep(0f, 1f, hit.distance / nearWallDistance));
+                }
+
+                _nearWallGain = Mathf.Lerp(_nearWallGain, gain, 1f - Mathf.Exp(-Time.deltaTime * 12f));
+                ApplyBeamIntensity();
+            }
         }
 
         /// <summary>
         /// ライトのアクティブ状態を切り替える
         /// </summary>
+        /// <param name="active">点灯する場合はtrue</param>
         public void SetLightActive(bool active)
         {
             if (flashlightLight != null)
             {
                 flashlightLight.enabled = active;
-                // ライトON時にも影を強制オフにしてクラッシュを防止
-                flashlightLight.shadows = LightShadows.None;
+                // シーンで指定した影品質を点灯後も維持する
+                flashlightLight.shadows = beamShadows;
 
                 if (active && targetCamera != null)
                 {
@@ -194,16 +244,26 @@ namespace Shinzui.View.Flashlight
         /// <param name="strobeFactor">0.0 〜 1.0 の発光係数</param>
         public void SetStrobeIntensity(float strobeFactor)
         {
+            _strobeFactor = Mathf.Clamp01(strobeFactor);
+            ApplyBeamIntensity();
+        }
+
+        /// <summary>
+        /// 通常光とストロボを合成し、壁際の減光を反映する
+        /// </summary>
+        private void ApplyBeamIntensity()
+        {
             EnsureBaseValuesCached();
+            float gain = useRealisticBeam ? _nearWallGain : 1f;
 
             if (flashlightLight != null)
             {
-                flashlightLight.intensity = _baseIntensity + (maxStrobeBoost * strobeFactor);
+                flashlightLight.intensity = (_baseIntensity + maxStrobeBoost * _strobeFactor) * gain;
             }
 
             if (_volumetricLight != null)
             {
-                _volumetricLight.Scattering = _baseVolumetricScattering + (volumetricScatteringBoost * strobeFactor);
+                _volumetricLight.Scattering = (_baseVolumetricScattering + volumetricScatteringBoost * _strobeFactor) * gain;
             }
         }
     }
