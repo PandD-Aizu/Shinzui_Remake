@@ -1557,7 +1557,12 @@ namespace SteamAudio
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void AutoInitialize()
         {
+#if !SHINZUI_CUSTOM_AUDIO_PROBE
+            // The dedicated custom-acoustics probe owns a private FMOD Core system.
+            // Its build-only define avoids starting the unrelated Studio/Steam Audio graph.
+            // Normal Editor play mode and game builds retain the vendor startup behavior.
             Initialize(ManagerInitReason.Playing);
+#endif
         }
 
         // Exports the static geometry in a scene.

@@ -10,7 +10,7 @@ namespace Shinzui.Application.UseCases
     /// DomainレイヤーのGameSettingsを完全に内部で保持・管理し、
     /// Presentationレイヤーへは個別のReactiveProperty（プリミティブ型）のみを公開する
     /// </summary>
-    public class SettingsUseCase
+    public class SettingsUseCase : IDisposable
     {
         private readonly ISettingsRepository _repository;
         private readonly ISettingsApplier _applier;
@@ -188,6 +188,19 @@ namespace Shinzui.Application.UseCases
 #else
             return false;
 #endif
+        }
+
+        public void Dispose()
+        {
+            _editDisposables.Dispose();
+            MasterVolume.Dispose();
+            BgmVolume.Dispose();
+            SeVolume.Dispose();
+            VoiceVolume.Dispose();
+            ControllerNormalSpeed.Dispose();
+            MouseNormalSensitivity.Dispose();
+            Brightness.Dispose();
+            ShowCenterDot.Dispose();
         }
     }
 }

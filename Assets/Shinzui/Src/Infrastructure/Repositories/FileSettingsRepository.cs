@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Newtonsoft.Json;
 using Shinzui.Application.Interfaces;
 using Shinzui.Domain.Settings;
 using UnityEngine;
@@ -15,9 +16,13 @@ namespace Shinzui.Infrastructure.Repositories
         private readonly string _saveFilePath;
 
         public FileSettingsRepository()
+            : this(Path.Combine(UnityEngine.Application.persistentDataPath, "settings.json"))
         {
-            // Unityの永続データパス直下に settings.json として保存
-            _saveFilePath = Path.Combine(UnityEngine.Application.persistentDataPath, "settings.json");
+        }
+
+        public FileSettingsRepository(string saveFilePath)
+        {
+            _saveFilePath = saveFilePath ?? throw new ArgumentNullException(nameof(saveFilePath));
         }
 
         /// <summary>
@@ -37,7 +42,10 @@ namespace Shinzui.Infrastructure.Repositories
                 if (File.Exists(_saveFilePath))
                 {
                     string json = File.ReadAllText(_saveFilePath);
-                    var settings = JsonUtility.FromJson<GameSettings>(json);
+                    // Domain settings are POCO properties, which Unity JsonUtility ignores.
+                    // Missing/null sections retain their initialized defaults for older saves.
+                    var settings = JsonConvert.DeserializeObject<GameSettings>(json,
+                        new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                     if (settings != null)
                     {
                         Debug.Log($"[Settings] Loaded settings from: {_saveFilePath}");
@@ -70,7 +78,7 @@ namespace Shinzui.Infrastructure.Repositories
 #else
             try
             {
-                string json = JsonUtility.ToJson(settings, true);
+                string json = JsonConvert.SerializeObject(settings, Formatting.Indented);
                 string directory = Path.GetDirectoryName(_saveFilePath);
                 if (directory != null && !Directory.Exists(directory))
                 {

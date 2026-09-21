@@ -1,0 +1,7 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.Application",
+  "rootNamespace": "Shinzui.Application.CustomSpatialAudio",
+  "references": [],
+  "noEngineReferences": true,
+  "autoReferenced": true
+}

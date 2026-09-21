@@ -14,6 +14,7 @@ namespace Shinzui.Presentation.GenerateTunnel
     /// </summary>
     public sealed class GenerateTunnelPresenter : IDisposable
     {
+        public TunnelMapDto CurrentMap { get; private set; }
         private readonly IGenerateTunnelUseCase _useCase;
         private readonly TunnelMapView _mapView;
         private readonly ITunnelNavigationBuilder _navigation;
@@ -60,7 +61,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                 SmallRoomWidth = request.SmallRoomWidth,
                 SmallRoomLength = request.SmallRoomLength,
                 TunnelLength = tLen,
-                ConnectionPointSpacing = request.ConnectionPointSpacing,
+                ConnectionPointSpacing = _mapView.ResolveConnectionPointSpacing(request.ConnectionPointSpacing),
                 TunnelWidth = tWidth,
                 TunnelHeight = tHeight,
                 CorridorLength = cLen,
@@ -84,6 +85,7 @@ namespace Shinzui.Presentation.GenerateTunnel
             BuildSceneHierarchy(mapDto);
             if (!_navigation.BuildNavMesh()) return false;
             _mapView.NotifyGeometryReady();
+            CurrentMap = mapDto;
             Debug.Log($"[GenerateTunnelPresenter] Generated {mapDto.Tunnels.Count} tunnels with navigation in '{_mapView.gameObject.scene.name}' (seed: {mapDto.Seed}).");
             return true;
         }

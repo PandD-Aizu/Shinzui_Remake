@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Failed(Child)" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.4195827">
+  <test-suite type="TestSuite" id="1020" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="5" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.419583" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1003" name="Shinzui.CustomSpatialAudio.GameIntegration.Tests.dll" fullname="D:/Pandd/ShinShinzui/Library/ScriptAssemblies/Shinzui.CustomSpatialAudio.GameIntegration.Tests.dll" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.411578" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="37668" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1004" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.410573" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1005" name="Tests" fullname="Shinzui.Tests" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.410121" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestSuite" id="1006" name="CustomSpatialAudio" fullname="Shinzui.Tests.CustomSpatialAudio" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.409787" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-suite type="TestSuite" id="1007" name="GameIntegration" fullname="Shinzui.Tests.CustomSpatialAudio.GameIntegration" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.409477" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <failure>
+                <message><![CDATA[One or more child tests had errors]]></message>
+              </failure>
+              <test-suite type="TestFixture" id="1001" name="CustomAudioGameIntegrationTests" fullname="Shinzui.Tests.CustomSpatialAudio.GameIntegration.CustomAudioGameIntegrationTests" classname="Shinzui.Tests.CustomSpatialAudio.GameIntegration.CustomAudioGameIntegrationTests" runstate="Runnable" testcasecount="1" result="Failed" site="Child" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.408163" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <failure>
+                  <message><![CDATA[One or more child tests had errors]]></message>
+                </failure>
+                <test-case id="1002" name="GeneratedMainSceneRoutesCustomAudioAndSurvivesLifecycle" fullname="Shinzui.Tests.CustomSpatialAudio.GameIntegration.CustomAudioGameIntegrationTests.GeneratedMainSceneRoutesCustomAudioAndSurvivesLifecycle" methodname="GeneratedMainSceneRoutesCustomAudioAndSurvivesLifecycle" classname="Shinzui.Tests.CustomSpatialAudio.GameIntegration.CustomAudioGameIntegrationTests" runstate="Runnable" seed="514390574" result="Failed" label="Error" start-time="2026-09-20 21:38:12Z" end-time="2026-09-20 21:38:16Z" duration="4.396862" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <failure>
+                    <message><![CDATA[System.ArgumentException : Room interiors must not overlap.
+Parameter name: rooms]]></message>
+                    <stack-trace><![CDATA[  at Shinzui.Application.CustomSpatialAudio.PortalAcousticGraph..ctor (Shinzui.Application.CustomSpatialAudio.PortalAcousticRoom[] rooms, Shinzui.Application.CustomSpatialAudio.AcousticPortal[] portals) [0x0022a] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\Application\CustomSpatialAudio\PortalAcousticTypes.cs:100 
+  at Shinzui.Infrastructure.CustomSpatialAudio.GeneratedAcousticWorld.RebuildGraph () [0x00251] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\Infrastructure\CustomSpatialAudio\GeneratedAcousticWorld.cs:135 
+  at Shinzui.Infrastructure.CustomSpatialAudio.GeneratedAcousticWorld..ctor (Shinzui.Application.DTOs.Tunnel.TunnelMapDto map) [0x00313] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\Infrastructure\CustomSpatialAudio\GeneratedAcousticWorld.cs:52 
+  at Shinzui.Infrastructure.CustomSpatialAudio.CustomTunnelAudioRuntime.Rebuild (Shinzui.Application.DTOs.Tunnel.TunnelMapDto map, UnityEngine.Transform geometryRoot) [0x00043] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\Infrastructure\CustomSpatialAudio\CustomTunnelAudioRuntime.cs:61 
+  at Shinzui.DI.CustomSpatialAudio.CustomTunnelAudioBinding.Rebuild (Shinzui.Application.DTOs.Tunnel.TunnelMapDto map) [0x00000] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\DI\CustomSpatialAudio\CustomTunnelAudioBinding.cs:33 
+  at Shinzui.DI.GenerateTunnel.TunnelGenerationEntryPoint.Regenerate (Shinzui.Application.DTOs.Tunnel.TunnelGenerationRequestDto request) [0x00019] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\DI\GenerateTunnel\TunnelGenerationEntryPoint.cs:43 
+  at Shinzui.DI.GenerateTunnel.GenerateTunnelLifetimeScope.Regenerate (System.Int32 seed) [0x0001c] in D:\Pandd\ShinShinzui\Assets\Shinzui\Src\DI\GenerateTunnel\GenerateTunnelLifetimeScope.cs:34 
+  at Shinzui.Tests.CustomSpatialAudio.GameIntegration.CustomAudioGameIntegrationTests+<GeneratedMainSceneRoutesCustomAudioAndSurvivesLifecycle>d__1.MoveNext () [0x00ace] in D:\Pandd\ShinShinzui\Assets\Shinzui\Tests\CustomSpatialAudio\GameIntegration\CustomAudioGameIntegrationTests.cs:129 
+  at UnityEngine.TestTools.TestEnumerator+<Execute>d__7.MoveNext () [0x0003a] in .\Library\PackageCache\com.unity.test-framework@1405238725ab\UnityEngine.TestRunner\NUnitExtensions\Attributes\TestEnumerator.cs:44 ]]></stack-trace>
+                  </failure>
+                  <output><![CDATA[
+IgnoreFailingMessages:true
+[TunnelLoopPresenter] Constructor called
+[TunnelLoopPresenter] Initialize called
+Failed to create agent because there is no valid NavMesh
+[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'LatestStageGenerateTemp' (seed: 2777).
+[FMOD] Instance of Event event:/SE/FlashLightButtonSE has not had EventInstance.set3DAttributes() called on it yet!
+[FMOD] Instance of Event event:/BGM/TunnelAmbient has not had EventInstance.set3DAttributes() called on it yet!
+[FMOD] AsyncCommandBuffer::growBuffer :     Growing command buffer to 65536 bytes. Initial command buffer size can be tuned to avoid dynamic growth using Studio::System::setAdvancedSettings()
+
+[GenerateTunnelPresenter] Generated 8 tunnels with navigation in 'LatestStageGenerateTemp' (seed: 42).
+
+IgnoreFailingMessages:false
+<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/koton/AppData/LocalLow/PandD_org/Shinzui\TestResults.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -414,7 +414,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 647959733}
-        m_TargetAssemblyTypeName: OnOffText, Assembly-CSharp
+        m_TargetAssemblyTypeName: OnOffText, ViewLayer
         m_MethodName: OnOffChange
         m_Mode: 1
         m_Arguments:
@@ -1071,7 +1071,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignGraphicOption
         m_Mode: 1
         m_Arguments:
@@ -1925,7 +1925,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignGameSettingOption
         m_Mode: 1
         m_Arguments:
@@ -2335,7 +2335,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignAudioOption
         m_Mode: 1
         m_Arguments:
@@ -2718,7 +2718,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: QuitGame
         m_Mode: 1
         m_Arguments:
@@ -2841,7 +2841,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignAccessibilityOption
         m_Mode: 1
         m_Arguments:
@@ -3483,7 +3483,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignControlOption
         m_Mode: 1
         m_Arguments:
@@ -4175,31 +4175,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 604478446}
-  - component: {fileID: 604478445}
+  - component: {fileID: 604478447}
   m_Layer: 0
-  m_Name: SettingsLifetimeScope
+  m_Name: TitleLifetimeScope
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &604478445
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 604478444}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8640f47d47a96e04794b21d75e274c1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: DILayer::Shinzui.DI.SettingsLifetimeScope
-  parentReference:
-    TypeName: Shinzui.DI.RootLifetimeScope
-  autoRun: 1
-  autoInjectGameObjects: []
-  optionWindowView: {fileID: 2019272603}
 --- !u!4 &604478446
 Transform:
   m_ObjectHideFlags: 0
@@ -4215,6 +4198,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &604478447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 604478444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a02f45891567a92488702b1a1110d0ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DILayer::Shinzui.DI.TitleLifetimeScope
+  parentReference:
+    TypeName: Shinzui.DI.RootLifetimeScope
+  autoRun: 1
+  autoInjectGameObjects: []
+  titleView: {fileID: 710154106}
+  creditView: {fileID: 2075373198}
+  optionView: {fileID: 2019272603}
+  gameSceneAddress: Assets/Shinzui/Scenes/StageTemp.unity
+  creditData: {fileID: 11400000, guid: e6f5f0c8244594f4c9f39240a869d3ad, type: 2}
+  loopCredits: 0
+  allowSkip: 1
+  autoStartCredits: 0
+  nextSceneName: 
+  creditsFadeOutDuration: 0.5
 --- !u!1 &611052258
 GameObject:
   m_ObjectHideFlags: 0
@@ -4901,7 +4910,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: CloseOptions
         m_Mode: 1
         m_Arguments:
@@ -5034,7 +5043,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignCameraOption
         m_Mode: 1
         m_Arguments:
@@ -5302,12 +5311,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad35a4c90c0d54e6d821f5ea44fad9d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Shinzui.Src.Title.ButtonController
-  titleFadeController: {fileID: 1116770391}
-  optionFadeController: {fileID: 475791543}
-  gameSceneAddress: Assets/Shinzui/Scenes/StageTemp.unity
   screenBackgroundImage: {fileID: 88813459}
   fadeDuration: 0.5
-  creditScreenPresenter: {fileID: 2075373201}
   creditsPanel: {fileID: 2075373196}
   creditsFadeDuration: 2
   creditsSkipHintCanvasGroup: {fileID: 2118282926}
@@ -5320,13 +5325,6 @@ MonoBehaviour:
   audioOptionText: {fileID: 1136700144}
   languageOptionText: {fileID: 1851719558}
   accessibilityOptionText: {fileID: 1443963340}
-  controlOptionObject: {fileID: 2138482871}
-  cameraOptionObject: {fileID: 190636678}
-  gameSettingOptionObject: {fileID: 1090874918}
-  graphicOptionObject: {fileID: 534895589}
-  audioOptionObject: {fileID: 682878044}
-  languageOptionObject: {fileID: 401325831}
-  accessibilityOptionObject: {fileID: 867306054}
 --- !u!4 &710154107
 Transform:
   m_ObjectHideFlags: 0
@@ -5728,7 +5726,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: StartGame
         m_Mode: 1
         m_Arguments:
@@ -6544,7 +6542,7 @@ RectTransform:
   m_Father: {fileID: 1489621531}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -6943,10 +6941,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 1737496722}
   m_HandleRect: {fileID: 1792504842}
   m_Direction: 0
-  m_MinValue: 0
-  m_MaxValue: 1
+  m_MinValue: 1
+  m_MaxValue: 100
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -7263,7 +7261,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: OpenOptions
         m_Mode: 1
         m_Arguments:
@@ -8054,7 +8052,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: StartCredits
         m_Mode: 1
         m_Arguments:
@@ -8187,7 +8185,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 710154106}
-        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, Assembly-CSharp
+        m_TargetAssemblyTypeName: Shinzui.Src.Title.ButtonController, ViewLayer
         m_MethodName: AlignLanguageOption
         m_Mode: 1
         m_Arguments:
@@ -9928,7 +9926,7 @@ RectTransform:
   m_Father: {fileID: 986705714}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -13214,7 +13212,7 @@ RectTransform:
   m_Father: {fileID: 1232897286}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -13612,7 +13610,7 @@ RectTransform:
   m_Father: {fileID: 1081997924}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -14098,10 +14096,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 1247821903}
   m_HandleRect: {fileID: 868084569}
   m_Direction: 0
-  m_MinValue: 0
-  m_MaxValue: 1
+  m_MinValue: 1
+  m_MaxValue: 100
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -14408,33 +14406,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e98660ab40824474e9e12312b14e4c7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Settings.OptionWindowView
+  generateCategoryTabs: 0
   categoryTabParent: {fileID: 1543519881}
   categoryTabPrefab: {fileID: 696626427276934442, guid: 01481ff5eaa3d3544a76423de950544c, type: 3}
-  categoryPanelParent: {fileID: 1543519881}
-  autoDiscoverCategoryPanels: 1
+  categoryPanelParent: {fileID: 996535417}
+  autoDiscoverCategoryPanels: 0
   categoryPanels:
   - categoryId: Controls
     panel: {fileID: 2138482871}
   - categoryId: Camera
-    panel: {fileID: 0}
+    panel: {fileID: 190636678}
   - categoryId: GameSettings
-    panel: {fileID: 0}
+    panel: {fileID: 1090874918}
   - categoryId: Graphics
-    panel: {fileID: 0}
+    panel: {fileID: 534895589}
   - categoryId: Audio
-    panel: {fileID: 0}
+    panel: {fileID: 682878044}
   - categoryId: Language
-    panel: {fileID: 0}
+    panel: {fileID: 401325831}
   - categoryId: Accessibility
-    panel: {fileID: 0}
-  masterVolumeSlider: {fileID: 0}
-  bgmVolumeSlider: {fileID: 0}
-  seVolumeSlider: {fileID: 0}
-  voiceVolumeSlider: {fileID: 0}
-  controllerSpeedSlider: {fileID: 0}
-  mouseSensitivitySlider: {fileID: 0}
-  brightnessSlider: {fileID: 0}
-  centerDotToggle: {fileID: 0}
+    panel: {fileID: 867306054}
+  masterVolumeSlider: {fileID: 455556605}
+  bgmVolumeSlider: {fileID: 711252601}
+  seVolumeSlider: {fileID: 1945446061}
+  voiceVolumeSlider: {fileID: 1356974649}
+  controllerSpeedSlider: {fileID: 1882944463}
+  mouseSensitivitySlider: {fileID: 928749703}
+  brightnessSlider: {fileID: 944587842}
+  centerDotToggle: {fileID: 68648474}
 --- !u!224 &2019272604
 RectTransform:
   m_ObjectHideFlags: 0
@@ -14893,7 +14892,6 @@ GameObject:
   - component: {fileID: 2075373197}
   - component: {fileID: 2075373200}
   - component: {fileID: 2075373199}
-  - component: {fileID: 2075373201}
   - component: {fileID: 2075373198}
   m_Layer: 5
   m_Name: CreditPanel
@@ -14995,29 +14993,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2075373196}
   m_CullTransparentMesh: 1
---- !u!114 &2075373201
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2075373196}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f679a583325d64aa2b920d8b571361c8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Shinzui.Src.Title.CreditScreenPresenter
-  view: {fileID: 2075373198}
-  titlePanel: {fileID: 1116770387}
-  creditData: {fileID: 11400000, guid: e6f5f0c8244594f4c9f39240a869d3ad, type: 2}
-  creditsPanel: {fileID: 2075373196}
-  skipHintCanvasGroup: {fileID: 2118282926}
-  nextSceneName: 
-  loopCredits: 0
-  allowSkip: 1
-  skipKey: 27
-  autoStart: 0
-  fadeOutDuration: 0.5
 --- !u!1 &2085813485
 GameObject:
   m_ObjectHideFlags: 0

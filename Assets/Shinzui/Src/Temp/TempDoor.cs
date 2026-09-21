@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Shinzui.View.Interaction;
+using Shinzui.Application.CustomSpatialAudio;
 
 namespace Shinzui.Temp
 {
@@ -75,7 +76,7 @@ namespace Shinzui.Temp
         }
     }
     
-    public class TempDoor : InteractableComponent
+    public class TempDoor : InteractableComponent, IAcousticDoorSource
     {
         [Header("Close Message")]
         [SerializeField, TextArea(3, 5)] 
@@ -91,6 +92,32 @@ namespace Shinzui.Temp
         private bool isOpen = false;
         private bool isMoving = false;
         private Coroutine moveCoroutine;
+        private Bounds acousticClosedBounds;
+        private bool acousticBoundsReady;
+
+        public bool TryGetAcousticDoor(out AcousticDoorState state)
+        {
+            state = default;
+            if (!isActiveAndEnabled || !acousticBoundsReady) return false;
+            float opening = 0; int count = 0;
+            foreach (var part in doorParts)
+            {
+                if (!part.PartTransform) continue;
+                float amount;
+                if (part.DoorType == DoorType.Slide)
+                    amount = Vector3.Distance(part.PartTransform.localPosition, part.initialPosition) / Mathf.Max(.001f, Mathf.Abs(part.SlideDistance));
+                else
+                    amount = Quaternion.Angle(Quaternion.Euler(part.RotationAxis * part.CloseAngle), part.PartTransform.localRotation) /
+                        Mathf.Max(.001f, Quaternion.Angle(Quaternion.Euler(part.RotationAxis * part.CloseAngle), Quaternion.Euler(part.RotationAxis * part.OpenAngle)));
+                opening += Mathf.Clamp01(amount); count++;
+            }
+            var c = acousticClosedBounds.center; var size = acousticClosedBounds.size;
+            bool normalX = size.x < size.z;
+            state = new AcousticDoorState(new AcousticVector3(c.x, c.y, c.z),
+                new AcousticVector3(normalX ? 1 : 0, 0, normalX ? 0 : 1),
+                Mathf.Max(.1f, normalX ? size.z : size.x), Mathf.Max(.1f, size.y), count > 0 ? opening / count : 0);
+            return true;
+        }
 
         private void Start()
         {
@@ -109,6 +136,11 @@ namespace Shinzui.Temp
                     {
                         part.initialPosition = part.PartTransform.localPosition;
                         part.initialRotation = part.PartTransform.localRotation;
+                        foreach (var renderer in part.PartTransform.GetComponentsInChildren<Renderer>())
+                        {
+                            if (!acousticBoundsReady) { acousticClosedBounds = renderer.bounds; acousticBoundsReady = true; }
+                            else acousticClosedBounds.Encapsulate(renderer.bounds);
+                        }
                     }
                 }
             }

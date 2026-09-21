@@ -1,0 +1,6 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.Probe.Editor",
+  "references": ["Shinzui.CustomSpatialAudio.Probe", "Unity.Addressables.Editor"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.Tests",
+  "references": ["Shinzui.CustomSpatialAudio.Application", "Shinzui.CustomSpatialAudio.Infrastructure", "Shinzui.SpatialAudio.Application", "ApplicationLayer", "DomainLayer", "ViewLayer", "FMODUnity"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false
+}

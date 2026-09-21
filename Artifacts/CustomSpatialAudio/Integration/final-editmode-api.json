@@ -1,0 +1,552 @@
+{
+  "status": "completed",
+  "duration": 1.92,
+  "summary": {
+    "total": 77,
+    "passed": 77,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "results": [
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.AzimuthWrapAndElevationInterpolationAreContinuous",
+      "Status": "Passed",
+      "Duration": 0.0154172,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.BinauralImpulseCombinesFractionalTravelDelayWithMeasuredEarsWithoutExtraPan",
+      "Status": "Passed",
+      "Duration": 0.0055378,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.BinauralTransitionsUseExistingHistoryAndAllocateNothingInAudioProcessing",
+      "Status": "Passed",
+      "Duration": 0.0064089,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.BundledKemarDataContainsMeasuredFrontBackElevationAndCorrectEarMirroring",
+      "Status": "Passed",
+      "Duration": 0.0887264,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.FiltersAndDatasetDefensivelyOwnTheirInputs",
+      "Status": "Passed",
+      "Duration": 0.0014389,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.ListenerYawAndPitchUseSourceRelativeDirection",
+      "Status": "Passed",
+      "Duration": 0.0006377,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.MaximumTravelDelayCanReadTheLastSupportedHrirTap",
+      "Status": "Passed",
+      "Duration": 0.2259792,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.RateMismatchIsRejectedBeforeAudioPublication",
+      "Status": "Passed",
+      "Duration": 0.000593,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference(16000)",
+      "Status": "Passed",
+      "Duration": 0.0007996,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference(48000)",
+      "Status": "Passed",
+      "Duration": 0.0002841,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.SincResamplingPreservesImpulseGainAndEarTimeDifference(96000)",
+      "Status": "Passed",
+      "Duration": 0.0004887,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.BinauralHrirTests.WavReaderHonoursChannelsAndRejectsTruncatedOrCompressedData",
+      "Status": "Passed",
+      "Duration": 0.000904,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.MuteAndPauseAffectTailAndFreezeExpiry",
+      "Status": "Passed",
+      "Duration": 0.0611784,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.NewContactCanRecycleAnOldTailAtTheVoiceLimit",
+      "Status": "Passed",
+      "Duration": 0.0627509,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.PoolBoundPriorityAndReuseDoNotLeakOldTailOrHandles",
+      "Status": "Passed",
+      "Duration": 0.0937347,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.CustomSpatialAudioServiceTests.PreparedVoicesAreSilentThenDetachAndProduceAudibleTail",
+      "Status": "Passed",
+      "Duration": 0.0735063,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.FmodRoomAcousticProcessorTests.NativeGroupMutesAndPausesStoredTailThenCanBeRecreated",
+      "Status": "Passed",
+      "Duration": 0.0331127,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ClosedPortalAndOutsidePositionsAreSilent",
+      "Status": "Passed",
+      "Duration": 0.0021262,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.PhysicalDoorInsideACellFollowsOpeningWithoutAFalseWarpConnection",
+      "Status": "Passed",
+      "Duration": 0.0010145,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(2777)",
+      "Status": "Passed",
+      "Duration": 0.0166046,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(42)",
+      "Status": "Passed",
+      "Duration": 0.0004778,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(1234)",
+      "Status": "Passed",
+      "Duration": 0.0003965,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(1)",
+      "Status": "Passed",
+      "Duration": 0.0004214,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.ProductionDimensionsProduceConnectedNonoverlappingCells(999)",
+      "Status": "Passed",
+      "Duration": 0.0004139,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.GeneratedAcousticWorldTests.WarpPairDoesNotCreateAnAcousticTeleport",
+      "Status": "Passed",
+      "Duration": 0.0005213,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.ClosedDoor_DisconnectedCellsAndZeroTransmission_AreSilent",
+      "Status": "Passed",
+      "Duration": 0.001418,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.DoorOpeningAndBandTransmission_MultiplyAmplitudeWithoutChangingTravelTime",
+      "Status": "Passed",
+      "Duration": 0.0004914,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.EqualCostRoutes_AreDeterministicRegardlessOfInputOrder",
+      "Status": "Passed",
+      "Duration": 0.0007025,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.GraphAndPath_CopyCallerArraysAndPreserveDoorSnapshot",
+      "Status": "Passed",
+      "Duration": 0.0003855,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.InvalidGraphGeometryAndIdentifiers_AreRejected",
+      "Status": "Passed",
+      "Duration": 0.001337,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.InvalidQueryAndDoorValues_AreRejectedBeforeDsp",
+      "Status": "Passed",
+      "Duration": 0.0008038,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.LBend_AccumulatesAllSegmentsAndArrivesFromLastOpening",
+      "Status": "Passed",
+      "Duration": 0.0005596,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.ListenerExactlyOnOpening_UsesIncidentSegmentAndReverseRouteIsReciprocal",
+      "Status": "Passed",
+      "Duration": 0.0004264,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.LossWeightCanPreferLongerOpenRoute_AndZeroWeightFindsShortestGeometry",
+      "Status": "Passed",
+      "Duration": 0.0004245,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.PathBeyondDspBudget_IsNeverClampedToAnEarlierArrival",
+      "Status": "Passed",
+      "Duration": 0.0004843,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.RotationChangesPan_WhileRouteAndTravelTimeRemainStable",
+      "Status": "Passed",
+      "Duration": 0.0003094,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.SameConvexCell_UsesDirectSegmentAndDoesNotInventReflectionsOrTail",
+      "Status": "Passed",
+      "Duration": 0.0010355,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.PortalRoomAcousticsTests.SearchIncludesFinalSegment_NotJustCheapestEntryIntoListenerCell",
+      "Status": "Passed",
+      "Duration": 0.0002414,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.AllOpenBoundaries_ProduceNoNewEarlyOrLateWetEnergy",
+      "Status": "Passed",
+      "Duration": 0.0004227,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.CentredSourceAndListener_HaveSixAnalyticalFirstOrderPaths",
+      "Status": "Passed",
+      "Duration": 0.0006371,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.FullyAbsorbedBand_DoesNotExciteLateReturnWhileOtherBandsSurvive",
+      "Status": "Passed",
+      "Duration": 0.0003715,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.InvalidNumericInputsAndBounds_AreRejectedBeforeDsp",
+      "Status": "Passed",
+      "Duration": 0.0011271,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.LargestRoomAndSlowestSound_FitThreeSecondDelayBudget",
+      "Status": "Passed",
+      "Duration": 0.00047,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.OffCentrePath_UsesImageDistanceAndSquareRootOfEnergySurvival",
+      "Status": "Passed",
+      "Duration": 0.0008073,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.OneWallOpening_LosesEnergyOnlyOnItsFirstOrderPathAndShortensTail",
+      "Status": "Passed",
+      "Duration": 0.0004075,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.ReflectiveAndAbsorbingExtremes_HaveExplicitBoundedDecayParameters",
+      "Status": "Passed",
+      "Duration": 0.0002567,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.RotationChangesPan_WithoutChangingWorldPathOrTravelTime",
+      "Status": "Passed",
+      "Duration": 0.0002872,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomAcousticsTests.Rt60_MatchesEyringEstimateForUniformCube_AndRespondsToScaleAndAbsorption",
+      "Status": "Passed",
+      "Duration": 0.0003012,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetDefaultsToDirectAndRejectsInvalidLimits",
+      "Status": "Passed",
+      "Duration": 0.0006624,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies(1)",
+      "Status": "Passed",
+      "Duration": 0.0015991,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.BinauralBudgetReservesDirectThenSelectsStrongestReflectionWithStableTies(2)",
+      "Status": "Passed",
+      "Duration": 0.0012194,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.DirectImpulseArrivesAtItsTravelDelayWithEqualPowerPan",
+      "Status": "Passed",
+      "Duration": 0.0019425,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.EachFirstOrderReflectionUsesItsOwnDelayAndPan",
+      "Status": "Passed",
+      "Duration": 0.0018289,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.FullyAbsorbingRoomProducesNoEarlyOrLateEnergy",
+      "Status": "Passed",
+      "Duration": 0.0235866,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.FullyOpenResponseDoesNotExciteALateTail",
+      "Status": "Passed",
+      "Duration": 0.0228712,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.GainAndDelayChangeCrossfadeWithoutAStepOnAConstantSignal",
+      "Status": "Passed",
+      "Duration": 0.0080555,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.InvalidRateDelayAndBufferInputsAreRejected",
+      "Status": "Passed",
+      "Duration": 0.002749,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LargeRoomLateEnergyCannotPrecedeItsFirstReflection",
+      "Status": "Passed",
+      "Duration": 0.0362771,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LongerUniformRt60PreservesMoreLateEnergy",
+      "Status": "Passed",
+      "Duration": 0.0725001,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LongestFractionalDelayRetainsTheExtraTapOfAMaximumLengthHrir",
+      "Status": "Passed",
+      "Duration": 0.4736643,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.LowAndHighRt60ControlsAffectTheirExcitedBandsIndependently",
+      "Status": "Passed",
+      "Duration": 0.1178934,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60(125.0f,1.008f)",
+      "Status": "Passed",
+      "Duration": 0.0881068,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60(1000.0f,0.448f)",
+      "Status": "Passed",
+      "Duration": 0.0862289,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NarrowBandT20DecayTracksItsConfiguredRt60(8000.0f,0.216f)",
+      "Status": "Passed",
+      "Duration": 0.0815569,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NonFiniteInputAndRepeatedRoomUpdatesStayFinite",
+      "Status": "Passed",
+      "Duration": 0.0405201,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.NullDryInputContinuesTheTailAndResetClearsIt",
+      "Status": "Passed",
+      "Duration": 0.0282334,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.PreparedFractionalHrirKernelsMatchReferenceConvolution(True)",
+      "Status": "Passed",
+      "Duration": 0.0037401,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.PreparedFractionalHrirKernelsMatchReferenceConvolution(False)",
+      "Status": "Passed",
+      "Duration": 0.0030421,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.ProcessingIsInvariantToDryBufferChunking",
+      "Status": "Passed",
+      "Duration": 0.0218525,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.QueuedRoomChangeStartsAtSameSampleRegardlessOfCallbackSize",
+      "Status": "Passed",
+      "Duration": 0.0070104,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.RectangularRoomDspTests.WarmProcessingAndQueuedTransitionsAllocateNoManagedMemory",
+      "Status": "Passed",
+      "Duration": 0.0324956,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(2777)",
+      "Status": "Passed",
+      "Duration": 0.0100693,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(42)",
+      "Status": "Passed",
+      "Duration": 0.0005455,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(1234)",
+      "Status": "Passed",
+      "Duration": 0.0004195,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(1)",
+      "Status": "Passed",
+      "Duration": 0.0004129,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.ActualSceneModelDimensionsBuildValidAcousticGraph(999)",
+      "Status": "Passed",
+      "Duration": 0.0004185,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.CustomSpatialAudio.TunnelAudioTemplateBoundsTests.MainPrefabDimensionsUseMeshDataAndEncloseAllSixEntrances",
+      "Status": "Passed",
+      "Duration": 0.0005731,
+      "Message": null,
+      "StackTrace": null
+    }
+  ]
+}

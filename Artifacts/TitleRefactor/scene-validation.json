@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "command": "eval_file",
+  "result": {
+    "output": null,
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": {
+      "scene": "Assets/Shinzui/Scenes/Title.unity",
+      "scopeCount": 1,
+      "listenerCount": 12,
+      "missingScripts": 0
+    },
+    "executionTimeMs": 501,
+    "message": null,
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-09-20T22:29:00.8697281Z"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:29:00.870737Z"
+}

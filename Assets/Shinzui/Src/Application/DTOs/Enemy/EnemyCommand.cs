@@ -18,6 +18,7 @@ namespace Shinzui.Application.DTOs.Enemy
 
         public static EnemyCommand Idle => new(EnemyCommandType.Idle, Vector3.zero);
         public static EnemyCommand Wander => new(EnemyCommandType.Wander, Vector3.zero);
+        public static EnemyCommand Retreat(Vector3 targetPosition) => new(EnemyCommandType.Retreat, targetPosition);
 
         /// <summary>
         /// プレイヤー追跡命令を作成する

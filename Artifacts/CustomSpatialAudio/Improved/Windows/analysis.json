@@ -1,0 +1,754 @@
+{
+  "generated_utc": "2026-09-20T21:08:30.232996+00:00",
+  "source_directory": "D:\\Pandd\\ShinShinzui\\Artifacts\\CustomSpatialAudio\\Improved\\Windows",
+  "method": "Filtered stereo spectrum estimates: independent constant-peak biquad bandpasses at 125/1000/8000 Hz, Q=0.707; squared channel energies are summed, not waveforms. Backward Schroeder EDC; linear regression from -5 to -25 dB gives T20 and an extrapolated RT60=T20*3. This is not a measured 60 dB decay, an ISO-compliant measurement, or exact reproduction of the cited FDN paper. The separate low/mid/high FDN component targets do not equal these broad spectral measurement bands.",
+  "capture_support_policy": "Require 35 dB terminal-envelope drop, post-fit capture guard, and <=5% estimated omitted energy at -25 dB. No noise subtraction or unrecorded-tail correction.",
+  "cases": [
+    {
+      "file": "binaural-back.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.10151063650846481,
+      "first_nonzero_frame": 140,
+      "first_nonzero_seconds": 0.002916666666666667,
+      "first_significant_frame": 140,
+      "first_significant_seconds": 0.002916666666666667,
+      "significant_amplitude_threshold": 1.0151063650846482e-10,
+      "component_note": "Measured HRIR on one propagated path; filter ringdown is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.10000000149011612,
+        "mid": 0.10000000149011612,
+        "high": 0.10000000149011612
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.0008219931702709934
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.01962224101223642
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.032181311759733114
+        }
+      ]
+    },
+    {
+      "file": "binaural-front.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.13105101883411407,
+      "first_nonzero_frame": 140,
+      "first_nonzero_seconds": 0.002916666666666667,
+      "first_significant_frame": 140,
+      "first_significant_seconds": 0.002916666666666667,
+      "significant_amplitude_threshold": 1.3105101883411407e-10,
+      "component_note": "Measured HRIR on one propagated path; filter ringdown is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.10000000149011612,
+        "mid": 0.10000000149011612,
+        "high": 0.10000000149011612
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.0010523851702912508
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.02968440223382732
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.07289788111702847
+        }
+      ]
+    },
+    {
+      "file": "binaural-right.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.24149945378303528,
+      "first_nonzero_frame": 140,
+      "first_nonzero_seconds": 0.002916666666666667,
+      "first_significant_frame": 140,
+      "first_significant_seconds": 0.002916666666666667,
+      "significant_amplitude_threshold": 2.414994537830353e-10,
+      "component_note": "Measured HRIR on one propagated path; filter ringdown is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.10000000149011612,
+        "mid": 0.10000000149011612,
+        "high": 0.10000000149011612
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.0012251804849413514
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.031031194881960458
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.1479463425700919
+        }
+      ]
+    },
+    {
+      "file": "binaural-up.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.08403164893388748,
+      "first_nonzero_frame": 140,
+      "first_nonzero_seconds": 0.002916666666666667,
+      "first_significant_frame": 140,
+      "first_significant_seconds": 0.002916666666666667,
+      "significant_amplitude_threshold": 8.403164893388748e-11,
+      "component_note": "Measured HRIR on one propagated path; filter ringdown is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.10000000149011612,
+        "mid": 0.10000000149011612,
+        "high": 0.10000000149011612
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.0008211353556573676
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.015828723461921587
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.05198012279653524
+        }
+      ]
+    },
+    {
+      "file": "l-corridor-closed.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.0,
+      "first_nonzero_frame": null,
+      "first_nonzero_seconds": null,
+      "first_significant_frame": null,
+      "first_significant_seconds": null,
+      "significant_amplitude_threshold": 1e-12,
+      "component_note": "Single portal path with no diffuse return; filtered decay is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.05000000074505806,
+        "mid": 0.05000000074505806,
+        "high": 0.05000000074505806
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "No measurable band energy."
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "No measurable band energy."
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "No measurable band energy."
+        }
+      ]
+    },
+    {
+      "file": "l-corridor-open.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.015742938965559006,
+      "first_nonzero_frame": 1830,
+      "first_nonzero_seconds": 0.038125,
+      "first_significant_frame": 1830,
+      "first_significant_seconds": 0.038125,
+      "significant_amplitude_threshold": 1.5742938965559006e-11,
+      "component_note": "Single portal path with no diffuse return; filtered decay is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.05000000074505806,
+        "mid": 0.05000000074505806,
+        "high": 0.05000000074505806
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 8.325781963625366e-06
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 6.006295454733115e-05
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.00022184671167161648
+        }
+      ]
+    },
+    {
+      "file": "l-corridor-quarter-open.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.007871469482779503,
+      "first_nonzero_frame": 1830,
+      "first_nonzero_seconds": 0.038125,
+      "first_significant_frame": 1830,
+      "first_significant_seconds": 0.038125,
+      "significant_amplitude_threshold": 7.871469482779503e-12,
+      "component_note": "Single portal path with no diffuse return; filtered decay is not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.05000000074505806,
+        "mid": 0.05000000074505806,
+        "high": 0.05000000074505806
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 2.0814454909063415e-06
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 1.5015738636832787e-05
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 5.546167791790412e-05
+        }
+      ]
+    },
+    {
+      "file": "open-boundaries-mixed.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.1318429410457611,
+      "first_nonzero_frame": 312,
+      "first_nonzero_seconds": 0.0065,
+      "first_significant_frame": 312,
+      "first_significant_seconds": 0.0065,
+      "significant_amplitude_threshold": 1.3184294104576112e-10,
+      "component_note": "Open boundaries; expected wet excitation is zero, so filter ringdown is not reverb.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 0.05000000074505806,
+        "mid": 0.05000000074505806,
+        "high": 0.05000000074505806
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.0002854744179624128
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.00208367876143632
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.008521687197225085
+        }
+      ]
+    },
+    {
+      "file": "small-room-direct.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.1318429410457611,
+      "first_nonzero_frame": 312,
+      "first_nonzero_seconds": 0.0065,
+      "first_significant_frame": 312,
+      "first_significant_seconds": 0.0065,
+      "significant_amplitude_threshold": 1.3184294104576112e-10,
+      "component_note": "Direct path only; filtered decay is filter ringdown, not room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 1.008273959159851,
+        "mid": 0.44803300499916077,
+        "high": 0.21559566259384155
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.0002854744179624128
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.00208367876143632
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": false,
+          "reason": "Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.",
+          "captured_band_energy": 0.008521687197225085
+        }
+      ]
+    },
+    {
+      "file": "small-room-early.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.07931678742170334,
+      "first_nonzero_frame": 523,
+      "first_nonzero_seconds": 0.010895833333333334,
+      "first_significant_frame": 523,
+      "first_significant_seconds": 0.010895833333333334,
+      "significant_amplitude_threshold": 7.931678742170335e-11,
+      "component_note": "Early reflections only; fitted decay is not a diffuse room RT60.",
+      "room_reverb_estimate_eligible": false,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 1.008273959159851,
+        "mid": 0.44803300499916077,
+        "high": 0.21559566259384155
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.00043403116901288185,
+          "fit_start_seconds": 0.014166666666666666,
+          "fit_end_seconds": 0.02808333333333333,
+          "fit_start_db": -5.005088068295169,
+          "fit_end_db": -25.059540249781413,
+          "fit_points": 15,
+          "r_squared": 0.7387174499030422,
+          "slope_db_per_second": -1106.6609965356222,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": null,
+          "terminal_window_is_exact_silence": true,
+          "capture_after_fit_seconds": 3.0118958333333334,
+          "estimated_omitted_energy_fraction_at_fit_end": 0.0,
+          "t20_seconds": 0.018072381752505563,
+          "extrapolated_rt60_seconds": 0.05421714525751669,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.0029370656479262296,
+          "fit_start_seconds": 0.011458333333333333,
+          "fit_end_seconds": 0.024104166666666666,
+          "fit_start_db": -5.073816056027475,
+          "fit_end_db": -25.782203005385334,
+          "fit_points": 14,
+          "r_squared": 0.35228358127576165,
+          "slope_db_per_second": -751.3362822111606,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": null,
+          "terminal_window_is_exact_silence": true,
+          "capture_after_fit_seconds": 3.015875,
+          "estimated_omitted_energy_fraction_at_fit_end": 0.0,
+          "t20_seconds": 0.026619238912755003,
+          "extrapolated_rt60_seconds": 0.07985771673826501,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.008288858530918337,
+          "fit_start_seconds": 0.011,
+          "fit_end_seconds": 0.023604166666666666,
+          "fit_start_db": -5.054577390258631,
+          "fit_end_db": -32.49145436787023,
+          "fit_points": 14,
+          "r_squared": 0.2851187922953632,
+          "slope_db_per_second": -913.6922494881269,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": null,
+          "terminal_window_is_exact_silence": true,
+          "capture_after_fit_seconds": 3.016375,
+          "estimated_omitted_energy_fraction_at_fit_end": 0.0,
+          "t20_seconds": 0.02188920833158484,
+          "extrapolated_rt60_seconds": 0.06566762499475451,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        }
+      ]
+    },
+    {
+      "file": "small-room-late.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.002195099601522088,
+      "first_nonzero_frame": 2022,
+      "first_nonzero_seconds": 0.042125,
+      "first_significant_frame": 2022,
+      "first_significant_seconds": 0.042125,
+      "significant_amplitude_threshold": 2.1950996015220882e-12,
+      "component_note": "Isolated late return; broad spectral decay estimate.",
+      "room_reverb_estimate_eligible": true,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 1.008273959159851,
+        "mid": 0.44803300499916077,
+        "high": 0.21559566259384155
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 2.5481522630420067e-05,
+          "fit_start_seconds": 0.10358333333333333,
+          "fit_end_seconds": 0.4193125,
+          "fit_start_db": -5.002420157312653,
+          "fit_end_db": -25.00132076041563,
+          "fit_points": 317,
+          "r_squared": 0.9980102434252779,
+          "slope_db_per_second": -60.37921752003131,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 178.70311902662135,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.6206666666666667,
+          "estimated_omitted_energy_fraction_at_fit_end": 6.466516542282907e-16,
+          "t20_seconds": 0.33123980106838635,
+          "extrapolated_rt60_seconds": 0.9937194032051591,
+          "fit_quality_note": "Approximately linear."
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.00010303223356307724,
+          "fit_start_seconds": 0.0670625,
+          "fit_end_seconds": 0.21991666666666668,
+          "fit_start_db": -5.05600239652325,
+          "fit_end_db": -25.00366336838654,
+          "fit_points": 154,
+          "r_squared": 0.9925741522608398,
+          "slope_db_per_second": -132.46198726011016,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 200.29176404314936,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.8200625,
+          "estimated_omitted_energy_fraction_at_fit_end": 3.488008917587394e-18,
+          "t20_seconds": 0.15098671259345386,
+          "extrapolated_rt60_seconds": 0.4529601377803616,
+          "fit_quality_note": "Approximately linear."
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.00014342948347214457,
+          "fit_start_seconds": 0.0619375,
+          "fit_end_seconds": 0.1569375,
+          "fit_start_db": -5.007566199644203,
+          "fit_end_db": -25.00131070636416,
+          "fit_points": 96,
+          "r_squared": 0.9837149214566476,
+          "slope_db_per_second": -195.38050634904693,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 220.6917304162106,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.8830416666666667,
+          "estimated_omitted_energy_fraction_at_fit_end": 2.1907389508627156e-20,
+          "t20_seconds": 0.10236435749772312,
+          "extrapolated_rt60_seconds": 0.30709307249316936,
+          "fit_quality_note": "Approximately linear."
+        }
+      ]
+    },
+    {
+      "file": "small-room-mixed.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.1318429410457611,
+      "first_nonzero_frame": 312,
+      "first_nonzero_seconds": 0.0065,
+      "first_significant_frame": 312,
+      "first_significant_seconds": 0.0065,
+      "significant_amplitude_threshold": 1.3184294104576112e-10,
+      "component_note": "Mixed impulse response; fit includes direct/early energy and may not isolate late decay.",
+      "room_reverb_estimate_eligible": true,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 1.008273959159851,
+        "mid": 0.44803300499916077,
+        "high": 0.21559566259384155
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.0006696254676455178,
+          "fit_start_seconds": 0.0116875,
+          "fit_end_seconds": 0.191875,
+          "fit_start_db": -5.00137871622138,
+          "fit_end_db": -25.000788202030222,
+          "fit_points": 182,
+          "r_squared": 0.9179133230470173,
+          "slope_db_per_second": -85.94737947617936,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 196.09425756750954,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.848104166666667,
+          "estimated_omitted_energy_fraction_at_fit_end": 1.7284841069581087e-17,
+          "t20_seconds": 0.23270052120138315,
+          "extrapolated_rt60_seconds": 0.6981015636041494,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.005123776644355805,
+          "fit_start_seconds": 0.011020833333333334,
+          "fit_end_seconds": 0.0948125,
+          "fit_start_db": -5.1762756794115505,
+          "fit_end_db": -25.002785088612036,
+          "fit_points": 85,
+          "r_squared": 0.8580161729740104,
+          "slope_db_per_second": -193.2157979762687,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 218.3028336389796,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.9451666666666667,
+          "estimated_omitted_energy_fraction_at_fit_end": 4.8075224053340924e-20,
+          "t20_seconds": 0.10351120461928509,
+          "extrapolated_rt60_seconds": 0.3105336138578553,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.01695397521161557,
+          "fit_start_seconds": 0.010979166666666667,
+          "fit_end_seconds": 0.0583125,
+          "fit_start_db": -6.740867782294805,
+          "fit_end_db": -25.013831380602202,
+          "fit_points": 49,
+          "r_squared": 0.7473842254899874,
+          "slope_db_per_second": -352.3934255329629,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 242.80330675415055,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.9816666666666665,
+          "estimated_omitted_energy_fraction_at_fit_end": 1.0305356528335461e-22,
+          "t20_seconds": 0.05675474782127909,
+          "extrapolated_rt60_seconds": 0.17026424346383726,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        }
+      ]
+    },
+    {
+      "file": "straight-tunnel-mixed.wav",
+      "sample_rate": 48000,
+      "frames": 145920,
+      "capture_seconds": 3.04,
+      "peak_amplitude": 0.1318429410457611,
+      "first_nonzero_frame": 312,
+      "first_nonzero_seconds": 0.0065,
+      "first_significant_frame": 312,
+      "first_significant_seconds": 0.0065,
+      "significant_amplitude_threshold": 1.3184294104576112e-10,
+      "component_note": "Mixed impulse response; fit includes direct/early energy and may not isolate late decay.",
+      "room_reverb_estimate_eligible": true,
+      "onset_note": "Capture-relative timestamps; capture/system latency is not subtracted.",
+      "independent_fdn_component_targets_seconds": {
+        "low": 1.181571125984192,
+        "mid": 0.5250386595726013,
+        "high": 0.2526511549949646
+      },
+      "bands": [
+        {
+          "centre_hz": 125,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.0006156127016983382,
+          "fit_start_seconds": 0.011375,
+          "fit_end_seconds": 0.233,
+          "fit_start_db": -5.0552578619613,
+          "fit_end_db": -25.000523131599422,
+          "fit_points": 223,
+          "r_squared": 0.9635464691359445,
+          "slope_db_per_second": -68.86829904047275,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 170.6709116835002,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.806979166666667,
+          "estimated_omitted_energy_fraction_at_fit_end": 8.179205989945984e-15,
+          "t20_seconds": 0.2904093796224927,
+          "extrapolated_rt60_seconds": 0.8712281388674781,
+          "fit_quality_note": "Approximately linear."
+        },
+        {
+          "centre_hz": 1000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.004706396802331849,
+          "fit_start_seconds": 0.010979166666666667,
+          "fit_end_seconds": 0.1059375,
+          "fit_start_db": -5.008119773601009,
+          "fit_end_db": -25.03650227836262,
+          "fit_points": 96,
+          "r_squared": 0.8916379852596469,
+          "slope_db_per_second": -132.2226603564201,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 192.8267364277241,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.934041666666667,
+          "estimated_omitted_energy_fraction_at_fit_end": 2.719826170688813e-17,
+          "t20_seconds": 0.151260002983512,
+          "extrapolated_rt60_seconds": 0.453780008950536,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        },
+        {
+          "centre_hz": 8000,
+          "q": 0.707,
+          "accepted": true,
+          "reason": null,
+          "captured_band_energy": 0.015675413569346063,
+          "fit_start_seconds": 0.0109375,
+          "fit_end_seconds": 0.08758333333333333,
+          "fit_start_db": -5.7078220770410395,
+          "fit_end_db": -27.329120810341013,
+          "fit_points": 78,
+          "r_squared": 0.7412847488556731,
+          "slope_db_per_second": -129.13143036570332,
+          "terminal_power_window_seconds": 0.1,
+          "terminal_power_drop_from_peak_10ms_db": 217.3252158004227,
+          "terminal_window_is_exact_silence": false,
+          "capture_after_fit_seconds": 2.9523958333333336,
+          "estimated_omitted_energy_fraction_at_fit_end": 1.8299930127113317e-19,
+          "t20_seconds": 0.1548809607650091,
+          "extrapolated_rt60_seconds": 0.46464288229502726,
+          "fit_quality_note": "Low linearity: this spectrum does not follow a single exponential decay."
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "component_onsets": [
+    {
+      "room_prefix": "small-room",
+      "direct_first_nonzero_seconds": 0.0065,
+      "late_first_nonzero_seconds": 0.042125,
+      "late_minus_direct_ms": 35.62500000000001,
+      "note": "Separate captures; difference assumes matching startup/capture timing. Mixed WAV alone cannot isolate late onset."
+    }
+  ]
+}

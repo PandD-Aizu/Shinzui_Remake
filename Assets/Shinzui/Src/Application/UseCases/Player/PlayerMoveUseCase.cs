@@ -20,6 +20,7 @@ namespace Shinzui.Application.UseCases
         public bool SprintPressed => _inputService.SprintPressed;
         public bool CrouchPressed => _inputService.CrouchPressed;
         public bool IsRunning => _playerEntityEntity.MovementState.Value == PlayerMovementState.Running;
+        public bool IsCrouching => _playerEntityEntity.MovementState.Value == PlayerMovementState.Crouching;
         
         private Ray ray;                                          //現在いるトンネルを取得するために足元に飛ばすray
         [HideInInspector] public GameObject currentTunnelStart;   //現在いるトンネルのスタート地点

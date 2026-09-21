@@ -1,0 +1,27 @@
+{
+  "success": true,
+  "command": "eval",
+  "result": {
+    "output": null,
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": {
+      "compiling": false,
+      "compilationFailed": false,
+      "playing": false,
+      "scene": "Assets/Shinzui/Scenes/Title.unity",
+      "dirty": false
+    },
+    "executionTimeMs": 273,
+    "message": null,
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-09-20T22:56:09.2416465Z"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:56:09.2431475Z"
+}

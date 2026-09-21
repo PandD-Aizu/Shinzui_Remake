@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "command": "eval",
+  "result": {
+    "jobId": "df4cef5c144545f0bbe7d539fc0953dc",
+    "state": "queued"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:09:44.4560716Z"
+}

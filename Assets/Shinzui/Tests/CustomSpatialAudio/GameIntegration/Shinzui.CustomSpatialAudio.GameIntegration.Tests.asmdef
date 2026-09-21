@@ -1,0 +1,6 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.GameIntegration.Tests",
+  "references": ["Shinzui.CustomSpatialAudio.Application", "Shinzui.CustomSpatialAudio.Infrastructure", "Shinzui.CustomSpatialAudio.DI", "Shinzui.SpatialAudio.Application", "Shinzui.TunnelAcoustics.DI", "ApplicationLayer", "DILayer", "ViewLayer", "PresentationLayer", "DomainLayer", "InfrastructureLayer", "FMODUnity", "VContainer"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false
+}

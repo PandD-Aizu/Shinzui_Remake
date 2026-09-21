@@ -13,13 +13,15 @@ namespace Shinzui.Application.DTOs.Enemy
             ReadOnlyMemory<EnemyReport> enemyReports,
             bool hasTunnelBounds,
             Vector3 tunnelStart,
-            Vector3 tunnelEnd)
+            Vector3 tunnelEnd,
+            float playerNoiseRadius = 0f)
         {
             PlayerPosition = playerPosition;
             EnemyReports = enemyReports;
             HasTunnelBounds = hasTunnelBounds;
             TunnelStart = tunnelStart;
             TunnelEnd = tunnelEnd;
+            PlayerNoiseRadius = playerNoiseRadius;
         }
 
         public Vector3 PlayerPosition { get; }
@@ -27,5 +29,6 @@ namespace Shinzui.Application.DTOs.Enemy
         public bool HasTunnelBounds { get; }
         public Vector3 TunnelStart { get; }
         public Vector3 TunnelEnd { get; }
+        public float PlayerNoiseRadius { get; }
     }
 }

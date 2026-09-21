@@ -1,0 +1,19 @@
+file,centre_hz,accepted,room_reverb_estimate_eligible,t20_seconds,extrapolated_rt60_seconds,r_squared,reason
+open-boundaries-mixed.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+open-boundaries-mixed.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+open-boundaries-mixed.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-direct.wav,125,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-direct.wav,1000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-direct.wav,8000,False,False,,,,Fewer than 10 nonzero EDC fit points; impulse/filter response is too short.
+small-room-early.wav,125,True,False,0.018072381752505563,0.05421714525751669,0.7387174499030422,
+small-room-early.wav,1000,True,False,0.026619238912755003,0.07985771673826501,0.35228358127576165,
+small-room-early.wav,8000,True,False,0.02188920833158484,0.06566762499475451,0.2851187922953632,
+small-room-late.wav,125,True,True,0.328754250297132,0.986262750891396,0.998302650214,
+small-room-late.wav,1000,True,True,0.21439260034505916,0.6431778010351775,0.9872877953689652,
+small-room-late.wav,8000,True,True,0.14131510174518616,0.42394530523555846,0.9916606619065035,
+small-room-mixed.wav,125,True,True,0.2433619341095208,0.7300858023285625,0.9426131655382001,
+small-room-mixed.wav,1000,True,True,0.12337161586434345,0.3701148475930303,0.9060672089810965,
+small-room-mixed.wav,8000,True,True,0.08028637099258502,0.24085911297775506,0.8997976078854094,
+straight-tunnel-mixed.wav,125,True,True,0.2949639297180185,0.8848917891540555,0.9745206927400301,
+straight-tunnel-mixed.wav,1000,True,True,0.15598695427281864,0.4679608628184559,0.9550188765620593,
+straight-tunnel-mixed.wav,8000,True,True,0.14090003949360327,0.4227001184808098,0.8911205718941996,

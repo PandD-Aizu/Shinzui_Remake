@@ -10,7 +10,10 @@
         "GUID:b0214a6008ed146ff8f122a6a9c2f6cc",
         "Unity.InputSystem",
         "Shinzui.TunnelAcoustics.DI",
-        "Shinzui.TunnelAcoustics.Infrastructure"
+        "Shinzui.TunnelAcoustics.Infrastructure",
+        "Shinzui.CustomSpatialAudio.DI",
+        "Shinzui.CustomSpatialAudio.Infrastructure",
+        "Shinzui.SpatialAudio.Application"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

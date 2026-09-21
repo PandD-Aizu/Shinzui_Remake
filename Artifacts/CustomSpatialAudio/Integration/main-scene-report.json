@@ -1,0 +1,19 @@
+{
+    "passed": true,
+    "rooms": 21,
+    "portals": 20,
+    "initialBuilds": 1,
+    "footsteps": 1,
+    "misses": 0,
+    "processors": 8,
+    "callbackErrors": 0,
+    "mapAudit": "tunnels=8, corridors=6, smallRooms=1, warps=4; dimensions=40.00001,10.35421,40.95705",
+    "legacyBgmStarts": true,
+    "legacyUiStarts": true,
+    "audiblePeak": 0.056826308369636539,
+    "seMutedPeak": 0.0,
+    "masterMutedPeak": 0.0,
+    "bgmMutedPeak": 0.056826308369636539,
+    "pausedPeak": 0.0,
+    "errors": []
+}

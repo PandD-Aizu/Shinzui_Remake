@@ -37,10 +37,11 @@ namespace Shinzui.Infrastructure.Services
                 }
                 else
                 {
-                    // サービスが利用できない場合は従来通りBusに直接設定
-                    SetFmodBusVolume(MasterBusPath, audio.SystemVolume);
-                    SetFmodBusVolume(BgmBusPath, audio.BgmVolume);
-                    SetFmodBusVolume(SeBusPath, audio.SeVolume);
+                    // Use the same authored VCAs as SoundSystemLifetimeScope. WorldSE is a
+                    // sibling of SE, so changing bus:/SE alone misses generated world sounds.
+                    SetFmodVcaVolume("vca:/Master", audio.SystemVolume);
+                    SetFmodVcaVolume("vca:/BGM", audio.BgmVolume);
+                    SetFmodVcaVolume("vca:/SE", audio.SeVolume);
                 }
 
                 // Voice は VCA サービスに含まれないため、従来通り Bus に適用
@@ -159,18 +160,21 @@ namespace Shinzui.Infrastructure.Services
             // FMOD Unity インテグレーションが読み込まれている場合にボリュームを適用
             try
             {
-#if FMOD_UNITY
-                var bus = FMODUnity.RuntimeManager.GetBus(busPath);
-                if (bus.isValid())
+                if (FMODUnity.RuntimeManager.StudioSystem.getBus(busPath, out var bus) == FMOD.RESULT.OK && bus.isValid())
                 {
-                    bus.setVolume(volume);
+                    bus.setVolume(Mathf.Clamp01(volume));
                 }
-#endif
             }
             catch (Exception)
             {
                 // エディタ未初期化エラーなどを無視
             }
+        }
+
+        private static void SetFmodVcaVolume(string path, float volume)
+        {
+            if (FMODUnity.RuntimeManager.StudioSystem.getVCA(path, out var vca) == FMOD.RESULT.OK && vca.isValid())
+                vca.setVolume(Mathf.Clamp01(volume));
         }
 
         private void ApplySwitchGraphics(GraphicsSettings graphics)

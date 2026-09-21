@@ -1,0 +1,9 @@
+{
+    "name": "Shinzui.EnemyDirector.Tests",
+    "references": ["ApplicationLayer", "InfrastructureLayer", "DomainLayer", "FMODUnity", "R3.Unity"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "overrideReferences": true,
+    "precompiledReferences": ["R3.dll", "nunit.framework.dll"],
+    "autoReferenced": false
+}

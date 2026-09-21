@@ -12,13 +12,15 @@ namespace Shinzui.Application.DTOs.Enemy
             Vector3 position,
             EnemyCommand currentCommand,
             float chaseDistance,
-            bool canReceiveCommand)
+            bool canReceiveCommand,
+            bool canSeePlayer = false)
         {
             Id = id;
             Position = position;
             CurrentCommand = currentCommand;
             ChaseDistance = chaseDistance;
             CanReceiveCommand = canReceiveCommand;
+            CanSeePlayer = canSeePlayer;
         }
 
         public int Id { get; }
@@ -26,5 +28,6 @@ namespace Shinzui.Application.DTOs.Enemy
         public EnemyCommand CurrentCommand { get; }
         public float ChaseDistance { get; }
         public bool CanReceiveCommand { get; }
+        public bool CanSeePlayer { get; }
     }
 }

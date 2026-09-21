@@ -1,0 +1,5 @@
+{
+  "name": "Shinzui.CustomSpatialAudio.Probe",
+  "references": ["Shinzui.CustomSpatialAudio.Application", "Shinzui.CustomSpatialAudio.Infrastructure", "FMODUnity"],
+  "autoReferenced": false
+}

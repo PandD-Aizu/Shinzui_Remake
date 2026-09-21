@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "command": "eval",
+  "result": {
+    "output": null,
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": {
+      "target": 0,
+      "name": "Enemy",
+      "stopped": true,
+      "speed": 0.0
+    },
+    "executionTimeMs": 356,
+    "message": null,
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-09-20T22:54:39.985373Z"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:54:39.9863845Z"
+}

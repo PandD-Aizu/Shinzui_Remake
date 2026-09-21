@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "command": "eval_file",
+  "result": {
+    "output": null,
+    "diagnostics": [],
+    "success": true,
+    "command": "eval",
+    "result": {
+      "titleScopeBuilt": true,
+      "optionCycles": 2,
+      "selectedTabs": 14,
+      "creditCycles": 2,
+      "titleVisible": true,
+      "cameraRange": [
+        1.0,
+        100.0
+      ]
+    },
+    "executionTimeMs": 488,
+    "message": null,
+    "error": null,
+    "errorDetails": null,
+    "executedAt": "2026-09-20T22:37:41.6116952Z"
+  },
+  "executionTimeMs": null,
+  "message": null,
+  "error": null,
+  "errorDetails": null,
+  "executedAt": "2026-09-20T22:37:41.6127079Z"
+}

@@ -102,14 +102,14 @@ namespace Shinzui.View.GenerateTunnel
             FindTemplates();
 
             bool useBounds = _generator == null || _generator.UseModelBoundsForLayout;
-            if (useBounds && _tunnelPrefab != null && TryCalculateRendererBounds(_tunnelPrefab, Vector3.one, out Bounds tunnelBounds))
+            if (useBounds && _tunnelPrefab != null && TryCalculateMeshBounds(_tunnelPrefab, GetTunnelModelScale(), out Bounds tunnelBounds))
             {
                 tunnelLength = Mathf.Max(tunnelBounds.size.x, tunnelBounds.size.z);
                 tunnelWidth = Mathf.Min(tunnelBounds.size.x, tunnelBounds.size.z);
                 tunnelHeight = Mathf.Max(tunnelHeight, tunnelBounds.size.y);
             }
 
-            if (_corridorTemplate != null && TryCalculateRendererBounds(_corridorTemplate, Vector3.one, out Bounds corridorBounds))
+            if (_corridorTemplate != null && TryCalculateMeshBounds(_corridorTemplate, GetCorridorModelScale(false), out Bounds corridorBounds))
             {
                 _corridorTemplateLongAxisIsX = corridorBounds.size.x >= corridorBounds.size.z;
                 if (useBounds)
@@ -120,7 +120,7 @@ namespace Shinzui.View.GenerateTunnel
                 }
             }
 
-            if (_warpCorridorTemplate != null && TryCalculateRendererBounds(_warpCorridorTemplate, Vector3.one, out Bounds warpBounds))
+            if (_warpCorridorTemplate != null && TryCalculateMeshBounds(_warpCorridorTemplate, GetCorridorModelScale(true), out Bounds warpBounds))
             {
                 _warpCorridorTemplateLongAxisIsX = warpBounds.size.x >= warpBounds.size.z;
             }
@@ -129,6 +129,32 @@ namespace Shinzui.View.GenerateTunnel
             HideSceneTemplate(_corridorTemplate);
             HideSceneTemplate(_smallRoomTemplate);
             HideSceneTemplate(_warpCorridorTemplate);
+        }
+
+        /// <summary>Measure side-mouth spacing from the same authored mesh used to draw the six exits.</summary>
+        public float ResolveConnectionPointSpacing(float configuredSpacing)
+        {
+            if ((_generator != null && !_generator.UseModelBoundsForLayout) || !_tunnelPrefab) return configuredSpacing;
+            float total = 0; int count = 0;
+            // The centre mouths have zero longitudinal offset; average each outer mouth relative
+            // to the centre on its side so an imported pivot does not affect the spacing.
+            for (int side = 0; side < 2; side++)
+            {
+                int middle = side * 3 + 1;
+                if (!TryMouthPosition(middle, out var centre)) continue;
+                foreach (int index in new[] { middle - 1, middle + 1 })
+                    if (TryMouthPosition(index, out var outer)) { total += Vector3.Distance(outer, centre); count++; }
+            }
+            return count == 4 && total > .01f ? total / count : configuredSpacing;
+        }
+
+        private bool TryMouthPosition(int index, out Vector3 position)
+        {
+            position = default;
+            var part = _tunnelPrefab.transform.Find(ExitPathNames[index]);
+            if (!part || !TryGetMeshBoundsInLocalSpace(part, _tunnelPrefab.transform, out var bounds)) return false;
+            position = Vector3.Scale(bounds.center, GetTunnelModelScale());
+            return true;
         }
 
         /// <summary>
@@ -710,41 +736,16 @@ namespace Shinzui.View.GenerateTunnel
                 : _generator.CorridorModelRotation;
         }
 
-        private static bool TryCalculateRendererBounds(GameObject template, Vector3 additionalScale, out Bounds bounds)
+        private static bool TryCalculateMeshBounds(GameObject template, Vector3 additionalScale, out Bounds bounds)
         {
             bounds = default;
-            if (template == null)
-            {
+            if (template == null || !TryGetMeshBoundsInLocalSpace(template.transform, template.transform, out Bounds meshBounds))
                 return false;
-            }
-
-            Renderer[] renderers = template.GetComponentsInChildren<Renderer>(true);
-            bool hasBounds = false;
-
-            foreach (Renderer renderer in renderers)
-            {
-                if (renderer == null)
-                {
-                    continue;
-                }
-
-                Bounds rendererBounds = renderer.bounds;
-                Vector3 center = Vector3.Scale(rendererBounds.center, additionalScale);
-                Vector3 size = Vector3.Scale(rendererBounds.size, Abs(additionalScale));
-                Bounds scaledBounds = new(center, size);
-
-                if (!hasBounds)
-                {
-                    bounds = scaledBounds;
-                    hasBounds = true;
-                }
-                else
-                {
-                    bounds.Encapsulate(scaledBounds);
-                }
-            }
-
-            return hasBounds;
+            // Prefab-asset Renderer.bounds can be stale/empty and include particle/VFX bounds.
+            // Transform actual mesh corners into the prefab's frame, then apply the authored scale.
+            bounds = new Bounds(Vector3.Scale(meshBounds.center, additionalScale),
+                Vector3.Scale(meshBounds.size, Abs(additionalScale)));
+            return true;
         }
 
         private static Vector3 Abs(Vector3 value)

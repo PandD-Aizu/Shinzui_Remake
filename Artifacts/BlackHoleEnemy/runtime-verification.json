@@ -1,0 +1,11 @@
+{
+  "controllers": 2,
+  "start": "(0.00, 0.60, 5.00)",
+  "end": "(0.00, 0.60, 3.89)",
+  "movedMetres": 1.10792828,
+  "onNavMesh": true,
+  "pathStatus": "PathComplete",
+  "velocity": "(0.00, 0.00, -1.20)",
+  "hoverPlaying": true,
+  "hoverY": 0.048994
+}

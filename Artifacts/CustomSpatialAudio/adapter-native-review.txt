@@ -1,0 +1,8 @@
+DSP[0]=ChanGroup Fader
+DSP[1]=Shinzui Rectangular Room
+pauseCallbackDelta=0 masterPausePeak=0
+managedMixerLoopBytes=32 groupFaderMutedTail=True
+managedSteadyMixerBytes=0
+emptyCallbacks=8 sourceEndCallbacks=28 totalCallbacks=308 captureFrames=53248 peak=0.032045484 tailPeak=0.012821901 errors=OK nonfinite=0 overflow=False
+invalidParentPartialCleanupAttempts=3
+PASS native callback, empty-input, source-stop tail, stereo capture, parameter publication, disposal/reconstruction

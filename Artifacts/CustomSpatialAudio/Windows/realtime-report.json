@@ -1,0 +1,27 @@
+{
+    "unityVersion": "6000.5.8f1",
+    "environment": "Windows Player",
+    "signalPath": "Private FMOD Core system -> dry PCM -> custom room DSP -> stereo output; no Studio bank or Steam Audio DSP in this signal path.",
+    "limitation": "Equal-power stereo, not HRTF. Existing project startup may independently initialize Steam Audio in a Player. WAV records custom DSP output before the group fader, not a microphone or loopback recording.",
+    "passed": true,
+    "cases": [
+        {
+            "name": "small-room-audition",
+            "output": "WASAPI",
+            "sampleRate": 48000,
+            "frames": 143872,
+            "callbacks": 282,
+            "peak": 0.09928826987743378,
+            "energy": 1.752841127105967,
+            "tailEnergy": 0.0004948254447255385,
+            "targetLowRt60": 1.008273959159851,
+            "targetMidRt60": 0.44803300499916079,
+            "targetHighRt60": 0.21559566259384156,
+            "finite": true,
+            "sourceStopped": true,
+            "passed": true,
+            "callbackError": "OK",
+            "captureOverflowed": false
+        }
+    ]
+}
