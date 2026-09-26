@@ -1,0 +1,25 @@
+{
+    "unityVersion": "6000.5.8f1",
+    "animationType": "Generic",
+    "rendererCount": 1,
+    "vertexCount": 28059,
+    "skinBoneCount": 34,
+    "tipCount": 8,
+    "unweightedVertices": 0,
+    "validatedLegs": [
+        "Leg_L01",
+        "Leg_L02",
+        "Leg_L03",
+        "Leg_L04",
+        "Leg_R01",
+        "Leg_R02",
+        "Leg_R03",
+        "Leg_R04"
+    ],
+    "boundsSize": {
+        "x": 0.9603882431983948,
+        "y": 1.0055618286132813,
+        "z": 0.9428755044937134
+    },
+    "passed": true
+}

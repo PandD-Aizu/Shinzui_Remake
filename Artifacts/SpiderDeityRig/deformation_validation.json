@@ -1,0 +1,90 @@
+[
+  {
+    "leg": "Leg_L01",
+    "max_edge_ratio": 1.1306440380788896,
+    "edge_midpoint": [
+      0.08569342643022537,
+      -0.2658691108226776,
+      0.53125
+    ],
+    "original_edge_length": 0.0041432037960149265,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_L02",
+    "max_edge_ratio": 1.246417169339438,
+    "edge_midpoint": [
+      0.07202152907848358,
+      -0.12695308402180672,
+      0.515869140625
+    ],
+    "original_edge_length": 0.01049520314036505,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_L03",
+    "max_edge_ratio": 1.0742142529717222,
+    "edge_midpoint": [
+      0.396484375,
+      0.12915046513080597,
+      0.388427734375
+    ],
+    "original_edge_length": 0.006137600141590105,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_L04",
+    "max_edge_ratio": 1.2619124586708406,
+    "edge_midpoint": [
+      0.1896972805261612,
+      0.13745123147964478,
+      0.63037109375
+    ],
+    "original_edge_length": 0.01109161786289116,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_R01",
+    "max_edge_ratio": 1.181512819402175,
+    "edge_midpoint": [
+      -0.07958977669477463,
+      -0.2687987983226776,
+      0.529296875
+    ],
+    "original_edge_length": 0.005190500885124341,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_R02",
+    "max_edge_ratio": 1.198456265530912,
+    "edge_midpoint": [
+      -0.07324214279651642,
+      -0.11645505577325821,
+      0.506103515625
+    ],
+    "original_edge_length": 0.018386885140393293,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_R03",
+    "max_edge_ratio": 1.0820595333616827,
+    "edge_midpoint": [
+      -0.3901367038488388,
+      0.11376950144767761,
+      0.407470703125
+    ],
+    "original_edge_length": 0.0052362469495546285,
+    "large_stretch_edges": 0
+  },
+  {
+    "leg": "Leg_R04",
+    "max_edge_ratio": 1.235691497435614,
+    "edge_midpoint": [
+      -0.1896972507238388,
+      0.137451171875,
+      0.63037109375
+    ],
+    "original_edge_length": 0.01109161786289116,
+    "large_stretch_edges": 0
+  }
+]

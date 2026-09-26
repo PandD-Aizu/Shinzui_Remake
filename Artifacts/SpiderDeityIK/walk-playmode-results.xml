@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="5" result="Passed" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.1431155">
+  <test-suite type="TestSuite" id="1043" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="16" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.143116" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1026" name="Shinzui.SpiderDeityIK.PlayModeTests.dll" fullname="D:/Pandd/ShinShinzui/Library/ScriptAssemblies/Shinzui.SpiderDeityIK.PlayModeTests.dll" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.135987" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="20192" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1027" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.135403" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1028" name="Tests" fullname="Shinzui.Tests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.135085" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1029" name="SpiderDeityIK" fullname="Shinzui.Tests.SpiderDeityIK" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.134786" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1030" name="Runtime" fullname="Shinzui.Tests.SpiderDeityIK.Runtime" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:34Z" duration="12.134507" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1019" name="SpiderDeityIkPlayModeTests" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:23Z" duration="0.390443" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1020" name="SavedPreviewSceneMovesFeetAndAllowsManualControl" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests.SavedPreviewSceneMovesFeetAndAllowsManualControl" methodname="SavedPreviewSceneMovesFeetAndAllowsManualControl" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests" runstate="Runnable" seed="488630960" result="Passed" start-time="2026-09-26 10:19:22Z" end-time="2026-09-26 10:19:23Z" duration="0.379951" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="TestFixture" id="1021" name="SpiderWalkPlayModeTests" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-26 10:19:23Z" end-time="2026-09-26 10:19:34Z" duration="11.742985" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1025" name="MissingGroundDoesNotCreateFalseStepsAndTeleportResetsContacts" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests.MissingGroundDoesNotCreateFalseStepsAndTeleportResetsContacts" methodname="MissingGroundDoesNotCreateFalseStepsAndTeleportResetsContacts" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests" runstate="Runnable" seed="2094006582" result="Passed" start-time="2026-09-26 10:19:23Z" end-time="2026-09-26 10:19:23Z" duration="0.412899" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1022" name="PlantedFeetStayInWorldSpaceWhileBodyMoves" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests.PlantedFeetStayInWorldSpaceWhileBodyMoves" methodname="PlantedFeetStayInWorldSpaceWhileBodyMoves" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests" runstate="Runnable" seed="194852884" result="Passed" start-time="2026-09-26 10:19:23Z" end-time="2026-09-26 10:19:23Z" duration="0.006240" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1024" name="PreviewMovesTurnsAndRendersWithAlternatingFeet" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests.PreviewMovesTurnsAndRendersWithAlternatingFeet" methodname="PreviewMovesTurnsAndRendersWithAlternatingFeet" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests" runstate="Runnable" seed="1344585804" result="Passed" start-time="2026-09-26 10:19:23Z" end-time="2026-09-26 10:19:30Z" duration="7.315810" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1023" name="WalkingAlternatesSupportsAndSettlesOnGround" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests.WalkingAlternatesSupportsAndSettlesOnGround" methodname="WalkingAlternatesSupportsAndSettlesOnGround" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderWalkPlayModeTests" runstate="Runnable" seed="1867892689" result="Passed" start-time="2026-09-26 10:19:30Z" end-time="2026-09-26 10:19:34Z" duration="4.006306" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/koton/AppData/LocalLow/PandD_org/Shinzui\TestResults.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

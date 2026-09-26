@@ -1,0 +1,17 @@
+{
+  "editMode": {
+    "result": "Passed",
+    "total": "12",
+    "passed": "12",
+    "failed": "0"
+  },
+  "playMode": {
+    "result": "Passed",
+    "total": "1",
+    "passed": "1",
+    "failed": "0"
+  },
+  "unity": "6000.5.8f1",
+  "package": "com.unity.animation.rigging@1.4.1",
+  "missingMeta": []
+}

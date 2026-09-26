@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.4045984">
+  <test-suite type="TestSuite" id="1038" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.404598" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1021" name="Shinzui.SpiderDeityIK.PlayModeTests.dll" fullname="D:/Pandd/ShinShinzui/Library/ScriptAssemblies/Shinzui.SpiderDeityIK.PlayModeTests.dll" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.396908" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="72248" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1022" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.395902" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1023" name="Tests" fullname="Shinzui.Tests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.395363" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1024" name="SpiderDeityIK" fullname="Shinzui.Tests.SpiderDeityIK" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.394675" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestSuite" id="1025" name="Runtime" fullname="Shinzui.Tests.SpiderDeityIK.Runtime" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.394330" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="TestFixture" id="1019" name="SpiderDeityIkPlayModeTests" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.392874" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1020" name="SavedPreviewSceneMovesFeetAndAllowsManualControl" fullname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests.SavedPreviewSceneMovesFeetAndAllowsManualControl" methodname="SavedPreviewSceneMovesFeetAndAllowsManualControl" classname="Shinzui.Tests.SpiderDeityIK.Runtime.SpiderDeityIkPlayModeTests" runstate="Runnable" seed="1260449976" result="Passed" start-time="2026-09-26 10:07:32Z" end-time="2026-09-26 10:07:33Z" duration="0.382245" asserts="0">
+                  <properties>
+                    <property name="_JOINTYPE" value="UnityCombinatorial" />
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                  <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/koton/AppData/LocalLow/PandD_org/Shinzui\TestResults.xml
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

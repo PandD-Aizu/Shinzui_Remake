@@ -1,0 +1,66 @@
+{
+  "source_vertices": 28056,
+  "blender_vertices": 28056,
+  "bones": 34,
+  "deform_bones": 25,
+  "unweighted_vertices": 0,
+  "neutral_max_error": 1.2644054553268208e-07,
+  "per_leg_tests": [
+    {
+      "leg": "Leg_L01",
+      "target_error": 1.747713104745731e-07,
+      "moved_vertices": 1143,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_L02",
+      "target_error": 3.960037906741593e-08,
+      "moved_vertices": 1495,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_L03",
+      "target_error": 1.2731557704981462e-07,
+      "moved_vertices": 1184,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_L04",
+      "target_error": 5.0669426131007984e-08,
+      "moved_vertices": 1923,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_R01",
+      "target_error": 1.747713104745731e-07,
+      "moved_vertices": 1310,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_R02",
+      "target_error": 3.960037906741593e-08,
+      "moved_vertices": 1487,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_R03",
+      "target_error": 1.2731557704981462e-07,
+      "moved_vertices": 1190,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    },
+    {
+      "leg": "Leg_R04",
+      "target_error": 5.0669426131007984e-08,
+      "moved_vertices": 1845,
+      "body_max_displacement": 0.0,
+      "opposite_legs_max_displacement": 1.2644054553268208e-07
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+    "name": "Shinzui.SpiderDeityIK.PlayModeTests",
+    "references": ["Unity.Animation.Rigging", "InfrastructureLayer", "ApplicationLayer", "Unity.AI.Navigation", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "autoReferenced": false
+}
