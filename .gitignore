@@ -128,3 +128,4 @@ fmod_editor.log
 
 # JetBrains Rider/IntelliJ project settings
 .idea/
+Packages/manifest.json
