@@ -6,7 +6,9 @@ Source HEAD: `72c028009adcae065dac217be09c06bf9dd0c444`; preserved dirty baselin
 
 ## Outcome
 
-The production Title and addressable StageTemp run in HDRP, with transactional graphics controls and measured hardware RT. The final tuned Ultra averaged **62.39 FPS / 16.03 ms**, with **16.58 ms P95**, on the tested RTX 3080 at native 1080p. This meets the approximately 60 FPS average target in this warmed fixed render workload. It is not a full-game or worst-case traversal guarantee.
+The production Title and addressable StageTemp run in HDRP, with transactional graphics controls and measured hardware RT. Two 45-second normal-simulation Ultra runs on the RTX 3080 at native 1080p averaged **59.97 FPS** (seed 2777) and **59.50 FPS** (regenerated seed 9182), with DOF, autofocus, enemies, collision, stamina and production portal crossings active. This supports the approximately 60 FPS **average** target for these short routes. P95 was **26.69 ms** in both and 1% lows were **26.46 / 21.68 FPS**, so smooth locked 60 FPS is not established.
+
+Windows rejected exclusive fullscreen and foreground activation during the approved visible launches. The Player rendered in borderless mode at 74.973 Hz with the saved Ultra defaults (VSync enabled, 60 FPS cap, requested 60 Hz). The actual render workload is valid, but exclusive-fullscreen/focus behavior is not validated. The previous foreground window was restored after both Players exited.
 
 ## Implemented
 
@@ -44,16 +46,38 @@ Half-resolution effects have less sample detail and temporal reconstruction can 
 | Title/settings EditMode | 27/27 passed, including old-save preservation; `title-tests-latest.json` |
 | Procedural PlayMode | 4/4 passed after portal changes; `tunnel-tests-latest.json` |
 | Real Title / addressable transition | Passed with tuned defaults; tab draft, cancel, defaults, transition, seed 9182 regeneration, camera and 16 gates; `scene-smoke.json` |
-| Windows build | Succeeded, 0 errors, 50 warnings, 232.4 seconds; `windows-build.json` |
+| Windows build | Succeeded, 0 errors, 33 warnings, 219.5 seconds; `windows-build.json` |
 | Native crossing / angled view / regeneration | All 11 checks passed through the production warp event, exactly one warp; `player-tuned-ultra-rt-1080p-crossing.json` |
 | Native display transactions / new-process restart | Eight transaction checks and two restart checks passed; `player-display-transactions.json`, `player-display-restart.json` |
 | DX11 RT-unavailable fallback | Actual rendered frame, RT unavailable, RayMarching, high quality levels 2/2 and full-resolution screen-space GI; `player-tuned-fallback-dx11-1080p.json` |
+| Normal native Ultra gameplay | Two 45-second runs passed render/movement/DOF/enemy/portal checks; mean 59.97 / 59.50 FPS, uneven frame pacing; `normal-gameplay-summary.json` |
 | Actual traced work | Raw GPU counters: 490,209 GI / 490,177 reflection rays in a sampled frame |
 | Source preservation | All 197 original dirty files unchanged; `source-preservation.json` |
 
 Detection noise and death dissolve passed gameplay visual probes. The display focus-loss test invokes the application signal; physical Alt-Tab remains untested. The native crossing checks observe `PlayerView.Warped` driven by `TunnelLoopPresenter`, not a direct test call to Warp. Its short movement samples are diagnostic, not a traversal benchmark, and some movement frames may exceed 16.67 ms.
 
-## Performance
+## Normal gameplay performance
+
+Windows x64 IL2CPP development Player, NVIDIA GeForce RTX 3080 10 GB, DX12, native 1920 x 1080, render scale 1.0. Production addressable StageTemp; seed 2777 and production regeneration to 9182 before warmup. Each run lasted 45 seconds with 5 seconds of ordinary-simulation warmup and about 40 seconds sampled. The Editor was closed. Screenshot encoding occurred after sampling.
+
+The actual saved Ultra defaults were written to and reloaded from an isolated diagnostic settings file: DOF on, VSync on, 60 FPS cap, native scale and RT on. User preferences were not written. Virtual gamepad events went through production InputActions. The harness did not teleport the player, call Warp, disable enemies/death/camera, or freeze simulation. Time scale stayed 1; Cinemachine and autofocus stayed enabled. Both runs reported HDRP RT support and RT frame settings enabled; actual traced rays were independently verified in the retained fixed-render evidence.
+
+| Seed | Samples | Mean frame | Mean FPS | P95 frame | P99 frame | 1% low FPS | Worst frame |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 2777 | 2399 | 16.67 ms | 59.97 | 26.69 ms | 26.69 ms | 26.46 | 53.37 ms |
+| 9182 (regenerated) | 2381 | 16.81 ms | 59.50 | 26.69 ms | 40.01 ms | 21.68 | 80.03 ms |
+
+Mean FPS is 1000 divided by mean sampled frame milliseconds. P95/P99 use nearest rank. The 1% low is 1000 divided by the mean of the slowest 1% of frames. Lowest single-frame rates were 18.74 / 12.50 FPS, respectively. These are capped measurements; they do not measure uncapped headroom. CPU-frame means were 16.67 / 16.81 ms. GPU telemetry included frequent zero samples and is retained without treating its average as reliable GPU cost.
+
+Seed 2777 moved 101.97 m and crossed two portals; regenerated 9182 moved 102.75 m and crossed three. Neither player died. Each run observed two enabled enemies on the NavMesh in all 92 enemy observations; 71 / 59 observations recorded movement. The director entered Ambient, Hunt and Search. DOF remained active with changing physical-camera focus distances. Final screenshots retain normal detection noise and visible enemies; they are not clean beauty renders.
+
+No runtime error/exception was captured during loading and the measured gameplay. Each log had four startup NavMesh warnings (the agents subsequently navigated), two exclusive-fullscreen failures and two borderless-fallback warnings. Foreground requests returned false, with a Steam helper observed owning foreground during the test. Actual mode was FullScreenWindow at 74.973 Hz, while saved settings requested exclusive 60 Hz. The combination of 60 FPS cap and 74.973 Hz VSync is a plausible contributor to the observed 13.34/26.68 ms cadence; no controlled causal profile was performed. The harness did not change those defaults to improve the result.
+
+After evidence was written, each capture log recorded four InputSystem assertions from diagnostic virtual-device cleanup and a persistent-allocation warning at shutdown. The harness now leaves device disposal to InputSystem during application quit. That cleanup-only change is rebuilt; no extra visible gameplay run was performed to recheck shutdown. It does not change the measured scene or gameplay path. The two bounded approved runs are complete, and previous foreground restoration succeeded.
+
+Evidence: `player-normal-ultra-seed2777.json`, `player-normal-ultra-regenerated9182.json`, their settings JSON and PNG files, `normal-gameplay-summary.json` and `normal-gameplay-launch.json`.
+
+## Fixed-render comparison
 
 NVIDIA GeForce RTX 3080, 10 GB, StageTemp seed 2777, native 1920 x 1080, render scale 1.0, camera `(0, 2.2228, 0.248)`, rotation zero, flashlight on. VSync/cap off. Simulation frozen and DOF off because autofocus does not update while frozen. At least 10 seconds/120 rendered frames warmup. Counter instrumentation runs separately after timing. Editor closed during Player measurements.
 
@@ -78,6 +102,7 @@ Final native evidence reports hardware support, pipeline support, enabled RT fra
 
 ## Visual evidence
 
+- `player-normal-ultra-seed2777.png`, `player-normal-ultra-regenerated9182.png`: unfrozen Ultra, normal DOF and gameplay feedback, captured after the measured route.
 - `before-native-1080p.png`: preserved URP baseline, matched seed/camera/native target.
 - `player-final-verified-rt-1080p.png`: earlier full-resolution Windows Ultra.
 - `player-cropped-ultra-retry-1080p.png`: portal optimization at original full-resolution lighting.
@@ -88,7 +113,7 @@ Final native evidence reports hardware support, pipeline support, enabled RT fra
 - `title-options-tuned-1080p.png`: real Title controls, preserving existing preferences.
 - `after-noise-array-1080p.png`, `after-death-array-1080p.png`: gameplay feedback probes.
 
-Images are unretouched. Baseline timing was Editor timing and is not compared directly with Player FPS as a speedup claim. The pre-crossing capture can be obscured by the nearby supernatural body; post-crossing and angled captures show the tunnel clearly.
+Full-resolution local PNGs are unretouched. The portable HTML uses compressed 1280 x 720 previews. Baseline timing was Editor timing and is not compared directly with Player FPS as a speedup claim. The pre-crossing capture can be obscured by the nearby supernatural body; post-crossing and angled captures show the tunnel clearly.
 
 ## Reproduce
 
@@ -102,11 +127,13 @@ Executable: `Builds/GraphicsValidation/Shinzui.exe`, relative to the worktree. `
 
 Use `-force-d3d11` without `--graphics-raster` to verify Ultra automatically falls back when hardware/API RT is unavailable. `--graphics-raster` explicitly selects a Custom raster configuration. Full lighting/fog: `--graphics-lighting-quality 3 --graphics-fog-quality 3`. `--graphics-uncropped-portals` and `--graphics-no-portals` are diagnostic comparisons only. Avoid Player batch mode for this rendering harness.
 
+Normal gameplay: add `--graphics-gameplay-validation --graphics-gameplay-seed 2777 --graphics-label player-normal-ultra-seed2777 --graphics-output <absolute-folder>` to the native DX12 launch, without the fixed-render `--graphics-validation` flag. Repeat with seed 9182 for production regeneration. Launch visibly after approval; allow 45 seconds plus loading.
+
 Native display check: `--graphics-display-validation --graphics-output <absolute-folder>`, then a second process with `--graphics-display-restart`. It uses an isolated test settings file, never the user's preferences.
 
 ## Remaining limits
 
-- Full-game traversal, worst-case seeds, long sessions, release builds and other GPU tiers are not measured. The short crossing contains variable frame times; the fixed-view average is not a promise of locked 60 FPS.
+- Two short normal-play routes support about 60 FPS average, but P95 and 1% lows show uneven pacing. Full-game traversal, worst-case seeds, long sessions, release builds and other GPU tiers are not measured. Exclusive fullscreen and confirmed foreground behavior remain unvalidated on this host; the measured runs used the automatic borderless fallback.
 - Portal boundary illumination contrast remains. Portal reflections are raster and rays do not cross the non-Euclidean connection. Eight virtual-light slots cover four visible portals at two recursion levels. More camera angles and simultaneous visible portals need art/QA coverage.
 - The raster fallback is visibly brighter than the RT path; matching their indirect-light appearance needs further art tuning. Its 52.46 FPS result also misses the 60 FPS target on this measured configuration.
 - The deformed/dithered black-hole body is deliberately excluded from RT geometry; raster body/eyes/lens remain visible. Webs and supernatural effects remain stylized. Existing geometry/art do not establish AAA fidelity or full photorealism.

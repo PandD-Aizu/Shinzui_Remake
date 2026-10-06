@@ -1,0 +1,24 @@
+{
+  "runs": [
+    {
+      "seed": 2777,
+      "label": "player-normal-ultra-seed2777",
+      "pid": 100152,
+      "startedUtc": "2026-10-06T12:30:35.3784796Z",
+      "endedUtc": "2026-10-06T12:31:33.5387286Z",
+      "foregroundRequested": false,
+      "outcome": "Exited 0"
+    },
+    {
+      "seed": 9182,
+      "label": "player-normal-ultra-regenerated9182",
+      "pid": 55380,
+      "startedUtc": "2026-10-06T12:31:33.5469963Z",
+      "endedUtc": "2026-10-06T12:32:31.5978228Z",
+      "foregroundRequested": false,
+      "outcome": "Exited 0"
+    }
+  ],
+  "originalFocusRestored": true,
+  "finishedUtc": "2026-10-06T12:32:31.5995266Z"
+}

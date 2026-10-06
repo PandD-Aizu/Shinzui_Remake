@@ -1,20 +1,20 @@
 {
   "result": "Succeeded",
   "errors": 0,
-  "warnings": 50,
-  "seconds": 232.37137109999998,
-  "bytes": 2851222944,
+  "warnings": 33,
+  "seconds": 219.5398241,
+  "bytes": 2859034228,
   "path": "C:/Users/koton/Documents/Codex/2026-10-06/task/Shinzui_HDRP/Builds/GraphicsValidation/Shinzui.exe",
   "steps": [
     {
       "name": "Build player",
-      "duration": "00:03:51.9324641",
+      "duration": "00:03:39.1250400",
       "messages": [],
       "depth": 0
     },
     {
       "name": "Preprocess Player",
-      "duration": "00:00:01.5871849",
+      "duration": "00:00:02.8269035",
       "messages": [
         {
           "type": 3,
@@ -37,136 +37,67 @@
     },
     {
       "name": "Prepare For Build",
-      "duration": "00:00:00.0050426",
+      "duration": "00:00:00.0061554",
       "messages": [],
       "depth": 1
     },
     {
       "name": "ProducePlayerScriptAssemblies",
-      "duration": "00:00:07.8529814",
+      "duration": "00:00:07.9983792",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Prebuild Cleanup and Recompile",
-      "duration": "00:00:07.4892380",
+      "duration": "00:00:07.6299536",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Compile scripts",
-      "duration": "00:00:06.5399741",
-      "messages": [
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\Infrastructure\\Services\\UnityInputService.cs(192,110): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\Infrastructure\\Services\\UnityInputService.cs(192,36): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\Infrastructure\\Services\\UnityInputService.cs(227,89): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\Infrastructure\\Services\\UnityInputService.cs(227,42): warning CS0618: 'Object.FindObjectsByType(Type, FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType(Type) or FindObjectsByType(Type, FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Title\\CreditScreenView.cs(123,13): warning CS0618: 'TMP_Text.enableWordWrapping' is obsolete: 'The enabledWordWrapping property is now obsolete. Please use the textWrappingMode property instead.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Title\\CreditScreenView.cs(125,13): warning CS0618: 'TMP_Text.enableKerning' is obsolete: 'The \"enableKerning\" property has been deprecated. Use the \"fontFeatures\" property to control what features are enabled on the text component.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\LoopTunnel\\LoopTunnelPortalBootstrap.cs(146,30): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\ItemSpawn\\ItemSpawnContainerView.cs(82,102): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\ItemSpawn\\ItemSpawnContainerView.cs(82,33): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsInactive, FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Rendering\\UltraEnvironmentQuality.cs(53,17): warning CS0618: 'Object.FindFirstObjectByType<T>(FindObjectsInactive)' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Rendering\\UltraEnvironmentQuality.cs(122,46): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Rendering\\UltraEnvironmentQuality.cs(121,47): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsInactive, FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Player\\PlayerView.cs(426,17): warning CS0618: 'FindObjectsSortMode' is obsolete: 'FindObjectsSortMode has been deprecated. Use the FindObjectsByType overloads that do not take a FindObjectsSortMode parameter.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\Player\\PlayerView.cs(424,43): warning CS0618: 'Object.FindObjectsByType<T>(FindObjectsInactive, FindObjectsSortMode)' is obsolete: 'FindObjectsByType with FindObjectsSortMode parameter has been deprecated. Use FindObjectsByType<T>() or FindObjectsByType<T>(FindObjectsInactive) instead. InstanceID will be replaced in the future with EntityId and previous sort order cannot be maintained.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\LoopTunnel\\TunnelGateView.cs(791,37): warning CS0618: 'Object.FindFirstObjectByType<T>()' is obsolete: 'FindFirstObjectByType has been deprecated because it relies on instance ID ordering. Use FindAnyObjectByType instead, which does not depend on ordering.'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\LoopTunnel\\TunnelGateView.cs(945,21): warning CS0618: 'UniversalRenderPipeline.RenderSingleCamera(ScriptableRenderContext, Camera)' is obsolete: 'RenderSingleCamera is obsolete, please use RenderPipeline.SubmitRenderRequest with UniversalRenderer.SingleCameraRequest as RequestData type. #from(2023.1)'"
-        },
-        {
-          "type": 2,
-          "content": "Assets\\Shinzui\\Src\\View\\LoopTunnel\\LoopTunnelPortalBootstrap.cs(63,38): warning CS0414: The field 'LoopTunnelPortalRuntime.warpBridgeFrameCount' is assigned but its value is never used"
-        }
-      ],
+      "duration": "00:00:06.7969257",
+      "messages": [],
       "depth": 3
     },
     {
       "name": "Generate and validate platform script types",
-      "duration": "00:00:00.0780450",
+      "duration": "00:00:00.0657659",
       "messages": [],
       "depth": 3
     },
     {
       "name": "Verify Build setup",
-      "duration": "00:00:00.4962011",
+      "duration": "00:00:00.5537008",
       "messages": [],
       "depth": 1
     },
     {
       "name": "GetUnityAssemblies",
-      "duration": "00:00:00.0051059",
+      "duration": "00:00:00.0048925",
       "messages": [],
       "depth": 2
     },
     {
       "name": "GetPlayerAssemblies",
-      "duration": "00:00:00.0189173",
+      "duration": "00:00:00.0130205",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Check old data build",
-      "duration": "00:00:00.4487358",
+      "duration": "00:00:00.5127840",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Prepare assets for target platform",
-      "duration": "00:00:00.0051977",
+      "duration": "00:00:00.0064081",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Prepare splash screen",
-      "duration": "00:00:00.0049275",
+      "duration": "00:00:00.0312543",
       "messages": [
         {
           "type": 3,
@@ -181,49 +112,49 @@
     },
     {
       "name": "Build scripts DLLs",
-      "duration": "00:00:00.0383653",
+      "duration": "00:00:00.0993278",
       "messages": [],
       "depth": 1
     },
     {
       "name": "GetSystemAssemblies",
-      "duration": "00:00:00.0024048",
+      "duration": "00:00:00.0059843",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Building scenes",
-      "duration": "00:00:00.6321497",
+      "duration": "00:00:01.0599175",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Building scene Assets/Shinzui/Scenes/Title.unity",
-      "duration": "00:00:00.6320665",
+      "duration": "00:00:01.0598436",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Build GlobalGameManagers file",
-      "duration": "00:00:00.3963614",
+      "duration": "00:00:00.4634997",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Writing asset files",
-      "duration": "00:00:07.4951169",
+      "duration": "00:00:08.4832839",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Packaging assets - globalgamemanagers.assets",
-      "duration": "00:00:03.9063478",
+      "duration": "00:00:06.6275718",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Packaging assets - resources.assets",
-      "duration": "00:00:03.3680972",
+      "duration": "00:00:01.7372589",
       "messages": [
         {
           "type": 2,
@@ -346,25 +277,25 @@
     },
     {
       "name": "Packaging assets - sharedassets0.assets = additional assets for scene 0: Assets/Shinzui/Scenes/Title.unity",
-      "duration": "00:00:00.1948065",
+      "duration": "00:00:00.0937016",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Building Resources/unity_builtin_extra",
-      "duration": "00:00:00.2553180",
+      "duration": "00:00:00.2523879",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Write data build dirty tracking information",
-      "duration": "00:00:00.2968383",
+      "duration": "00:00:00.2659634",
       "messages": [],
       "depth": 1
     },
     {
       "name": "Postprocess built player",
-      "duration": "00:03:31.0986362",
+      "duration": "00:03:15.3066441",
       "messages": [
         {
           "type": 2,
@@ -387,19 +318,19 @@
     },
     {
       "name": "Setup incremental player build",
-      "duration": "00:00:00.0746343",
+      "duration": "00:00:00.0943374",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Incremental player build",
-      "duration": "00:03:24.6645786",
+      "duration": "00:03:05.6916502",
       "messages": [],
       "depth": 2
     },
     {
       "name": "Report output files",
-      "duration": "00:00:00.2153427",
+      "duration": "00:00:00.2600868",
       "messages": [],
       "depth": 2
     }

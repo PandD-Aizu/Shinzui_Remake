@@ -37,3 +37,7 @@
 !player-tuned-ultra-rt-1080p*
 !player-tuned-fallback-dx11-1080p.*
 !title-options-tuned-1080p.png
+!player-normal-ultra-*.json
+!player-normal-ultra-*.png
+!normal-gameplay-summary.json
+!normal-gameplay-launch.json
