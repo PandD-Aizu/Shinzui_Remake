@@ -1,9 +1,9 @@
 {
   "status": "completed",
-  "duration": 0.25,
+  "duration": 0.35,
   "summary": {
-    "total": 26,
-    "passed": 26,
+    "total": 27,
+    "passed": 27,
     "failed": 0,
     "skipped": 0,
     "inconclusive": 0
@@ -12,182 +12,189 @@
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.AppliedOverridesAreCustomAndSurviveRestart",
       "Status": "Passed",
-      "Duration": 0.0246594,
+      "Duration": 0.0248491,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.AudioPreviewDoesNotApplyGraphicsOrPersist",
       "Status": "Passed",
-      "Duration": 0.0008284,
+      "Duration": 0.0009909,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.CancelDiscardsGraphicsAndReopeningReadsConfirmedSnapshot",
       "Status": "Passed",
-      "Duration": 0.0005397,
+      "Duration": 0.0006025,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.DisplayCandidateIsNotPersistedUntilConfirmed",
       "Status": "Passed",
-      "Duration": 0.002088,
+      "Duration": 0.0007395,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.EarlierUltraSamplingIsPreservedAsCustom",
+      "Status": "Passed",
+      "Duration": 0.0002806,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.GraphicsCloneIncludesEveryWritableProperty",
       "Status": "Passed",
-      "Duration": 0.0042445,
+      "Duration": 0.0041281,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.GraphicsDraftAndDefaultsDoNotApplyDisplay",
       "Status": "Passed",
-      "Duration": 0.0002934,
+      "Duration": 0.0003475,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.LegacyUltraRasterOverrideIsHonestlyLabelledCustom",
       "Status": "Passed",
-      "Duration": 0.0004751,
+      "Duration": 0.0003553,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.PresetsReplaceOverridesAndPreserveDisplay",
       "Status": "Passed",
-      "Duration": 0.0002534,
+      "Duration": 0.0003616,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.SaveFailureRollsBackAppliedCandidateAndReportsFailure",
       "Status": "Passed",
-      "Duration": 0.0009459,
+      "Duration": 0.0008298,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.TimeoutAndFocusLossRestoreConfirmedDisplay(True,15.1f)",
       "Status": "Passed",
-      "Duration": 0.000584,
+      "Duration": 0.0005547,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.GraphicsTransactionTests.TimeoutAndFocusLossRestoreConfirmedDisplay(False,0.0f)",
       "Status": "Passed",
-      "Duration": 8.16E-05,
+      "Duration": 0.0001223,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.AsyncLoadFailureAfterDisposalDoesNotTouchTheView",
       "Status": "Passed",
-      "Duration": 0.0651656,
+      "Duration": 0.0620154,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.ConfigurationReportsMissingViewBeforeContainerConstruction",
       "Status": "Passed",
-      "Duration": 0.0040339,
+      "Duration": 0.0037071,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.CreditsCanBeSkippedDuringEndDelayAndReopened",
       "Status": "Passed",
-      "Duration": 0.0039044,
+      "Duration": 0.0043244,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.CreditTimingAccountsForStartAndEndDelaysAndCompletesOnce",
       "Status": "Passed",
-      "Duration": 0.0015941,
+      "Duration": 0.0017411,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.DisposingContainerCancelsPendingFadeAndRemovesButtonBindings",
       "Status": "Passed",
-      "Duration": 0.0028949,
+      "Duration": 0.002611,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.FailedLoadRestoresMenuAndAllowsRetry",
       "Status": "Passed",
-      "Duration": 0.0037722,
+      "Duration": 0.0035037,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.GraphicsQualitySelectionPersistsAndCanReturnToUltra",
       "Status": "Passed",
-      "Duration": 0.0486787,
+      "Duration": 0.1547669,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.InactiveViewsAreInjectedAndInitializationDoesNotReplaceAuthoredTabs",
       "Status": "Passed",
-      "Duration": 0.0034532,
+      "Duration": 0.0038407,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.LegacySettingsRetainDefaults(\"{}\")",
       "Status": "Passed",
-      "Duration": 0.0044103,
+      "Duration": 0.0066507,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.LegacySettingsRetainDefaults(\"{\\\"Audio\\\":null}\")",
       "Status": "Passed",
-      "Duration": 0.0049804,
+      "Duration": 0.005021,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.ProductionSettingsAdapterResolvesWithoutASoundScope",
       "Status": "Passed",
-      "Duration": 0.0048428,
+      "Duration": 0.0028787,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.ReinitializingPresenterDoesNotDuplicateSubscriptions",
       "Status": "Passed",
-      "Duration": 0.0024589,
+      "Duration": 0.0031432,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.ReopeningOptionsStartsANewEditableSession",
       "Status": "Passed",
-      "Duration": 0.0030381,
+      "Duration": 0.0031049,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.RepeatedStartClicksIssueOnlyOneLoad",
       "Status": "Passed",
-      "Duration": 0.0027003,
+      "Duration": 0.0023618,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.Title.TitleLifetimeTests.SettingsPropertiesSurviveSavingAndReloading",
       "Status": "Passed",
-      "Duration": 0.0265361,
+      "Duration": 0.0293954,
       "Message": null,
       "StackTrace": null
     }

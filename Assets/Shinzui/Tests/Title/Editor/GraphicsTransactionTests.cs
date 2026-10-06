@@ -87,6 +87,9 @@ namespace Shinzui.Tests.Title
             graphics.SetQualityPreset(GraphicsQualityPreset.Ultra);
             Assert.That(graphics.EnableRayTracing, Is.True);
             Assert.That(graphics.ImageQualityScale, Is.EqualTo(1f));
+            Assert.That(graphics.GiAndReflectionQuality, Is.EqualTo(2));
+            Assert.That(graphics.VolumeLightQuality, Is.EqualTo(2));
+            Assert.That(graphics.PortalResolutionScale, Is.EqualTo(.75f));
             Assert.That(graphics.Resolution, Is.EqualTo("2560x1440"));
             Assert.That(graphics.FrameRateLimit, Is.EqualTo(144));
         }
@@ -128,6 +131,17 @@ namespace Shinzui.Tests.Title
             Assert.That(graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Custom));
             Assert.That(graphics.EnableRayTracing, Is.False);
             graphics.SetQualityPreset(GraphicsQualityPreset.Ultra);
+            Assert.That(graphics.EnableRayTracing, Is.True);
+        }
+
+        /// <summary>Preserve earlier full-resolution preferences without labelling them as the tuned preset</summary>
+        [Test] public void EarlierUltraSamplingIsPreservedAsCustom()
+        {
+            var graphics = new GraphicsSettings { GiAndReflectionQuality = 3, VolumeLightQuality = 3 };
+            graphics.Validate();
+            Assert.That(graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Custom));
+            Assert.That(graphics.GiAndReflectionQuality, Is.EqualTo(3));
+            Assert.That(graphics.VolumeLightQuality, Is.EqualTo(3));
             Assert.That(graphics.EnableRayTracing, Is.True);
         }
 

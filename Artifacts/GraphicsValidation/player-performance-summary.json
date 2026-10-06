@@ -155,6 +155,167 @@
           "Recursive": 0
         }
       }
+    },
+    {
+      "label": "player-cropped-ultra-retry-1080p",
+      "gpu": "NVIDIA GeForce RTX 3080",
+      "api": "Direct3D12",
+      "width": 1920,
+      "height": 1080,
+      "scene": "Assets/Shinzui/Scenes/StageTemp.unity",
+      "seed": 2777,
+      "hardwareRT": true,
+      "pipelineRT": true,
+      "giTracing": "RayTracing",
+      "reflectionTracing": "RayTracing",
+      "samples": 1280,
+      "averageWallMs": 23.4401420159375,
+      "p95WallMs": 24.607,
+      "fpsFromMean": 42.66185756554191,
+      "averageCpuMs": 23.441232890625,
+      "reportedAverageGpuMs": 0.006692,
+      "gpuTimerUsable": false,
+      "rayCounts": {
+        "available": true,
+        "method": "Raw R16_UInt GPU texture readback, CPU sum by ray type",
+        "values": {
+          "AmbientOcclusion": 0,
+          "ShadowDirectional": 0,
+          "ShadowPointSpot": 0,
+          "ShadowAreaLight": 0,
+          "DiffuseGI_Forward": 0,
+          "DiffuseGI_Deferred": 1961122,
+          "ReflectionForward": 0,
+          "ReflectionDeferred": 1960980,
+          "Recursive": 0
+        }
+      }
+    },
+    {
+      "label": "player-cropped-medium-rt-1080p",
+      "gpu": "NVIDIA GeForce RTX 3080",
+      "api": "Direct3D12",
+      "width": 1920,
+      "height": 1080,
+      "scene": "Assets/Shinzui/Scenes/StageTemp.unity",
+      "seed": 2777,
+      "hardwareRT": true,
+      "pipelineRT": true,
+      "giTracing": "RayTracing",
+      "reflectionTracing": "RayTracing",
+      "samples": 2047,
+      "averageWallMs": 14.663564434049828,
+      "p95WallMs": 15.8540964,
+      "fpsFromMean": 68.19624276877249,
+      "averageCpuMs": 14.662289203712751,
+      "reportedAverageGpuMs": 0.005958409379579873,
+      "gpuTimerUsable": false,
+      "rayCounts": {
+        "available": true,
+        "method": "Raw R16_UInt GPU texture readback, CPU sum by ray type",
+        "values": {
+          "AmbientOcclusion": 0,
+          "ShadowDirectional": 0,
+          "ShadowPointSpot": 0,
+          "ShadowAreaLight": 0,
+          "DiffuseGI_Forward": 0,
+          "DiffuseGI_Deferred": 490335,
+          "ReflectionForward": 0,
+          "ReflectionDeferred": 456,
+          "Recursive": 0
+        }
+      }
+    },
+    {
+      "label": "player-cropped-covered-rt-1080p",
+      "gpu": "NVIDIA GeForce RTX 3080",
+      "api": "Direct3D12",
+      "width": 1920,
+      "height": 1080,
+      "scene": "Assets/Shinzui/Scenes/StageTemp.unity",
+      "seed": 2777,
+      "hardwareRT": true,
+      "pipelineRT": true,
+      "giTracing": "RayTracing",
+      "reflectionTracing": "RayTracing",
+      "samples": 1927,
+      "averageWallMs": 15.575872381162428,
+      "p95WallMs": 16.1084957,
+      "fpsFromMean": 64.20186141287387,
+      "averageCpuMs": 15.575941722885315,
+      "reportedAverageGpuMs": 0.006174820965230929,
+      "gpuTimerUsable": false,
+      "rayCounts": {
+        "available": true,
+        "method": "Raw R16_UInt GPU texture readback, CPU sum by ray type",
+        "values": {
+          "AmbientOcclusion": 0,
+          "ShadowDirectional": 0,
+          "ShadowPointSpot": 0,
+          "ShadowAreaLight": 0,
+          "DiffuseGI_Forward": 0,
+          "DiffuseGI_Deferred": 490201,
+          "ReflectionForward": 0,
+          "ReflectionDeferred": 490169,
+          "Recursive": 0
+        }
+      }
+    },
+    {
+      "label": "player-tuned-ultra-rt-1080p",
+      "gpu": "NVIDIA GeForce RTX 3080",
+      "api": "Direct3D12",
+      "width": 1920,
+      "height": 1080,
+      "scene": "Assets/Shinzui/Scenes/StageTemp.unity",
+      "seed": 2777,
+      "hardwareRT": true,
+      "pipelineRT": true,
+      "giTracing": "RayTracing",
+      "reflectionTracing": "RayTracing",
+      "samples": 1873,
+      "averageWallMs": 16.028507240576616,
+      "p95WallMs": 16.582901,
+      "fpsFromMean": 62.38884164262483,
+      "averageCpuMs": 16.028628403630538,
+      "reportedAverageGpuMs": 0.006275758675920983,
+      "gpuTimerUsable": false,
+      "rayCounts": {
+        "available": true,
+        "method": "Raw R16_UInt GPU texture readback, CPU sum by ray type",
+        "values": {
+          "AmbientOcclusion": 0,
+          "ShadowDirectional": 0,
+          "ShadowPointSpot": 0,
+          "ShadowAreaLight": 0,
+          "DiffuseGI_Forward": 0,
+          "DiffuseGI_Deferred": 490209,
+          "ReflectionForward": 0,
+          "ReflectionDeferred": 490177,
+          "Recursive": 0
+        }
+      }
+    },
+    {
+      "label": "player-tuned-fallback-dx11-1080p",
+      "gpu": "NVIDIA GeForce RTX 3080",
+      "api": "Direct3D11",
+      "width": 1920,
+      "height": 1080,
+      "scene": "Assets/Shinzui/Scenes/StageTemp.unity",
+      "seed": 2777,
+      "hardwareRT": false,
+      "pipelineRT": false,
+      "giTracing": "RayMarching",
+      "reflectionTracing": "RayMarching",
+      "samples": 1575,
+      "averageWallMs": 19.062920449904762,
+      "p95WallMs": 21.2019978,
+      "fpsFromMean": 52.45785936251945,
+      "averageCpuMs": 19.06210653968254,
+      "reportedAverageGpuMs": 18.984162255238097,
+      "gpuTimerUsable": true,
+      "rayCounts": null
     }
   ]
 }

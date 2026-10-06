@@ -86,10 +86,12 @@ Shader "Custom/PortalProjection"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
             TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             float _PortalExposureMultiplier;
+            float4 _PortalUvTransform;
             float4 Vert(float3 positionOS : POSITION) : SV_POSITION { return TransformWorldToHClip(TransformObjectToWorld(positionOS)); }
             float4 Frag(float4 positionCS : SV_POSITION) : SV_Target
             {
                 float2 uv = positionCS.xy * _ScreenSize.zw;
+                uv = uv * _PortalUvTransform.xy + _PortalUvTransform.zw;
                 return float4(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb * _PortalExposureMultiplier * GetCurrentExposureMultiplier(), 1);
             }
             ENDHLSL

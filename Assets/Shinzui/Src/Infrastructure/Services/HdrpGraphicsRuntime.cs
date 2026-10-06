@@ -31,7 +31,10 @@ namespace Shinzui.Infrastructure.Services
                 ? "RT indirect lighting configured / reflections " + (reflections ? "RT" : "off")
                 : "Raster lighting / indirect lighting " + (lighting ? "screen-space" : "off") +
                   " / reflections " + (reflections ? "screen-space" : "off");
-            return $"{SystemInfo.graphicsDeviceName} / {SystemInfo.graphicsDeviceType}\nHardware RT: {(hardware ? "supported" : "unavailable")} / HDRP RT resources: {(pipeline ? "ready" : "unavailable")}\n{active}. Portal views use raster lighting.";
+            string portal = RayTracingConfigured ? "Portal indirect lighting uses RT; portal reflections use raster." : "Portal views use raster lighting.";
+            string ultra = _settings?.QualityPreset == Shinzui.Domain.Settings.GraphicsQualityPreset.Ultra
+                ? (RayTracingConfigured ? " Ultra: half-res RT / medium fog." : " Ultra fallback: highest raster GI/reflection/fog.") : "";
+            return $"{SystemInfo.graphicsDeviceName} / {SystemInfo.graphicsDeviceType}\nHardware RT: {(hardware ? "supported" : "unavailable")} / HDRP RT resources: {(pipeline ? "ready" : "unavailable")}\n{active}. {portal}{ultra}";
         }
 
         /// <summary>Install persistent runtime overrides for the confirmed settings snapshot</summary>
@@ -82,18 +85,36 @@ namespace Shinzui.Infrastructure.Services
         {
             var g = _settings;
             _configuredRt = CanUseRayTracing();
-            int quality = Mathf.Clamp(g.GiAndReflectionQuality - 1, 0, 2);
+            bool ultraRaster = !_configuredRt && g.QualityPreset == Shinzui.Domain.Settings.GraphicsQualityPreset.Ultra;
+            int lightingQuality = ultraRaster ? 3 : g.GiAndReflectionQuality;
+            int fogQuality = ultraRaster ? 3 : g.VolumeLightQuality;
+            int quality = Mathf.Clamp(lightingQuality - 1, 0, 2);
             var gi = Effect<GlobalIllumination>();
             gi.enable.Override(g.GiAndReflectionQuality > 0);
             gi.tracing.Override(_configuredRt ? RayCastingMode.RayTracing : RayCastingMode.RayMarching);
             gi.mode.Override(RayTracingMode.Performance);
             gi.quality.Override(quality);
-            gi.fullResolutionSS.Override(g.GiAndReflectionQuality >= 3);
+            gi.fullResolutionSS.Override(lightingQuality >= 3);
             var reflection = Effect<ScreenSpaceReflection>();
+            reflection.SetAllOverridesTo(false);
             reflection.enabled.Override(g.EnableSsr && g.GiAndReflectionQuality > 0);
             reflection.tracing.Override(_configuredRt ? RayCastingMode.RayTracing : RayCastingMode.RayMarching);
             reflection.mode.Override(RayTracingMode.Performance);
             reflection.quality.Override(quality);
+            if (_configuredRt && g.GiAndReflectionQuality >= 2)
+            {
+                // Medium changes sample density, not which rough tunnel surfaces receive traced reflections.
+                reflection.SetAllOverridesTo(true);
+                reflection.quality.Override(ScalableSettingLevelParameter.LevelCount);
+                reflection.fullResolution = g.GiAndReflectionQuality >= 3;
+                reflection.minSmoothness = 0;
+                reflection.smoothnessFadeStart = 0;
+                reflection.rayLength = 50;
+                reflection.rayMaxIterationsRT = 64;
+                reflection.denoise = true;
+                reflection.denoiserRadius = 1;
+                reflection.denoiserAntiFlickeringStrength = 1;
+            }
             var ao = Effect<ScreenSpaceAmbientOcclusion>();
             ao.intensity.Override(g.EnableAo ? .65f : 0f);
             ao.rayTracing.Override(false);
@@ -104,7 +125,7 @@ namespace Shinzui.Infrastructure.Services
             var fog = Effect<Fog>();
             fog.enabled.Override(g.VolumeLightQuality > 0);
             fog.enableVolumetricFog.Override(g.VolumeLightQuality > 0);
-            fog.quality.Override(Mathf.Clamp(g.VolumeLightQuality - 1, 0, 2));
+            fog.quality.Override(Mathf.Clamp(fogQuality - 1, 0, 2));
             Effect<Bloom>().intensity.Override(g.EnableBloom ? .15f : 0f);
             Effect<FilmGrain>().intensity.Override(g.EnableFilmGrain ? .12f : 0f);
             Effect<LensDistortion>().intensity.Override(g.EnableLensDistortion ? -.08f : 0f);

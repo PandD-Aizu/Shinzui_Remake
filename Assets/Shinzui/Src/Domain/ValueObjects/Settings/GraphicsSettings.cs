@@ -96,7 +96,7 @@ namespace Shinzui.Domain.Settings
         public float PortalResolutionScale { get; set; } = 0.75f;
 
         /// <summary>グローバルイルミネーション (GI) & 反射の品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
-        public int GiAndReflectionQuality { get; set; } = 3;
+        public int GiAndReflectionQuality { get; set; } = 2;
 
         /// <summary>反射量／反射強度係数 (0.0 ~ 1.0)</summary>
         public float ReflectionIntensity { get; set; } = 1.0f;
@@ -108,7 +108,7 @@ namespace Shinzui.Domain.Settings
         public bool EnableSsr { get; set; } = true;
 
         /// <summary>ボリュームライト（霧・光のシャフト）品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
-        public int VolumeLightQuality { get; set; } = 3;
+        public int VolumeLightQuality { get; set; } = 2;
 
         /// <summary>サブサーフェイススキャッタリング（肌の透け感表現）の有効化</summary>
         public bool EnableSss { get; set; } = true;
@@ -156,8 +156,9 @@ namespace Shinzui.Domain.Settings
             TextureFilteringQuality = quality;
             MeshQuality = System.Math.Min(quality, 2);
             ShadowQuality = System.Math.Min(quality + 1, 3);
-            GiAndReflectionQuality = System.Math.Min(quality + 1, 3);
-            VolumeLightQuality = System.Math.Min(quality + 1, 3);
+            // Ultra keeps rough-surface RT coverage with half-resolution sampling and a medium fog budget
+            GiAndReflectionQuality = preset == GraphicsQualityPreset.Ultra ? 2 : System.Math.Min(quality + 1, 3);
+            VolumeLightQuality = preset == GraphicsQualityPreset.Ultra ? 2 : System.Math.Min(quality + 1, 3);
             AntiAliasingType = quality == 0 ? 1 : quality == 1 ? 2 : 3;
             FsrMode = 0;
             ImageQualityScale = 1f;
@@ -188,8 +189,10 @@ namespace Shinzui.Domain.Settings
         public void Validate()
         {
             if (!System.Enum.IsDefined(typeof(GraphicsQualityPreset), QualityPreset)) QualityPreset = GraphicsQualityPreset.High;
-            // Legacy saves could label a raster-only override Ultra; preserve its choice but report it as Custom.
-            if (QualityPreset == GraphicsQualityPreset.Ultra && !EnableRayTracing) QualityPreset = GraphicsQualityPreset.Custom;
+            // Preserve older raster or full-resolution Ultra preferences while honestly reporting the tuned preset
+            if (QualityPreset == GraphicsQualityPreset.Ultra &&
+                (!EnableRayTracing || GiAndReflectionQuality != 2 || VolumeLightQuality != 2))
+                QualityPreset = GraphicsQualityPreset.Custom;
             ScreenMode = System.Math.Clamp(ScreenMode, 0, 2);
             RefreshRate = System.Math.Clamp(RefreshRate, 24, 1000);
             FrameRateLimit = FrameRateLimit <= 0 ? 0 : System.Math.Clamp(FrameRateLimit, 30, 360);

@@ -28,3 +28,12 @@
 !after-noise-array-1080p.png
 !after-death-array-1080p.png
 !player-final-verified-rt-1080p.*
+!player-cropped-ultra-retry-1080p.*
+!player-cropped-medium-rt-1080p.json
+!player-cropped-medium-rt-1080p.png
+!player-cropped-covered-rt-1080p.json
+!player-cropped-covered-rt-1080p.png
+!player-cropped-covered-rt-1080p-crossing.json
+!player-tuned-ultra-rt-1080p*
+!player-tuned-fallback-dx11-1080p.*
+!title-options-tuned-1080p.png

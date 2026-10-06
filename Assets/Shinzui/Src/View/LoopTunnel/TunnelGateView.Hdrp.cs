@@ -9,9 +9,9 @@ namespace Shinzui.View
     {
         private Camera[] _hdrpCameras;
         private MaterialPropertyBlock _portalProperties;
-
-
-
+        private Rect _hdrpCrop = new Rect(0, 0, 1, 1);
+        private static readonly int PortalUvTransformId = Shader.PropertyToID("_PortalUvTransform");
+        private static readonly bool CropPortalTargets = !System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "--graphics-uncropped-portals");
         public static float HdrpPortalScale => Infrastructure.Services.HdrpGraphicsRuntime.PortalScale;
         private static bool UsesHdrp => GraphicsSettings.currentRenderPipeline is HDRenderPipelineAsset;
 
@@ -40,8 +40,9 @@ namespace Shinzui.View
             DisableHdrpLightCopies();
             if (!visible) { ReleaseHdrpLightSlots(); return; }
             _lastVisibleTime = Time.unscaledTime;
-            int width = Mathf.Max(1, Mathf.RoundToInt(_mainCamera.pixelWidth * HdrpPortalScale));
-            int height = Mathf.Max(1, Mathf.RoundToInt(_mainCamera.pixelHeight * HdrpPortalScale));
+            _hdrpCrop = CropPortalTargets ? GetHdrpPortalCrop() : new Rect(0, 0, 1, 1);
+            int width = Mathf.Max(1, Mathf.RoundToInt(_mainCamera.pixelWidth * HdrpPortalScale * _hdrpCrop.width));
+            int height = Mathf.Max(1, Mathf.RoundToInt(_mainCamera.pixelHeight * HdrpPortalScale * _hdrpCrop.height));
             if (_portalRT == null || _portalRT.width != width || _portalRT.height != height)
             {
                 foreach (var camera in _hdrpCameras) camera.targetTexture = null;
@@ -66,6 +67,14 @@ namespace Shinzui.View
                 portalCamera.useOcclusionCulling = false;
                 MatchPortalCameraTransformForDepth(portalCamera.transform, transform, targetGate.transform, i + 1);
                 if (useDynamicNearClip) SetObliqueNearClipPlane(portalCamera, targetGate.transform);
+                // HDRP's depth-based lighting reads Camera.nearClipPlane as well as the projection.
+                // Keep its depth constants consistent with the portal clip plane at the view center.
+                var projection = portalCamera.projectionMatrix;
+                float effectiveNear = projection.m23 / (projection.m22 - 1);
+                if (effectiveNear > 0 && effectiveNear < portalCamera.farClipPlane)
+                    portalCamera.nearClipPlane = effectiveNear;
+                portalCamera.projectionMatrix = projection;
+                portalCamera.projectionMatrix = CropProjection(_hdrpCrop) * portalCamera.projectionMatrix;
                 var data = portalCamera.GetComponent<HDAdditionalCameraData>();
                 if (data == null) data = portalCamera.gameObject.AddComponent<HDAdditionalCameraData>();
                 data.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
@@ -79,11 +88,51 @@ namespace Shinzui.View
                 SetPortalFrame(data, FrameSettingsField.Refraction, true);
                 // Store unexposed radiance; composition applies the receiving camera's pre-exposure once.
                 SetPortalFrame(data, FrameSettingsField.ExposureControl, false);
-                SetPortalFrame(data, FrameSettingsField.RayTracing, false);
+                SetPortalFrame(data, FrameSettingsField.RayTracing, Infrastructure.Services.HdrpGraphicsRuntime.RayTracingConfigured);
                 SetPortalFrame(data, FrameSettingsField.SSR, false);
-                SetPortalFrame(data, FrameSettingsField.SSGI, false);
-                SetPortalFrame(data, FrameSettingsField.MotionVectors, false);
+                SetPortalFrame(data, FrameSettingsField.SSGI, Infrastructure.Services.HdrpGraphicsRuntime.RayTracingConfigured);
+                SetPortalFrame(data, FrameSettingsField.MotionVectors, true);
             }
+        }
+
+        /// <summary>Shade only the screen rectangle visible through this portal, preserving its requested pixel density</summary>
+        /// <returns>Conservative viewport crop, with a full view while crossing the near plane</returns>
+        private Rect GetHdrpPortalCrop()
+        {
+            var bounds = _portalRenderer.bounds;
+            var lower = Vector2.one;
+            var upper = Vector2.zero;
+            for (int corner = 0; corner < 8; corner++)
+            {
+                var world = new Vector3((corner & 1) == 0 ? bounds.min.x : bounds.max.x,
+                    (corner & 2) == 0 ? bounds.min.y : bounds.max.y,
+                    (corner & 4) == 0 ? bounds.min.z : bounds.max.z);
+                var point = _mainCamera.WorldToViewportPoint(world);
+                if (point.z <= _mainCamera.nearClipPlane + .1f) return new Rect(0, 0, 1, 1);
+                lower = Vector2.Min(lower, new Vector2(point.x, point.y));
+                upper = Vector2.Max(upper, new Vector2(point.x, point.y));
+            }
+            // Quantize outward with a guard band to reduce target reallocations during movement.
+            float width = Mathf.Max(1, _mainCamera.pixelWidth * HdrpPortalScale);
+            float height = Mathf.Max(1, _mainCamera.pixelHeight * HdrpPortalScale);
+            float left = Mathf.Clamp01(Mathf.Floor((lower.x * width - 8) / 32) * 32 / width);
+            float right = Mathf.Clamp01(Mathf.Ceil((upper.x * width + 8) / 32) * 32 / width);
+            float bottom = Mathf.Clamp01(Mathf.Floor((lower.y * height - 8) / 32) * 32 / height);
+            float top = Mathf.Clamp01(Mathf.Ceil((upper.y * height + 8) / 32) * 32 / height);
+            return right > left && top > bottom ? Rect.MinMaxRect(left, bottom, right, top) : new Rect(0, 0, 1, 1);
+        }
+
+        /// <summary>Expand a viewport rectangle to the render target without changing world-space rays</summary>
+        /// <param name="crop">Visible rectangle in the uncropped viewport</param>
+        /// <returns>Clip-space projection adjustment</returns>
+        private static Matrix4x4 CropProjection(Rect crop)
+        {
+            var matrix = Matrix4x4.identity;
+            matrix.m00 = 1 / crop.width;
+            matrix.m03 = (1 - 2 * crop.x - crop.width) / crop.width;
+            matrix.m11 = 1 / crop.height;
+            matrix.m13 = (1 - 2 * crop.y - crop.height) / crop.height;
+            return matrix;
         }
 
         /// <summary>Override one portal frame feature explicitly</summary>
@@ -115,11 +164,13 @@ namespace Shinzui.View
         {
             if (_portalRenderer == null || !_portalRenderer.enabled || _portalMaskRenderer == null || !_portalMaskRenderer.enabled) return;
             Texture texture = _portalRT;
+            Rect cameraCrop = new Rect(0, 0, 1, 1);
             foreach (var owner in ActiveGates)
             {
                 if (owner._hdrpCameras == null) continue;
                 int level = System.Array.IndexOf(owner._hdrpCameras, camera);
                 if (level < 0) continue;
+                cameraCrop = owner._hdrpCrop;
                 if (this == owner.targetGate) return;
                 if (this == owner) texture = level + 1 < owner._hdrpCameras.Length ? owner._recursionRTs[level] : Texture2D.blackTexture;
                 break;
@@ -127,6 +178,11 @@ namespace Shinzui.View
             _portalProperties ??= new MaterialPropertyBlock();
             _portalProperties.SetTexture("_MainTex", texture != null ? texture : Texture2D.blackTexture);
             _portalProperties.SetFloat(PortalExposureMultiplierId, PortalExposureMultiplier);
+            // HDRP's render-target projection and this shader use the same viewport orientation.
+            _portalProperties.SetVector(PortalUvTransformId, new Vector4(
+                cameraCrop.width / _hdrpCrop.width, cameraCrop.height / _hdrpCrop.height,
+                (cameraCrop.x - _hdrpCrop.x) / _hdrpCrop.width,
+                (cameraCrop.y - _hdrpCrop.y) / _hdrpCrop.height));
             command.DrawMesh(_portalMesh, _portalMaskRenderer.localToWorldMatrix, _portalMaskRenderer.sharedMaterial, 0, 0);
             command.DrawMesh(_portalMesh, _portalRenderer.localToWorldMatrix, _portalRenderer.sharedMaterial, 0, 0, _portalProperties);
         }

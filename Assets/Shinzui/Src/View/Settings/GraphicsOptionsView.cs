@@ -73,7 +73,7 @@ namespace Shinzui.View.Settings
             scroller.movementType = UnityEngine.UI.ScrollRect.MovementType.Clamped;
             scroller.scrollSensitivity = 45;
             _capability = Text(Rect("Capability", _content), "", 21);
-            _capability.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().preferredHeight = 125;
+            _capability.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().preferredHeight = 200;
             _capability.textWrappingMode = TextWrappingModes.Normal;
 
             // Global actions stay reachable from all authored tabs

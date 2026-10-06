@@ -1,6 +1,6 @@
 {
   "status": "completed",
-  "duration": 2.57,
+  "duration": 2.78,
   "summary": {
     "total": 4,
     "passed": 4,
@@ -12,28 +12,28 @@
     {
       "FullName": "Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.AdditiveStagesOwnTheirMapsAndReloadWithFreshContainers",
       "Status": "Passed",
-      "Duration": 0.7028318,
+      "Duration": 0.6086197,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.ExplicitNextFloorReplacesGeometryAndKeepsStartupIdempotent",
       "Status": "Passed",
-      "Duration": 0.2157716,
+      "Duration": 0.1398828,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.StageStartsOnceAndPreservesGameplayCamera",
       "Status": "Passed",
-      "Duration": 0.9415443,
+      "Duration": 1.4844551,
       "Message": null,
       "StackTrace": null
     },
     {
       "FullName": "Shinzui.Tests.TunnelGeneration.StageTunnelGenerationTests.WarpInputIsBoundOnceAndUnboundWithTheContainer",
       "Status": "Passed",
-      "Duration": 0.6131517,
+      "Duration": 0.5210275,
       "Message": null,
       "StackTrace": null
     }
