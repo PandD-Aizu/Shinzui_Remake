@@ -1,0 +1,67 @@
+{
+  "pipeline": "Assets/Shinzui/GraphicSettings/QualityUltra.asset",
+  "renderScale": 2.0,
+  "quality": "ULTRA",
+  "lights": [
+    {
+      "name": "Fluorescent Illumination",
+      "intensity": 44.8,
+      "type": "Spot"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    },
+    {
+      "name": "Fluorescent Illumination",
+      "intensity": 44.8,
+      "type": "Spot"
+    },
+    {
+      "name": "Fluorescent Illumination",
+      "intensity": 44.8,
+      "type": "Spot"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    },
+    {
+      "name": "Fluorescent Illumination",
+      "intensity": 44.8,
+      "type": "Spot"
+    },
+    {
+      "name": "Fluorescent Illumination",
+      "intensity": 44.8,
+      "type": "Spot"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    },
+    {
+      "name": "Ceiling Bounce",
+      "intensity": 0.8,
+      "type": "Point"
+    }
+  ]
+}

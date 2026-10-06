@@ -17,6 +17,20 @@ namespace Shinzui.View
 
         private float _gizmoChaseDistance = -1.0f;
 
+        /// <summary>Keep shader-deformed, dithered black-hole geometry out of HDRP's undeformed ray-tracing acceleration structure</summary>
+        private void Awake()
+        {
+            foreach (var renderer in GetComponentsInChildren<Renderer>(true))
+                foreach (var material in renderer.sharedMaterials)
+                    if (material != null && material.shader != null && material.shader.name.StartsWith("Shinzui/BlackHole"))
+                    {
+                        renderer.rayTracingMode = UnityEngine.Experimental.Rendering.RayTracingMode.Off;
+                        if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is
+                            UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset) HdrpPortalPass.EnsureVolume();
+                        break;
+                    }
+        }
+
         public float PlayerDeathDistance => playerDeathDistance;
         public float DeathAttemptCooldown => deathAttemptCooldown;
         public Vector3 TransformPosition => transform.position;

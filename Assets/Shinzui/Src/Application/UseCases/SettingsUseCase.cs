@@ -5,199 +5,203 @@ using Shinzui.Domain.Settings;
 
 namespace Shinzui.Application.UseCases
 {
-    /// <summary>
-    /// ゲーム設定のユースケース（ビジネスロジック）を制御するクラス
-    /// DomainレイヤーのGameSettingsを完全に内部で保持・管理し、
-    /// Presentationレイヤーへは個別のReactiveProperty（プリミティブ型）のみを公開する
-    /// </summary>
+    /// <summary>Owns a confirmed snapshot and a disposable options draft</summary>
     public class SettingsUseCase : IDisposable
     {
         private readonly ISettingsRepository _repository;
         private readonly ISettingsApplier _applier;
         private readonly CompositeDisposable _editDisposables = new();
-
-        // 決定済みの正式な設定
         private GameSettings _activeSettings;
-
-        // 編集中の設定
         private GameSettings _editingSettings;
-
-        // --- Presentation層へ公開するリアクティブプロパティ ---
-        // 音量関連
+        private GameSettings _pendingSettings;
+        private float _confirmationSeconds;
+        public event Action DraftChanged;
+        public string LastError { get; private set; }
+        public bool AwaitingDisplayConfirmation => _pendingSettings != null;
+        public float ConfirmationSeconds => _confirmationSeconds;
+        public bool IsEditing => _editingSettings != null;
         public ReactiveProperty<float> MasterVolume { get; } = new();
         public ReactiveProperty<float> BgmVolume { get; } = new();
         public ReactiveProperty<float> SeVolume { get; } = new();
         public ReactiveProperty<float> VoiceVolume { get; } = new();
-
-        // カメラ・マウス感度
         public ReactiveProperty<float> ControllerNormalSpeed { get; } = new();
         public ReactiveProperty<float> MouseNormalSensitivity { get; } = new();
-
-        // 明るさ
         public ReactiveProperty<float> Brightness { get; } = new();
-
-        /// <summary>描画品質プリセットの選択番号</summary>
         public ReactiveProperty<int> GraphicsQuality { get; } = new();
-
-        // アクセシビリティ
         public ReactiveProperty<bool> ShowCenterDot { get; } = new();
 
+        /// <summary>Load confirmed settings and apply them on startup</summary>
+        /// <param name="repository">Persistent store</param>
+        /// <param name="applier">Category-specific engine adapter</param>
         public SettingsUseCase(ISettingsRepository repository, ISettingsApplier applier)
         {
             _repository = repository;
             _applier = applier;
-            
-            // 起動時にロードしてエンジンに反映
             Initialize();
         }
 
+        /// <summary>Load and validate the persistent snapshot</summary>
         public void Initialize()
         {
             _activeSettings = _repository.Load();
+            _activeSettings.Graphics.Validate();
             _applier.ApplyAll(_activeSettings);
         }
 
-        /// <summary>
-        /// オプション画面を開いた際に、編集用セッションを開始します。
-        /// 内部でドメインモデルのクローンを生成し、プロパティ群を同期します。
-        /// </summary>
+        /// <summary>Start a fresh draft and restore any previous preview</summary>
         public void BeginEdit()
         {
-            _editDisposables.Clear();
+            if (IsEditing) CancelEdit();
             _editingSettings = _activeSettings.Clone();
-
-            // ドメインデータを公開プロパティへ転記
-            SyncModelToProperties(_editingSettings);
-
-            // プロパティ値変更時の自動プレビュー適用をバインド
-            BindPropertiesToModel();
+            SynchronizeDraft();
         }
 
-        /// <summary>
-        /// 編集中の設定を画面へ公開する値へ同期する
-        /// </summary>
-        /// <param name="model">同期元の設定</param>
-        private void SyncModelToProperties(GameSettings model)
+        /// <summary>Return an independent graphics snapshot for the presenter</summary>
+        /// <returns>The draft or last confirmed graphics settings</returns>
+        public GraphicsSettings GetGraphicsDraft() => (_editingSettings ?? _activeSettings).Graphics.Clone();
+
+        /// <summary>Edit graphics without applying a disruptive display change</summary>
+        /// <param name="edit">Draft mutation</param>
+        /// <param name="custom">Whether this changes a preset detail</param>
+        public void EditGraphics(Action<GraphicsSettings> edit, bool custom = true)
         {
+            if (!IsEditing || AwaitingDisplayConfirmation) return;
+            edit(_editingSettings.Graphics);
+            if (custom) _editingSettings.Graphics.QualityPreset = GraphicsQualityPreset.Custom;
+            _editingSettings.Graphics.Validate();
+            SynchronizeDraft();
+        }
+
+        /// <summary>Synchronize controls without triggering preview handlers</summary>
+        private void SynchronizeDraft()
+        {
+            _editDisposables.Clear();
+            var model = _editingSettings;
             MasterVolume.Value = model.Audio.SystemVolume;
             BgmVolume.Value = model.Audio.BgmVolume;
             SeVolume.Value = model.Audio.SeVolume;
             VoiceVolume.Value = model.Audio.VoiceVolume;
-
             ControllerNormalSpeed.Value = model.Camera.ControllerNormalSpeed;
             MouseNormalSensitivity.Value = model.Camera.MouseNormalSensitivity;
-
             Brightness.Value = model.Graphics.BrightnessValue;
             GraphicsQuality.Value = (int)model.Graphics.QualityPreset;
-
             ShowCenterDot.Value = model.Accessibility.ShowCenterDot;
+            BindPropertiesToModel();
+            DraftChanged?.Invoke();
         }
 
-        /// <summary>
-        /// 画面の値変更をプレビューと設定保存へ接続する
-        /// </summary>
+        /// <summary>Preview only the category touched by a live control</summary>
         private void BindPropertiesToModel()
         {
-            // 各プロパティ変更時、対応するドメイン設定の値を更新してプレビュー適用
-            MasterVolume.Skip(1).Subscribe(val => { _editingSettings.Audio.SystemVolume = val; ApplyPreview(); }).AddTo(_editDisposables);
-            BgmVolume.Skip(1).Subscribe(val => { _editingSettings.Audio.BgmVolume = val; ApplyPreview(); }).AddTo(_editDisposables);
-            SeVolume.Skip(1).Subscribe(val => { _editingSettings.Audio.SeVolume = val; ApplyPreview(); }).AddTo(_editDisposables);
-            VoiceVolume.Skip(1).Subscribe(val => { _editingSettings.Audio.VoiceVolume = val; ApplyPreview(); }).AddTo(_editDisposables);
-
-            ControllerNormalSpeed.Skip(1).Subscribe(val => { _editingSettings.Camera.ControllerNormalSpeed = val; ApplyPreview(); }).AddTo(_editDisposables);
-            MouseNormalSensitivity.Skip(1).Subscribe(val => { _editingSettings.Camera.MouseNormalSensitivity = val; ApplyPreview(); }).AddTo(_editDisposables);
-
-            Brightness.Skip(1).Subscribe(val => { _editingSettings.Graphics.BrightnessValue = val; ApplyPreview(); }).AddTo(_editDisposables);
-            GraphicsQuality.Skip(1).Subscribe(val =>
+            MasterVolume.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Audio.SystemVolume = v; _applier.ApplyAudio(_editingSettings.Audio); } }).AddTo(_editDisposables);
+            BgmVolume.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Audio.BgmVolume = v; _applier.ApplyAudio(_editingSettings.Audio); } }).AddTo(_editDisposables);
+            SeVolume.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Audio.SeVolume = v; _applier.ApplyAudio(_editingSettings.Audio); } }).AddTo(_editDisposables);
+            VoiceVolume.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Audio.VoiceVolume = v; _applier.ApplyAudio(_editingSettings.Audio); } }).AddTo(_editDisposables);
+            ControllerNormalSpeed.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Camera.ControllerNormalSpeed = v; _applier.ApplyCamera(_editingSettings.Camera); } }).AddTo(_editDisposables);
+            MouseNormalSensitivity.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Camera.MouseNormalSensitivity = v; _applier.ApplyCamera(_editingSettings.Camera); } }).AddTo(_editDisposables);
+            ShowCenterDot.Skip(1).Subscribe(v => { if (CanEdit()) { _editingSettings.Accessibility.ShowCenterDot = v; _applier.ApplyAccessibility(_editingSettings.Accessibility); } }).AddTo(_editDisposables);
+            Brightness.Skip(1).Subscribe(v => { if (CanEdit()) _editingSettings.Graphics.BrightnessValue = v; }).AddTo(_editDisposables);
+            GraphicsQuality.Skip(1).Subscribe(v =>
             {
-                _editingSettings.Graphics.SetQualityPreset((GraphicsQualityPreset)Math.Clamp(val, 0, 3));
-                ApplyPreview();
+                if (!CanEdit()) return;
+                _editingSettings.Graphics.SetQualityPreset((GraphicsQualityPreset)Math.Clamp(v, 0, 4));
+                DraftChanged?.Invoke();
             }).AddTo(_editDisposables);
-
-            ShowCenterDot.Skip(1).Subscribe(val => { _editingSettings.Accessibility.ShowCenterDot = val; ApplyPreview(); }).AddTo(_editDisposables);
-
-            // 自動セーブのDebounce
-            Observable.Merge(
-                MasterVolume.Skip(1).Select(_ => Unit.Default),
-                BgmVolume.Skip(1).Select(_ => Unit.Default),
-                SeVolume.Skip(1).Select(_ => Unit.Default),
-                VoiceVolume.Skip(1).Select(_ => Unit.Default),
-                ControllerNormalSpeed.Skip(1).Select(_ => Unit.Default),
-                MouseNormalSensitivity.Skip(1).Select(_ => Unit.Default),
-                Brightness.Skip(1).Select(_ => Unit.Default),
-                GraphicsQuality.Skip(1).Select(_ => Unit.Default),
-                ShowCenterDot.Skip(1).Select(_ => Unit.Default)
-            )
-            .Debounce(TimeSpan.FromSeconds(0.5f))
-            .Subscribe(_ => AutoSave())
-            .AddTo(_editDisposables);
         }
 
-        private void ApplyPreview()
-        {
-            if (_editingSettings != null)
-            {
-                _applier.ApplyAll(_editingSettings);
-            }
-        }
+        /// <summary>Prevent background controls from changing a pending candidate</summary>
+        /// <returns>Whether the current draft accepts changes</returns>
+        private bool CanEdit() => IsEditing && !AwaitingDisplayConfirmation;
 
-        private void AutoSave()
-        {
-            if (_editingSettings == null) return;
-
-            _activeSettings = _editingSettings.Clone();
-            _repository.Save(_activeSettings);
-            UnityEngine.Debug.Log("[Settings] Auto-saved successfully via Debounce.");
-        }
-
-        /// <summary>
-        /// 編集内容を確定し、ファイル保存を行う
-        /// </summary>
+        /// <summary>Apply a candidate, requiring confirmation for disruptive display changes</summary>
         public void SaveAndApply()
         {
-            if (_editingSettings == null) return;
-
-            _activeSettings = _editingSettings.Clone();
-            _repository.Save(_activeSettings);
-            _applier.ApplyAll(_activeSettings);
-
-            _editDisposables.Clear();
-            _editingSettings = null;
+            if (!CanEdit()) return;
+            LastError = null;
+            _editingSettings.Graphics.Validate();
+            var candidate = _editingSettings.Clone();
+            _applier.ApplyAll(candidate);
+            if (candidate.Graphics.DisplayDiffersFrom(_activeSettings.Graphics))
+            {
+                _pendingSettings = candidate;
+                _confirmationSeconds = 15f;
+                DraftChanged?.Invoke();
+                return;
+            }
+            Commit(candidate);
         }
 
-        /// <summary>
-        /// 編集をキャンセルし、プレビューを元の正式設定にロールバックする
-        /// </summary>
+        /// <summary>Persist only a confirmed candidate, leaving options ready for further editing</summary>
+        /// <param name="candidate">Confirmed settings</param>
+        private void Commit(GameSettings candidate)
+        {
+            try { _repository.Save(candidate); }
+            catch (Exception)
+            {
+                LastError = "Settings could not be saved. Previous settings restored.";
+                _applier.ApplyAll(_activeSettings);
+                _pendingSettings = null;
+                _editingSettings = _activeSettings.Clone();
+                SynchronizeDraft();
+                return;
+            }
+            _activeSettings = candidate.Clone();
+            _pendingSettings = null;
+            _editingSettings = _activeSettings.Clone();
+            SynchronizeDraft();
+        }
+
+        /// <summary>Accept the pending display change and persist it</summary>
+        public void ConfirmDisplay()
+        {
+            if (_pendingSettings != null) Commit(_pendingSettings);
+        }
+
+        /// <summary>Restore the last confirmed settings after rejecting a display mode</summary>
+        public void RejectDisplay()
+        {
+            if (_pendingSettings == null) return;
+            _pendingSettings = null;
+            _applier.ApplyAll(_activeSettings);
+            _editingSettings = _activeSettings.Clone();
+            SynchronizeDraft();
+        }
+
+        /// <summary>Use unscaled elapsed time and revert immediately on focus loss</summary>
+        /// <param name="deltaSeconds">Unscaled elapsed seconds</param>
+        /// <param name="hasFocus">Whether the application still has focus</param>
+        public void TickDisplayConfirmation(float deltaSeconds, bool hasFocus)
+        {
+            if (!AwaitingDisplayConfirmation) return;
+            _confirmationSeconds -= Math.Max(0f, deltaSeconds);
+            if (!hasFocus || _confirmationSeconds <= 0f) RejectDisplay();
+        }
+
+        /// <summary>Discard the draft and restore only categories that were previewed</summary>
         public void CancelEdit()
         {
-            if (_editingSettings == null) return;
-
-            // 元の設定に戻す
-            _applier.ApplyAll(_activeSettings);
-
+            if (!IsEditing) return;
+            if (AwaitingDisplayConfirmation) RejectDisplay();
+            _applier.ApplyAudio(_activeSettings.Audio);
+            _applier.ApplyCamera(_activeSettings.Camera);
+            _applier.ApplyAccessibility(_activeSettings.Accessibility);
             _editDisposables.Clear();
             _editingSettings = null;
         }
 
-        /// <summary>
-        /// 編集中のドラフトをデフォルト値にリセット
-        /// </summary>
+        /// <summary>Reset the draft without writing disk or changing the display mode</summary>
         public void ResetToDefault()
         {
-            _editDisposables.Clear();
+            if (AwaitingDisplayConfirmation) RejectDisplay();
             _editingSettings = new GameSettings();
-            _editingSettings.ResetToDefault();
-
-            // ドメインデータをUIプロパティに再適用
-            SyncModelToProperties(_editingSettings);
-
-            // プレビュー反映
-            _applier.ApplyAll(_editingSettings);
-
-            // 監視を再接続
-            BindPropertiesToModel();
+            _applier.ApplyAudio(_editingSettings.Audio);
+            _applier.ApplyCamera(_editingSettings.Camera);
+            _applier.ApplyAccessibility(_editingSettings.Accessibility);
+            SynchronizeDraft();
         }
 
+        /// <summary>Identify legacy console builds</summary>
+        /// <returns>Whether console-specific UI is required</returns>
         public bool IsConsolePlatform()
         {
 #if UNITY_SWITCH && !UNITY_EDITOR
@@ -207,21 +211,14 @@ namespace Shinzui.Application.UseCases
 #endif
         }
 
-        /// <summary>
-        /// 設定画面の購読と公開プロパティを解放する
-        /// </summary>
+        /// <summary>Roll back uncommitted previews and release subscriptions</summary>
         public void Dispose()
         {
+            CancelEdit();
             _editDisposables.Dispose();
-            MasterVolume.Dispose();
-            BgmVolume.Dispose();
-            SeVolume.Dispose();
-            VoiceVolume.Dispose();
-            ControllerNormalSpeed.Dispose();
-            MouseNormalSensitivity.Dispose();
-            Brightness.Dispose();
-            GraphicsQuality.Dispose();
-            ShowCenterDot.Dispose();
+            MasterVolume.Dispose(); BgmVolume.Dispose(); SeVolume.Dispose(); VoiceVolume.Dispose();
+            ControllerNormalSpeed.Dispose(); MouseNormalSensitivity.Dispose();
+            Brightness.Dispose(); GraphicsQuality.Dispose(); ShowCenterDot.Dispose();
         }
     }
 }

@@ -36,6 +36,7 @@ namespace Shinzui.View
         private VolumeProfile profile;
         private MotionBlur motionBlur;
         private DepthOfField depthOfField;
+        private UnityEngine.Rendering.HighDefinition.DepthOfField hdrpDepthOfField;
         private bool originalMotionBlurActive;
         private bool originalDepthOfFieldActive;
 
@@ -55,7 +56,13 @@ namespace Shinzui.View
                 targetVolume = GetComponent<Volume>();
             }
 
-            if (targetVolume != null)
+            if (targetVolume != null && GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset)
+            {
+                profile = targetVolume.profile;
+                if (!profile.TryGet(out hdrpDepthOfField)) hdrpDepthOfField = profile.Add<UnityEngine.Rendering.HighDefinition.DepthOfField>();
+                hdrpDepthOfField.focusDistance.Override(defaultFocusDistance);
+            }
+            else if (targetVolume != null)
             {
                 // 元のVolumeProfileアセットが直接書き換わるのを防ぐため、profileのコピーを取得して操作する
                 profile = targetVolume.profile;
@@ -116,7 +123,8 @@ namespace Shinzui.View
             if (trackingCamera == null) return;
 
             // 被写界深度のフォーカス距離測定
-            if (enableDepthOfField && depthOfField != null && !UltraEnvironmentQuality.IsActive)
+            if (enableDepthOfField && ((hdrpDepthOfField != null && Infrastructure.Services.HdrpGraphicsRuntime.DepthOfFieldEnabled)
+                || (depthOfField != null && !UltraEnvironmentQuality.IsActive)))
             {
                 raycastTimer += Time.deltaTime;
                 if (raycastTimer >= raycastInterval)
@@ -132,6 +140,12 @@ namespace Shinzui.View
         /// </summary>
         private void LateUpdate()
         {
+            if (hdrpDepthOfField != null)
+            {
+                if (enableDepthOfField && Infrastructure.Services.HdrpGraphicsRuntime.DepthOfFieldEnabled)
+                    hdrpDepthOfField.focusDistance.value = Mathf.Lerp(hdrpDepthOfField.focusDistance.value, targetFocusDistance, Time.deltaTime * focusLerpSpeed);
+                return;
+            }
             // ULTRAではシーンVolumeの自動ぼけよりパイプラインの鮮明な画作りを優先する
             bool ultra = UltraEnvironmentQuality.IsActive;
             if (motionBlur != null) motionBlur.active = originalMotionBlurActive && !ultra;

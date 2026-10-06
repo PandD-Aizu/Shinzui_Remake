@@ -143,7 +143,7 @@ namespace Shinzui.Presentation.Title
         private void CloseOptions()
         {
             if (_disposed || _loading || !_view.OptionPanel.activeSelf) return;
-            _settings.SaveAndApply();
+            _settings.CancelEdit();
             _view.OptionPanel.SetActive(false);
             _view.TitlePanel.SetActive(true);
         }

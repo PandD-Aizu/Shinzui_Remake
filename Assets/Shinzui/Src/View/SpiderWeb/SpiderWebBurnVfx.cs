@@ -208,8 +208,9 @@ namespace Shinzui.View
 
         private Material CreateParticleMaterial(Color tint)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
-                            ?? Shader.Find("Particles/Standard Unlit");
+            Shader shader = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset
+                ? Shader.Find("Shinzui/HdrpParticles")
+                : Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Particles/Standard Unlit");
             if (shader == null)
             {
                 return null;

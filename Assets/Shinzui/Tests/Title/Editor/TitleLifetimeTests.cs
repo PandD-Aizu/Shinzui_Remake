@@ -114,9 +114,11 @@ namespace Shinzui.Tests.Title
             Build();
             _view.OpenOptions();
             _optionView.MasterVolumeSlider.value = 0.3f;
+            _container.Resolve<SettingsUseCase>().SaveAndApply();
             _view.CloseOptions();
             _view.OpenOptions();
             _optionView.MasterVolumeSlider.value = 0.7f;
+            _container.Resolve<SettingsUseCase>().SaveAndApply();
             _view.CloseOptions();
             Assert.That(_store.Saves, Is.EqualTo(2));
             Assert.That(_store.Value.Audio.SystemVolume, Is.EqualTo(0.7f).Within(0.001f));
@@ -145,6 +147,7 @@ namespace Shinzui.Tests.Title
             Assert.That(_optionView.GraphicsQualitySlider, Is.Not.Null);
             Assert.That(_optionView.GraphicsQualitySlider.value, Is.EqualTo(3));
             _optionView.GraphicsQualitySlider.value = 0;
+            _container.Resolve<SettingsUseCase>().SaveAndApply();
             _view.CloseOptions();
             Assert.That(_store.Value.Graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Low));
 
@@ -152,6 +155,7 @@ namespace Shinzui.Tests.Title
             _view.OpenOptions();
             Assert.That(_optionView.GraphicsQualitySlider.value, Is.Zero);
             _optionView.GraphicsQualitySlider.value = 3;
+            _container.Resolve<SettingsUseCase>().SaveAndApply();
             _view.CloseOptions();
             Assert.That(_store.Value.Graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Ultra));
             Assert.That(_store.Value.Graphics.TextureQuality, Is.EqualTo(3));

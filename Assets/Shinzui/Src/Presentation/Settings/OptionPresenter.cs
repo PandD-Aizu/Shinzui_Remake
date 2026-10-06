@@ -33,6 +33,7 @@ namespace Shinzui.Presentation.Settings
 
         private Button _dynamicDefaultButton;
         private Button _dynamicCloseButton;
+        private GraphicsOptionsPresenter _graphicsPresenter;
 
         public OptionPresenter(SettingsUseCase useCase, OptionWindowView view)
         {
@@ -50,6 +51,8 @@ namespace Shinzui.Presentation.Settings
 
             // 3. UIとUseCaseの双方向バインディング
             BindUi();
+            var details = _view.EnsureGraphicsDetails();
+            if (details != null) _graphicsPresenter = new GraphicsOptionsPresenter(_useCase, details);
 
             // 4. 初期カテゴリー選択
             SelectCategory(0);
@@ -143,7 +146,7 @@ namespace Shinzui.Presentation.Settings
                 {
                     _dynamicCloseButton.onClick.AddListener(() =>
                     {
-                        _useCase.SaveAndApply();
+                        _useCase.CancelEdit();
                         _view.gameObject.SetActive(false);
                     });
                 }
@@ -232,6 +235,7 @@ namespace Shinzui.Presentation.Settings
 
         public void Dispose()
         {
+            _graphicsPresenter?.Dispose();
             _disposables.Dispose();
 
             // onClickリスナーは GameObject 破棄時にクリアされますが、念のため明示的解除

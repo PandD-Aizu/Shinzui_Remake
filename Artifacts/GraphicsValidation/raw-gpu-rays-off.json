@@ -1,0 +1,8 @@
+{
+  "camera": "Main Camera",
+  "rayTracingFrameEnabled": false,
+  "giTracing": "RayMarching",
+  "reflectionTracing": "RayMarching",
+  "textures": [],
+  "note": "RT-off control: graph does not allocate a ray-count texture when no traced effect consumes it; there are no GPU counter pixels to sum."
+}

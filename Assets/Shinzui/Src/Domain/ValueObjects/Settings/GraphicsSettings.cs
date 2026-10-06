@@ -8,7 +8,8 @@ namespace Shinzui.Domain.Settings
         Low = 0,
         Medium = 1,
         High = 2,
-        Ultra = 3
+        Ultra = 3,
+        Custom = 4
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ namespace Shinzui.Domain.Settings
         public int RenderingPath { get; set; } = 1;
 
         /// <summary>イメージクオリティ／解像度スケール倍率 (0.5 ~ 2.0)</summary>
-        public float ImageQualityScale { get; set; } = 2.0f;
+        public float ImageQualityScale { get; set; } = 1.0f;
 
         /// <summary>FidelityFX Contrast Adaptive Sharpening (CAS) の有無</summary>
         public bool EnableFidelityFxCas { get; set; } = false;
@@ -86,7 +87,13 @@ namespace Shinzui.Domain.Settings
         // --- ライティング・レイトレーシング ---
 
         /// <summary>レイトレーシングの有効化</summary>
-        public bool EnableRayTracing { get; set; } = false;
+        public bool EnableRayTracing { get; set; } = true;
+
+        /// <summary>Motion blur preference, independent of automatic camera focus</summary>
+        public bool EnableMotionBlur { get; set; } = false;
+
+        /// <summary>Portal texture scale, applied independently of the main camera</summary>
+        public float PortalResolutionScale { get; set; } = 0.75f;
 
         /// <summary>グローバルイルミネーション (GI) & 反射の品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
         public int GiAndReflectionQuality { get; set; } = 3;
@@ -140,6 +147,7 @@ namespace Shinzui.Domain.Settings
         /// <param name="preset">適用する描画品質</param>
         public void SetQualityPreset(GraphicsQualityPreset preset)
         {
+            if (preset == GraphicsQualityPreset.Custom) { QualityPreset = preset; return; }
             QualityPreset = preset;
 
             // 品質切り替え時に高品質プリセットの個別設定を次の品質へ持ち越さない
@@ -152,7 +160,50 @@ namespace Shinzui.Domain.Settings
             VolumeLightQuality = System.Math.Min(quality + 1, 3);
             AntiAliasingType = quality == 0 ? 1 : quality == 1 ? 2 : 3;
             FsrMode = 0;
-            ImageQualityScale = preset == GraphicsQualityPreset.Ultra ? 2f : 1f;
+            ImageQualityScale = 1f;
+            EnableRayTracing = preset == GraphicsQualityPreset.Ultra;
+            EnableAo = quality > 0;
+            EnableSsr = quality > 0;
+            EnableContactShadow = quality >= 2;
+            EnableBloom = true;
+            EnableLensFlare = quality >= 2;
+            EnableFilmGrain = true;
+            EnableDepthOfField = quality >= 2;
+            EnableMotionBlur = false;
+            EnableLensDistortion = true;
+            PortalResolutionScale = quality == 0 ? 0.5f : quality == 1 ? 0.625f : 0.75f;
+        }
+
+        /// <summary>Copy this scalar-only value object for independent editing</summary>
+        /// <returns>An independent graphics draft</returns>
+        public GraphicsSettings Clone() => (GraphicsSettings)MemberwiseClone();
+
+        /// <summary>Compare display modes that require confirmation before persistence</summary>
+        /// <param name="other">Previously confirmed settings</param>
+        /// <returns>Whether resolution, refresh, fullscreen or HDR output changed</returns>
+        public bool DisplayDiffersFrom(GraphicsSettings other) => Resolution != other.Resolution
+            || ScreenMode != other.ScreenMode || RefreshRate != other.RefreshRate || EnableHDR != other.EnableHDR;
+
+        /// <summary>Clamp persisted values before they reach rendering APIs</summary>
+        public void Validate()
+        {
+            if (!System.Enum.IsDefined(typeof(GraphicsQualityPreset), QualityPreset)) QualityPreset = GraphicsQualityPreset.High;
+            // Legacy saves could label a raster-only override Ultra; preserve its choice but report it as Custom.
+            if (QualityPreset == GraphicsQualityPreset.Ultra && !EnableRayTracing) QualityPreset = GraphicsQualityPreset.Custom;
+            ScreenMode = System.Math.Clamp(ScreenMode, 0, 2);
+            RefreshRate = System.Math.Clamp(RefreshRate, 24, 1000);
+            FrameRateLimit = FrameRateLimit <= 0 ? 0 : System.Math.Clamp(FrameRateLimit, 30, 360);
+            TextureQuality = System.Math.Clamp(TextureQuality, 0, 3);
+            TextureFilteringQuality = System.Math.Clamp(TextureFilteringQuality, 0, 3);
+            MeshQuality = System.Math.Clamp(MeshQuality, 0, 2);
+            ShadowQuality = System.Math.Clamp(ShadowQuality, 0, 3);
+            GiAndReflectionQuality = System.Math.Clamp(GiAndReflectionQuality, 0, 3);
+            VolumeLightQuality = System.Math.Clamp(VolumeLightQuality, 0, 3);
+            AntiAliasingType = System.Math.Clamp(AntiAliasingType, 0, 3);
+            ImageQualityScale = float.IsNaN(ImageQualityScale) ? 1f : System.Math.Clamp(ImageQualityScale, 0.5f, 1f);
+            PortalResolutionScale = float.IsNaN(PortalResolutionScale) ? 0.75f : System.Math.Clamp(PortalResolutionScale, 0.25f, 1f);
+            BrightnessValue = float.IsNaN(BrightnessValue) ? 0.5f : System.Math.Clamp(BrightnessValue, 0f, 1f);
+            ReflectionIntensity = float.IsNaN(ReflectionIntensity) ? 1f : System.Math.Clamp(ReflectionIntensity, 0f, 1f);
         }
     }
 }

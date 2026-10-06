@@ -1,7 +1,27 @@
 {
-    "name": "Shinzui.Title.Tests",
-    "references": ["ApplicationLayer", "DomainLayer", "InfrastructureLayer", "ViewLayer", "PresentationLayer", "DILayer", "VContainer", "Unity.TextMeshPro", "UnityEngine.UI", "R3.Unity"],
-    "includePlatforms": ["Editor"],
-    "optionalUnityReferences": ["TestAssemblies"],
-    "autoReferenced": false
+  "name": "Shinzui.Title.Tests",
+  "references": [
+    "ApplicationLayer",
+    "DomainLayer",
+    "InfrastructureLayer",
+    "ViewLayer",
+    "PresentationLayer",
+    "DILayer",
+    "VContainer",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI",
+    "R3.Unity"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "R3.dll"
+  ]
 }

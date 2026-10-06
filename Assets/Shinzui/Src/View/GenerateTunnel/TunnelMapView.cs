@@ -74,9 +74,17 @@ namespace Shinzui.View.GenerateTunnel
         {
             Camera camera = Camera.main;
             bool ultra = UltraEnvironmentQuality.IsActive;
+            bool hdrp = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset;
             float lightIntensityMultiplier = UltraEnvironmentQuality.CeilingLightIntensityMultiplier;
             int budget = camera != null ? (ultra ? 64 : Mathf.Clamp(maxCeilingShadowLights, 0, 16)) : 0;
             float distanceLimit = ultra ? 100f : Mathf.Max(0f, ceilingShadowDistance);
+            if (hdrp)
+            {
+                int quality = Infrastructure.Services.HdrpGraphicsRuntime.ShadowQuality;
+                budget = camera == null ? 0 : quality switch { 0 => 0, 1 => 2, 2 => 4, _ => 8 };
+                distanceLimit = quality switch { 1 => 18, 2 => 35, _ => 60 };
+                lightIntensityMultiplier = 1f;
+            }
             Vector3 cameraPosition = camera != null ? camera.transform.position : Vector3.zero;
             for (int i = 0; i < budget; i++)
             {
@@ -822,7 +830,8 @@ namespace Shinzui.View.GenerateTunnel
 
         private static Material CreateMaterial(string materialName, Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Shader shader = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset
+                ? Shader.Find("HDRP/Lit") : Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             var material = new Material(shader) { name = materialName, color = color };
             return material;
         }

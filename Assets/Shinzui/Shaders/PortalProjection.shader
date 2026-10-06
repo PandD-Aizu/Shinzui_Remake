@@ -68,4 +68,31 @@ Shader "Custom/PortalProjection"
             ENDHLSL
         }
     }
+    SubShader
+    {
+        Tags { "RenderPipeline"="HDRenderPipeline" }
+        Pass
+        {
+            Name "HdrpPortalProjection"
+            Tags { "LightMode"="ShinzuiPortal" }
+            Cull Off ZWrite Off ZTest LEqual
+            Stencil { Ref 64 ReadMask 64 WriteMask 0 Comp Equal Pass Keep }
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
+            float _PortalExposureMultiplier;
+            float4 Vert(float3 positionOS : POSITION) : SV_POSITION { return TransformWorldToHClip(TransformObjectToWorld(positionOS)); }
+            float4 Frag(float4 positionCS : SV_POSITION) : SV_Target
+            {
+                float2 uv = positionCS.xy * _ScreenSize.zw;
+                return float4(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb * _PortalExposureMultiplier * GetCurrentExposureMultiplier(), 1);
+            }
+            ENDHLSL
+        }
+    }
 }

@@ -12,7 +12,7 @@ namespace Shinzui.View
     /// URP環境において、RenderTexture投影方式によるステンシルマスク付きポータル表現をセットアップ
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    public class TunnelGateView : MonoBehaviour
+    public partial class TunnelGateView : MonoBehaviour
     {
         [Header("Warp Configuration")]
         [Tooltip("対になるもう一方の端点のゲート（ワープ先）。")]
@@ -185,6 +185,7 @@ namespace Shinzui.View
         private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             if (targetGate == null) return;
+            if (UsesHdrp) return;
 
             // ポータルカメラ自身のレンダリング開始時：
             // URPによる自動的な射影行列の再計算を上書きし、フェイルセーフな斜め射影ニアクリップ面を適用する
@@ -288,6 +289,8 @@ namespace Shinzui.View
         private void ReleasePortalTextures()
         {
             if (_portalCamera != null) _portalCamera.targetTexture = null;
+            if (_hdrpCameras != null)
+                foreach (var camera in _hdrpCameras) if (camera != null) camera.targetTexture = null;
             if (_portalRenderer != null && _portalRenderer.sharedMaterial != null)
             {
                 _portalRenderer.sharedMaterial.SetTexture("_MainTex", Texture2D.blackTexture);
@@ -305,6 +308,7 @@ namespace Shinzui.View
         /// </summary>
         private void ReleasePortalResources()
         {
+            ReleaseHdrpCameras();
             ReleasePortalTextures();
 
             if (_portalCamera != null)
@@ -742,6 +746,9 @@ namespace Shinzui.View
 
         private void ReleaseRecursionRenderTextures()
         {
+            if (_hdrpCameras != null)
+                for (int i = 1; i < _hdrpCameras.Length; i++)
+                    if (_hdrpCameras[i] != null) _hdrpCameras[i].targetTexture = null;
             if (_recursionRTs != null)
             {
                 for (int i = 0; i < _recursionRTs.Length; i++)

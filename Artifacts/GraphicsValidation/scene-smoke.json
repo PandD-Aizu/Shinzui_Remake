@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "titleDraftSurvivesTabChange": true,
+  "closeCancels": true,
+  "defaultsDoNotPersist": true,
+  "titleAddressableTransition": true,
+  "regenerationSeed": 9182,
+  "gates": 16,
+  "gameplayCameraPreserved": true,
+  "settingsFileUnchanged": true
+}

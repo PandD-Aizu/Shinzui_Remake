@@ -66,70 +66,67 @@ namespace Shinzui.Infrastructure.Services
         /// 描画プリセットと個別設定をエンジンおよびURPカメラへ適用する
         /// </summary>
         /// <param name="graphics">適用するグラフィックス設定</param>
+        private static GraphicsSettings _lastGraphics;
+
         public void ApplyGraphics(GraphicsSettings graphics)
         {
-#if UNITY_SWITCH && !UNITY_EDITOR
-            // Nintendo Switch実機では解像度やレンダリング品質の変更はシステムが自動処理するためスキップ
-            // 画面の明るさ(セーフエリア/表示領域調整)など一部項目のみ反映します
-            ApplySwitchGraphics(graphics);
-            return;
-#endif
-
-            // インデックスを固定せず品質名から対応するレンダーパイプラインを選択
-            ApplyQualityPreset(graphics.QualityPreset);
-            bool isUltra = graphics.QualityPreset == GraphicsQualityPreset.Ultra;
-
-            // 画面解像度とウィンドウモードの適用
-            string[] resParts = graphics.Resolution.Split('x');
-            if (resParts.Length == 2 && int.TryParse(resParts[0], out int width) && int.TryParse(resParts[1], out int height))
-            {
-                FullScreenMode mode = graphics.ScreenMode switch
-                {
-                    0 => FullScreenMode.ExclusiveFullScreen, // フルスクリーン
-                    1 => FullScreenMode.Windowed,            // ウィンドウ
-                    2 => FullScreenMode.FullScreenWindow,    // 仮想フルスクリーン (ボーダーレスウィンドウ)
-                    _ => FullScreenMode.FullScreenWindow
-                };
-                
-                var refreshRate = new RefreshRate
-                {
-                    numerator = (uint)Math.Max(graphics.RefreshRate, 1),
-                    denominator = 1u
-                };
-
-                Screen.SetResolution(width, height, mode, refreshRate);
-            }
-
-            // 2. 垂直同期 (VSync) とフレームレート制限
+            graphics = graphics.Clone();
+            graphics.Validate();
+            ApplyQualityPreset(graphics.QualityPreset == GraphicsQualityPreset.Custom ? GraphicsQualityPreset.Ultra : graphics.QualityPreset);
+            if (_lastGraphics == null || graphics.DisplayDiffersFrom(_lastGraphics)) ApplyDisplay(graphics);
+            _lastGraphics = graphics.Clone();
             QualitySettings.vSyncCount = graphics.EnableVSync ? 1 : 0;
             UnityEngine.Application.targetFrameRate = graphics.FrameRateLimit > 0 ? graphics.FrameRateLimit : -1;
-
-            // ULTRAでは旧保存データの個別設定に関係なく元解像度のテクスチャを使用
-            QualitySettings.globalTextureMipmapLimit = isUltra ? 0 : Mathf.Clamp(3 - graphics.TextureQuality, 0, 3);
+            QualitySettings.globalTextureMipmapLimit = 3 - graphics.TextureQuality;
             QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
-            int anisotropy = isUltra ? 16 : 1 << Mathf.Clamp(graphics.TextureFilteringQuality + 1, 1, 4);
+            int anisotropy = 1 << (graphics.TextureFilteringQuality + 1);
             Texture.SetGlobalAnisotropicFilteringLimits(anisotropy, anisotropy);
-            QualitySettings.lodBias = isUltra ? 4f : graphics.MeshQuality switch { 0 => 0.7f, 1 => 1f, _ => 2f };
+            QualitySettings.lodBias = graphics.MeshQuality switch { 0 => .7f, 1 => 1f, _ => 2f };
             QualitySettings.maximumLODLevel = 0;
-            QualitySettings.realtimeReflectionProbes = isUltra || graphics.GiAndReflectionQuality >= 3;
-
-            // FXAA/SMAA/TAAはURPのポスト処理として設定しMSAAとの競合を避ける
+            QualitySettings.realtimeReflectionProbes = graphics.GiAndReflectionQuality > 0;
             QualitySettings.antiAliasing = 0;
-            _cameraQualityPreset = graphics.QualityPreset;
-            _cameraAntiAliasingType = isUltra ? 3 : graphics.AntiAliasingType;
-            _allowHdrOutput = graphics.EnableHDR;
+            QualitySettings.shadows = graphics.ShadowQuality > 0 ? UnityEngine.ShadowQuality.All : UnityEngine.ShadowQuality.Disable;
             RenderPipelineManager.beginCameraRendering -= ApplyCameraRenderingSettings;
-            RenderPipelineManager.beginCameraRendering += ApplyCameraRenderingSettings;
-            foreach (var renderingCamera in UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsInactive.Include))
+            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset)
             {
-                ApplyCameraRenderingSettings(default, renderingCamera);
+                HdrpGraphicsRuntime.Apply(graphics);
+                return;
             }
-
-            // 通常品質の影の切り替えを維持しULTRAでは常に影を有効化
-            QualitySettings.shadows = isUltra || graphics.ShadowQuality > 0
-                ? UnityEngine.ShadowQuality.All : UnityEngine.ShadowQuality.Disable;
+            _cameraQualityPreset = graphics.QualityPreset;
+            _cameraAntiAliasingType = graphics.AntiAliasingType;
+            _allowHdrOutput = graphics.EnableHDR;
+            RenderPipelineManager.beginCameraRendering += ApplyCameraRenderingSettings;
+            foreach (var camera in UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsInactive.Include))
+                ApplyCameraRenderingSettings(default, camera);
         }
 
+        /// <summary>Apply an enumerated monitor mode only when display preferences change</summary>
+        /// <param name="graphics">Validated display candidate</param>
+        private static void ApplyDisplay(GraphicsSettings graphics)
+        {
+            string[] parts = (graphics.Resolution ?? string.Empty).Split('x');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out int width) || !int.TryParse(parts[1], out int height)) return;
+            var mode = graphics.ScreenMode switch { 0 => FullScreenMode.ExclusiveFullScreen, 1 => FullScreenMode.Windowed, _ => FullScreenMode.FullScreenWindow };
+            var refresh = Screen.currentResolution.refreshRateRatio;
+            bool supported = false;
+            foreach (var resolution in Screen.resolutions)
+            {
+                if (resolution.width == width && resolution.height == height && Mathf.RoundToInt((float)resolution.refreshRateRatio.value) == graphics.RefreshRate)
+                {
+                    refresh = resolution.refreshRateRatio;
+                    supported = true;
+                    break;
+                }
+            }
+            if (!supported && mode == FullScreenMode.ExclusiveFullScreen)
+            {
+                width = Screen.currentResolution.width;
+                height = Screen.currentResolution.height;
+            }
+            Screen.SetResolution(Mathf.Max(640, width), Mathf.Max(360, height), mode, refresh);
+            if (HDROutputSettings.main != null && HDROutputSettings.main.available)
+                HDROutputSettings.main.RequestHDRModeChange(graphics.EnableHDR);
+        }
         /// <summary>
         /// 保存用の品質番号をUnityの品質名へ変換して切り替える
         /// </summary>
@@ -203,6 +200,7 @@ namespace Shinzui.Infrastructure.Services
         private static void ResetCameraRenderingSettings()
         {
             RenderPipelineManager.beginCameraRendering -= ApplyCameraRenderingSettings;
+            _lastGraphics = null;
         }
 
         public void ApplyCamera(CameraSettings camera)

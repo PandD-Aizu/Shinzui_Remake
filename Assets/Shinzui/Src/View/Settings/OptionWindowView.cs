@@ -71,6 +71,19 @@ namespace Shinzui.View.Settings
 
         public Toggle CenterDotToggle => centerDotToggle;
 
+        /// <summary>Extend the authored graphics panel with detailed settings</summary>
+        /// <returns>The detail view, or null when no graphics panel is authored</returns>
+        public GraphicsOptionsView EnsureGraphicsDetails()
+        {
+            if (!EnsureCategoryPanelsInitialized() || !_categoryPanelMap.TryGetValue("Graphics", out var panel)) return null;
+            var existing = GetComponent<GraphicsOptionsView>();
+            if (existing != null) return existing;
+            var detail = gameObject.AddComponent<GraphicsOptionsView>();
+            var label = brightnessSlider != null ? brightnessSlider.transform.parent.GetComponentInChildren<TMP_Text>(true) : null;
+            detail.Build((RectTransform)panel.transform, label != null ? label.font : TMP_Settings.defaultFontAsset);
+            return detail;
+        }
+
         /// <summary>
         /// 既存の明るさ行の書式を利用して品質プリセットの選択行を用意する
         /// </summary>
@@ -95,7 +108,7 @@ namespace Shinzui.View.Settings
             graphicsQualitySlider = qualityRow.GetComponentInChildren<Slider>(true);
             graphicsQualitySlider.onValueChanged = new Slider.SliderEvent();
             graphicsQualitySlider.minValue = 0;
-            graphicsQualitySlider.maxValue = 3;
+            graphicsQualitySlider.maxValue = 4;
             graphicsQualitySlider.wholeNumbers = true;
             graphicsQualityLabel = qualityRow.GetComponentInChildren<TMP_Text>(true);
             if (graphicsQualityLabel != null)
@@ -119,7 +132,7 @@ namespace Shinzui.View.Settings
             graphicsQualitySlider.SetValueWithoutNotify(quality);
             if (graphicsQualityLabel != null)
             {
-                string name = quality switch { 0 => "LOW", 1 => "MEDIUM", 2 => "HIGH", _ => "ULTRA" };
+                string name = quality switch { 0 => "LOW", 1 => "MEDIUM", 2 => "HIGH", 3 => "ULTRA", _ => "CUSTOM" };
                 graphicsQualityLabel.text = $"Graphics Quality: {name}";
             }
         }
