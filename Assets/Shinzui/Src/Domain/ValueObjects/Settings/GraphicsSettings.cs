@@ -1,12 +1,26 @@
 namespace Shinzui.Domain.Settings
 {
     /// <summary>
+    /// 保存データの品質番号をUnityの品質インデックスから独立させる描画プリセット
+    /// </summary>
+    public enum GraphicsQualityPreset
+    {
+        Low = 0,
+        Medium = 1,
+        High = 2,
+        Ultra = 3
+    }
+
+    /// <summary>
     /// グラフィックスおよび描画品質に関する設定データを保持するドメインモデル
     /// </summary>
     [System.Serializable]
     public class GraphicsSettings
     {
         // --- 基本・画面設定 ---
+
+        /// <summary>描画品質プリセット</summary>
+        public GraphicsQualityPreset QualityPreset { get; set; } = GraphicsQualityPreset.Ultra;
         
         /// <summary>【PC専用】FPSやGPU情報等の表示有無</summary>
         public bool ShowPerformanceMetrics { get; set; } = false;
@@ -47,7 +61,7 @@ namespace Shinzui.Domain.Settings
         public int RenderingPath { get; set; } = 1;
 
         /// <summary>イメージクオリティ／解像度スケール倍率 (0.5 ~ 2.0)</summary>
-        public float ImageQualityScale { get; set; } = 1.0f;
+        public float ImageQualityScale { get; set; } = 2.0f;
 
         /// <summary>FidelityFX Contrast Adaptive Sharpening (CAS) の有無</summary>
         public bool EnableFidelityFxCas { get; set; } = false;
@@ -61,10 +75,10 @@ namespace Shinzui.Domain.Settings
         // --- アセット・描画品質 ---
 
         /// <summary>テクスチャ解像度品質 (0: 低, 1: 中, 2: 高, 3: ウルトラ)</summary>
-        public int TextureQuality { get; set; } = 2;
+        public int TextureQuality { get; set; } = 3;
 
         /// <summary>テクスチャフィルタリング（異方性フィルタリング）品質 (0: 2x, 1: 4x, 2: 8x, 3: 16x)</summary>
-        public int TextureFilteringQuality { get; set; } = 2;
+        public int TextureFilteringQuality { get; set; } = 3;
 
         /// <summary>3DメッシュのLOD（詳細度）品質 (0: 低, 1: 中, 2: 高)</summary>
         public int MeshQuality { get; set; } = 2;
@@ -75,7 +89,7 @@ namespace Shinzui.Domain.Settings
         public bool EnableRayTracing { get; set; } = false;
 
         /// <summary>グローバルイルミネーション (GI) & 反射の品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
-        public int GiAndReflectionQuality { get; set; } = 2;
+        public int GiAndReflectionQuality { get; set; } = 3;
 
         /// <summary>反射量／反射強度係数 (0.0 ~ 1.0)</summary>
         public float ReflectionIntensity { get; set; } = 1.0f;
@@ -87,7 +101,7 @@ namespace Shinzui.Domain.Settings
         public bool EnableSsr { get; set; } = true;
 
         /// <summary>ボリュームライト（霧・光のシャフト）品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
-        public int VolumeLightQuality { get; set; } = 2;
+        public int VolumeLightQuality { get; set; } = 3;
 
         /// <summary>サブサーフェイススキャッタリング（肌の透け感表現）の有効化</summary>
         public bool EnableSss { get; set; } = true;
@@ -95,7 +109,7 @@ namespace Shinzui.Domain.Settings
         // --- 影設定 ---
 
         /// <summary>メインシャドウの品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
-        public int ShadowQuality { get; set; } = 2;
+        public int ShadowQuality { get; set; } = 3;
 
         /// <summary>コンタクトシャドウ（接地部の微細な影）の有効化</summary>
         public bool EnableContactShadow { get; set; } = true;
@@ -119,5 +133,26 @@ namespace Shinzui.Domain.Settings
 
         /// <summary>レンズゆがみ（魚眼・色収差等のゆがみエフェクト）の有効化</summary>
         public bool EnableLensDistortion { get; set; } = true;
+
+        /// <summary>
+        /// 画面と音量の設定を維持しながら描画品質プリセットを切り替える
+        /// </summary>
+        /// <param name="preset">適用する描画品質</param>
+        public void SetQualityPreset(GraphicsQualityPreset preset)
+        {
+            QualityPreset = preset;
+
+            // 品質切り替え時に高品質プリセットの個別設定を次の品質へ持ち越さない
+            int quality = (int)preset;
+            TextureQuality = quality;
+            TextureFilteringQuality = quality;
+            MeshQuality = System.Math.Min(quality, 2);
+            ShadowQuality = System.Math.Min(quality + 1, 3);
+            GiAndReflectionQuality = System.Math.Min(quality + 1, 3);
+            VolumeLightQuality = System.Math.Min(quality + 1, 3);
+            AntiAliasingType = quality == 0 ? 1 : quality == 1 ? 2 : 3;
+            FsrMode = 0;
+            ImageQualityScale = preset == GraphicsQualityPreset.Ultra ? 2f : 1f;
+        }
     }
 }

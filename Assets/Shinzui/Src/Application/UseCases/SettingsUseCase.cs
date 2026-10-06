@@ -36,6 +36,9 @@ namespace Shinzui.Application.UseCases
         // 明るさ
         public ReactiveProperty<float> Brightness { get; } = new();
 
+        /// <summary>描画品質プリセットの選択番号</summary>
+        public ReactiveProperty<int> GraphicsQuality { get; } = new();
+
         // アクセシビリティ
         public ReactiveProperty<bool> ShowCenterDot { get; } = new();
 
@@ -70,6 +73,10 @@ namespace Shinzui.Application.UseCases
             BindPropertiesToModel();
         }
 
+        /// <summary>
+        /// 編集中の設定を画面へ公開する値へ同期する
+        /// </summary>
+        /// <param name="model">同期元の設定</param>
         private void SyncModelToProperties(GameSettings model)
         {
             MasterVolume.Value = model.Audio.SystemVolume;
@@ -81,10 +88,14 @@ namespace Shinzui.Application.UseCases
             MouseNormalSensitivity.Value = model.Camera.MouseNormalSensitivity;
 
             Brightness.Value = model.Graphics.BrightnessValue;
+            GraphicsQuality.Value = (int)model.Graphics.QualityPreset;
 
             ShowCenterDot.Value = model.Accessibility.ShowCenterDot;
         }
 
+        /// <summary>
+        /// 画面の値変更をプレビューと設定保存へ接続する
+        /// </summary>
         private void BindPropertiesToModel()
         {
             // 各プロパティ変更時、対応するドメイン設定の値を更新してプレビュー適用
@@ -97,6 +108,11 @@ namespace Shinzui.Application.UseCases
             MouseNormalSensitivity.Skip(1).Subscribe(val => { _editingSettings.Camera.MouseNormalSensitivity = val; ApplyPreview(); }).AddTo(_editDisposables);
 
             Brightness.Skip(1).Subscribe(val => { _editingSettings.Graphics.BrightnessValue = val; ApplyPreview(); }).AddTo(_editDisposables);
+            GraphicsQuality.Skip(1).Subscribe(val =>
+            {
+                _editingSettings.Graphics.SetQualityPreset((GraphicsQualityPreset)Math.Clamp(val, 0, 3));
+                ApplyPreview();
+            }).AddTo(_editDisposables);
 
             ShowCenterDot.Skip(1).Subscribe(val => { _editingSettings.Accessibility.ShowCenterDot = val; ApplyPreview(); }).AddTo(_editDisposables);
 
@@ -109,6 +125,7 @@ namespace Shinzui.Application.UseCases
                 ControllerNormalSpeed.Skip(1).Select(_ => Unit.Default),
                 MouseNormalSensitivity.Skip(1).Select(_ => Unit.Default),
                 Brightness.Skip(1).Select(_ => Unit.Default),
+                GraphicsQuality.Skip(1).Select(_ => Unit.Default),
                 ShowCenterDot.Skip(1).Select(_ => Unit.Default)
             )
             .Debounce(TimeSpan.FromSeconds(0.5f))
@@ -190,6 +207,9 @@ namespace Shinzui.Application.UseCases
 #endif
         }
 
+        /// <summary>
+        /// 設定画面の購読と公開プロパティを解放する
+        /// </summary>
         public void Dispose()
         {
             _editDisposables.Dispose();
@@ -200,6 +220,7 @@ namespace Shinzui.Application.UseCases
             ControllerNormalSpeed.Dispose();
             MouseNormalSensitivity.Dispose();
             Brightness.Dispose();
+            GraphicsQuality.Dispose();
             ShowCenterDot.Dispose();
         }
     }

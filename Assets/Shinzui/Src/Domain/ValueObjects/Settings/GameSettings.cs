@@ -33,6 +33,7 @@ namespace Shinzui.Domain.Settings
         /// <summary>
         /// 設定オブジェクトのディープコピーを作成する
         /// </summary>
+        /// <returns>変更を独立して保持する設定のコピー</returns>
         public GameSettings Clone()
         {
             return new GameSettings
@@ -69,6 +70,7 @@ namespace Shinzui.Domain.Settings
                 },
                 Graphics = new GraphicsSettings
                 {
+                    QualityPreset = Graphics.QualityPreset,
                     ShowPerformanceMetrics = Graphics.ShowPerformanceMetrics,
                     DisplayAreaRatio = Graphics.DisplayAreaRatio,
                     BrightnessValue = Graphics.BrightnessValue,

@@ -1,0 +1,5 @@
+Concrete Floor Damaged 01 — Rob Tuytel / Poly Haven
+https://polyhaven.com/a/concrete_floor_damaged_01
+License: CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/
+4K albedo, OpenGL normal, height and AO/roughness source
+Concrete_Mask_4K: R = metallic (0), G = source AO, B = 0, A = 1 - source roughness

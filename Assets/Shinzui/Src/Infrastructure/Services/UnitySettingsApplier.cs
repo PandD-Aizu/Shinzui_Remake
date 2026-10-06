@@ -2,6 +2,9 @@ using System;
 using Shinzui.Application.Interfaces;
 using Shinzui.Domain.Settings;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using GraphicsSettings = Shinzui.Domain.Settings.GraphicsSettings;
 
 namespace Shinzui.Infrastructure.Services
 {
@@ -18,6 +21,10 @@ namespace Shinzui.Infrastructure.Services
         private const string SystemBusPath = "bus:/System";
 
         private readonly IFMODVCAService _fmodVcaService;
+
+        private static GraphicsQualityPreset _cameraQualityPreset;
+        private static int _cameraAntiAliasingType;
+        private static bool _allowHdrOutput;
 
         public UnitySettingsApplier(IFMODVCAService fmodVcaService = null)
         {
@@ -55,6 +62,10 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// 描画プリセットと個別設定をエンジンおよびURPカメラへ適用する
+        /// </summary>
+        /// <param name="graphics">適用するグラフィックス設定</param>
         public void ApplyGraphics(GraphicsSettings graphics)
         {
 #if UNITY_SWITCH && !UNITY_EDITOR
@@ -63,6 +74,10 @@ namespace Shinzui.Infrastructure.Services
             ApplySwitchGraphics(graphics);
             return;
 #endif
+
+            // インデックスを固定せず品質名から対応するレンダーパイプラインを選択
+            ApplyQualityPreset(graphics.QualityPreset);
+            bool isUltra = graphics.QualityPreset == GraphicsQualityPreset.Ultra;
 
             // 画面解像度とウィンドウモードの適用
             string[] resParts = graphics.Resolution.Split('x');
@@ -89,23 +104,105 @@ namespace Shinzui.Infrastructure.Services
             QualitySettings.vSyncCount = graphics.EnableVSync ? 1 : 0;
             UnityEngine.Application.targetFrameRate = graphics.FrameRateLimit > 0 ? graphics.FrameRateLimit : -1;
 
-            // 3. テクスチャ解像度 (0:高, 1:中, 2:低, 3:超低)
-            QualitySettings.globalTextureMipmapLimit = Mathf.Clamp(3 - graphics.TextureQuality, 0, 3);
+            // ULTRAでは旧保存データの個別設定に関係なく元解像度のテクスチャを使用
+            QualitySettings.globalTextureMipmapLimit = isUltra ? 0 : Mathf.Clamp(3 - graphics.TextureQuality, 0, 3);
+            QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+            int anisotropy = isUltra ? 16 : 1 << Mathf.Clamp(graphics.TextureFilteringQuality + 1, 1, 4);
+            Texture.SetGlobalAnisotropicFilteringLimits(anisotropy, anisotropy);
+            QualitySettings.lodBias = isUltra ? 4f : graphics.MeshQuality switch { 0 => 0.7f, 1 => 1f, _ => 2f };
+            QualitySettings.maximumLODLevel = 0;
+            QualitySettings.realtimeReflectionProbes = isUltra || graphics.GiAndReflectionQuality >= 3;
 
-            // 4. アンチエイリアス
-            // 0: OFF, 2: 2x, 4: 4x, 8: 8x
-            QualitySettings.antiAliasing = graphics.AntiAliasingType switch
+            // FXAA/SMAA/TAAはURPのポスト処理として設定しMSAAとの競合を避ける
+            QualitySettings.antiAliasing = 0;
+            _cameraQualityPreset = graphics.QualityPreset;
+            _cameraAntiAliasingType = isUltra ? 3 : graphics.AntiAliasingType;
+            _allowHdrOutput = graphics.EnableHDR;
+            RenderPipelineManager.beginCameraRendering -= ApplyCameraRenderingSettings;
+            RenderPipelineManager.beginCameraRendering += ApplyCameraRenderingSettings;
+            foreach (var renderingCamera in UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsInactive.Include))
             {
-                0 => 0,
-                1 => 2, // FXAA相当のマルチサンプル代替
-                2 => 4, // SMAA
-                3 => 8, // TAA/MSAA最大
-                _ => 0
+                ApplyCameraRenderingSettings(default, renderingCamera);
+            }
+
+            // 通常品質の影の切り替えを維持しULTRAでは常に影を有効化
+            QualitySettings.shadows = isUltra || graphics.ShadowQuality > 0
+                ? UnityEngine.ShadowQuality.All : UnityEngine.ShadowQuality.Disable;
+        }
+
+        /// <summary>
+        /// 保存用の品質番号をUnityの品質名へ変換して切り替える
+        /// </summary>
+        /// <param name="preset">適用する描画品質</param>
+        private static void ApplyQualityPreset(GraphicsQualityPreset preset)
+        {
+            string qualityName = preset == GraphicsQualityPreset.Medium ? "Midium" : preset.ToString();
+            string[] names = QualitySettings.names;
+            for (int index = 0; index < names.Length; index++)
+            {
+                // 既存プロジェクトのMidium表記と修正後のMedium表記を受け入れる
+                if (!string.Equals(names[index], qualityName, StringComparison.OrdinalIgnoreCase)
+                    && !(preset == GraphicsQualityPreset.Medium && names[index] == "Medium"))
+                {
+                    continue;
+                }
+
+                if (QualitySettings.GetQualityLevel() != index)
+                {
+                    QualitySettings.SetQualityLevel(index, true);
+                }
+                return;
+            }
+        }
+
+        /// <summary>
+        /// シーン遷移後のゲームカメラにもHDR描画とアンチエイリアスを反映する
+        /// </summary>
+        /// <param name="context">描画コンテキスト</param>
+        /// <param name="renderingCamera">描画対象のカメラ</param>
+        private static void ApplyCameraRenderingSettings(ScriptableRenderContext context, Camera renderingCamera)
+        {
+            // ポータルなどポスト処理を無効にした中間描画の設定を維持
+            if (renderingCamera.cameraType != CameraType.Game
+                || !renderingCamera.TryGetComponent<UniversalAdditionalCameraData>(out var cameraData)
+                || cameraData.renderType != CameraRenderType.Base
+                || (renderingCamera.targetTexture != null && !cameraData.renderPostProcessing))
+            {
+                return;
+            }
+
+            // HDR内部描画はディスプレイのHDR出力設定と独立して有効化
+            renderingCamera.allowHDR = true;
+            renderingCamera.allowMSAA = false;
+            renderingCamera.allowDynamicResolution = false;
+            cameraData.allowHDROutput = _allowHdrOutput;
+            cameraData.renderPostProcessing = true;
+            cameraData.antialiasing = _cameraAntiAliasingType switch
+            {
+                1 => AntialiasingMode.FastApproximateAntialiasing,
+                2 => AntialiasingMode.SubpixelMorphologicalAntiAliasing,
+                3 => AntialiasingMode.TemporalAntiAliasing,
+                _ => AntialiasingMode.None
             };
 
-            // 5. 影品質
-            // QualitySettingsのShadow設定などを適用
-            QualitySettings.shadows = graphics.ShadowQuality > 0 ? ShadowQuality.All : ShadowQuality.Disable;
+            // カメラスタックはURPのTAA対象外なのでSMAAへ切り替える
+            if (cameraData.antialiasing == AntialiasingMode.TemporalAntiAliasing && cameraData.cameraStack?.Count > 0)
+            {
+                cameraData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+            }
+            cameraData.antialiasingQuality = AntialiasingQuality.High;
+            cameraData.taaSettings.quality = _cameraQualityPreset == GraphicsQualityPreset.Ultra
+                ? TemporalAAQuality.VeryHigh : TemporalAAQuality.High;
+            cameraData.taaSettings.contrastAdaptiveSharpening = 0f;
+        }
+
+        /// <summary>
+        /// ドメインリロードを省略した再生開始時にもカメラ描画の購読を初期化する
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetCameraRenderingSettings()
+        {
+            RenderPipelineManager.beginCameraRendering -= ApplyCameraRenderingSettings;
         }
 
         public void ApplyCamera(CameraSettings camera)
