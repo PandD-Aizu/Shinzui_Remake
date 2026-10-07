@@ -22,6 +22,8 @@ namespace Shinzui.View.GenerateTunnel
 
         [Header("Layout Size")]
         [Min(4.0f)] [SerializeField] private float tunnelLength = 153.12695f;
+        [Min(4.0f)] [SerializeField] private float minTunnelLength = 153.12695f;
+        [Min(4.0f)] [SerializeField] private float maxTunnelLength = 153.12695f;
         [Tooltip("Distance from the center connection point to the front/back connection points on each tunnel side.")]
         [Min(0.0f)] [SerializeField] private float connectionPointSpacing = 51.042316f;
         [Min(3.0f)] [SerializeField] private float tunnelWidth = 14.800003f;
@@ -72,6 +74,8 @@ namespace Shinzui.View.GenerateTunnel
         public float SmallRoomWidth => smallRoomWidth;
         public float SmallRoomLength => smallRoomLength;
         public float TunnelLength => tunnelLength;
+        public float MinTunnelLength => Mathf.Min(minTunnelLength, maxTunnelLength);
+        public float MaxTunnelLength => Mathf.Max(minTunnelLength, maxTunnelLength);
         public float ConnectionPointSpacing => connectionPointSpacing * Mathf.Abs(BasicTunnelModelScale.x);
         public float TunnelWidth => tunnelWidth;
         public float TunnelHeight => tunnelHeight;

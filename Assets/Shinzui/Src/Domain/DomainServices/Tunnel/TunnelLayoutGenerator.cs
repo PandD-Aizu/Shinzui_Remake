@@ -25,6 +25,8 @@ namespace Shinzui.Domain.DomainServices.Tunnel
         {
             public int Id { get; }
             public TunnelVector3 Position { get; }
+            public TunnelVector2 Forward { get; }
+            public float Length { get; }
             public string Name { get; set; }
             public bool IsSpecial { get; set; }
             public int ConnectionCount { get; set; }
@@ -32,10 +34,12 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             public bool[] ActiveEntranceMarkers { get; } = new bool[Entrances.Length];
             public bool[] OpenEntrances { get; } = new bool[Entrances.Length];
 
-            public InternalTunnelNode(int id, TunnelVector3 position, string name, bool isSpecial)
+            public InternalTunnelNode(int id, TunnelVector3 position, TunnelVector2 forward, float length, string name, bool isSpecial)
             {
                 Id = id;
                 Position = position;
+                Forward = forward;
+                Length = length;
                 Name = name;
                 IsSpecial = isSpecial;
                 for (int i = 0; i < ActiveEntranceMarkers.Length; i++)
@@ -65,14 +69,35 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             public TunnelVector3 Direction { get; }
             public float Length { get; }
             public int ConnectionIndex { get; }
+            public bool HasSmallRoom { get; }
+            public bool OpenEnd { get; }
+            public bool OpenLeft { get; }
+            public bool OpenRight { get; }
 
+            /// <summary>
+            /// 通路区間の寸法と接続端と開口部を保持する
+            /// </summary>
+            /// <param name="startPort">入口の位置</param>
+            /// <param name="endPort">出口の位置</param>
+            /// <param name="center">区間の中心</param>
+            /// <param name="direction">区間の前方向</param>
+            /// <param name="length">区間の長さ</param>
+            /// <param name="connectionIndex">接続の識別番号</param>
+            /// <param name="hasSmallRoom">小部屋を配置するか</param>
+            /// <param name="openEnd">前方を開けるか</param>
+            /// <param name="openLeft">左側を開けるか</param>
+            /// <param name="openRight">右側を開けるか</param>
             public InternalNormalCorridor(
                 TunnelVector3 startPort,
                 TunnelVector3 endPort,
                 TunnelVector3 center,
                 TunnelVector3 direction,
                 float length,
-                int connectionIndex)
+                int connectionIndex,
+                bool hasSmallRoom = false,
+                bool openEnd = true,
+                bool openLeft = false,
+                bool openRight = false)
             {
                 StartPort = startPort;
                 EndPort = endPort;
@@ -80,9 +105,18 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                 Direction = direction;
                 Length = length;
                 ConnectionIndex = connectionIndex;
+                HasSmallRoom = hasSmallRoom;
+                OpenEnd = openEnd;
+                OpenLeft = openLeft;
+                OpenRight = openRight;
             }
         }
 
+        /// <summary>
+        /// 設定とシード値からトンネルと通路のレイアウトを生成する
+        /// </summary>
+        /// <param name="config">生成設定</param>
+        /// <returns>トンネルと通路と小部屋の生成結果</returns>
         public TunnelLayoutResult GenerateLayout(TunnelGenerationConfig config)
         {
             config ??= new TunnelGenerationConfig();
@@ -96,7 +130,7 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             var warpCorridors = new List<WarpCorridorLayout>();
 
             // 原点は Player の開始地点。Special はこれとは別のトンネルとして生成される。
-            AddTunnel(tunnels, openEntrances, occupiedAreas, TunnelVector3.Zero, false, "Player Start Tunnel 00", config);
+            AddTunnel(tunnels, openEntrances, occupiedAreas, TunnelVector3.Zero, TunnelVector2.Zero, ChooseTunnelLength(config, random), false, "Player Start Tunnel 00", config);
 
             int requestedTunnelCount = Math.Max(5, config.TunnelCount);
             SelectSmallRoomConnections(smallRoomConnectionIndices, requestedTunnelCount - 1, config.SmallRoomCount, random);
@@ -123,12 +157,12 @@ namespace Shinzui.Domain.DomainServices.Tunnel
 
             foreach (var corridor in normalCorridors)
             {
-                if (smallRoomConnectionIndices.Contains(corridor.ConnectionIndex))
+                if (corridor.HasSmallRoom)
                 {
                     roomNumber++;
                     float width = Math.Max(config.CorridorWidth, config.SmallRoomWidth);
                     float roomLength = Math.Max(1.0f, config.SmallRoomLength);
-                    float passageLength = config.CorridorLength;
+                    float passageLength = (corridor.Length - roomLength) * 0.5f;
 
                     smallRooms.Add(new SmallRoomLayout(
                         roomNumber,
@@ -148,7 +182,10 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                         corridor.EndPort,
                         corridor.Center,
                         corridor.Direction,
-                        corridor.Length));
+                        corridor.Length,
+                        corridor.OpenEnd,
+                        corridor.OpenLeft,
+                        corridor.OpenRight));
                 }
             }
 
@@ -165,7 +202,7 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                 var markerLayouts = new List<TunnelEntranceMarkerLayout>(Entrances.Length);
                 for (int m = 0; m < Entrances.Length; m++)
                 {
-                    TunnelVector3 localPos = GetPortOffset(Entrances[m], config);
+                    TunnelVector3 localPos = GetPortOffset(Entrances[m], tunnel.Length, config);
                     localPos = new TunnelVector3(localPos.X, 0.16f, localPos.Z);
                     markerLayouts.Add(new TunnelEntranceMarkerLayout(
                         m,
@@ -179,6 +216,8 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                     tunnel.Id,
                     tunnel.Name,
                     tunnel.Position,
+                    tunnel.Forward,
+                    tunnel.Length,
                     tunnel.IsSpecial,
                     markerLayouts,
                     (bool[])tunnel.OpenEntrances.Clone()));
@@ -202,14 +241,21 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             List<InternalOpenEntrance> openEntrances,
             List<TunnelOccupiedArea> occupiedAreas,
             TunnelVector3 position,
+            TunnelVector2 forward,
+            float length,
             bool isSpecial,
             string objectName,
             TunnelGenerationConfig config)
         {
             int id = tunnels.Count;
-            var node = new InternalTunnelNode(id, position, objectName, isSpecial);
+            if (forward.Equals(TunnelVector2.Zero))
+            {
+                forward = TunnelVector2.Right;
+            }
+
+            var node = new InternalTunnelNode(id, position, forward, length, objectName, isSpecial);
             tunnels.Add(node);
-            occupiedAreas.Add(CreateTunnelArea(position, id, config));
+            occupiedAreas.Add(CreateTunnelArea(node, id, config));
 
             for (int i = 0; i < Entrances.Length; i++)
             {
@@ -243,47 +289,71 @@ namespace Shinzui.Domain.DomainServices.Tunnel
 
                 InternalOpenEntrance parentOpen = openEntrances[parentOpenIndex];
                 TunnelEntrance parentEntrance = Entrances[parentOpen.EntranceIndex];
-                TunnelVector3 parentPort = GetPortPosition(parentOpen.Tunnel.Position, parentEntrance, config);
-                TunnelVector3 outward = ToWorldDirection(parentEntrance.Direction);
+                TunnelVector3 parentPort = GetPortPosition(parentOpen.Tunnel, parentEntrance, config);
+                TunnelVector3 outward = ToWorldDirection(parentEntrance.Direction, parentOpen.Tunnel.Forward);
 
-                var candidates = GetOppositeEntrances(parentEntrance.Direction);
-                int childEntranceIndex = candidates[random.Next(candidates.Count)];
-                TunnelEntrance childEntrance = Entrances[childEntranceIndex];
-                TunnelVector3 childPortOffset = GetPortOffset(childEntrance, config);
+                TunnelVector2 childForward = ChooseTunnelForward(random);
+                float childLength = ChooseTunnelLength(config, random);
+                var candidates = GetOppositeEntrances(outward, childForward);
 
-                bool isSmallRoom = smallRoomConnectionIndices.Contains(index);
-                float connectionLength = isSmallRoom
-                    ? config.CorridorLength * 2.0f + Math.Max(1.0f, config.SmallRoomLength)
-                    : config.CorridorLength;
-
-                TunnelVector3 childPosition = parentPort + outward * connectionLength - childPortOffset;
-                TunnelVector3 childPort = GetPortPosition(childPosition, childEntrance, config);
-                if (isSmallRoom && !IsPositiveDirectionFromStart(parentOpen.Tunnel.Position, childPosition))
+                // 直交するトンネルは側面の接続口までL字に曲げて接続する
+                bool needsBend = candidates.Count == 0;
+                if (needsBend)
                 {
-                    isSmallRoom = false;
-                    connectionLength = config.CorridorLength;
-                    childPosition = parentPort + outward * connectionLength - childPortOffset;
-                    childPort = GetPortPosition(childPosition, childEntrance, config);
+                    for (int entranceIndex = 0; entranceIndex < Entrances.Length; entranceIndex++)
+                    {
+                        candidates.Add(entranceIndex);
+                    }
                 }
 
-                if (!CanPlaceTunnelAndConnection(parentOpen.Tunnel.Id, childPosition, parentPort, childPort, isSmallRoom, config, occupiedAreas))
+                int childEntranceIndex = candidates[random.Next(candidates.Count)];
+                TunnelEntrance childEntrance = Entrances[childEntranceIndex];
+                TunnelVector3 childPortOffset = ToWorldOffset(GetPortOffset(childEntrance, childLength, config), childForward);
+
+                bool isSmallRoom = smallRoomConnectionIndices.Contains(index);
+                float connectionLength = config.CorridorLength * (1.0f + (float)random.NextDouble() * 2.0f);
+                float minimumRoomLength = config.CorridorLength * 2.0f + Math.Max(1.0f, config.SmallRoomLength);
+                if (isSmallRoom) connectionLength = Math.Max(connectionLength, minimumRoomLength);
+
+                // 親と子の長い側面を避けた位置に曲がり角を設ける
+                TunnelVector3 childInward = ToWorldDirection(childEntrance.Direction, childForward) * -1.0f;
+                float halfWidth = config.CorridorWidth * 0.5f;
+                float firstLength = needsBend ? connectionLength + halfWidth : connectionLength;
+                float parentPortOffset = DotHorizontal(parentPort - parentOpen.Tunnel.Position, childInward);
+                float secondLength = needsBend
+                    ? Math.Max(config.CorridorLength + halfWidth,
+                        parentOpen.Tunnel.Length * 0.5f - parentPortOffset + config.PlacementMargin + config.CorridorLength)
+                    : 0.0f;
+                TunnelVector3 bend = parentPort + outward * firstLength;
+                TunnelVector3 childPort = bend + childInward * secondLength;
+                TunnelVector3 childPosition = childPort - childPortOffset;
+
+                // 直線区間と曲がり角を、互いに重ならない矩形として扱う
+                var route = new List<InternalNormalCorridor>(needsBend ? 3 : 1);
+                TunnelVector3 firstEnd = needsBend ? bend - outward * halfWidth : childPort;
+                route.Add(CreateStraightCorridor(parentPort, firstEnd, index, isSmallRoom));
+                if (needsBend)
+                {
+                    TunnelVector3 secondStart = bend + childInward * halfWidth;
+                    TunnelVector2 side = GetSideDirection(new TunnelVector2(outward.X, outward.Z));
+                    bool turnsRight = side.X * childInward.X + side.Y * childInward.Z > 0.0f;
+                    route.Add(new InternalNormalCorridor(firstEnd, secondStart, bend, outward,
+                        config.CorridorWidth, index, false, false, !turnsRight, turnsRight));
+                    route.Add(CreateStraightCorridor(secondStart, childPort, index));
+                }
+
+                if (!CanPlaceTunnelAndConnection(parentOpen.Tunnel.Id, childPosition, childForward, childLength, route, config, occupiedAreas))
                 {
                     continue;
                 }
 
-                InternalTunnelNode child = AddTunnel(tunnels, openEntrances, occupiedAreas, childPosition, false, $"Tunnel {index:00}", config);
+                InternalTunnelNode child = AddTunnel(tunnels, openEntrances, occupiedAreas, childPosition, childForward, childLength, false, $"Tunnel {index:00}", config);
 
-                TunnelVector3 delta = childPort - parentPort;
-                TunnelVector3 center = (parentPort + childPort) * 0.5f;
-                TunnelVector3 direction = delta.Normalized;
-
-                normalCorridors.Add(new InternalNormalCorridor(parentPort, childPort, center, direction, delta.Magnitude, index));
-                occupiedAreas.AddRange(BuildConnectionAreas(parentPort, childPort, isSmallRoom, config));
-                if (!isSmallRoom)
+                normalCorridors.AddRange(route);
+                foreach (InternalNormalCorridor segment in route)
                 {
-                    smallRoomConnectionIndices.Remove(index);
+                    occupiedAreas.AddRange(BuildCorridorAreas(segment, config));
                 }
-
                 parentOpen.Tunnel.ConnectionCount++;
                 child.ConnectionCount++;
                 parentOpen.Tunnel.Neighbors.Add(child);
@@ -299,15 +369,20 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             return false;
         }
 
-        private static bool IsPositiveDirectionFromStart(TunnelVector3 parentPosition, TunnelVector3 childPosition)
+        /// <summary>
+        /// 始点と終点から直線区間のレイアウトを作成する
+        /// </summary>
+        /// <param name="start">区間の始点</param>
+        /// <param name="end">区間の終点</param>
+        /// <param name="connectionIndex">接続の識別番号</param>
+        /// <param name="hasSmallRoom">区間内に小部屋を配置するか</param>
+        /// <returns>直線区間のレイアウト</returns>
+        private static InternalNormalCorridor CreateStraightCorridor(
+            TunnelVector3 start, TunnelVector3 end, int connectionIndex, bool hasSmallRoom = false)
         {
-            const float epsilon = 0.0001f;
-            return HorizontalDistanceSqr(childPosition) > HorizontalDistanceSqr(parentPosition) + epsilon;
-        }
-
-        private static float HorizontalDistanceSqr(TunnelVector3 position)
-        {
-            return position.X * position.X + position.Z * position.Z;
+            TunnelVector3 delta = end - start;
+            return new InternalNormalCorridor(start, end, (start + end) * 0.5f,
+                delta.Normalized, delta.Magnitude, connectionIndex, hasSmallRoom);
         }
 
         private static void SelectSmallRoomConnections(
@@ -529,8 +604,8 @@ namespace Shinzui.Domain.DomainServices.Tunnel
 
             InternalOpenEntrance open = openEntrances[openIndex];
             TunnelEntrance entrance = Entrances[open.EntranceIndex];
-            TunnelVector3 start = GetPortPosition(tunnel.Position, entrance, config);
-            TunnelVector3 outward = ToWorldDirection(entrance.Direction);
+            TunnelVector3 start = GetPortPosition(tunnel, entrance, config);
+            TunnelVector3 outward = ToWorldDirection(entrance.Direction, tunnel.Forward);
             TunnelVector3 end = start + outward * config.CorridorLength;
             TunnelVector3 delta = end - start;
             TunnelVector3 center = (start + end) * 0.5f;
@@ -579,8 +654,8 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             {
                 InternalOpenEntrance open = openEntrances[candidateIndex];
                 TunnelEntrance entrance = Entrances[open.EntranceIndex];
-                TunnelVector3 start = GetPortPosition(tunnel.Position, entrance, config);
-                TunnelVector3 end = start + ToWorldDirection(entrance.Direction) * config.CorridorLength;
+                TunnelVector3 start = GetPortPosition(tunnel, entrance, config);
+                TunnelVector3 end = start + ToWorldDirection(entrance.Direction, tunnel.Forward) * config.CorridorLength;
                 bool overlaps = false;
 
                 foreach (TunnelOccupiedArea area in BuildConnectionAreas(start, end, false, config))
@@ -669,34 +744,77 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             return candidates.Count == 0 ? -1 : candidates[random.Next(candidates.Count)];
         }
 
+        /// <summary>
+        /// 接続先のトンネルと通路の全区間が既存の配置と重ならないか判定する
+        /// </summary>
+        /// <param name="parentTunnelId">接続元のトンネル番号</param>
+        /// <param name="childPosition">接続先の中心</param>
+        /// <param name="childForward">接続先の向き</param>
+        /// <param name="childLength">接続先の長さ</param>
+        /// <param name="route">接続する通路の区間</param>
+        /// <param name="config">生成設定</param>
+        /// <param name="occupiedAreas">既存の占有領域</param>
+        /// <returns>配置可能ならtrue</returns>
         private static bool CanPlaceTunnelAndConnection(
             int? parentTunnelId,
             TunnelVector3 childPosition,
-            TunnelVector3 start,
-            TunnelVector3 end,
-            bool hasSmallRoom,
+            TunnelVector2 childForward,
+            float childLength,
+            List<InternalNormalCorridor> route,
             TunnelGenerationConfig config,
             List<TunnelOccupiedArea> occupiedAreas)
         {
-            if (OverlapsAny(CreateTunnelArea(childPosition, null, config), null, occupiedAreas))
+            if (OverlapsAny(CreateTunnelArea(childPosition, childForward, childLength, null, config), null, occupiedAreas))
             {
                 return false;
             }
 
-            foreach (TunnelOccupiedArea area in BuildConnectionAreas(start, end, hasSmallRoom, config))
+            foreach (InternalNormalCorridor segment in route)
             {
-                if (OverlapsAny(area, parentTunnelId, occupiedAreas))
+                foreach (TunnelOccupiedArea area in BuildCorridorAreas(segment, config))
                 {
-                    return false;
+                    if (OverlapsAny(area, parentTunnelId, occupiedAreas))
+                    {
+                        return false;
+                    }
                 }
             }
 
             return true;
         }
 
-        private static TunnelOccupiedArea CreateTunnelArea(TunnelVector3 position, int? ownerTunnelId, TunnelGenerationConfig config)
+        /// <summary>
+        /// 直線区間または曲がり角の占有領域を取得する
+        /// </summary>
+        /// <param name="segment">判定する通路区間</param>
+        /// <param name="config">生成設定</param>
+        /// <returns>通路と小部屋の占有領域</returns>
+        private static List<TunnelOccupiedArea> BuildCorridorAreas(InternalNormalCorridor segment, TunnelGenerationConfig config)
         {
-            TunnelVector2 size = new TunnelVector2(config.TunnelWidth, config.TunnelLength)
+            // 曲がり角は通路幅と同じ一辺を持つ正方形として判定する
+            if (!segment.OpenEnd)
+            {
+                return new List<TunnelOccupiedArea>
+                {
+                    CreateSegmentArea(segment.Center, segment.Direction, segment.Length,
+                        config.CorridorWidth, config.CorridorOverlapSizeMultiplier, config.PlacementMargin)
+                };
+            }
+
+            return BuildConnectionAreas(segment.StartPort, segment.EndPort, segment.HasSmallRoom, config);
+        }
+
+        private static TunnelOccupiedArea CreateTunnelArea(InternalTunnelNode tunnel, int? ownerTunnelId, TunnelGenerationConfig config)
+        {
+            return CreateTunnelArea(tunnel.Position, tunnel.Forward, tunnel.Length, ownerTunnelId, config);
+        }
+
+        private static TunnelOccupiedArea CreateTunnelArea(TunnelVector3 position, TunnelVector2 forward, float length, int? ownerTunnelId, TunnelGenerationConfig config)
+        {
+            TunnelVector2 side = GetSideDirection(forward);
+            float sizeX = Math.Abs(forward.X) * length + Math.Abs(side.X) * config.TunnelWidth;
+            float sizeZ = Math.Abs(forward.Y) * length + Math.Abs(side.Y) * config.TunnelWidth;
+            TunnelVector2 size = new TunnelVector2(sizeX, sizeZ)
                                  * Math.Max(0.1f, config.TunnelOverlapSizeMultiplier)
                                  + TunnelVector2.One * config.PlacementMargin;
             return new TunnelOccupiedArea(new TunnelVector2(position.X, position.Z), size, ownerTunnelId);
@@ -725,7 +843,7 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             }
 
             float roomLength = Math.Max(1.0f, config.SmallRoomLength);
-            float passageLength = config.CorridorLength;
+            float passageLength = (totalLength - roomLength) * 0.5f;
 
             result.Add(CreateSegmentArea(start + direction * (passageLength * 0.5f), direction,
                 passageLength, config.CorridorWidth, config.CorridorOverlapSizeMultiplier, config.PlacementMargin));
@@ -766,12 +884,13 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             return false;
         }
 
-        private static List<int> GetOppositeEntrances(TunnelVector2 direction)
+        private static List<int> GetOppositeEntrances(TunnelVector3 worldDirection, TunnelVector2 tunnelForward)
         {
             var result = new List<int>(3);
             for (int i = 0; i < Entrances.Length; i++)
             {
-                if (TunnelVector2.Dot(Entrances[i].Direction, direction) < -0.99f)
+                TunnelVector3 entranceDirection = ToWorldDirection(Entrances[i].Direction, tunnelForward);
+                if (DotHorizontal(entranceDirection, worldDirection) < -0.99f)
                 {
                     result.Add(i);
                 }
@@ -779,16 +898,24 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             return result;
         }
 
-        private static TunnelVector3 GetPortPosition(TunnelVector3 tunnelPosition, TunnelEntrance entrance, TunnelGenerationConfig config)
+        private static TunnelVector3 GetPortPosition(InternalTunnelNode tunnel, TunnelEntrance entrance, TunnelGenerationConfig config)
         {
-            return tunnelPosition + GetPortOffset(entrance, config);
+            return GetPortPosition(tunnel.Position, tunnel.Forward, tunnel.Length, entrance, config);
         }
 
-        private static TunnelVector3 GetPortOffset(TunnelEntrance entrance, TunnelGenerationConfig config)
+        private static TunnelVector3 GetPortPosition(TunnelVector3 tunnelPosition, TunnelVector2 tunnelForward, float tunnelLength, TunnelEntrance entrance, TunnelGenerationConfig config)
         {
+            return tunnelPosition + ToWorldOffset(GetPortOffset(entrance, tunnelLength, config), tunnelForward);
+        }
+
+        private static TunnelVector3 GetPortOffset(TunnelEntrance entrance, float tunnelLength, TunnelGenerationConfig config)
+        {
+            // 長さ方向のモデル拡縮と同じ比率で外側の接続口を移動する
+            float lengthScale = config.TunnelLength > 0.0f ? tunnelLength / config.TunnelLength : 1.0f;
+            float spacing = Math.Min(config.ConnectionPointSpacing * lengthScale, tunnelLength * 0.45f);
             float longitudinalOffset = entrance.NormalizedPosition.Y == 0.0f
                 ? 0.0f
-                : Math.Sign(entrance.NormalizedPosition.Y) * config.ConnectionPointSpacing;
+                : Math.Sign(entrance.NormalizedPosition.Y) * spacing;
 
             return new TunnelVector3(
                 entrance.NormalizedPosition.X * config.TunnelWidth,
@@ -796,9 +923,44 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                 longitudinalOffset);
         }
 
-        private static TunnelVector3 ToWorldDirection(TunnelVector2 direction)
+        private static TunnelVector3 ToWorldDirection(TunnelVector2 direction, TunnelVector2 tunnelForward)
         {
-            return new TunnelVector3(direction.X, 0.0f, direction.Y);
+            TunnelVector2 side = GetSideDirection(tunnelForward);
+            return new TunnelVector3(
+                side.X * direction.X + tunnelForward.X * direction.Y,
+                0.0f,
+                side.Y * direction.X + tunnelForward.Y * direction.Y);
+        }
+
+        private static TunnelVector3 ToWorldOffset(TunnelVector3 localOffset, TunnelVector2 tunnelForward)
+        {
+            TunnelVector2 side = GetSideDirection(tunnelForward);
+            return new TunnelVector3(
+                side.X * localOffset.X + tunnelForward.X * localOffset.Z,
+                localOffset.Y,
+                side.Y * localOffset.X + tunnelForward.Y * localOffset.Z);
+        }
+
+        private static TunnelVector2 GetSideDirection(TunnelVector2 tunnelForward)
+        {
+            return new TunnelVector2(tunnelForward.Y, -tunnelForward.X);
+        }
+
+        private static float DotHorizontal(TunnelVector3 a, TunnelVector3 b)
+        {
+            return a.X * b.X + a.Z * b.Z;
+        }
+
+        private static TunnelVector2 ChooseTunnelForward(Random random)
+        {
+            return random.Next(2) == 0 ? TunnelVector2.Right : new TunnelVector2(0.0f, 1.0f);
+        }
+
+        private static float ChooseTunnelLength(TunnelGenerationConfig config, Random random)
+        {
+            float min = Math.Min(config.MinTunnelLength, config.MaxTunnelLength);
+            float max = Math.Max(config.MinTunnelLength, config.MaxTunnelLength);
+            return max <= min + 1e-4f ? min : min + (float)random.NextDouble() * (max - min);
         }
 
         private static void RemoveOpenEntrance(List<InternalOpenEntrance> openEntrances, int index)
@@ -830,22 +992,21 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             float minY = float.MaxValue, maxY = float.MinValue;
             float minZ = float.MaxValue, maxZ = float.MinValue;
 
-            float halfW = config.TunnelWidth * 0.5f;
-            float halfH = config.TunnelHeight * 0.5f;
-            float halfL = config.TunnelLength * 0.5f;
-
             foreach (var tunnel in tunnels)
             {
                 float px = tunnel.Position.X;
                 float py = tunnel.Position.Y;
                 float pz = tunnel.Position.Z;
+                TunnelVector2 side = GetSideDirection(tunnel.Forward);
+                float halfX = (Math.Abs(tunnel.Forward.X) * tunnel.Length + Math.Abs(side.X) * config.TunnelWidth) * 0.5f;
+                float halfZ = (Math.Abs(tunnel.Forward.Y) * tunnel.Length + Math.Abs(side.Y) * config.TunnelWidth) * 0.5f;
 
-                minX = Math.Min(minX, px - halfW);
-                maxX = Math.Max(maxX, px + halfW);
+                minX = Math.Min(minX, px - halfX);
+                maxX = Math.Max(maxX, px + halfX);
                 minY = Math.Min(minY, py);
                 maxY = Math.Max(maxY, py + config.TunnelHeight);
-                minZ = Math.Min(minZ, pz - halfL);
-                maxZ = Math.Max(maxZ, pz + halfL);
+                minZ = Math.Min(minZ, pz - halfZ);
+                maxZ = Math.Max(maxZ, pz + halfZ);
             }
 
             TunnelVector3 center = new TunnelVector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);

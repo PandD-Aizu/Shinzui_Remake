@@ -17,6 +17,8 @@ namespace Shinzui.Application.DTOs.Tunnel
         public float SmallRoomLength { get; init; } = 6.0f;
 
         public float TunnelLength { get; init; } = 153.12695f;
+        public float MinTunnelLength { get; init; } = 153.12695f;
+        public float MaxTunnelLength { get; init; } = 153.12695f;
         public float ConnectionPointSpacing { get; init; } = 51.042316f;
         public float TunnelWidth { get; init; } = 14.800003f;
         public float TunnelHeight { get; init; } = 5.0f;
@@ -30,6 +32,14 @@ namespace Shinzui.Application.DTOs.Tunnel
 
         public TunnelGenerationConfig ToDomainConfig()
         {
+            float minTunnelLength = MinTunnelLength;
+            float maxTunnelLength = MaxTunnelLength;
+            if (MinTunnelLength == 153.12695f && MaxTunnelLength == 153.12695f && TunnelLength != 153.12695f)
+            {
+                minTunnelLength = TunnelLength;
+                maxTunnelLength = TunnelLength;
+            }
+
             return new TunnelGenerationConfig(
                 TunnelCount,
                 Seed,
@@ -38,6 +48,8 @@ namespace Shinzui.Application.DTOs.Tunnel
                 SmallRoomWidth,
                 SmallRoomLength,
                 TunnelLength,
+                minTunnelLength,
+                maxTunnelLength,
                 ConnectionPointSpacing,
                 TunnelWidth,
                 TunnelHeight,

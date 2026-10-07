@@ -93,6 +93,9 @@ namespace Shinzui.Application.UseCases.Tunnel
                     PositionX = tunnel.Position.X,
                     PositionY = tunnel.Position.Y,
                     PositionZ = tunnel.Position.Z,
+                    DirX = tunnel.Forward.X,
+                    DirZ = tunnel.Forward.Y,
+                    Length = tunnel.Length,
                     IsSpecial = tunnel.IsSpecial,
                     EntranceMarkers = markerDtos,
                     OpenEntrances = tunnel.OpenEntrances
@@ -117,7 +120,10 @@ namespace Shinzui.Application.UseCases.Tunnel
                     DirX = corridor.Direction.X,
                     DirY = corridor.Direction.Y,
                     DirZ = corridor.Direction.Z,
-                    Length = corridor.Length
+                    Length = corridor.Length,
+                    OpenEnd = corridor.OpenEnd,
+                    OpenLeft = corridor.OpenLeft,
+                    OpenRight = corridor.OpenRight
                 });
             }
 

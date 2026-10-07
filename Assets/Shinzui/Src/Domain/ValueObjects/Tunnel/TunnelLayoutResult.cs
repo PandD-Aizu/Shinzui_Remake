@@ -10,6 +10,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         public int Id { get; }
         public string Name { get; }
         public TunnelVector3 Position { get; }
+        public TunnelVector2 Forward { get; }
+        public float Length { get; }
         public bool IsSpecial { get; set; }
         public IReadOnlyList<TunnelEntranceMarkerLayout> EntranceMarkers { get; }
         public IReadOnlyList<bool> OpenEntrances { get; }
@@ -18,6 +20,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             int id,
             string name,
             TunnelVector3 position,
+            TunnelVector2 forward,
+            float length,
             bool isSpecial,
             IReadOnlyList<TunnelEntranceMarkerLayout> entranceMarkers,
             IReadOnlyList<bool> openEntrances = null)
@@ -25,6 +29,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             Id = id;
             Name = name;
             Position = position;
+            Forward = forward;
+            Length = length;
             IsSpecial = isSpecial;
             EntranceMarkers = entranceMarkers;
             OpenEntrances = openEntrances;
@@ -63,14 +69,32 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         public TunnelVector3 Center { get; }
         public TunnelVector3 Direction { get; }
         public float Length { get; }
+        public bool OpenEnd { get; }
+        public bool OpenLeft { get; }
+        public bool OpenRight { get; }
 
+        /// <summary>
+        /// 通路区間の寸法と接続端と開口部を保持する
+        /// </summary>
+        /// <param name="connectionIndex">接続の識別番号</param>
+        /// <param name="startPort">入口の位置</param>
+        /// <param name="endPort">出口の位置</param>
+        /// <param name="center">区間の中心</param>
+        /// <param name="direction">区間の前方向</param>
+        /// <param name="length">区間の長さ</param>
+        /// <param name="openEnd">前方を開けるか</param>
+        /// <param name="openLeft">左側を開けるか</param>
+        /// <param name="openRight">右側を開けるか</param>
         public NormalCorridorLayout(
             int connectionIndex,
             TunnelVector3 startPort,
             TunnelVector3 endPort,
             TunnelVector3 center,
             TunnelVector3 direction,
-            float length)
+            float length,
+            bool openEnd = true,
+            bool openLeft = false,
+            bool openRight = false)
         {
             ConnectionIndex = connectionIndex;
             StartPort = startPort;
@@ -78,6 +102,9 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             Center = center;
             Direction = direction;
             Length = length;
+            OpenEnd = openEnd;
+            OpenLeft = openLeft;
+            OpenRight = openRight;
         }
     }
 

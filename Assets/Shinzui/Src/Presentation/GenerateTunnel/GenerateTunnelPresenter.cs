@@ -51,6 +51,8 @@ namespace Shinzui.Presentation.GenerateTunnel
             float cWidth = request.CorridorWidth;
 
             _mapView.ResolveTemplateDimensions(ref tLen, ref tWidth, ref tHeight, ref cLen, ref cWidth);
+            float minTunnelLength = Mathf.Approximately(request.MinTunnelLength, request.TunnelLength) ? tLen : request.MinTunnelLength;
+            float maxTunnelLength = Mathf.Approximately(request.MaxTunnelLength, request.TunnelLength) ? tLen : request.MaxTunnelLength;
 
             var adjustedRequest = new TunnelGenerationRequestDto
             {
@@ -61,6 +63,8 @@ namespace Shinzui.Presentation.GenerateTunnel
                 SmallRoomWidth = request.SmallRoomWidth,
                 SmallRoomLength = request.SmallRoomLength,
                 TunnelLength = tLen,
+                MinTunnelLength = minTunnelLength,
+                MaxTunnelLength = maxTunnelLength,
                 ConnectionPointSpacing = _mapView.ResolveConnectionPointSpacing(request.ConnectionPointSpacing),
                 TunnelWidth = tWidth,
                 TunnelHeight = tHeight,
@@ -99,12 +103,15 @@ namespace Shinzui.Presentation.GenerateTunnel
             foreach (TunnelNodeDto tunnel in mapDto.Tunnels)
             {
                 Vector3 pos = new Vector3(tunnel.PositionX, tunnel.PositionY, tunnel.PositionZ);
+                Vector3 forward = new Vector3(tunnel.DirX, 0.0f, tunnel.DirZ);
                 Transform tunnelRoot = _mapView.CreateTunnelNode(
                     pos,
+                    forward,
                     tunnel.Name,
                     tunnel.IsSpecial,
                     mapDto.Dimensions.TunnelWidth,
                     mapDto.Dimensions.TunnelHeight,
+                    tunnel.Length,
                     mapDto.Dimensions.TunnelLength,
                     tunnel.OpenEntrances);
 
@@ -134,7 +141,10 @@ namespace Shinzui.Presentation.GenerateTunnel
                     corridor.ConnectionIndex,
                     mapDto.Dimensions.CorridorWidth,
                     mapDto.Dimensions.TunnelHeight,
-                    mapDto.Dimensions.CorridorLength);
+                    mapDto.Dimensions.CorridorLength,
+                    corridor.OpenEnd,
+                    corridor.OpenLeft,
+                    corridor.OpenRight);
             }
 
             // 3. 小部屋接続の生成

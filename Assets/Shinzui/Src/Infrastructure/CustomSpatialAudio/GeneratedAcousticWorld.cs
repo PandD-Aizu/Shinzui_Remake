@@ -28,7 +28,7 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
             var cells = new List<PortalAcousticRoom>();
             var d = map.Dimensions;
             foreach (var node in map.Tunnels)
-                AddBox(cells, node.PositionX, node.PositionY, node.PositionZ, d.TunnelWidth, d.TunnelHeight, d.TunnelLength);
+                AddPassage(cells, node.PositionX, node.PositionY, node.PositionZ, node.DirX, node.DirZ, d.TunnelWidth, d.TunnelHeight, node.Length);
             foreach (var c in map.NormalCorridors)
                 AddPassage(cells, c.CenterX, c.CenterY, c.CenterZ, c.DirX, c.DirZ, d.CorridorWidth, d.TunnelHeight, c.Length);
             foreach (var r in map.SmallRooms)

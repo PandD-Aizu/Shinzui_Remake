@@ -10,11 +10,25 @@ namespace Shinzui.Tests.CustomSpatialAudio
 {
     public sealed class GeneratedAcousticWorldTests
     {
+        /// <summary>
+        /// 生成された直線とL字通路が重ならず全体で接続していることを確認する
+        /// </summary>
+        /// <param name="seed">生成に使用するシード値</param>
+        /// <param name="minTunnelLength">トンネル長の最小値</param>
+        /// <param name="maxTunnelLength">トンネル長の最大値</param>
         [TestCase(2777)] [TestCase(42)] [TestCase(1234)] [TestCase(1)] [TestCase(999)]
-        public void ProductionDimensionsProduceConnectedNonoverlappingCells(int seed)
+        [TestCase(2777, 90.0f, 150.0f)]
+        public void ProductionDimensionsProduceConnectedNonoverlappingCells(
+            int seed, float minTunnelLength = 153.12695f, float maxTunnelLength = 153.12695f)
         {
             var useCase = new GenerateTunnelUseCase(null);
-            Assert.That(useCase.GenerateOnce(new TunnelGenerationRequestDto { Seed = seed, TunnelCount = 8 }, out var map));
+            Assert.That(useCase.GenerateOnce(new TunnelGenerationRequestDto
+            {
+                Seed = seed,
+                TunnelCount = 8,
+                MinTunnelLength = minTunnelLength,
+                MaxTunnelLength = maxTunnelLength
+            }, out var map));
             var world = new GeneratedAcousticWorld(map);
             Assert.That(world.Graph.RoomCount, Is.GreaterThan(map.Tunnels.Count));
             Assert.That(world.Graph.PortalCount, Is.GreaterThan(0));
@@ -23,10 +37,41 @@ namespace Shinzui.Tests.CustomSpatialAudio
                 int i = world.FindRoom(new AcousticVector3(c.CenterX, c.CenterY + 1, c.CenterZ));
                 Assert.That(i, Is.GreaterThanOrEqualTo(0));
                 int edges = 0;
+                var connectedFaces = new HashSet<int>();
+                var bounds = world.Graph.GetRoom(i).Bounds;
                 for (int p = 0; p < world.Graph.PortalCount; p++)
-                    if (world.Graph.GetPortal(p).RoomAId == i || world.Graph.GetPortal(p).RoomBId == i) edges++;
-                Assert.That(edges, Is.EqualTo(2), "A normal corridor must join both physical tunnel mouths, seed " + seed);
+                {
+                    var portal = world.Graph.GetPortal(p);
+                    if (portal.RoomAId != i && portal.RoomBId != i) continue;
+                    edges++;
+                    connectedFaces.Add(portal.Centre.X == bounds.Min.X ? 0 :
+                        portal.Centre.X == bounds.Max.X ? 1 : portal.Centre.Z == bounds.Min.Z ? 2 : 3);
+                }
+
+                // 接続先セルの分割境界をまたぐ開口部でも、接続する面は二つに限られる
+                Assert.That(edges, Is.GreaterThanOrEqualTo(2), "A normal corridor must join both physical ends, seed " + seed);
+                Assert.That(connectedFaces.Count, Is.EqualTo(2), "A normal corridor must have two open faces, seed " + seed);
             }
+
+            // 開始地点の音響セルから通常接続だけで全セルへ到達できることを確認する
+            int startRoom = world.FindRoom(new AcousticVector3(0, 1, 0));
+            Assert.That(startRoom, Is.GreaterThanOrEqualTo(0));
+            var visited = new HashSet<int> { startRoom };
+            var pending = new Queue<int>();
+            pending.Enqueue(startRoom);
+            while (pending.Count > 0)
+            {
+                int current = pending.Dequeue();
+                for (int p = 0; p < world.Graph.PortalCount; p++)
+                {
+                    var portal = world.Graph.GetPortal(p);
+                    int next = portal.RoomAId == current ? portal.RoomBId :
+                        portal.RoomBId == current ? portal.RoomAId : -1;
+                    if (next >= 0 && visited.Add(next)) pending.Enqueue(next);
+                }
+            }
+
+            Assert.That(visited.Count, Is.EqualTo(world.Graph.RoomCount), "Every generated cell must have a physical connection, seed " + seed);
         }
 
         internal static TunnelMapDto TwoRooms() => new TunnelMapDto

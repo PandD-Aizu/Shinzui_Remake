@@ -18,6 +18,8 @@ namespace Shinzui.DI.GenerateTunnel
                     SmallRoomWidth = tunnelGenerator.SmallRoomWidth,
                     SmallRoomLength = tunnelGenerator.SmallRoomLength,
                     TunnelLength = tunnelGenerator.TunnelLength,
+                    MinTunnelLength = tunnelGenerator.MinTunnelLength,
+                    MaxTunnelLength = tunnelGenerator.MaxTunnelLength,
                     ConnectionPointSpacing = tunnelGenerator.ConnectionPointSpacing,
                     TunnelWidth = tunnelGenerator.TunnelWidth,
                     TunnelHeight = tunnelGenerator.TunnelHeight,
