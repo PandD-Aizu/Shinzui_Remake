@@ -99,6 +99,9 @@ namespace Shinzui.Editor
             }
         }
 
+        /// <summary>
+        /// 再生中の設定と同期する編集項目を描画する
+        /// </summary>
         private void DrawLiveUseCaseGui()
         {
             EditorGUI.BeginChangeCheck();
@@ -115,6 +118,7 @@ namespace Shinzui.Editor
 
             // グラフィックス
             float brightness = EditorGUILayout.Slider("Brightness", _activeUseCase.Brightness.Value, 0f, 1f);
+            var graphicsQuality = (GraphicsQualityPreset)EditorGUILayout.EnumPopup("Graphics Quality", (GraphicsQualityPreset)_activeUseCase.GraphicsQuality.Value);
 
             // アクセシビリティ
             bool centerDot = EditorGUILayout.Toggle("Show Center Dot", _activeUseCase.ShowCenterDot.Value);
@@ -128,6 +132,7 @@ namespace Shinzui.Editor
                 _activeUseCase.ControllerNormalSpeed.Value = ctrlSpeed;
                 _activeUseCase.MouseNormalSensitivity.Value = mouseSens;
                 _activeUseCase.Brightness.Value = brightness;
+                _activeUseCase.GraphicsQuality.Value = (int)graphicsQuality;
                 _activeUseCase.ShowCenterDot.Value = centerDot;
             }
 
@@ -152,6 +157,9 @@ namespace Shinzui.Editor
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// 保存ファイルへ反映する編集項目を描画する
+        /// </summary>
         private void DrawFileDirectGui()
         {
             EditorGUI.BeginChangeCheck();
@@ -168,6 +176,11 @@ namespace Shinzui.Editor
 
             // グラフィックス
             _editSettings.Graphics.BrightnessValue = EditorGUILayout.Slider("Brightness", _editSettings.Graphics.BrightnessValue, 0f, 1f);
+            var graphicsQuality = (GraphicsQualityPreset)EditorGUILayout.EnumPopup("Graphics Quality", _editSettings.Graphics.QualityPreset);
+            if (graphicsQuality != _editSettings.Graphics.QualityPreset)
+            {
+                _editSettings.Graphics.SetQualityPreset(graphicsQuality);
+            }
 
             // アクセシビリティ
             _editSettings.Accessibility.ShowCenterDot = EditorGUILayout.Toggle("Show Center Dot", _editSettings.Accessibility.ShowCenterDot);

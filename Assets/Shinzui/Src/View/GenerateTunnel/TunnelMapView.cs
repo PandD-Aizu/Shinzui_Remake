@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Shinzui.View.Rendering;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
@@ -60,18 +62,21 @@ namespace Shinzui.View.GenerateTunnel
         [Header("Ceiling Light Shadows")]
         [SerializeField, Min(0f)] private float ceilingShadowDistance = 15f;
         [SerializeField, Range(0, 16)] private int maxCeilingShadowLights = 8;
-        private readonly List<(Light light, LightShadows shadows, float strength)> _ceilingLights = new();
-        private readonly int[] _nearestShadowLights = new int[16];
-        private readonly float[] _nearestShadowDistances = new float[16];
+        private readonly List<(Light light, LightShadows shadows, float strength, float intensity,
+            UniversalAdditionalLightData data, int shadowTier)> _ceilingLights = new();
+        private readonly int[] _nearestShadowLights = new int[64];
+        private readonly float[] _nearestShadowDistances = new float[64];
 
         /// <summary>
-        /// カメラに近い蛍光灯だけ影を描画し、照明自体は遠方でも維持する
+        /// 画質ごとの距離と灯数に応じて蛍光灯の影を描画する
         /// </summary>
         private void LateUpdate()
         {
             Camera camera = Camera.main;
-            int budget = camera != null ? Mathf.Clamp(maxCeilingShadowLights, 0, 16) : 0;
-            float distanceLimit = Mathf.Max(0f, ceilingShadowDistance);
+            bool ultra = UltraEnvironmentQuality.IsActive;
+            float lightIntensityMultiplier = UltraEnvironmentQuality.CeilingLightIntensityMultiplier;
+            int budget = camera != null ? (ultra ? 64 : Mathf.Clamp(maxCeilingShadowLights, 0, 16)) : 0;
+            float distanceLimit = ultra ? 100f : Mathf.Max(0f, ceilingShadowDistance);
             Vector3 cameraPosition = camera != null ? camera.transform.position : Vector3.zero;
             for (int i = 0; i < budget; i++)
             {
@@ -83,9 +88,18 @@ namespace Shinzui.View.GenerateTunnel
             for (int i = 0; i < _ceilingLights.Count; i++)
             {
                 var entry = _ceilingLights[i];
-                if (entry.light == null || !entry.light.isActiveAndEnabled) continue;
+                if (entry.light == null) continue;
+
+                // 生成した蛍光灯と天井反射光だけを調整し、消灯状態は維持する
+                entry.light.intensity = entry.intensity * lightIntensityMultiplier;
+                if (!entry.light.isActiveAndEnabled) continue;
                 entry.light.shadows = LightShadows.None;
                 if (entry.shadows == LightShadows.None) continue;
+
+                // ULTRAでは遠方の蛍光灯にも高解像度の影を割り当てる
+                if (entry.data != null && UnityEngine.Application.isPlaying)
+                    entry.data.additionalLightsShadowResolutionTier = ultra
+                        ? UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierHigh : entry.shadowTier;
 
                 float distance = (entry.light.transform.position - cameraPosition).sqrMagnitude;
                 for (int slot = 0; slot < budget; slot++)
@@ -103,20 +117,20 @@ namespace Shinzui.View.GenerateTunnel
                 }
             }
 
-            // 距離上限の手前で影を薄くして切り替えを目立ちにくくする
+            // ULTRAは影の強さを維持し、他の画質では距離上限の手前で薄くする
             for (int slot = 0; slot < budget; slot++)
             {
                 int index = _nearestShadowLights[slot];
                 if (index < 0) break;
                 var entry = _ceilingLights[index];
                 entry.light.shadows = entry.shadows;
-                entry.light.shadowStrength = entry.strength * (1f - Mathf.InverseLerp(
+                entry.light.shadowStrength = ultra ? entry.strength : entry.strength * (1f - Mathf.InverseLerp(
                     distanceLimit * 0.75f, distanceLimit, Mathf.Sqrt(_nearestShadowDistances[slot])));
             }
         }
 
         /// <summary>
-        /// 管理を停止するときに蛍光灯の元の影設定を復元する
+        /// 管理を停止するときに蛍光灯の元の光量と影設定を復元する
         /// </summary>
         private void OnDisable()
         {
@@ -125,6 +139,9 @@ namespace Shinzui.View.GenerateTunnel
                 if (entry.light == null) continue;
                 entry.light.shadows = entry.shadows;
                 entry.light.shadowStrength = entry.strength;
+                entry.light.intensity = entry.intensity;
+                if (entry.data != null && UnityEngine.Application.isPlaying)
+                    entry.data.additionalLightsShadowResolutionTier = entry.shadowTier;
             }
         }
 
@@ -725,7 +742,9 @@ namespace Shinzui.View.GenerateTunnel
                 // 生成した蛍光灯のみを影予算の対象にし、懐中電灯は変更しない
                 foreach (Light source in light.GetComponentsInChildren<Light>(true))
                 {
-                    _ceilingLights.Add((source, source.shadows, source.shadowStrength));
+                    var data = source.GetComponent<UniversalAdditionalLightData>();
+                    _ceilingLights.Add((source, source.shadows, source.shadowStrength, source.intensity, data,
+                        data != null ? data.additionalLightsShadowResolutionTier : 0));
                     source.shadows = LightShadows.None;
                 }
             }

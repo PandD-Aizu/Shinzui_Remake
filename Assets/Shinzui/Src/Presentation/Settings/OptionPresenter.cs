@@ -150,6 +150,9 @@ namespace Shinzui.Presentation.Settings
             }
         }
 
+        /// <summary>
+        /// 設定値と画面の入力を双方向に接続する
+        /// </summary>
         private void BindUi()
         {
             // --- UseCase -> View のバインディング (UseCaseのプロパティ値が変わったらUIへ反映する) ---
@@ -162,6 +165,18 @@ namespace Shinzui.Presentation.Settings
             _useCase.MouseNormalSensitivity.Subscribe(val => _view.MouseSensitivitySlider.value = val).AddTo(_disposables);
 
             _useCase.Brightness.Subscribe(val => _view.BrightnessSlider.value = val).AddTo(_disposables);
+
+            // PC版では既存のグラフィックス画面へ品質プリセットの選択を追加
+            if (!_useCase.IsConsolePlatform())
+            {
+                _view.EnsureGraphicsQualitySelector();
+                if (_view.GraphicsQualitySlider != null)
+                {
+                    _useCase.GraphicsQuality.Subscribe(_view.SetGraphicsQuality).AddTo(_disposables);
+                    OnSliderValueChanged(_view.GraphicsQualitySlider)
+                        .Subscribe(val => _useCase.GraphicsQuality.Value = Mathf.RoundToInt(val)).AddTo(_disposables);
+                }
+            }
 
             _useCase.ShowCenterDot.Subscribe(val => _view.CenterDotToggle.isOn = val).AddTo(_disposables);
 

@@ -1,0 +1,241 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-5841903638586397886
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d69a19d29ef66464ea0afc7cd84fd6c2, type: 3}
+  m_Name: VolumetricFogRendererFeature
+  m_EditorClassIdentifier: com.cqf.urpvolumetricfog.runtime::VolumetricFogRendererFeature
+  m_Active: 1
+  downsampleDepthShader: {fileID: 4800000, guid: cffeaeec0396a2c4dad475266cc8dfeb, type: 3}
+  volumetricFogShader: {fileID: 4800000, guid: 08f816187f9af0244a95556ee0cab83f, type: 3}
+--- !u!114 &-3261005941647117757
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4e8136761c945fa9d23731aa0600ede, type: 3}
+  m_Name: ExposureRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Exposure.ExposureRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 682befa5b27f45a39ca5ba5fd80e82b2, type: 3}
+    computeShader: {fileID: 7200000, guid: 6b054d4d2f7b4e08b2deb59148ce89c5, type: 3}
+    injectionPoint: 550
+--- !u!114 &-2416843845793650869
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45ff8ebd27ebc5b4c847c40916d3a427, type: 3}
+  m_Name: ScanlineRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Scanline.ScanlineRendererFeature
+  m_Active: 0
+  settings:
+    shader: {fileID: 4800000, guid: ec3002505b331a8489ffef298ac9c0f2, type: 3}
+    injectionPoint: 600
+--- !u!114 &-1538220207743190309
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
+  m_Name: SSAO
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion
+  m_Active: 1
+  m_Settings:
+    AOMethod: 0
+    Downsample: 0
+    AfterOpaque: 0
+    Source: 1
+    NormalSamples: 1
+    Intensity: 1.1
+    DirectLightingStrength: 0.1
+    Radius: 0.3
+    Samples: 0
+    BlurQuality: 0
+    Falloff: 100
+    SampleCount: -1
+--- !u!114 &-811768065182550585
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e32e72b6a3f58a24c9033e2b9275eea0, type: 3}
+  m_Name: ScreenSpaceShadows
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ScreenSpaceShadows
+  m_Active: 1
+  m_Shader: {fileID: 4800000, guid: 0f854b35a0cf61a429bd5dcfea30eddd, type: 3}
+--- !u!114 &-636569812922321553
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b00045f12942b46c698459096c89274e, type: 3}
+  m_Name: HorrorDetection
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.FullScreenPassRendererFeature
+  m_Active: 1
+  injectionPoint: 600
+  fetchColorBuffer: 1
+  requirements: 0
+  passMaterial: {fileID: 2100000, guid: 99f6e6b04bbde60489b5b9a73f44f46f, type: 2}
+  passIndex: 0
+  bindDepthStencilAttachment: 0
+  m_Version: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de640fe3d0db1804a85f9fc8f5cadab6, type: 3}
+  m_Name: QualityUltra_Renderer
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalRendererData
+  debugShaders:
+    debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
+    hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+    probeVolumeSamplingDebugComputeShader: {fileID: 7200000, guid: 53626a513ea68ce47b59dc1299fe3959, type: 3}
+  probeVolumeResources:
+    probeVolumeDebugShader: {fileID: 0}
+    probeVolumeFragmentationDebugShader: {fileID: 0}
+    probeVolumeOffsetDebugShader: {fileID: 0}
+    probeVolumeSamplingDebugShader: {fileID: 0}
+    probeSamplingDebugMesh: {fileID: 0}
+    probeSamplingDebugTexture: {fileID: 0}
+    probeVolumeBlendStatesCS: {fileID: 0}
+  m_RendererFeatures:
+  - {fileID: -5841903638586397886}
+  - {fileID: -1538220207743190309}
+  - {fileID: -811768065182550585}
+  - {fileID: 6265200972613448145}
+  - {fileID: 6817841505760810079}
+  - {fileID: -2416843845793650869}
+  - {fileID: -3261005941647117757}
+  - {fileID: -636569812922321553}
+  - {fileID: 7228978494421125303}
+  - {fileID: 5452526740319256532}
+  m_RendererFeatureMap: 42ebfea99763edaed1710e131777f2565f94c91dbad69d5e4b67e1c553a575de4372afa55f94bed2954710d6ddd139c36f3507ba20732af7b7c8e8d0a37d5264
+  xrSystemData: {fileID: 0}
+  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
+  m_AssetVersion: 3
+  m_PrepassLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_OpaqueLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_TransparentLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_DefaultStencilState:
+    overrideStencilState: 0
+    stencilReference: 0
+    stencilCompareFunction: 8
+    passOperation: 2
+    failOperation: 0
+    zFailOperation: 0
+  m_ShadowTransparentReceive: 1
+  m_RenderingMode: 3
+  m_DepthPrimingMode: 0
+  m_CopyDepthMode: 1
+  m_DepthAttachmentFormat: 0
+  m_DepthTextureFormat: 0
+  m_AccurateGbufferNormals: 1
+  m_IntermediateTextureMode: 1
+  m_TileOnlyMode: 0
+--- !u!114 &5452526740319256532
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8826dbbd2f20a84180629a9ae196e22, type: 3}
+  m_Name: ScreenSpaceGlobalIlluminationULTRA
+  m_EditorClassIdentifier: SSGIURP::ScreenSpaceGlobalIlluminationURP
+  m_Active: 1
+  m_Shader: {fileID: 4800000, guid: 052b080a79c052c4993acc96081d70b1, type: 3}
+  m_RenderingDebugger: 0
+  m_ReflectionProbes: 0
+  m_HighQualityUpscaling: 1
+  m_OverrideAmbientLighting: 1
+  m_BackfaceLighting: 0
+--- !u!114 &6265200972613448145
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd58cc6524b477082406482ea2a80fc, type: 3}
+  m_Name: PixelationRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.PixelationRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 3bfe149ecae3460b9db0b5fa27af19a4, type: 3}
+    injectionPoint: 601
+--- !u!114 &6817841505760810079
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a26339558a59437c9d99a06b1a8815eb, type: 3}
+  m_Name: InverseScanlineRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.InverseScanLine.InverseScanlineRendererFeature
+  m_Active: 0
+  settings:
+    shader: {fileID: 4800000, guid: ec4e22da188d4bf796f6e6a12cf7ca72, type: 3}
+    injectionPoint: 600
+--- !u!114 &7228978494421125303
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d35a2f8e274a1d8ae9623be143d248, type: 3}
+  m_Name: GameOverDissolveRendererFeature
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.GameOverDissolve.GameOverDissolveRendererFeature
+  m_Active: 1
+  settings:
+    shader: {fileID: 4800000, guid: 52b927b00b1446369a65b5eb00e74c3d, type: 3}
+    injectionPoint: 600

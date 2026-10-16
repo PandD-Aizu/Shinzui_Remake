@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -39,6 +40,8 @@ namespace Shinzui.View.Settings
 
         [Header("Graphics Settings UI")]
         [SerializeField] private Slider brightnessSlider;
+        [SerializeField] private Slider graphicsQualitySlider;
+        [SerializeField] private TMP_Text graphicsQualityLabel;
 
         [Header("Accessibility UI")]
         [SerializeField] private Toggle centerDotToggle;
@@ -64,10 +67,62 @@ namespace Shinzui.View.Settings
         public Slider MouseSensitivitySlider => mouseSensitivitySlider;
 
         public Slider BrightnessSlider => brightnessSlider;
+        public Slider GraphicsQualitySlider => graphicsQualitySlider;
 
         public Toggle CenterDotToggle => centerDotToggle;
 
+        /// <summary>
+        /// 既存の明るさ行の書式を利用して品質プリセットの選択行を用意する
+        /// </summary>
+        public void EnsureGraphicsQualitySelector()
+        {
+            if (graphicsQualitySlider != null || brightnessSlider == null || !EnsureCategoryPanelsInitialized()
+                || !_categoryPanelMap.TryGetValue("Graphics", out var graphicsPanel))
+            {
+                return;
+            }
 
+            // グラフィックスパネル直下の行のみ複製し他のカテゴリーを含めない
+            Transform brightnessRow = brightnessSlider.transform.parent;
+            if (brightnessRow == null || brightnessRow.parent != graphicsPanel.transform)
+            {
+                return;
+            }
+
+            var qualityRow = Instantiate(brightnessRow.gameObject, graphicsPanel.transform);
+            qualityRow.name = "Graphics Quality";
+            qualityRow.transform.SetSiblingIndex(brightnessRow.GetSiblingIndex());
+            graphicsQualitySlider = qualityRow.GetComponentInChildren<Slider>(true);
+            graphicsQualitySlider.onValueChanged = new Slider.SliderEvent();
+            graphicsQualitySlider.minValue = 0;
+            graphicsQualitySlider.maxValue = 3;
+            graphicsQualitySlider.wholeNumbers = true;
+            graphicsQualityLabel = qualityRow.GetComponentInChildren<TMP_Text>(true);
+            if (graphicsQualityLabel != null)
+            {
+                graphicsQualityLabel.enableAutoSizing = true;
+            }
+        }
+
+        /// <summary>
+        /// 品質選択の現在値とラベルをイベント再発火なしで更新する
+        /// </summary>
+        /// <param name="quality">品質番号 0: LOW、1: MEDIUM、2: HIGH、3: ULTRA</param>
+        public void SetGraphicsQuality(int quality)
+        {
+            if (graphicsQualitySlider == null)
+            {
+                return;
+            }
+
+            // スライダー操作中も選択中のプリセットを読めるラベルに保つ
+            graphicsQualitySlider.SetValueWithoutNotify(quality);
+            if (graphicsQualityLabel != null)
+            {
+                string name = quality switch { 0 => "LOW", 1 => "MEDIUM", 2 => "HIGH", _ => "ULTRA" };
+                graphicsQualityLabel.text = $"Graphics Quality: {name}";
+            }
+        }
 
         public void ShowCategoryPanel(string categoryId)
         {

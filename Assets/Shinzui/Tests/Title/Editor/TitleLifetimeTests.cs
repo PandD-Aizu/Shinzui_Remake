@@ -123,6 +123,41 @@ namespace Shinzui.Tests.Title
             Assert.That(_view.TitlePanel.activeSelf, Is.True);
         }
 
+        /// <summary>
+        /// 品質選択を保存して画面を開き直しても選択値とプリセットが維持される
+        /// </summary>
+        [Test]
+        public void GraphicsQualitySelectionPersistsAndCanReturnToUltra()
+        {
+            // 実際のタイトルと同じ明るさ行から品質選択行を生成
+            var panels = Child("Elements");
+            panels.transform.SetParent(_optionView.transform);
+            var graphics = Child("Graphics");
+            graphics.transform.SetParent(panels.transform);
+            var brightnessRow = Child("Brightness");
+            brightnessRow.transform.SetParent(graphics.transform);
+            _optionView.BrightnessSlider.transform.SetParent(brightnessRow.transform);
+            Set(_optionView, "categoryPanelParent", panels.GetComponent<RectTransform>());
+            Build();
+
+            // 初期ULTRAからLOWへ切り替えた内容を正式な設定へ保存
+            _view.OpenOptions();
+            Assert.That(_optionView.GraphicsQualitySlider, Is.Not.Null);
+            Assert.That(_optionView.GraphicsQualitySlider.value, Is.EqualTo(3));
+            _optionView.GraphicsQualitySlider.value = 0;
+            _view.CloseOptions();
+            Assert.That(_store.Value.Graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Low));
+
+            // 再表示後にULTRAへ戻した際のテクスチャとAAの品質も確認
+            _view.OpenOptions();
+            Assert.That(_optionView.GraphicsQualitySlider.value, Is.Zero);
+            _optionView.GraphicsQualitySlider.value = 3;
+            _view.CloseOptions();
+            Assert.That(_store.Value.Graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Ultra));
+            Assert.That(_store.Value.Graphics.TextureQuality, Is.EqualTo(3));
+            Assert.That(_store.Value.Graphics.AntiAliasingType, Is.EqualTo(3));
+        }
+
         [Test]
         public void RepeatedStartClicksIssueOnlyOneLoad()
         {
@@ -255,11 +290,13 @@ namespace Shinzui.Tests.Title
                 settings.Audio.SystemVolume = 0.37f;
                 settings.Camera.MouseNormalSensitivity = 74f;
                 settings.Graphics.BrightnessValue = 0.61f;
+                settings.Graphics.SetQualityPreset(GraphicsQualityPreset.High);
                 repository.Save(settings);
                 var reloaded = repository.Load();
                 Assert.That(reloaded.Audio.SystemVolume, Is.EqualTo(0.37f));
                 Assert.That(reloaded.Camera.MouseNormalSensitivity, Is.EqualTo(74f));
                 Assert.That(reloaded.Graphics.BrightnessValue, Is.EqualTo(0.61f));
+                Assert.That(reloaded.Graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.High));
             }
             finally { if (File.Exists(path)) File.Delete(path); }
         }
@@ -275,6 +312,7 @@ namespace Shinzui.Tests.Title
                 var settings = new FileSettingsRepository(path).Load();
                 Assert.That(settings.Audio.SystemVolume, Is.EqualTo(new GameSettings().Audio.SystemVolume));
                 Assert.That(settings.Camera, Is.Not.Null);
+                Assert.That(settings.Graphics.QualityPreset, Is.EqualTo(GraphicsQualityPreset.Ultra));
             }
             finally { if (File.Exists(path)) File.Delete(path); }
         }

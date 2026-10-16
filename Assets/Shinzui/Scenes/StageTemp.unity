@@ -5033,6 +5033,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 46571526944090451, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: groundLayers.m_Bits
+      value: 257
+      objectReference: {fileID: 0}
     - target: {fileID: 1333701309180838938, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
       propertyPath: m_Name
       value: SpiderDeity_AI
@@ -5051,15 +5055,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1914580099418210790, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -9.23037
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1914580099418210790, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1914580099418210790, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -12.89573
+      value: -13
       objectReference: {fileID: 0}
     - target: {fileID: 1914580099418210790, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5088,6 +5092,34 @@ PrefabInstance:
     - target: {fileID: 1914580099418210790, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2065184786409137437, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 119550617}
+    - target: {fileID: 2065184786409137437, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: fieldOfView
+      value: 360
+      objectReference: {fileID: 0}
+    - target: {fileID: 2065184786409137437, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: sampleRadius
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2065184786409137437, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: stopDistance
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2065184786409137437, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: memorySeconds
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 2065184786409137437, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: detectionDistance
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 9018787114054911840, guid: 765d509c654581b48a6dc01cf43e1691, type: 3}
+      propertyPath: groundLayers.m_Bits
+      value: 257
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Shinzui.View.Rendering;
 
 namespace Shinzui.View
 {
@@ -35,6 +36,8 @@ namespace Shinzui.View
         private VolumeProfile profile;
         private MotionBlur motionBlur;
         private DepthOfField depthOfField;
+        private bool originalMotionBlurActive;
+        private bool originalDepthOfFieldActive;
 
         private Vector3 lastPosition;
         private Quaternion lastRotation;
@@ -42,6 +45,9 @@ namespace Shinzui.View
         private float targetFocusDistance;
         private float raycastTimer;
 
+        /// <summary>
+        /// カメラと実行時Volumeを取得して自動ぼけの初期状態を記録する
+        /// </summary>
         private void Start()
         {
             if (targetVolume == null)
@@ -65,6 +71,9 @@ namespace Shinzui.View
                 {
                     depthOfField = profile.Add<DepthOfField>(true);
                 }
+
+                originalMotionBlurActive = motionBlur.active;
+                originalDepthOfFieldActive = depthOfField.active;
             }
 
             if (trackingCamera == null)
@@ -99,12 +108,15 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>
+        /// 自動被写界深度を使用する画質で注視距離を測定する
+        /// </summary>
         private void Update()
         {
             if (trackingCamera == null) return;
 
             // 被写界深度のフォーカス距離測定
-            if (enableDepthOfField && depthOfField != null)
+            if (enableDepthOfField && depthOfField != null && !UltraEnvironmentQuality.IsActive)
             {
                 raycastTimer += Time.deltaTime;
                 if (raycastTimer >= raycastInterval)
@@ -115,21 +127,29 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>
+        /// 画質に応じて自動ぼけを切り替え、カメラの移動へ追従させる
+        /// </summary>
         private void LateUpdate()
         {
+            // ULTRAではシーンVolumeの自動ぼけよりパイプラインの鮮明な画作りを優先する
+            bool ultra = UltraEnvironmentQuality.IsActive;
+            if (motionBlur != null) motionBlur.active = originalMotionBlurActive && !ultra;
+            if (depthOfField != null) depthOfField.active = originalDepthOfFieldActive && !ultra;
+
             if (trackingCamera == null) return;
 
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
 
             // モーションブラー強度の適用
-            if (enableMotionBlur && motionBlur != null)
+            if (enableMotionBlur && motionBlur != null && !ultra)
             {
                 UpdateDynamicMotionBlur(dt);
             }
 
             // 被写界深度フォーカス距離の適用
-            if (enableDepthOfField && depthOfField != null)
+            if (enableDepthOfField && depthOfField != null && !ultra)
             {
                 depthOfField.focusDistance.value = Mathf.Lerp(
                     depthOfField.focusDistance.value,
@@ -141,6 +161,15 @@ namespace Shinzui.View
             // 次フレーム追跡用のデータ更新
             lastPosition = trackingCamera.position;
             lastRotation = trackingCamera.rotation;
+        }
+
+        /// <summary>
+        /// コンポーネント停止時に品質によるぼけの抑制を解除する
+        /// </summary>
+        private void OnDisable()
+        {
+            if (motionBlur != null) motionBlur.active = originalMotionBlurActive;
+            if (depthOfField != null) depthOfField.active = originalDepthOfFieldActive;
         }
 
         private void UpdateDynamicMotionBlur(float dt)
