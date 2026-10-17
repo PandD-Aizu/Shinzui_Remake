@@ -46,7 +46,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         public double seconds, cpuMs, gpuMs, mainThreadMs, renderThreadMs, mainPresentWaitMs;
         public float wallMs;
         public ulong timingTimestamp;
-        public long gcAllocatedBytes, shaderCompileNs, presentWaitNs, portalAllocationNs, portalCacheBytes, audioTickNs, audioStartNs;
+        public long harnessNs, gcAllocatedBytes, shaderCompileNs, presentWaitNs, portalAllocationNs, portalCacheBytes, audioTickNs, audioStartNs;
     }
     private readonly List<object> _observations = new();
     private readonly List<object> _warps = new();
@@ -58,6 +58,9 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     private int _renderedFrames;
     private int _activePortalCameraCount;
     private bool _quitting;
+    private bool _minimalTelemetry;
+    private long _previousHarnessTicks;
+    private long _maximumHarnessTicks;
 
     /// <summary>Enable only in an explicitly requested development Player run</summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -87,6 +90,9 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         string label = Argument("--graphics-label", "player-normal-ultra");
         int seed = int.Parse(Argument("--graphics-gameplay-seed", "2777"));
         Directory.CreateDirectory(folder);
+        _minimalTelemetry = Environment.GetCommandLineArgs().Contains("--graphics-minimal-telemetry");
+        bool quietLogs = Environment.GetCommandLineArgs().Contains("--graphics-quiet-logs");
+        if (quietLogs) Debug.unityLogger.filterLogType = LogType.Error;
         UnityEngine.Application.logMessageReceived += ObserveLog;
         double sceneLoadStarted = Time.realtimeSinceStartupAsDouble;
         GenerateTunnelLifetimeScope.RuntimeSeedOverride = 2777;
@@ -148,12 +154,15 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             UnityEngine.Application.Quit(3);
             yield break;
         }
-        _gcAllocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
-        _shaderCompile = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shader.CompileGPUProgram");
-        _presentWait = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Gfx.WaitForPresentOnGfxThread");
-        _portalAllocation = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shinzui.PortalTextureAllocate");
-        _audioTick = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "Shinzui.SpatialAudioTick");
-        _audioStart = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "Shinzui.SpatialVoiceStart");
+        if (!_minimalTelemetry)
+        {
+            _gcAllocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+            _shaderCompile = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shader.CompileGPUProgram");
+            _presentWait = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Gfx.WaitForPresentOnGfxThread");
+            _portalAllocation = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shinzui.PortalTextureAllocate");
+            _audioTick = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "Shinzui.SpatialAudioTick");
+            _audioStart = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "Shinzui.SpatialVoiceStart");
+        }
         _started = Time.realtimeSinceStartupAsDouble;
         int lastRendered = 0;
         double nextObservation = 0;
@@ -163,6 +172,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         double duration = double.Parse(Argument("--graphics-duration", "45"), System.Globalization.CultureInfo.InvariantCulture);
         while (Time.realtimeSinceStartupAsDouble - _started < duration)
         {
+            long inputStarted = System.Diagnostics.Stopwatch.GetTimestamp();
             double elapsed = Time.realtimeSinceStartupAsDouble - _started;
             bool dead = _death.IsDead.CurrentValue;
             // Warm up normally, then walk down the tunnel off-center with brief ordinary sprints
@@ -173,21 +183,28 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             var state = new GamepadState { leftStick = movement, leftTrigger = elapsed >= 5 && elapsed % 10 < 3 ? 1 : 0 };
             if (elapsed >= 5 && elapsed < 5.1) state = state.WithButton(GamepadButton.North);
             InputSystem.QueueStateEvent(_gamepad, state);
+            long inputTicks = System.Diagnostics.Stopwatch.GetTimestamp() - inputStarted;
             yield return null;
-            FrameTimingManager.CaptureFrameTimings();
-            uint timings = FrameTimingManager.GetLatestTimings(1, _timing);
+            long sampleStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+            uint timings = 0;
+            if (!_minimalTelemetry)
+            {
+                FrameTimingManager.CaptureFrameTimings();
+                timings = FrameTimingManager.GetLatestTimings(1, _timing);
+            }
             Vector3 position = _player.transform.position;
             float step = Vector3.Distance(position, lastPosition);
             if (step < 5) distance += step;
             lastPosition = position;
             if (elapsed >= 5 && _renderedFrames > 120 && _renderedFrames != lastRendered && !dead)
                 _samples.Add(new FrameSample { frame = Time.frameCount, seconds = elapsed, wallMs = Time.unscaledDeltaTime * 1000,
+                    harnessNs = (long)(_previousHarnessTicks * (1e9 / System.Diagnostics.Stopwatch.Frequency)),
                     cpuMs = timings > 0 ? _timing[0].cpuFrameTime : 0, gpuMs = timings > 0 ? _timing[0].gpuFrameTime : 0,
                     mainThreadMs = timings > 0 ? _timing[0].cpuMainThreadFrameTime : 0,
                     renderThreadMs = timings > 0 ? _timing[0].cpuRenderThreadFrameTime : 0,
                     mainPresentWaitMs = timings > 0 ? _timing[0].cpuMainThreadPresentWaitTime : 0,
                     timingTimestamp = timings > 0 ? _timing[0].frameStartTimestamp : 0,
-                    gcCollections = GC.CollectionCount(0), portalTargetChanges = CountPortalTargetChanges(),
+                    gcCollections = GC.CollectionCount(0), portalTargetChanges = _minimalTelemetry ? -1 : CountPortalTargetChanges(),
                     activePortalCameras = _activePortalCameraCount, portalAllocations = PortalRenderTextureCache.Allocations, portalCacheHits = PortalRenderTextureCache.Hits,
                     portalCacheBytes = PortalRenderTextureCache.RetainedBytes,
                     audioTickNs = _audioTick.Valid ? _audioTick.LastValue : -1, audioStartNs = _audioStart.Valid ? _audioStart.LastValue : -1,
@@ -201,6 +218,8 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
                 Observe(elapsed);
                 nextObservation = elapsed + 1;
             }
+            _previousHarnessTicks = inputTicks + System.Diagnostics.Stopwatch.GetTimestamp() - sampleStarted;
+            _maximumHarnessTicks = Math.Max(_maximumHarnessTicks, _previousHarnessTicks);
             if (dead) { wasDead = true; break; }
         }
         InputSystem.QueueStateEvent(_gamepad, new GamepadState());
@@ -220,6 +239,9 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             pipelineRT = (RenderPipelineManager.currentPipeline as HDRenderPipeline)?.rayTracingSupported,
             rtFrame = hd.frameSettings.IsEnabled(FrameSettingsField.RayTracing), capability = HdrpGraphicsRuntime.CapabilityReport(),
             portalNearPlaneCull = TunnelGateView.HdrpNearPlaneCullEnabled, portalTargetCache = TunnelGateView.HdrpTargetCacheEnabled, portalCropQuantum = TunnelGateView.HdrpCropQuantum,
+            minimalTelemetry = _minimalTelemetry, quietLogs,
+            maximumHarnessMs = _maximumHarnessTicks * (1000.0 / System.Diagnostics.Stopwatch.Frequency),
+            actualVSync = QualitySettings.vSyncCount, actualFrameCap = UnityEngine.Application.targetFrameRate,
             profilerCounters = new { gcAllocated = _gcAllocated.Valid, shaderCompile = _shaderCompile.Valid, presentWait = _presentWait.Valid, portalAllocation = _portalAllocation.Valid, audioTick = _audioTick.Valid, audioStart = _audioStart.Valid },
             renderedFrames = _renderedFrames, validRenderWorkload = _renderedFrames > 120 && _samples.Count >= 300,
             durationSeconds = Time.realtimeSinceStartupAsDouble - _started, warmupSeconds = 5, wasDead, walkedDistanceMetres = distance,
@@ -239,6 +261,12 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     private void Observe(double elapsed)
     {
         if (!VolumeManager.instance.isInitialized || _renderedFrames == 0) return;
+        if (_minimalTelemetry)
+        {
+            _observations.Add(new { seconds = elapsed, position = _player.transform.position.ToString("F3"),
+                velocity = _player.CurrentVelocity.magnitude, dead = _death.IsDead.CurrentValue });
+            return;
+        }
         var hd = HDCamera.GetOrCreate(_camera);
         var dof = hd.volumeStack.GetComponent<DepthOfField>();
         var enemies = FindObjectsByType<EnemyView>();
