@@ -1,6 +1,8 @@
+using Shinzui.Application.Interfaces;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
+using TMPro;
 
 namespace Shinzui.Infrastructure.SaveSystem
 {
@@ -14,14 +16,20 @@ namespace Shinzui.Infrastructure.SaveSystem
         [SerializeField] private Button saveButton;
         [SerializeField] private Button loadButton;
         [SerializeField] private Button backButton;
+        [SerializeField] private TextMeshProUGUI saveText;
         //[SerializeField] private List<Button> saveSlots;
+        
         private SaveManager _saveManager;
+        private IInputService _inputService;
         
         [Inject]
-        public void Construct(SaveManager saveManager)
+        public void Construct(
+            SaveManager saveManager,
+            IInputService inputService)
         {
             Debug.Log("SaveController: Construct");
             _saveManager = saveManager;
+            _inputService = inputService;
             
             saveSlotSelectPanel.SetActive(false);
             saveCheckPanel.SetActive(false);
@@ -35,41 +43,28 @@ namespace Shinzui.Infrastructure.SaveSystem
             // バックボタンを押すとセーブ画面を閉じる
             backButton.onClick
                 .AddListener(() => ChangeSavePanelActive(false));
+
+            saveText.text = "持ち物を確認しておかないと";
         }
 
         public void ChangeSavePanelActive(bool active)
         {
             saveSlotSelectPanel.SetActive(active);
-            ApplyCursorLock(!active);
-        }
-        
-        /// <summary>
-        /// lockCursor = trueのときカーソルを非表示にし、画面中央に固定する
-        /// </summary>
-        private void ApplyCursorLock(bool lockCursor)
-        {
-            if (lockCursor)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
-            else
-            {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            }
+            _inputService.SetBlocked(active);
         }
         
         public void SaveButton(int index)
         {
             if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
             _saveManager.Save(index);
+            saveText.text = "持ち物を記憶した";
         }
 
         public void LoadButton(int index)
         {
             if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
             _saveManager.Load(index);
+            saveText.text = "持ち物を思い出した";
         }
     }
 }

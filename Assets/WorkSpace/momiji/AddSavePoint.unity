@@ -3429,6 +3429,7 @@ MonoBehaviour:
   saveButton: {fileID: 776668146}
   loadButton: {fileID: 364791824}
   backButton: {fileID: 584003167}
+  saveText: {fileID: 1416311915}
 --- !u!1 &690180210
 GameObject:
   m_ObjectHideFlags: 0
@@ -5911,7 +5912,7 @@ GameObject:
   - component: {fileID: 1416311916}
   - component: {fileID: 1416311915}
   m_Layer: 5
-  m_Name: SaveSlotTitleText
+  m_Name: SaveText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
