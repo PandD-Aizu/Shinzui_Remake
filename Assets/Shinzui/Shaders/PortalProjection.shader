@@ -84,15 +84,28 @@ Shader "Custom/PortalProjection"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            #define SHADOW_LOW
+            #define AREA_SHADOW_LOW
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Sky/SkyUtils.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/Lighting/AtmosphericScattering/AtmosphericScattering.hlsl"
             TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             float _PortalExposureMultiplier;
             float4 _PortalUvTransform;
+            float _PortalFogCorrection;
             float4 Vert(float3 positionOS : POSITION) : SV_POSITION { return TransformWorldToHClip(TransformObjectToWorld(positionOS)); }
             float4 Frag(float4 positionCS : SV_POSITION) : SV_Target
             {
                 float2 uv = positionCS.xy * _ScreenSize.zw;
                 uv = uv * _PortalUvTransform.xy + _PortalUvTransform.zw;
-                return float4(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb * _PortalExposureMultiplier * GetCurrentExposureMultiplier(), 1);
+                float3 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb * _PortalExposureMultiplier * GetCurrentExposureMultiplier();
+                PositionInputs posInput = GetPositionInput(positionCS.xy, _ScreenSize.zw, positionCS.z, UNITY_MATRIX_I_VP, UNITY_MATRIX_V);
+                float3 view = GetWorldSpaceNormalizeViewDir(posInput.positionWS);
+                float3 fogColor = 0, fogOpacity = 0;
+                // The clipped portal volume omits scattering between the receiving camera and this plane
+                if (_PortalFogCorrection > 0.5 && _EnableVolumetricFog != 0)
+                    EvaluateAtmosphericScattering(posInput, view, fogColor, fogOpacity);
+                return float4(color * (1 - fogOpacity) + fogColor, 1);
             }
             ENDHLSL
         }

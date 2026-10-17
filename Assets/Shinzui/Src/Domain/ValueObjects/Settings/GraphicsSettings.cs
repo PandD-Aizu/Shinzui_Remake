@@ -133,7 +133,7 @@ namespace Shinzui.Domain.Settings
         public bool EnableLensFlare { get; set; } = true;
 
         /// <summary>フィルム粒子（ホラー演出用ノイズ）の有効化</summary>
-        public bool EnableFilmGrain { get; set; } = true;
+        public bool EnableFilmGrain { get; set; } = false;
 
         /// <summary>被写界深度（ピンボケ効果）の有効化</summary>
         public bool EnableDepthOfField { get; set; } = true;
@@ -160,6 +160,8 @@ namespace Shinzui.Domain.Settings
             GiAndReflectionQuality = preset == GraphicsQualityPreset.Ultra ? 2 : System.Math.Min(quality + 1, 3);
             VolumeLightQuality = preset == GraphicsQualityPreset.Ultra ? 2 : System.Math.Min(quality + 1, 3);
             AntiAliasingType = quality == 0 ? 1 : quality == 1 ? 2 : 3;
+            // Restore all supported preset details, including overrides from a previous Custom preset
+            ReflectionIntensity = 1f;
             FsrMode = 0;
             ImageQualityScale = 1f;
             EnableRayTracing = preset == GraphicsQualityPreset.Ultra;
@@ -168,7 +170,7 @@ namespace Shinzui.Domain.Settings
             EnableContactShadow = quality >= 2;
             EnableBloom = true;
             EnableLensFlare = quality >= 2;
-            EnableFilmGrain = true;
+            EnableFilmGrain = false; // Preserve material detail; grain remains an explicit artistic preference
             EnableDepthOfField = quality >= 2;
             EnableMotionBlur = false;
             EnableLensDistortion = true;

@@ -89,7 +89,11 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         bool regenerated = seed != 2777 && FindAnyObjectByType<GenerateTunnelLifetimeScope>().Regenerate(seed);
         var saved = new GameSettings();
         saved.ResetToDefault();
-        saved.Graphics.SetQualityPreset(GraphicsQualityPreset.Ultra);
+        saved.Graphics.SetQualityPreset((GraphicsQualityPreset)int.Parse(Argument("--graphics-preset", "3")));
+        saved.Graphics.ImageQualityScale = float.Parse(Argument("--graphics-render-scale", "1"), System.Globalization.CultureInfo.InvariantCulture);
+        saved.Graphics.FrameRateLimit = int.Parse(Argument("--graphics-frame-cap", "60"));
+        saved.Graphics.EnableVSync = Argument("--graphics-vsync", "true") == "true";
+        if (!Mathf.Approximately(saved.Graphics.ImageQualityScale, 1)) saved.Graphics.QualityPreset = GraphicsQualityPreset.Custom;
         var repository = new FileSettingsRepository(Path.Combine(folder, label + "-settings.json"));
         repository.Save(saved);
         var reloaded = repository.Load();
@@ -123,7 +127,8 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         float distance = 0;
         Vector3 lastPosition = _player.transform.position;
         bool wasDead = false;
-        while (Time.realtimeSinceStartupAsDouble - _started < 45)
+        double duration = double.Parse(Argument("--graphics-duration", "45"), System.Globalization.CultureInfo.InvariantCulture);
+        while (Time.realtimeSinceStartupAsDouble - _started < duration)
         {
             double elapsed = Time.realtimeSinceStartupAsDouble - _started;
             bool dead = _death.IsDead.CurrentValue;
@@ -161,6 +166,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         File.WriteAllText(Path.Combine(folder, label + ".json"), JsonConvert.SerializeObject(new
         {
             gpu = SystemInfo.graphicsDeviceName, api = SystemInfo.graphicsDeviceType.ToString(), width = Screen.width, height = Screen.height,
+            internalWidth = hd.actualWidth, internalHeight = hd.actualHeight,
             refreshHz = Screen.currentResolution.refreshRateRatio.value, mode = Screen.fullScreenMode.ToString(),
             editor = false, developmentBuild = Debug.isDebugBuild, settings = reloaded.Graphics, settingsSavedAndReloaded = true,
             isolatedSettingsFile = true, seed, regenerated, timeScale = Time.timeScale, frozenGameplay = false,

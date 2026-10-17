@@ -44,6 +44,10 @@ namespace Shinzui.Presentation.Settings
             Choice("Filtering", "Anisotropic filtering", new[] { "2x", "4x", "8x", "16x" }, g => g.TextureFilteringQuality, (g, v) => g.TextureFilteringQuality = v);
             Choice("Mesh", "Mesh detail", new[] { "Low", "Medium", "High" }, g => g.MeshQuality, (g, v) => g.MeshQuality = v);
             Choice("AA", "Anti-aliasing", new[] { "Off", "FXAA", "SMAA", "TAA" }, g => g.AntiAliasingType, (g, v) => g.AntiAliasingType = v);
+            float[] renderScales = { .5f, .625f, .75f, .85f, 1f };
+            Choice("RenderScale", "Render scale (internal)", new[] { "50%", "62.5%", "75%", "85%", "100% (native)" },
+                g => Array.FindIndex(renderScales, v => Mathf.Approximately(v, g.ImageQualityScale)),
+                (g, v) => g.ImageQualityScale = renderScales[v]);
             Choice("Shadow", "Shadows", new[] { "Off", "Low", "Medium", "High" }, g => g.ShadowQuality, (g, v) => g.ShadowQuality = v);
             Choice("GI", "Indirect lighting / reflections", new[] { "Off", "Low", "Medium", "High" }, g => g.GiAndReflectionQuality, (g, v) => g.GiAndReflectionQuality = v);
             Choice("Fog", "Volumetric fog", new[] { "Off", "Low", "Medium", "High" }, g => g.VolumeLightQuality, (g, v) => g.VolumeLightQuality = v);

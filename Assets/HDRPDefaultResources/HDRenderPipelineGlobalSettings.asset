@@ -593,7 +593,7 @@ MonoBehaviour:
         m_ColorPyramidPS: {fileID: 4800000, guid: 2fcfb8d92f45e4549b3f0bad5d0654bf, type: 3}
         m_ColorPyramidCS: {fileID: 7200000, guid: 4e3267a1135742441a14298d8dcac04a, type: 3}
         m_DepthPyramidCS: {fileID: 7200000, guid: 64a553bb564274041906f78ffba955e4, type: 3}
-        m_MaxZCS: {fileID: 7200000, guid: e95abf8c7230c344595f41c4dd5ff517, type: 3}
+        m_MaxZCS: {fileID: 7200000, guid: 5ac402dc5131e1b40b96afa9e18def42, type: 3}
         m_ApplyDistortionPS: {fileID: 4800000, guid: 02ae56f4306413c4a96dcf005cde1971, type: 3}
         m_CustomPassUtils: {fileID: 4800000, guid: 7e3722d0388000848acb25fd3cc8c088, type: 3}
         m_CustomPassRenderersUtils: {fileID: 4800000, guid: cef5ba33ee5063d4c8b495d2292e394d, type: 3}

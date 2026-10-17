@@ -8,6 +8,7 @@ using Shinzui.Infrastructure.Services;
 using Shinzui.View;
 using Shinzui.View.Flashlight;
 using UnityEngine;
+using Unity.Profiling;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -26,6 +27,11 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
     private Shinzui.Domain.Settings.GraphicsSettings _settings;
     private bool _portalsDisabled;
     private int _renderedFrames;
+    private float _warmupSeconds = 10;
+    private float _captureSeconds = 40;
+    private ProfilerRecorder _gcAllocated;
+    private ProfilerRecorder _shaderCompile;
+    private ProfilerRecorder _presentWait;
 
     /// <summary>Activate only when the local development player is explicitly launched for graphics validation</summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -78,9 +84,11 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
         if (graphics.GiAndReflectionQuality != preset.GiAndReflectionQuality || graphics.VolumeLightQuality != preset.VolumeLightQuality || graphics.ShadowQuality != preset.ShadowQuality ||
             !Mathf.Approximately(graphics.PortalResolutionScale, preset.PortalResolutionScale))
             graphics.QualityPreset = Shinzui.Domain.Settings.GraphicsQualityPreset.Custom;
+        graphics.ImageQualityScale = float.Parse(Argument("--graphics-render-scale", "1"), System.Globalization.CultureInfo.InvariantCulture);
+        if (!Mathf.Approximately(graphics.ImageQualityScale, 1f)) graphics.QualityPreset = Shinzui.Domain.Settings.GraphicsQualityPreset.Custom;
         graphics.EnableDepthOfField = false; // Frozen simulation cannot update gameplay autofocus.
         graphics.EnableVSync = false;
-        graphics.FrameRateLimit = 0;
+        graphics.FrameRateLimit = int.Parse(Argument("--graphics-frame-cap", "0"));
         graphics.ScreenMode = 1;
         graphics.Validate();
         _settings = graphics.Clone();
@@ -96,12 +104,22 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
         _target.Create();
         _camera.targetTexture = _target;
         _camera.aspect = 16f / 9;
+        if (Environment.GetCommandLineArgs().Contains("--graphics-portal-views"))
+        {
+            yield return GraphicsPortalValidation.CaptureViews(_camera, _target, _folder, _label);
+            yield break;
+        }
         RenderPipelineManager.endCameraRendering += CountRenderedFrame;
+        _warmupSeconds = Mathf.Clamp(float.Parse(Argument("--graphics-warmup", "10"), System.Globalization.CultureInfo.InvariantCulture), 1, 60);
+        _captureSeconds = Mathf.Max(_warmupSeconds + 10, float.Parse(Argument("--graphics-duration", "40"), System.Globalization.CultureInfo.InvariantCulture));
+        _gcAllocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+        _shaderCompile = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shader.CompileGPUProgram");
+        _presentWait = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Gfx.WaitForPresentOnGfxThread");
         double started = Time.realtimeSinceStartupAsDouble;
         int lastRendered = 0;
-        while (Time.realtimeSinceStartupAsDouble - started < 40 || _samples.Count < 300)
+        while (Time.realtimeSinceStartupAsDouble - started < _captureSeconds || _samples.Count < 300)
         {
-            if (Time.realtimeSinceStartupAsDouble - started > 90)
+            if (Time.realtimeSinceStartupAsDouble - started > _captureSeconds + 50)
             {
                 File.WriteAllText(Path.Combine(_folder, _label + "-failure.json"), JsonConvert.SerializeObject(new
                 {
@@ -116,9 +134,18 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
             yield return null;
             FrameTimingManager.CaptureFrameTimings();
             uint count = FrameTimingManager.GetLatestTimings(1, _timing);
-            if (_renderedFrames > 120 && _renderedFrames != lastRendered && Time.realtimeSinceStartupAsDouble - started > 10)
+            if (_renderedFrames > 120 && _renderedFrames != lastRendered && Time.realtimeSinceStartupAsDouble - started > _warmupSeconds)
                 _samples.Add(new { frame = Time.frameCount, wallMs = Time.unscaledDeltaTime * 1000,
-                    cpuMs = count > 0 ? _timing[0].cpuFrameTime : 0, gpuMs = count > 0 ? _timing[0].gpuFrameTime : 0 });
+                    seconds = Time.realtimeSinceStartupAsDouble - started,
+                    cpuMs = count > 0 ? _timing[0].cpuFrameTime : 0, gpuMs = count > 0 ? _timing[0].gpuFrameTime : 0,
+                    mainThreadMs = count > 0 ? _timing[0].cpuMainThreadFrameTime : 0,
+                    renderThreadMs = count > 0 ? _timing[0].cpuRenderThreadFrameTime : 0,
+                    mainPresentWaitMs = count > 0 ? _timing[0].cpuMainThreadPresentWaitTime : 0,
+                    syncInterval = count > 0 ? _timing[0].syncInterval : 0,
+                    gcCollections = System.GC.CollectionCount(0),
+                    gcAllocatedBytes = _gcAllocated.Valid ? _gcAllocated.LastValue : -1,
+                    shaderCompileNs = _shaderCompile.Valid ? _shaderCompile.LastValue : -1,
+                    presentWaitNs = _presentWait.Valid ? _presentWait.LastValue : -1 });
             lastRendered = _renderedFrames;
         }
         SaveEvidence();
@@ -187,11 +214,13 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
             giQualityLevel = gi.quality.value, giFullResolutionScreenSpace = gi.fullResolutionSS.value,
             reflectionQualityLevel = ssr.quality.value, fogQualityLevel = fog.quality.value,
             fogBudget = fog.volumetricFogBudget,
+            warmupSeconds = _warmupSeconds, captureSeconds = _captureSeconds,
+            profilerCounters = new { gcAllocated = _gcAllocated.Valid, shaderCompile = _shaderCompile.Valid, presentWait = _presentWait.Valid },
             renderedFrames = _renderedFrames, validRenderWorkload = _renderedFrames > 120 && _samples.Count >= 300,
-            scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path, seed = _seed, width = 1920, height = 1080, renderScale = 1,
+            scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path, seed = _seed, width = 1920, height = 1080, renderScale = _settings.ImageQualityScale, internalWidth = camera.actualWidth, internalHeight = camera.actualHeight,
             editor = false, developmentBuild = Debug.isDebugBuild, frozenGameplay = true, depthOfField = false,
             settings = _settings, portalsDisabled = _portalsDisabled,
-            activeCameras = Camera.allCameras.Select(c => new { c.name, c.pixelWidth, c.pixelHeight, c.nearClipPlane,
+            activeCameras = Camera.allCameras.Select(c => new { c.name, c.pixelWidth, c.pixelHeight, c.nearClipPlane, internalWidth = HDCamera.GetOrCreate(c).actualWidth, internalHeight = HDCamera.GetOrCreate(c).actualHeight,
                 rtFrame = HDCamera.GetOrCreate(c).frameSettings.IsEnabled(FrameSettingsField.RayTracing),
                 indirectFrame = HDCamera.GetOrCreate(c).frameSettings.IsEnabled(FrameSettingsField.SSGI) }).ToArray(),
             gates = TunnelGateView.ActiveGates.Count, capability = HdrpGraphicsRuntime.CapabilityReport(), rayCounts = _rayCounts,
@@ -210,7 +239,13 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
     }
 
     /// <summary>Remove the temporary validation callback</summary>
-    private void OnDestroy() => RenderPipelineManager.endCameraRendering -= CountRenderedFrame;
+    private void OnDestroy()
+    {
+        RenderPipelineManager.endCameraRendering -= CountRenderedFrame;
+        _gcAllocated.Dispose();
+        _shaderCompile.Dispose();
+        _presentWait.Dispose();
+    }
 
     /// <summary>Enable HDRP's own diagnostic GPU ray counter without substituting capability flags for traced work</summary>
     /// <param name="enabled">Diagnostic counter state</param>

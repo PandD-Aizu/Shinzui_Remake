@@ -145,6 +145,29 @@ namespace Shinzui.Tests.Title
             Assert.That(graphics.EnableRayTracing, Is.True);
         }
 
+        /// <summary>Presets restore reflection strength and internal resolution after individual edits</summary>
+        [Test] public void PresetsResetReflectionAndRenderScaleOverrides()
+        {
+            var graphics = new GraphicsSettings { ReflectionIntensity = 0f, ImageQualityScale = .5f };
+            graphics.SetQualityPreset(GraphicsQualityPreset.High);
+            Assert.That(graphics.ReflectionIntensity, Is.EqualTo(1f));
+            Assert.That(graphics.ImageQualityScale, Is.EqualTo(1f));
+        }
+
+        /// <summary>Internal resolution edits persist without requesting a monitor-mode confirmation</summary>
+        [Test] public void RenderScalePersistsWithoutChangingDisplay()
+        {
+            var originalResolution = _settings.GetGraphicsDraft().Resolution;
+            _settings.EditGraphics(g => g.ImageQualityScale = .75f);
+            _settings.SaveAndApply();
+            Assert.That(_settings.AwaitingDisplayConfirmation, Is.False);
+            Assert.That(_store.Saves, Is.EqualTo(1));
+            using var restarted = new SettingsUseCase(_store, new Applier());
+            Assert.That(restarted.GetGraphicsDraft().ImageQualityScale, Is.EqualTo(.75f));
+            Assert.That(restarted.GetGraphicsDraft().Resolution, Is.EqualTo(originalResolution));
+            Assert.That(restarted.GetGraphicsDraft().QualityPreset, Is.EqualTo(GraphicsQualityPreset.Custom));
+        }
+
         private sealed class Store : ISettingsRepository
         {
             public GameSettings Value = new();

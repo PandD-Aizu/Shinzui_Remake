@@ -34,7 +34,16 @@ namespace Shinzui.Infrastructure.Services
             string portal = RayTracingConfigured ? "Portal indirect lighting uses RT; portal reflections use raster." : "Portal views use raster lighting.";
             string ultra = _settings?.QualityPreset == Shinzui.Domain.Settings.GraphicsQualityPreset.Ultra
                 ? (RayTracingConfigured ? " Ultra: half-res RT / medium fog." : " Ultra fallback: highest raster GI/reflection/fog.") : "";
-            return $"{SystemInfo.graphicsDeviceName} / {SystemInfo.graphicsDeviceType}\nHardware RT: {(hardware ? "supported" : "unavailable")} / HDRP RT resources: {(pipeline ? "ready" : "unavailable")}\n{active}. {portal}{ultra}";
+            string display = Screen.fullScreenMode switch
+            {
+                FullScreenMode.ExclusiveFullScreen => "Exclusive fullscreen",
+                FullScreenMode.FullScreenWindow => "Borderless",
+                FullScreenMode.MaximizedWindow => "Maximized window",
+                _ => "Windowed"
+            };
+            string requested = _settings?.ScreenMode == 0 && Screen.fullScreenMode != FullScreenMode.ExclusiveFullScreen
+                ? " (exclusive requested)" : "";
+            return $"Display in use: {Screen.width}x{Screen.height} / {display}{requested}\n{SystemInfo.graphicsDeviceName} / {SystemInfo.graphicsDeviceType}\nHardware RT: {(hardware ? "supported" : "unavailable")} / HDRP RT resources: {(pipeline ? "ready" : "unavailable")}\n{active}. {portal}{ultra}";
         }
 
         /// <summary>Install persistent runtime overrides for the confirmed settings snapshot</summary>
@@ -58,10 +67,16 @@ namespace Shinzui.Infrastructure.Services
                 horror.customPasses.Add(new Rendering.HdrpHorrorPass { name = "Detection and death feedback" });
                 RenderPipelineManager.beginCameraRendering += _instance.ConfigureCamera;
             }
+            // Use a fixed user-selected scale, independent of portal targets and display resolution
+            DynamicResolutionHandler.SetDynamicResScaler(RenderScalePercentage, DynamicResScalePolicyType.ReturnsPercentage);
             _instance.ConfigureVolumes();
             foreach (var camera in FindObjectsByType<Camera>(FindObjectsInactive.Include))
                 _instance.ConfigureCamera(default, camera);
         }
+
+        /// <summary>Return the fixed internal resolution requested by the confirmed settings</summary>
+        /// <returns>Internal resolution percentage, with native rendering as the fallback</returns>
+        private static float RenderScalePercentage() => (_settings?.ImageQualityScale ?? 1f) * 100f;
 
         /// <summary>Resolve hardware capability again after a pipeline is recreated</summary>
         private void Update()
@@ -145,6 +160,9 @@ namespace Shinzui.Infrastructure.Services
             var data = camera.GetComponent<HDAdditionalCameraData>();
             if (data == null) data = camera.gameObject.AddComponent<HDAdditionalCameraData>();
             data.customRenderingSettings = true;
+            // Only the main game view scales; dedicated portal cameras keep their own pixel budget
+            data.allowDynamicResolution = _settings.ImageQualityScale < 1f;
+            camera.allowDynamicResolution = data.allowDynamicResolution;
             data.antialiasing = _settings.AntiAliasingType switch
             {
                 1 => HDAdditionalCameraData.AntialiasingMode.FastApproximateAntialiasing,

@@ -11,6 +11,7 @@ namespace Shinzui.View
         private MaterialPropertyBlock _portalProperties;
         private Rect _hdrpCrop = new Rect(0, 0, 1, 1);
         private static readonly int PortalUvTransformId = Shader.PropertyToID("_PortalUvTransform");
+        private static readonly int PortalFogCorrectionId = Shader.PropertyToID("_PortalFogCorrection");
         private static readonly bool CropPortalTargets = !System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "--graphics-uncropped-portals");
         public static float HdrpPortalScale => Infrastructure.Services.HdrpGraphicsRuntime.PortalScale;
         private static bool UsesHdrp => GraphicsSettings.currentRenderPipeline is HDRenderPipelineAsset;
@@ -178,6 +179,10 @@ namespace Shinzui.View
             _portalProperties ??= new MaterialPropertyBlock();
             _portalProperties.SetTexture("_MainTex", texture != null ? texture : Texture2D.blackTexture);
             _portalProperties.SetFloat(PortalExposureMultiplierId, PortalExposureMultiplier);
+            // Only replace the fog interval omitted by an active oblique near plane
+            bool clippedVolume = useDynamicNearClip && _hdrpCameras != null && _hdrpCameras[0] != null && _mainCamera != null
+                && _hdrpCameras[0].nearClipPlane > _mainCamera.nearClipPlane + .01f;
+            _portalProperties.SetFloat(PortalFogCorrectionId, clippedVolume ? 1 : 0);
             // HDRP's render-target projection and this shader use the same viewport orientation.
             _portalProperties.SetVector(PortalUvTransformId, new Vector4(
                 cameraCrop.width / _hdrpCrop.width, cameraCrop.height / _hdrpCrop.height,

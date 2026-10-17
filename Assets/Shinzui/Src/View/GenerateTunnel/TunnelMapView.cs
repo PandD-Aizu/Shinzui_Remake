@@ -524,7 +524,29 @@ namespace Shinzui.View.GenerateTunnel
             else
             {
                 float floorThickness = ShellThickness * 1.5f;
-                CreateStageBox(room, "Walkable Room Floor", Vector3.zero, new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
+                Transform passage = connection.Find("Corridor Before Room");
+                float floorHeight = MeasurePassageSurface(passage, false, floorThickness * .5f, tunnelHeight);
+                float ceilingHeight = MeasurePassageSurface(passage, true, tunnelHeight, tunnelHeight);
+                float wallHeight = Mathf.Max(1, ceilingHeight - floorHeight);
+                float wallCenter = floorHeight + wallHeight * .5f;
+                CreateStageBox(room, "Walkable Room Floor", Vector3.up * (floorHeight - floorThickness * .5f),
+                    new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
+                // Enclose the model-free fallback while preserving both corridor openings
+                CreateStageBox(room, "Room Ceiling", new Vector3(0, ceilingHeight + ShellThickness * .5f, 0),
+                    new Vector3(roomWidth + ShellThickness * 2, ShellThickness, roomLength + ShellThickness * 2), _smallRoomMaterial);
+                float wingWidth = Mathf.Max(0, (roomWidth - corridorWidth) * .5f);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    CreateStageBox(room, "Room Side Wall " + side, new Vector3(side * (roomWidth + ShellThickness) * .5f, wallCenter, 0),
+                        new Vector3(ShellThickness, wallHeight, roomLength), _smallRoomMaterial);
+                    if (wingWidth <= 0) continue;
+                    for (int end = -1; end <= 1; end += 2)
+                        CreateStageBox(room, $"Room Door Wall {side} {end}",
+                            new Vector3(side * (corridorWidth + wingWidth) * .5f, wallCenter, end * (roomLength + ShellThickness) * .5f),
+                            new Vector3(wingWidth, wallHeight, ShellThickness), _smallRoomMaterial);
+                }
+                ApplyTunnelPassageMaterial(room.gameObject);
+                CreateCeilingLights(room, roomLength, ceilingHeight);
             }
 
             return info;
@@ -640,6 +662,29 @@ namespace Shinzui.View.GenerateTunnel
             _markerMaterial = CreateMaterial("Entrance Candidate", new Color(0.1f, 0.9f, 0.65f));
         }
 
+        /// <summary>Match a fallback room to the actual walkable floor and inside ceiling of its adjoining model</summary>
+        /// <param name="passage">Already generated adjoining passage</param>
+        /// <param name="ceiling">Whether to trace upward to the inside ceiling</param>
+        /// <param name="fallback">Surface height for a passage without a matching collider</param>
+        /// <param name="height">Maximum vertical search distance</param>
+        /// <returns>Surface height in passage local space</returns>
+        private static float MeasurePassageSurface(Transform passage, bool ceiling, float fallback, float height)
+        {
+            if (passage == null) return fallback;
+            Physics.SyncTransforms();
+            var ray = new Ray(passage.TransformPoint(new Vector3(0, 1.5f, 0)), ceiling ? passage.up : -passage.up);
+            float distance = Mathf.Infinity;
+            float result = fallback;
+            foreach (Collider surface in passage.GetComponentsInChildren<Collider>(false))
+            {
+                if (surface.isTrigger || !surface.enabled) continue;
+                if (!surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height, 2) * passage.lossyScale.y)
+                    || hit.distance >= distance || Vector3.Dot(hit.normal, ceiling ? -passage.up : passage.up) < .5f) continue;
+                distance = hit.distance;
+                result = passage.InverseTransformPoint(hit.point).y;
+            }
+            return result;
+        }
         private void CreateRoomPassage(
             Transform connectionRoot,
             string objectName,
