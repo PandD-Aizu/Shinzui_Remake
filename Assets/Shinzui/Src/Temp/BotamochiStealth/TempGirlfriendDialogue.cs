@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using Shinzui.View;
 using Shinzui.View.Interaction;
@@ -6,35 +5,19 @@ using Shinzui.View.Interaction;
 namespace Shinzui.Temp.BotamochiStealth
 {
     /// <summary>
-    /// 彼女との対話と現代トンネルへの帰還ワープを処理するシンプルなスクリプト
+    /// 彼女。会話中は敵を止め、会話が終わったら現代トンネルへ戻して次の階へ進める
+    /// 1階につき1回だけ話せる。会話の中身はTempGirlfriendScriptに書く
     /// </summary>
-    public class TempGirlfriendDialogue : InteractableComponent
+    public class TempGirlfriendDialogue : TempTalkCharacter
     {
-        [Header("Dialogue Content")]
-        [SerializeField, TextArea(2, 4)]
-        private string[] messages = new string[]
-        {
-            "彼女『後藤健子です』",
-            "彼女『帰んな』"
-        };
-
         [Header("Return Position")]
         [Tooltip("会話終了後にワープする現代トンネルの座標（TempPastTunnelDirectorが無い場合のフォールバック）")]
         [SerializeField] private Vector3 modernTunnelPosition = Vector3.zero;
 
         [Header("Optional References")]
-        [SerializeField] private InteractionMessageView messageView;
         [SerializeField] private TempPatrolChaseEnemy chasingEnemy;
 
-        [Header("Interact Gate")]
-        [Tooltip("自前入力で会話を開始する距離(m)")]
-        [SerializeField] private float interactDistance = 3.5f;
-        [Tooltip("この内積以上プレイヤーがこちらを向いている時だけ会話開始（誤爆防止）")]
-        [SerializeField, Range(-1f, 1f)] private float facingDotThreshold = 0.3f;
-
         private TempPastTunnelDirector _director;
-        private int _currentIndex = 0;
-        private bool _isTalking = false;
         private bool _finished = false;
 
         /// <summary>
@@ -51,137 +34,55 @@ namespace Shinzui.Temp.BotamochiStealth
         /// </summary>
         public void ResetForNextFloor()
         {
-            _isTalking = false;
+            StopTalk();
             _finished = false;
-            _currentIndex = 0;
             CanInteract = true;
+        }
+
+        // デバッグ用
+        public void ResetScenarioProgress()
+        {
+            TempTalk.ResetChosen();
         }
 
         private void Reset()
         {
             // Inspectorでのプロンプト表示設定
             var field = typeof(InteractableComponent).GetField("displayName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (field != null) field.SetValue(this, "[E] 話しかける");
+            if (field != null) field.SetValue(this, TempMessages.Girlfriend.Prompt);
         }
 
-        public override void ExecuteInteractEffect()
+        private void Awake()
         {
-            base.ExecuteInteractEffect();
-            if (_isTalking || _finished) return;
-
-            StartDialogue();
+            // シーンのInspectorが既定の「[E] 調べる」のままならTempMessagesの文言にする
+            var field = typeof(InteractableComponent).GetField("displayName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (field != null && field.GetValue(this) as string == "[E] 調べる")
+            {
+                field.SetValue(this, TempMessages.Girlfriend.Prompt);
+            }
         }
 
-        private void StartDialogue()
-        {
-            _isTalking = true;
-            _currentIndex = 0;
+        protected override bool CanStartTalk() => !_finished;
 
+        protected override TempTalkStep[] BuildScript()
+        {
+            if (_director == null) _director = FindAnyObjectByType<TempPastTunnelDirector>();
+            int floor = _director != null ? _director.FloorNumber : 1;
+            return TempGirlfriendScript.Build(floor);
+        }
+
+        protected override void OnTalkStarted()
+        {
             if (chasingEnemy == null) chasingEnemy = FindAnyObjectByType<TempPatrolChaseEnemy>();
             if (chasingEnemy != null) chasingEnemy.PauseEnemy();
-
-            ShowCurrentLine();
         }
 
-        private void Update()
+        protected override void OnTalkEnded()
         {
-            if (!_isTalking)
-            {
-                // 話しかけ前：プレイヤーが近くでこちらを向いて[E]キー/クリック等を押したら会話開始
-                if (!_finished && IsInteractKeyPressedNearPlayer())
-                {
-                    StartDialogue();
-                }
-                return;
-            }
-
-            // 会話中：メッセージ送り
-            if (IsAdvanceKeyPressed())
-            {
-                _currentIndex++;
-                if (_currentIndex < messages.Length)
-                {
-                    ShowCurrentLine();
-                }
-                else
-                {
-                    EndDialogueAndReturn();
-                }
-            }
-        }
-
-        private bool IsInteractKeyPressedNearPlayer()
-        {
-            var player = FindAnyObjectByType<PlayerView>();
-            if (player == null) return false;
-
-            Vector3 toGirl = transform.position - player.transform.position;
-            if (toGirl.sqrMagnitude > interactDistance * interactDistance) return false;
-
-            // プレイヤー（カメラ）がこちらを向いているか
-            var cam = Camera.main;
-            if (cam != null)
-            {
-                Vector3 flatDir = toGirl;
-                flatDir.y = 0.0f;
-                Vector3 flatFwd = cam.transform.forward;
-                flatFwd.y = 0.0f;
-                if (flatDir.sqrMagnitude > 0.001f && flatFwd.sqrMagnitude > 0.001f &&
-                    Vector3.Dot(flatDir.normalized, flatFwd.normalized) < facingDotThreshold)
-                {
-                    return false;
-                }
-            }
-
-            return IsAdvanceKeyPressed();
-        }
-
-        private bool IsAdvanceKeyPressed()
-        {
-            if (UnityEngine.InputSystem.Keyboard.current != null)
-            {
-                if (UnityEngine.InputSystem.Keyboard.current.eKey.wasPressedThisFrame ||
-                    UnityEngine.InputSystem.Keyboard.current.spaceKey.wasPressedThisFrame ||
-                    UnityEngine.InputSystem.Keyboard.current.enterKey.wasPressedThisFrame)
-                {
-                    return true;
-                }
-            }
-
-            if (UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                return true;
-            }
-
-            if (UnityEngine.InputSystem.Gamepad.current != null &&
-                (UnityEngine.InputSystem.Gamepad.current.buttonSouth.wasPressedThisFrame ||
-                 UnityEngine.InputSystem.Gamepad.current.buttonEast.wasPressedThisFrame))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private void ShowCurrentLine()
-        {
-            if (messageView == null) messageView = FindAnyObjectByType<InteractionMessageView>();
-            if (messageView != null && _currentIndex < messages.Length)
-            {
-                messageView.ShowMessage(messages[_currentIndex]);
-            }
-        }
-
-        private void EndDialogueAndReturn()
-        {
-            _isTalking = false;
             _finished = true;
             CanInteract = false;
 
-            if (messageView != null)
-            {
-                messageView.ShowMessage("現代トンネルへ戻される……");
-            }
+            ShowMessage(TempMessages.Girlfriend.ReturnToModern);
 
             if (_director == null)
             {
