@@ -15,6 +15,12 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private int seed = 2777;
         [Min(1)] [SerializeField] private int placementAttemptsPerTunnel = 80;
 
+        [Header("Upper Floor")]
+        [SerializeField] private bool generateUpperFloor;
+        [Min(8.0f)] [SerializeField] private float upperFloorHeight = 12.0f;
+        [Min(0)] [SerializeField] private int dropOpeningCount = 2;
+        [Min(2.0f)] [SerializeField] private float dropOpeningSize = 3.0f;
+
         [Header("Small Rooms")]
         [Min(0)] [SerializeField] private int smallRoomCount = 1;
         [Min(1.0f)] [SerializeField] private float smallRoomWidth = 8.0f;
@@ -70,6 +76,10 @@ namespace Shinzui.View.GenerateTunnel
         public int TunnelCount => tunnelCount;
         public int Seed => seed;
         public int PlacementAttemptsPerTunnel => placementAttemptsPerTunnel;
+        public bool GenerateUpperFloor => generateUpperFloor;
+        public float UpperFloorHeight => upperFloorHeight;
+        public int DropOpeningCount => dropOpeningCount;
+        public float DropOpeningSize => dropOpeningSize;
         public int SmallRoomCount => smallRoomCount;
         public float SmallRoomWidth => smallRoomWidth;
         public float SmallRoomLength => smallRoomLength;

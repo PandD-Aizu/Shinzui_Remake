@@ -4913,6 +4913,10 @@ MonoBehaviour:
   smallRoomWidth: 20
   smallRoomLength: 20
   tunnelLength: 140
+  generateUpperFloor: 1
+  upperFloorHeight: 14
+  dropOpeningCount: 2
+  dropOpeningSize: 3
   connectionPointSpacing: 11
   tunnelWidth: 14.800003
   tunnelHeight: 5

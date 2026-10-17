@@ -7,6 +7,59 @@ namespace Shinzui.Tests
 {
     public class TunnelLayoutGeneratorTests
     {
+        /// <summary>
+        /// 同じ生成規則で上階ができ、傾斜の上下端と落下口がつながることを確認する
+        /// </summary>
+        /// <param name="seed">生成に使用するシード値</param>
+        [TestCase(2777)]
+        [TestCase(42)]
+        [TestCase(12345)]
+        public void GenerateLayout_UpperFloorPreservesConnectionsAndProvidesDistinctDrops(int seed)
+        {
+            var config = new TunnelGenerationConfig { GenerateUpperFloor = true, Seed = seed };
+            var generator = new TunnelLayoutGenerator();
+            var result = generator.GenerateLayout(config);
+            var repeated = generator.GenerateLayout(config);
+
+            // 追加した別の坂ではなく既存の下階トンネル一本だけが傾斜する
+            Assert.That(result.Tunnels.Count(t => t.FloorIndex == 0), Is.EqualTo(config.TunnelCount));
+            Assert.That(result.Tunnels.Count(t => t.FloorIndex == 1), Is.EqualTo(config.TunnelCount));
+            var ramp = result.Tunnels.Single(t => t.Slope != 0.0f);
+            Assert.That(ramp.Id, Is.Not.EqualTo(0));
+            Assert.That(ramp.FloorIndex, Is.Zero);
+            Assert.That(System.Math.Abs(ramp.Slope), Is.LessThanOrEqualTo(0.5f));
+            var mouth = ramp.EntranceMarkers.Single(m => m.IsOpen);
+            Assert.That(ramp.Position.Y + mouth.LocalPosition.Y, Is.EqualTo(0.16f).Within(0.001f));
+
+            // 上端の位置が上階の開いた接続口と一致する
+            float horizontalLength = ramp.Length / (float)System.Math.Sqrt(1 + ramp.Slope * ramp.Slope);
+            float sign = System.Math.Sign(ramp.Slope);
+            var high = ramp.Position + new TunnelVector3(ramp.Forward.X, ramp.Slope, ramp.Forward.Y)
+                * (horizontalLength * 0.5f * sign);
+            Assert.That(high.Y, Is.EqualTo(config.UpperFloorHeight).Within(0.001f));
+            Assert.That(result.Tunnels.Where(t => t.FloorIndex == 1).Any(t => t.EntranceMarkers.Any(m =>
+            {
+                var port = t.Position + new TunnelVector3(t.Forward.Y * m.LocalPosition.X + t.Forward.X * m.LocalPosition.Z,
+                    0, -t.Forward.X * m.LocalPosition.X + t.Forward.Y * m.LocalPosition.Z);
+                return m.IsOpen && (port - high).Magnitude < 0.001f;
+            })), Is.True);
+
+            // 落下口は異なる下階のトンネル内部にあり、シードで再現できる
+            Assert.That(result.DropOpenings.Count, Is.EqualTo(2));
+            Assert.That(result.DropOpenings.Select(o => o.LowerTunnelId).Distinct().Count(), Is.EqualTo(2));
+            for (int i = 0; i < result.DropOpenings.Count; i++)
+            {
+                var opening = result.DropOpenings[i];
+                Assert.That(opening.LowerTunnelId, Is.Not.EqualTo(ramp.Id));
+                Assert.That(opening.Center, Is.EqualTo(repeated.DropOpenings[i].Center));
+                Assert.That(result.Tunnels.Single(t => t.Id == opening.UpperTunnelId).FloorIndex, Is.EqualTo(1));
+            }
+
+            // ペアの識別番号と参照先は上下階を結合しても衝突しない
+            foreach (var warp in result.WarpCorridors.Where(w => w.PairedIndex >= 0))
+                Assert.That(result.WarpCorridors[warp.PairedIndex].PairId, Is.EqualTo(warp.PairId));
+        }
+
         [Test]
         public void GenerateLayout_AllTunnelsHaveSixEntranceMarkersAndOpenEntrances()
         {

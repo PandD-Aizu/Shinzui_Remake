@@ -120,6 +120,18 @@ namespace Shinzui.Domain.DomainServices.Tunnel
         public TunnelLayoutResult GenerateLayout(TunnelGenerationConfig config)
         {
             config ??= new TunnelGenerationConfig();
+            TunnelLayoutResult lower = GenerateSingleFloor(config);
+            return config.GenerateUpperFloor ? TunnelUpperFloorBuilder.Build(lower, config, GenerateSingleFloor) : lower;
+        }
+
+        /// <summary>
+        /// 一階層分の連結した平面レイアウトを生成する
+        /// </summary>
+        /// <param name="config">生成設定</param>
+        /// <returns>一階層分の生成結果</returns>
+        private static TunnelLayoutResult GenerateSingleFloor(TunnelGenerationConfig config)
+        {
+            config ??= new TunnelGenerationConfig();
 
             var random = new Random(config.Seed);
             var tunnels = new List<InternalTunnelNode>();

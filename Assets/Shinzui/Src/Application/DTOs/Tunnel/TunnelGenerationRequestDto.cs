@@ -11,6 +11,10 @@ namespace Shinzui.Application.DTOs.Tunnel
         public int TunnelCount { get; init; } = 8;
         public int Seed { get; init; } = 2777;
         public int PlacementAttemptsPerTunnel { get; init; } = 80;
+        public bool GenerateUpperFloor { get; init; }
+        public float UpperFloorHeight { get; init; } = 12.0f;
+        public int DropOpeningCount { get; init; } = 2;
+        public float DropOpeningSize { get; init; } = 3.0f;
 
         public int SmallRoomCount { get; init; } = 1;
         public float SmallRoomWidth { get; init; } = 8.0f;
@@ -58,7 +62,11 @@ namespace Shinzui.Application.DTOs.Tunnel
                 PlacementMargin,
                 TunnelOverlapSizeMultiplier,
                 CorridorOverlapSizeMultiplier,
-                SmallRoomOverlapSizeMultiplier);
+                SmallRoomOverlapSizeMultiplier,
+                GenerateUpperFloor,
+                UpperFloorHeight,
+                DropOpeningCount,
+                DropOpeningSize);
         }
     }
 }

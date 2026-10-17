@@ -13,7 +13,7 @@ namespace Shinzui.View.GenerateTunnel
     /// ドメイン層やプレゼンテーション層に依存せず、純粋なUnityオブジェクト構築責務を持つ。
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class TunnelMapView : MonoBehaviour
+    public sealed partial class TunnelMapView : MonoBehaviour
     {
         private const string MapRootName = "MapRoot";
         private const string GeometryRootName = "Tunnel Map Geometry";
@@ -153,6 +153,7 @@ namespace Shinzui.View.GenerateTunnel
         private void OnDestroy()
         {
             GeometryClearing?.Invoke();
+            ReleaseGeneratedMeshes();
             foreach (var material in new[] { _specialMaterial, _tunnelMaterial, _corridorMaterial,
                 _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial })
                 if (material) Destroy(material);
@@ -277,6 +278,7 @@ namespace Shinzui.View.GenerateTunnel
         public void PrepareBuild()
         {
             GeometryClearing?.Invoke();
+            ReleaseGeneratedMeshes();
             _ceilingLights.Clear();
             EnsureMapRoot();
             CreateMaterials();
@@ -299,6 +301,21 @@ namespace Shinzui.View.GenerateTunnel
         /// <summary>
         /// トンネルGameObjectを作成する。
         /// </summary>
+        /// <param name="position">中心位置</param>
+        /// <param name="forward">水平の長さ方向</param>
+        /// <param name="objectName">生成名</param>
+        /// <param name="isSpecial">特殊トンネルか</param>
+        /// <param name="width">幅</param>
+        /// <param name="height">高さ</param>
+        /// <param name="length">トンネル長</param>
+        /// <param name="standardTunnelLength">モデルの基準長</param>
+        /// <param name="openEntrances">使用する側面口</param>
+        /// <param name="slope">水平距離あたりの高さ</param>
+        /// <param name="slopeEntranceZ">下階の接続口の位置</param>
+        /// <param name="corridorWidth">下階の通路幅</param>
+        /// <param name="upperLanding">上階の接続先</param>
+        /// <param name="upperEntranceIndex">上階の側面口の番号</param>
+        /// <returns>トンネルの配置先</returns>
         public Transform CreateTunnelNode(
             Vector3 position,
             Vector3 forward,
@@ -308,7 +325,12 @@ namespace Shinzui.View.GenerateTunnel
             float height,
             float length,
             float standardTunnelLength,
-            IReadOnlyList<bool> openEntrances = null)
+            IReadOnlyList<bool> openEntrances = null,
+            float slope = 0.0f,
+            float slopeEntranceZ = 0.0f,
+            float corridorWidth = 3.0f,
+            Transform upperLanding = null,
+            int upperEntranceIndex = 1)
         {
             var root = new GameObject(objectName).transform;
             root.SetParent(_geometryRoot, false);
@@ -316,6 +338,13 @@ namespace Shinzui.View.GenerateTunnel
             root.localRotation = forward.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(forward, Vector3.up) : Quaternion.identity;
 
             Material shellMaterial = isSpecial ? _specialMaterial : _tunnelMaterial;
+            if (Mathf.Abs(slope) > 0.0001f)
+            {
+                CreateInclinedTunnel(root, width, height, length, slope, slopeEntranceZ, corridorWidth,
+                    openEntrances, upperLanding, upperEntranceIndex);
+                return root;
+            }
+
             if (_tunnelPrefab != null)
             {
                 GameObject model = Instantiate(_tunnelPrefab, root, false);
@@ -755,7 +784,11 @@ namespace Shinzui.View.GenerateTunnel
         /// <param name="passage">配置先のトンネルまたは廊下</param>
         /// <param name="length">通路の長さ</param>
         /// <param name="height">天井を探索する高さ</param>
-        private void CreateCeilingLights(Transform passage, float length, float height)
+        /// <param name="slope">水平距離あたりの高さ</param>
+        /// <param name="floorOffset">床の補正高</param>
+        /// <param name="slopeStartZ">平坦な踊り場の終端</param>
+        private void CreateCeilingLights(Transform passage, float length, float height, float slope = 0.0f,
+            float floorOffset = 0.0f, float? slopeStartZ = null)
         {
             // 共通プレハブを再利用し、短い通路でも器具が端からはみ出さないようにする
             if (_ceilingLightPrefab == null)
@@ -777,7 +810,11 @@ namespace Shinzui.View.GenerateTunnel
             lightRoot.SetParent(passage, false);
             for (int i = 0; i < count; i++)
             {
-                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, 1.5f, start + i * spacing));
+                float localZ = start + i * spacing;
+                float rise = slopeStartZ.HasValue
+                    ? Mathf.Abs(slope) * Mathf.Max(0.0f, Mathf.Sign(slope) * (localZ - slopeStartZ.Value))
+                    : slope * localZ;
+                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, 1.5f + floorOffset + rise, localZ));
                 var ray = new Ray(origin, passage.up);
                 float distance = Mathf.Infinity;
                 Vector3 ceiling = default;

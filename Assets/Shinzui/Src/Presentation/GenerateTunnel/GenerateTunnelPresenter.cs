@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.View;
@@ -59,6 +60,10 @@ namespace Shinzui.Presentation.GenerateTunnel
                 TunnelCount = request.TunnelCount,
                 Seed = request.Seed,
                 PlacementAttemptsPerTunnel = request.PlacementAttemptsPerTunnel,
+                GenerateUpperFloor = request.GenerateUpperFloor,
+                UpperFloorHeight = request.UpperFloorHeight,
+                DropOpeningCount = request.DropOpeningCount,
+                DropOpeningSize = request.DropOpeningSize,
                 SmallRoomCount = request.SmallRoomCount,
                 SmallRoomWidth = request.SmallRoomWidth,
                 SmallRoomLength = request.SmallRoomLength,
@@ -94,16 +99,45 @@ namespace Shinzui.Presentation.GenerateTunnel
             return true;
         }
 
+        /// <summary>
+        /// 全階層のモデルを生成し傾斜と落下口をつなぐ
+        /// </summary>
+        /// <param name="mapDto">生成済みの配置情報</param>
         private void BuildSceneHierarchy(TunnelMapDto mapDto)
         {
             Dispose();
             _mapView.PrepareBuild();
+            var tunnelRoots = new Dictionary<int, Transform>();
 
             // 1. トンネルノードと出入口候補マーカーの生成
-            foreach (TunnelNodeDto tunnel in mapDto.Tunnels)
+            foreach (TunnelNodeDto tunnel in mapDto.Tunnels.OrderBy(t => t.Slope != 0.0f))
             {
                 Vector3 pos = new Vector3(tunnel.PositionX, tunnel.PositionY, tunnel.PositionZ);
                 Vector3 forward = new Vector3(tunnel.DirX, 0.0f, tunnel.DirZ);
+                float slopeEntranceZ = 0.0f;
+                Transform upperLanding = null;
+                int upperEntranceIndex = 1;
+                if (tunnel.Slope != 0.0f && tunnel.EntranceMarkers != null)
+                {
+                    foreach (var marker in tunnel.EntranceMarkers)
+                        if (marker.IsOpen) slopeEntranceZ = marker.LocalPosZ;
+
+                    // 上階の実モデルを先に作り、傾斜の上端にある接続口を取得する
+                    float halfLength = tunnel.Length / Mathf.Sqrt(1.0f + tunnel.Slope * tunnel.Slope) * 0.5f;
+                    Vector3 high = pos + (forward + Vector3.up * tunnel.Slope) * (halfLength * Mathf.Sign(tunnel.Slope));
+                    foreach (var upper in mapDto.Tunnels.Where(t => t.FloorIndex == 1))
+                    {
+                        Transform upperRoot = tunnelRoots[upper.Id];
+                        foreach (var marker in upper.EntranceMarkers)
+                        {
+                            Vector3 port = upperRoot.localPosition + upperRoot.localRotation
+                                * new Vector3(marker.LocalPosX, 0, marker.LocalPosZ);
+                            if (!marker.IsOpen || (port - high).sqrMagnitude > 0.0001f) continue;
+                            upperLanding = upperRoot;
+                            upperEntranceIndex = marker.Index;
+                        }
+                    }
+                }
                 Transform tunnelRoot = _mapView.CreateTunnelNode(
                     pos,
                     forward,
@@ -113,7 +147,13 @@ namespace Shinzui.Presentation.GenerateTunnel
                     mapDto.Dimensions.TunnelHeight,
                     tunnel.Length,
                     mapDto.Dimensions.TunnelLength,
-                    tunnel.OpenEntrances);
+                    tunnel.OpenEntrances,
+                    tunnel.Slope,
+                    slopeEntranceZ,
+                    mapDto.Dimensions.CorridorWidth,
+                    upperLanding,
+                    upperEntranceIndex);
+                tunnelRoots.Add(tunnel.Id, tunnelRoot);
 
                 if (tunnel.EntranceMarkers != null)
                 {
@@ -200,7 +240,15 @@ namespace Shinzui.Presentation.GenerateTunnel
                 }
             }
 
-            // 5. カメラフレーミング
+            // 5. 上階の床と下階の天井を貫く落下口を生成する
+            foreach (var opening in mapDto.DropOpenings)
+            {
+                _mapView.CreateDropOpening(tunnelRoots[opening.LowerTunnelId], tunnelRoots[opening.UpperTunnelId],
+                    new Vector3(opening.CenterX, 0, opening.CenterZ), opening.Size,
+                    opening.LowerFloorY, opening.UpperFloorY, mapDto.Dimensions.TunnelHeight);
+            }
+
+            // 6. カメラフレーミング
             if (mapDto.Bounds != null)
             {
                 Vector3 boundsCenter = new Vector3(mapDto.Bounds.CenterX, mapDto.Bounds.CenterY, mapDto.Bounds.CenterZ);

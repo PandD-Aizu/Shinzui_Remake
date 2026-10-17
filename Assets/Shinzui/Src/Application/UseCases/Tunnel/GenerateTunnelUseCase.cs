@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.Domain.DomainServices.Tunnel;
@@ -66,6 +67,12 @@ namespace Shinzui.Application.UseCases.Tunnel
             }
         }
 
+        /// <summary>
+        /// 全階層の配置と落下口を描画用のDTOへ変換する
+        /// </summary>
+        /// <param name="layoutResult">ドメイン層の生成結果</param>
+        /// <param name="config">寸法設定</param>
+        /// <returns>描画と音響で共用する配置情報</returns>
         private static TunnelMapDto ConvertToDto(TunnelLayoutResult layoutResult, TunnelGenerationConfig config)
         {
             var tunnelDtos = new List<TunnelNodeDto>(layoutResult.Tunnels.Count);
@@ -96,6 +103,8 @@ namespace Shinzui.Application.UseCases.Tunnel
                     DirX = tunnel.Forward.X,
                     DirZ = tunnel.Forward.Y,
                     Length = tunnel.Length,
+                    FloorIndex = tunnel.FloorIndex,
+                    Slope = tunnel.Slope,
                     IsSpecial = tunnel.IsSpecial,
                     EntranceMarkers = markerDtos,
                     OpenEntrances = tunnel.OpenEntrances
@@ -201,7 +210,18 @@ namespace Shinzui.Application.UseCases.Tunnel
                 SpecialTunnelId = layoutResult.SpecialTunnelId,
                 Bounds = boundsDto,
                 Dimensions = dimensionsDto,
-                Seed = layoutResult.Seed
+                Seed = layoutResult.Seed,
+                DropOpenings = layoutResult.DropOpenings.Select(
+                    opening => new TunnelDropOpeningDto
+                    {
+                        LowerTunnelId = opening.LowerTunnelId,
+                        UpperTunnelId = opening.UpperTunnelId,
+                        CenterX = opening.Center.X,
+                        CenterZ = opening.Center.Z,
+                        Size = opening.Size,
+                        LowerFloorY = opening.LowerFloorY,
+                        UpperFloorY = opening.UpperFloorY
+                    }).ToArray()
             };
         }
     }

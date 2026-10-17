@@ -60,8 +60,8 @@ namespace Shinzui.Application.CustomSpatialAudio
     /// </summary>
     public sealed class PortalAcousticGraph
     {
-        public const int MaximumRoomCount = 64;
-        public const int MaximumPortalCount = 128;
+        public const int MaximumRoomCount = 192;
+        public const int MaximumPortalCount = 384;
         private readonly PortalAcousticRoom[] rooms;
         private readonly AcousticPortal[] portals;
 
