@@ -10,6 +10,37 @@ namespace Shinzui.View
         private Camera[] _hdrpCameras;
         private MaterialPropertyBlock _portalProperties;
         private Rect _hdrpCrop = new Rect(0, 0, 1, 1);
+        public static bool HdrpNearPlaneCullEnabled => !Debug.isDebugBuild || !LegacyPortalVisibility;
+        private static readonly bool LegacyPortalVisibility = System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "--graphics-legacy-portal-visibility");
+
+        /// <summary>Count cameras actually scheduled by this gate for diagnostic sampling</summary>
+        public int HdrpActiveCameraCount
+        {
+            get
+            {
+                int count = 0;
+                if (_hdrpCameras != null) foreach (var camera in _hdrpCameras) if (camera != null && camera.enabled) count++;
+                return count;
+            }
+        }
+
+        /// <summary>Reject only a rendered surface wholly outside the near clip plane, keeping a small crossing tolerance</summary>
+        /// <param name="bounds">Unexpanded world bounds of the actual portal mesh</param>
+        /// <param name="nearPlane">Inward-facing camera near plane</param>
+        /// <returns>Whether no point of the mesh bounds can survive near clipping</returns>
+        private static bool IsWhollyBehindNearPlane(Bounds bounds, Plane nearPlane)
+        {
+            Vector3 normal = nearPlane.normal;
+            Vector3 extents = bounds.extents;
+            float radius = Mathf.Abs(normal.x) * extents.x + Mathf.Abs(normal.y) * extents.y + Mathf.Abs(normal.z) * extents.z;
+            return nearPlane.GetDistanceToPoint(bounds.center) + radius < -.01f;
+        }
+        private bool _usesHdrpTextureCache;
+        public static bool HdrpTargetCacheEnabled => !Debug.isDebugBuild || !DisableTargetCache;
+        private static readonly bool DisableTargetCache =
+            System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "--graphics-no-portal-cache");
+        public static int HdrpCropQuantum => Debug.isDebugBuild && FinePortalCrop ? 32 : 128;
+        private static readonly bool FinePortalCrop = System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "--graphics-fine-portal-crop");
         private static readonly int PortalUvTransformId = Shader.PropertyToID("_PortalUvTransform");
         private static readonly int PortalFogCorrectionId = Shader.PropertyToID("_PortalFogCorrection");
         private static readonly bool CropPortalTargets = !System.Array.Exists(System.Environment.GetCommandLineArgs(), a => a == "--graphics-uncropped-portals");
@@ -48,8 +79,11 @@ namespace Shinzui.View
             {
                 foreach (var camera in _hdrpCameras) camera.targetTexture = null;
                 ReleasePortalTextures();
-                _portalRT = new RenderTexture(width, height, 24, RenderTextureFormat.ARGBHalf) { name = $"HDRP Portal {name}" };
-                _portalRT.Create();
+                _usesHdrpTextureCache = HdrpTargetCacheEnabled;
+                _portalRT = _usesHdrpTextureCache
+                    ? PortalRenderTextureCache.Acquire(width, height, RenderTextureFormat.ARGBHalf, $"HDRP Portal {name}")
+                    : new RenderTexture(width, height, 24, RenderTextureFormat.ARGBHalf) { name = $"HDRP Portal {name}" };
+                if (!_usesHdrpTextureCache) _portalRT.Create();
                 _portalRenderer.sharedMaterial.SetTexture("_MainTex", _portalRT);
             }
             EnsureRecursionRenderTextures(MaxRecursionDepth - 1, Mathf.Max(1, width / 2), Mathf.Max(1, height / 2));
@@ -116,10 +150,11 @@ namespace Shinzui.View
             // Quantize outward with a guard band to reduce target reallocations during movement.
             float width = Mathf.Max(1, _mainCamera.pixelWidth * HdrpPortalScale);
             float height = Mathf.Max(1, _mainCamera.pixelHeight * HdrpPortalScale);
-            float left = Mathf.Clamp01(Mathf.Floor((lower.x * width - 8) / 32) * 32 / width);
-            float right = Mathf.Clamp01(Mathf.Ceil((upper.x * width + 8) / 32) * 32 / width);
-            float bottom = Mathf.Clamp01(Mathf.Floor((lower.y * height - 8) / 32) * 32 / height);
-            float top = Mathf.Clamp01(Mathf.Ceil((upper.y * height + 8) / 32) * 32 / height);
+            float quantum = HdrpCropQuantum;
+            float left = Mathf.Clamp01(Mathf.Floor((lower.x * width - 8) / quantum) * quantum / width);
+            float right = Mathf.Clamp01(Mathf.Ceil((upper.x * width + 8) / quantum) * quantum / width);
+            float bottom = Mathf.Clamp01(Mathf.Floor((lower.y * height - 8) / quantum) * quantum / height);
+            float top = Mathf.Clamp01(Mathf.Ceil((upper.y * height + 8) / quantum) * quantum / height);
             return right > left && top > bottom ? Rect.MinMaxRect(left, bottom, right, top) : new Rect(0, 0, 1, 1);
         }
 

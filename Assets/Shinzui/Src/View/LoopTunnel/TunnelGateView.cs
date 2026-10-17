@@ -222,6 +222,13 @@ namespace Shinzui.View
         {
             if (mainCam == null) return false;
 
+            // Expanded trigger bounds are useful at edges, but must not schedule fully clipped HDRP views behind the player
+            if (UsesHdrp && HdrpNearPlaneCullEnabled && _portalRenderer != null)
+            {
+                GeometryUtility.CalculateFrustumPlanes(mainCam, _frustumPlanesScratch);
+                if (IsWhollyBehindNearPlane(_portalRenderer.bounds, _frustumPlanesScratch[4])) return false;
+            }
+
             Vector3 gateCenter = transform.position;
             if (_collider is BoxCollider box)
             {
@@ -297,10 +304,13 @@ namespace Shinzui.View
             }
 
             ReleaseRecursionRenderTextures();
-            if (_portalRT == null) return;
-            _portalRT.Release();
-            Destroy(_portalRT);
-            _portalRT = null;
+            if (_portalRT != null)
+            {
+                if (_usesHdrpTextureCache) PortalRenderTextureCache.Release(_portalRT);
+                else { _portalRT.Release(); Destroy(_portalRT); }
+                _portalRT = null;
+            }
+            _usesHdrpTextureCache = false;
         }
 
         /// <summary>
@@ -735,12 +745,15 @@ namespace Shinzui.View
             _recursionRTs = new RenderTexture[depth];
             for (int i = 0; i < depth; i++)
             {
-                _recursionRTs[i] = new RenderTexture(width, height, 24, RenderTextureFormat.DefaultHDR)
+                string textureName = $"Portal_RecursionRT_{gameObject.name}_{i}";
+                if (_usesHdrpTextureCache)
+                    _recursionRTs[i] = PortalRenderTextureCache.Acquire(width, height, RenderTextureFormat.DefaultHDR, textureName);
+                else
                 {
-                    name = $"Portal_RecursionRT_{gameObject.name}_{i}",
-                    useMipMap = false
-                };
-                _recursionRTs[i].Create();
+                    _recursionRTs[i] = new RenderTexture(width, height, 24, RenderTextureFormat.DefaultHDR)
+                    { name = textureName, useMipMap = false };
+                    _recursionRTs[i].Create();
+                }
             }
         }
 
@@ -755,8 +768,8 @@ namespace Shinzui.View
                 {
                     if (_recursionRTs[i] != null)
                     {
-                        _recursionRTs[i].Release();
-                        Destroy(_recursionRTs[i]);
+                        if (_usesHdrpTextureCache) PortalRenderTextureCache.Release(_recursionRTs[i]);
+                        else { _recursionRTs[i].Release(); Destroy(_recursionRTs[i]); }
                         _recursionRTs[i] = null;
                     }
                 }
