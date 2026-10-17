@@ -37,6 +37,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     private ProfilerRecorder _shaderCompile;
     private ProfilerRecorder _presentWait;
     private ProfilerRecorder _portalAllocation;
+    private ProfilerRecorder _audioTick, _audioStart;
 
     /// <summary>Store frame telemetry without allocating a managed object per rendered frame</summary>
     private struct FrameSample
@@ -45,7 +46,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         public double seconds, cpuMs, gpuMs, mainThreadMs, renderThreadMs, mainPresentWaitMs;
         public float wallMs;
         public ulong timingTimestamp;
-        public long gcAllocatedBytes, shaderCompileNs, presentWaitNs, portalAllocationNs, portalCacheBytes;
+        public long gcAllocatedBytes, shaderCompileNs, presentWaitNs, portalAllocationNs, portalCacheBytes, audioTickNs, audioStartNs;
     }
     private readonly List<object> _observations = new();
     private readonly List<object> _warps = new();
@@ -151,6 +152,8 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         _shaderCompile = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shader.CompileGPUProgram");
         _presentWait = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Gfx.WaitForPresentOnGfxThread");
         _portalAllocation = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shinzui.PortalTextureAllocate");
+        _audioTick = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "Shinzui.SpatialAudioTick");
+        _audioStart = ProfilerRecorder.StartNew(ProfilerCategory.Scripts, "Shinzui.SpatialVoiceStart");
         _started = Time.realtimeSinceStartupAsDouble;
         int lastRendered = 0;
         double nextObservation = 0;
@@ -187,6 +190,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
                     gcCollections = GC.CollectionCount(0), portalTargetChanges = CountPortalTargetChanges(),
                     activePortalCameras = _activePortalCameraCount, portalAllocations = PortalRenderTextureCache.Allocations, portalCacheHits = PortalRenderTextureCache.Hits,
                     portalCacheBytes = PortalRenderTextureCache.RetainedBytes,
+                    audioTickNs = _audioTick.Valid ? _audioTick.LastValue : -1, audioStartNs = _audioStart.Valid ? _audioStart.LastValue : -1,
                     portalAllocationNs = _portalAllocation.Valid ? _portalAllocation.LastValue : -1,
                     gcAllocatedBytes = _gcAllocated.Valid ? _gcAllocated.LastValue : -1,
                     shaderCompileNs = _shaderCompile.Valid ? _shaderCompile.LastValue : -1,
@@ -216,7 +220,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             pipelineRT = (RenderPipelineManager.currentPipeline as HDRenderPipeline)?.rayTracingSupported,
             rtFrame = hd.frameSettings.IsEnabled(FrameSettingsField.RayTracing), capability = HdrpGraphicsRuntime.CapabilityReport(),
             portalNearPlaneCull = TunnelGateView.HdrpNearPlaneCullEnabled, portalTargetCache = TunnelGateView.HdrpTargetCacheEnabled, portalCropQuantum = TunnelGateView.HdrpCropQuantum,
-            profilerCounters = new { gcAllocated = _gcAllocated.Valid, shaderCompile = _shaderCompile.Valid, presentWait = _presentWait.Valid, portalAllocation = _portalAllocation.Valid },
+            profilerCounters = new { gcAllocated = _gcAllocated.Valid, shaderCompile = _shaderCompile.Valid, presentWait = _presentWait.Valid, portalAllocation = _portalAllocation.Valid, audioTick = _audioTick.Valid, audioStart = _audioStart.Valid },
             renderedFrames = _renderedFrames, validRenderWorkload = _renderedFrames > 120 && _samples.Count >= 300,
             durationSeconds = Time.realtimeSinceStartupAsDouble - _started, warmupSeconds = 5, wasDead, walkedDistanceMetres = distance,
             inputMethod = "Virtual gamepad through production InputActions; collision, stamina, enemies, death and camera logic unchanged",
@@ -295,6 +299,8 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     /// <summary>Remove diagnostic callbacks and dispose the device only while the input system is live</summary>
     private void OnDestroy()
     {
+        _audioTick.Dispose();
+        _audioStart.Dispose();
         _portalAllocation.Dispose();
         _gcAllocated.Dispose();
         _shaderCompile.Dispose();

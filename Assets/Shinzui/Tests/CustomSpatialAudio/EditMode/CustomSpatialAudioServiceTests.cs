@@ -104,6 +104,51 @@ namespace Shinzui.Tests.CustomSpatialAudio
             service.SetWorld(null); Assert.That(service.ActiveVoiceCount, Is.Zero);
             Assert.That(service.Play(Request()).Status, Is.EqualTo(SpatialAudioPlayStatus.BackendUnavailable));
         }
+        /// <summary>A Core channel reused by FMOD enters tail draining without interrupting the service tick</summary>
+        [Test]
+        public void StolenCoreChannelPreservesTailAndExpiresWithoutException()
+        {
+            var voice = service.Play(Request()).Handle;
+            Assert.That(service.TryInspect(voice, out var group, out _));
+            var field = typeof(CustomSpatialAudioService).GetField("slots", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var slot = ((Array)field.GetValue(service)).GetValue(0);
+            var original = (Channel)slot.GetType().GetField("Channel").GetValue(slot);
+            Check(original.setPriority(256));
+            Check(original.setMode(MODE.LOOP_NORMAL));
+            Check(original.getCurrentSound(out var sound));
+            Check(system.getMasterChannelGroup(out var master));
+            var replacements = new Channel[64];
+            try
+            {
+                // The isolated test system has 64 virtual channels; fill them to steal the lowest-priority voice
+                for (int i = 0; i < replacements.Length; i++)
+                {
+                    Check(system.playSound(sound, master, true, out replacements[i]));
+                    Check(replacements[i].setPriority(0));
+                    Check(replacements[i].setMode(MODE.LOOP_NORMAL));
+                    Check(replacements[i].setPaused(false));
+                }
+                Check(system.update());
+                // Native stealing policy may protect the DSP group's source; use a genuinely stolen handle from this system
+                Channel stolen = default;
+                foreach (var candidate in replacements)
+                    if (candidate.isPlaying(out _) == RESULT.ERR_CHANNEL_STOLEN) { stolen = candidate; break; }
+                Assert.That(stolen.hasHandle(), Is.True, "The native channel budget must actually produce a stolen handle");
+                original.stop();
+                slot.GetType().GetField("Channel").SetValue(slot, stolen);
+                Assert.DoesNotThrow(() => service.Tick(.01f));
+                Assert.That(service.GetState(voice), Is.EqualTo(SpatialVoiceState.Stopping));
+                Assert.That(service.ActiveVoiceCount, Is.EqualTo(1));
+            }
+            finally
+            {
+                foreach (var channel in replacements) if (channel.hasHandle()) channel.stop();
+            }
+            Step(600);
+            Assert.That(service.GetState(voice), Is.EqualTo(SpatialVoiceState.Stopped));
+            Assert.That(service.ActiveVoiceCount, Is.Zero);
+            Assert.That(service.CallbackErrorCount, Is.Zero);
+        }
         sealed class PoseSource : IAudioPoseSource
         { public AudioPose Pose; public bool TryGetPose(out AudioPose pose) { pose = Pose; return true; } }
     }
