@@ -1,59 +1,68 @@
 using UnityEngine;
 using System.Threading.Tasks;
 using Shinzui.Application.Interfaces.Inventory;
+using Shinzui.Application.UseCases.Inventory;
 
-namespace Shinzui.Infrastructure.SaveData
+namespace Shinzui.Infrastructure.SaveSystem
 {
     /// <summary>
-    /// ゲームのセーブ&ロード処理を行う
+    /// ゲームのセーブ & ロード処理を行う
     /// </summary>
     public class SaveManager
     {
         private readonly IInventoryRepository _inventoryRepository;
         private readonly ISpecialItemRepository _specialItemRepository;
+        private readonly InventoryUseCase _inventoryUseCase;
+        private readonly SpecialItemUseCase _specialItemUseCase;
     
         private const string SaveKey = "shinzui_savedata_";
-        private const int SaveDataSlot = 3;
-        public int SaveSlotNum => SaveDataSlot;
+        private const int SaveDataSlotNum = 3;
+        public int SaveSlotNum => SaveDataSlotNum;
 
         public SaveManager(
             IInventoryRepository inventoryRepository,
-            ISpecialItemRepository specialItemRepository)
+            ISpecialItemRepository specialItemRepository,
+            InventoryUseCase inventoryUseCase,
+            SpecialItemUseCase specialItemUseCase)
         {
             _inventoryRepository = inventoryRepository;
             _specialItemRepository = specialItemRepository;
+            _inventoryUseCase = inventoryUseCase;
+            _specialItemUseCase = specialItemUseCase;
         }
 
         /// <summary>
-        /// セーブ
+        /// セーブスロットを指定してセーブ
         /// </summary>
-        /// <param name="saveIdx">セーブスロットのインデックス</param>
-        public async void Save(int saveIdx)
+        /// <param name="idx">セーブスロットのインデックス</param>
+        public async void Save(int idx)
         {
             GameSaveData data = await CreateGameSaveDataAsync();
-            Task saveTask = SaveGameData(saveIdx, data);
+            await SaveGameDataAsync(idx, data);
         }
 
         /// <summary>
-        /// ロード
+        /// セーブスロットを指定してロード
         /// </summary>
-        /// <param name="loadIdx">セーブスロットのインデックス</param>
+        /// <param name="idx">セーブスロットのインデックス</param>
         /// <returns>ロードしたゲームデータ</returns>
-        public async Task<GameSaveData> Load(int loadIdx)
+        public async Task<GameSaveData> Load(int idx)
         {
-            GameSaveData data = await LoadGameDataAsync(loadIdx);
+            GameSaveData data = await LoadGameDataAsync(idx);
+            await _inventoryUseCase.SetInventoryData(data.InventorySaveData);
+            await _specialItemUseCase.SetSpecialItemData(data.SpecialItemSaveData);
             return data;
         }
     
         /// <summary>
         /// セーブデータをjsonファイルに変換しPlayerPrefsに保存する
         /// </summary>
-        /// <param name="saveIdx">セーブスロットのインデックス</param>
+        /// <param name="idx">セーブスロットのインデックス</param>
         /// <param name="data">セーブデータ</param>
         /// <returns></returns>
-        private Task SaveGameData(int saveIdx, GameSaveData data)
+        private Task SaveGameDataAsync(int idx, GameSaveData data)
         {
-            if (saveIdx > SaveDataSlot)
+            if (idx > SaveDataSlotNum)
             {
                 Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
                 return Task.CompletedTask;
@@ -62,7 +71,7 @@ namespace Shinzui.Infrastructure.SaveData
             try
             {
                 string json = JsonUtility.ToJson(data);
-                PlayerPrefs.SetString(SaveKey + saveIdx, json);
+                PlayerPrefs.SetString(SaveKey + idx, json);
                 PlayerPrefs.Save();
             }
             catch (System.Exception ex)
@@ -76,11 +85,11 @@ namespace Shinzui.Infrastructure.SaveData
         /// <summary>
         /// ロードするゲームデータをjsonからGameSaveDataに変換する
         /// </summary>
-        /// <param name="loadIdx">セーブスロットのインデックス</param>
+        /// <param name="idx">セーブスロットのインデックス</param>
         /// <returns>指定したセーブスロットのゲームデータ</returns>
-        private Task<GameSaveData> LoadGameDataAsync(int loadIdx)
+        private Task<GameSaveData> LoadGameDataAsync(int idx)
         {
-            if (!PlayerPrefs.HasKey(SaveKey + loadIdx))
+            if (!PlayerPrefs.HasKey(SaveKey + idx))
             {
                 return Task.FromResult<GameSaveData>(null);
             }
