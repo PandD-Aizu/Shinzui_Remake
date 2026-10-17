@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
 
 /// <summary>Opt-in native-player crossing and regeneration checks through the production presenter</summary>
-public static class GraphicsPortalValidation
+public static partial class GraphicsPortalValidation
 {
     /// <summary>Move the real player and camera through a portal, observing the actual warp event rather than invoking it</summary>
     /// <param name="camera">Production gameplay camera</param>

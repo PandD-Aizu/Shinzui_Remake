@@ -14,6 +14,7 @@ using Shinzui.Infrastructure.Repositories;
 using Shinzui.Infrastructure.Services;
 using Shinzui.View;
 using UnityEngine;
+using Unity.Profiling;
 using UnityEngine.AddressableAssets;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -30,14 +31,31 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     private IInputService _input;
     private PlayerDeathUseCase _death;
     private EnemyDirectorUseCase _director;
-    private readonly List<object> _samples = new();
+    private readonly List<FrameSample> _samples = new(40000);
+    private readonly Dictionary<EntityId, EntityId> _portalTargetIds = new();
+    private ProfilerRecorder _gcAllocated;
+    private ProfilerRecorder _shaderCompile;
+    private ProfilerRecorder _presentWait;
+    private ProfilerRecorder _portalAllocation;
+
+    /// <summary>Store frame telemetry without allocating a managed object per rendered frame</summary>
+    private struct FrameSample
+    {
+        public int frame, gcCollections, portalTargetChanges, portalAllocations, portalCacheHits, activePortalCameras;
+        public double seconds, cpuMs, gpuMs, mainThreadMs, renderThreadMs, mainPresentWaitMs;
+        public float wallMs;
+        public ulong timingTimestamp;
+        public long gcAllocatedBytes, shaderCompileNs, presentWaitNs, portalAllocationNs, portalCacheBytes;
+    }
     private readonly List<object> _observations = new();
     private readonly List<object> _warps = new();
     private readonly Dictionary<string, int> _warnings = new();
     private readonly Dictionary<string, int> _errors = new();
+    private readonly List<object> _errorEvents = new();
     private readonly FrameTiming[] _timing = new FrameTiming[1];
     private double _started;
     private int _renderedFrames;
+    private int _activePortalCameraCount;
     private bool _quitting;
 
     /// <summary>Enable only in an explicitly requested development Player run</summary>
@@ -69,6 +87,7 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
         int seed = int.Parse(Argument("--graphics-gameplay-seed", "2777"));
         Directory.CreateDirectory(folder);
         UnityEngine.Application.logMessageReceived += ObserveLog;
+        double sceneLoadStarted = Time.realtimeSinceStartupAsDouble;
         GenerateTunnelLifetimeScope.RuntimeSeedOverride = 2777;
         yield return Addressables.LoadSceneAsync("Assets/Shinzui/Scenes/StageTemp.unity");
         double deadline = Time.realtimeSinceStartupAsDouble + 30;
@@ -83,17 +102,24 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             UnityEngine.Application.Quit(2);
             yield break;
         }
+        double sceneLoadSeconds = Time.realtimeSinceStartupAsDouble - sceneLoadStarted;
         _input = scope.Container.Resolve<IInputService>();
         _death = scope.Container.Resolve<PlayerDeathUseCase>();
         _director = scope.Container.Resolve<EnemyDirectorUseCase>();
+        double generationStarted = Time.realtimeSinceStartupAsDouble;
+        int generationGcBefore = GC.CollectionCount(0);
         bool regenerated = seed != 2777 && FindAnyObjectByType<GenerateTunnelLifetimeScope>().Regenerate(seed);
+        double regenerationMs = (Time.realtimeSinceStartupAsDouble - generationStarted) * 1000;
+        int generationGcCollections = GC.CollectionCount(0) - generationGcBefore;
         var saved = new GameSettings();
         saved.ResetToDefault();
         saved.Graphics.SetQualityPreset((GraphicsQualityPreset)int.Parse(Argument("--graphics-preset", "3")));
         saved.Graphics.ImageQualityScale = float.Parse(Argument("--graphics-render-scale", "1"), System.Globalization.CultureInfo.InvariantCulture);
+        float presetPortalScale = saved.Graphics.PortalResolutionScale;
+        saved.Graphics.PortalResolutionScale = float.Parse(Argument("--graphics-portal-scale", presetPortalScale.ToString(System.Globalization.CultureInfo.InvariantCulture)), System.Globalization.CultureInfo.InvariantCulture);
         saved.Graphics.FrameRateLimit = int.Parse(Argument("--graphics-frame-cap", "60"));
         saved.Graphics.EnableVSync = Argument("--graphics-vsync", "true") == "true";
-        if (!Mathf.Approximately(saved.Graphics.ImageQualityScale, 1)) saved.Graphics.QualityPreset = GraphicsQualityPreset.Custom;
+        if (!Mathf.Approximately(saved.Graphics.ImageQualityScale, 1) || !Mathf.Approximately(saved.Graphics.PortalResolutionScale, presetPortalScale)) saved.Graphics.QualityPreset = GraphicsQualityPreset.Custom;
         var repository = new FileSettingsRepository(Path.Combine(folder, label + "-settings.json"));
         repository.Save(saved);
         var reloaded = repository.Load();
@@ -121,6 +147,10 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             UnityEngine.Application.Quit(3);
             yield break;
         }
+        _gcAllocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+        _shaderCompile = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shader.CompileGPUProgram");
+        _presentWait = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Gfx.WaitForPresentOnGfxThread");
+        _portalAllocation = ProfilerRecorder.StartNew(ProfilerCategory.Render, "Shinzui.PortalTextureAllocate");
         _started = Time.realtimeSinceStartupAsDouble;
         int lastRendered = 0;
         double nextObservation = 0;
@@ -148,8 +178,19 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             if (step < 5) distance += step;
             lastPosition = position;
             if (elapsed >= 5 && _renderedFrames > 120 && _renderedFrames != lastRendered && !dead)
-                _samples.Add(new { frame = Time.frameCount, seconds = elapsed, wallMs = Time.unscaledDeltaTime * 1000,
-                    cpuMs = timings > 0 ? _timing[0].cpuFrameTime : 0, gpuMs = timings > 0 ? _timing[0].gpuFrameTime : 0 });
+                _samples.Add(new FrameSample { frame = Time.frameCount, seconds = elapsed, wallMs = Time.unscaledDeltaTime * 1000,
+                    cpuMs = timings > 0 ? _timing[0].cpuFrameTime : 0, gpuMs = timings > 0 ? _timing[0].gpuFrameTime : 0,
+                    mainThreadMs = timings > 0 ? _timing[0].cpuMainThreadFrameTime : 0,
+                    renderThreadMs = timings > 0 ? _timing[0].cpuRenderThreadFrameTime : 0,
+                    mainPresentWaitMs = timings > 0 ? _timing[0].cpuMainThreadPresentWaitTime : 0,
+                    timingTimestamp = timings > 0 ? _timing[0].frameStartTimestamp : 0,
+                    gcCollections = GC.CollectionCount(0), portalTargetChanges = CountPortalTargetChanges(),
+                    activePortalCameras = _activePortalCameraCount, portalAllocations = PortalRenderTextureCache.Allocations, portalCacheHits = PortalRenderTextureCache.Hits,
+                    portalCacheBytes = PortalRenderTextureCache.RetainedBytes,
+                    portalAllocationNs = _portalAllocation.Valid ? _portalAllocation.LastValue : -1,
+                    gcAllocatedBytes = _gcAllocated.Valid ? _gcAllocated.LastValue : -1,
+                    shaderCompileNs = _shaderCompile.Valid ? _shaderCompile.LastValue : -1,
+                    presentWaitNs = _presentWait.Valid ? _presentWait.LastValue : -1 });
             lastRendered = _renderedFrames;
             if (elapsed >= nextObservation)
             {
@@ -169,15 +210,17 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
             internalWidth = hd.actualWidth, internalHeight = hd.actualHeight,
             refreshHz = Screen.currentResolution.refreshRateRatio.value, mode = Screen.fullScreenMode.ToString(),
             editor = false, developmentBuild = Debug.isDebugBuild, settings = reloaded.Graphics, settingsSavedAndReloaded = true,
-            isolatedSettingsFile = true, seed, regenerated, timeScale = Time.timeScale, frozenGameplay = false,
+            isolatedSettingsFile = true, seed, regenerated, sceneLoadSeconds, regenerationMs, generationGcCollections, timeScale = Time.timeScale, frozenGameplay = false,
             dofMode = dof.focusMode.value.ToString(), dofActive = dof.IsActive(), focusDistance = dof.focusDistance.value,
             cinemachineEnabled = brain != null && brain.enabled, autofocusComponents = FindObjectsByType<DynamicPostProcessView>().Count(v => v.isActiveAndEnabled),
             pipelineRT = (RenderPipelineManager.currentPipeline as HDRenderPipeline)?.rayTracingSupported,
             rtFrame = hd.frameSettings.IsEnabled(FrameSettingsField.RayTracing), capability = HdrpGraphicsRuntime.CapabilityReport(),
+            portalNearPlaneCull = TunnelGateView.HdrpNearPlaneCullEnabled, portalTargetCache = TunnelGateView.HdrpTargetCacheEnabled, portalCropQuantum = TunnelGateView.HdrpCropQuantum,
+            profilerCounters = new { gcAllocated = _gcAllocated.Valid, shaderCompile = _shaderCompile.Valid, presentWait = _presentWait.Valid, portalAllocation = _portalAllocation.Valid },
             renderedFrames = _renderedFrames, validRenderWorkload = _renderedFrames > 120 && _samples.Count >= 300,
             durationSeconds = Time.realtimeSinceStartupAsDouble - _started, warmupSeconds = 5, wasDead, walkedDistanceMetres = distance,
             inputMethod = "Virtual gamepad through production InputActions; collision, stamina, enemies, death and camera logic unchanged",
-            samples = _samples, observations = _observations, warps = _warps, warnings = _warnings, errors = _errors
+            samples = _samples, observations = _observations, warps = _warps, warnings = _warnings, errors = _errors, errorEvents = _errorEvents
         }, Formatting.Indented));
         // Screenshot encoding occurs after the final performance sample
         yield return new WaitForEndOfFrame();
@@ -206,6 +249,23 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
                 speed = a != null && a.enabled && a.isOnNavMesh ? a.velocity.magnitude : 0 }; }).ToArray() });
     }
 
+    /// <summary>Observe portal target replacement without changing rendering or allocating per frame</summary>
+    /// <returns>Number of targets created, released or replaced since the previous sample</returns>
+    private int CountPortalTargetChanges()
+    {
+        int changes = 0;
+        _activePortalCameraCount = 0;
+        foreach (var gate in TunnelGateView.ActiveGates)
+        {
+            _activePortalCameraCount += gate.HdrpActiveCameraCount;
+            EntityId gateId = gate.GetEntityId();
+            EntityId targetId = gate.PortalRT != null ? gate.PortalRT.GetEntityId() : EntityId.None;
+            if (_portalTargetIds.TryGetValue(gateId, out EntityId previous) && previous != targetId) changes++;
+            _portalTargetIds[gateId] = targetId;
+        }
+        return changes;
+    }
+
     /// <summary>Count actual rendered production frames</summary>
     /// <param name="context">Render context</param>
     /// <param name="camera">Rendered camera</param>
@@ -223,6 +283,8 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     {
         var destination = type == LogType.Warning ? _warnings : type == LogType.Error || type == LogType.Exception || type == LogType.Assert ? _errors : null;
         if (destination == null) return;
+        if (destination == _errors && _errorEvents.Count < 100)
+            _errorEvents.Add(new { frame = Time.frameCount, seconds = Time.realtimeSinceStartupAsDouble - _started, message, stack });
         if (destination.TryGetValue(message, out int count)) destination[message] = count + 1;
         else if (destination.Count < 30) destination[message] = 1;
     }
@@ -233,6 +295,10 @@ public sealed class GraphicsGameplayValidation : MonoBehaviour
     /// <summary>Remove diagnostic callbacks and dispose the device only while the input system is live</summary>
     private void OnDestroy()
     {
+        _portalAllocation.Dispose();
+        _gcAllocated.Dispose();
+        _shaderCompile.Dispose();
+        _presentWait.Dispose();
         RenderPipelineManager.endCameraRendering -= CountFrame;
         UnityEngine.Application.logMessageReceived -= ObserveLog;
         if (_player != null) _player.Warped -= ObserveWarp;

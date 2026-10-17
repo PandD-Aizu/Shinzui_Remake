@@ -104,6 +104,11 @@ public sealed class GraphicsPlayerValidation : MonoBehaviour
         _target.Create();
         _camera.targetTexture = _target;
         _camera.aspect = 16f / 9;
+        if (Environment.GetCommandLineArgs().Contains("--graphics-portal-stress"))
+        {
+            yield return GraphicsPortalValidation.CaptureStress(_camera, _target, _folder, _label);
+            yield break;
+        }
         if (Environment.GetCommandLineArgs().Contains("--graphics-portal-views"))
         {
             yield return GraphicsPortalValidation.CaptureViews(_camera, _target, _folder, _label);
