@@ -17,6 +17,11 @@ namespace Shinzui.Infrastructure.TunnelAcoustics
             // Initialize on the main thread, after the Unity scene has loaded.
             _ = SteamAudioManager.Singleton;
             scene = SteamAudioManager.CurrentScene;
+            if ((scene == null || scene.Get() == IntPtr.Zero) && SteamAudioManager.Singleton != null && SteamAudioManager.Context != null)
+            {
+                SteamAudioManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), SteamAudioManager.Context, false);
+                scene = SteamAudioManager.CurrentScene;
+            }
             if (scene == null || scene.Get() == IntPtr.Zero) throw new InvalidOperationException("Steam Audio scene is not ready.");
         }
         public void Replace(AcousticMeshData geometry)

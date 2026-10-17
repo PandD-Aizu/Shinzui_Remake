@@ -47,6 +47,11 @@ namespace Shinzui.Temp.BotamochiStealth
         private static int s_floorNumber = 1;
         private static int? s_pendingSeed;
 
+        /// <summary>
+        /// 彼女にアイテムを渡すとtrue。次の階だけ敵を出さない
+        /// </summary>
+        public static bool SkipNextFloorEnemy;
+
         private bool _placed;
         private bool _advancing;
         private Vector3? _playerSpawn;
@@ -123,9 +128,9 @@ namespace Shinzui.Temp.BotamochiStealth
                 yield return null;
             }
 
-            if (special == null)
+            if (special == null || !HasBakedNavMesh())
             {
-                Debug.LogWarning("[TempPastTunnelDirector] Special Tunnel が生成マップ内に見つかりませんでした。配置をスキップします（生成が無効なシーンでは正常）。", this);
+                Debug.LogWarning("[TempPastTunnelDirector] Special Tunnel または NavMesh が見つかりませんでした。配置をスキップします（生成が無効なシーンでは正常）。", this);
                 if (stealthEnemy != null)
                 {
                     stealthEnemy.gameObject.SetActive(true);
@@ -133,6 +138,7 @@ namespace Shinzui.Temp.BotamochiStealth
                 yield break;
             }
 
+            WarpPlayerToStartTunnel();
             PlaceOccupants(special);
         }
 
@@ -224,9 +230,19 @@ namespace Shinzui.Temp.BotamochiStealth
 
                 GameObject eo = stealthEnemy.gameObject;
                 eo.transform.position = enemyPoint + Vector3.up * 0.1f;
-                eo.SetActive(true);
-                // 前の階の会話で一時停止したままになっていることがあるので巡回を再開させる
-                stealthEnemy.ResumeEnemy();
+
+                if (SkipNextFloorEnemy)
+                {
+                    SkipNextFloorEnemy = false;
+                    eo.SetActive(false);
+                    Debug.Log("[TempPastTunnelDirector] 特殊アイテムの効果でこの階層の敵配置をスキップしました。", this);
+                }
+                else
+                {
+                    eo.SetActive(true);
+                    // 前の階の会話で一時停止したままになっていることがあるので巡回を再開させる
+                    stealthEnemy.ResumeEnemy();
+                }
             }
 
             _placed = true;
@@ -354,9 +370,9 @@ namespace Shinzui.Temp.BotamochiStealth
                 yield return null;
             }
 
-            if (special == null)
+            if (special == null || !HasBakedNavMesh())
             {
-                Debug.LogWarning("[TempPastTunnelDirector] 再生成後に Special Tunnel が見つかりませんでした", this);
+                Debug.LogWarning("[TempPastTunnelDirector] 再生成後に Special Tunnel または NavMesh が見つかりませんでした", this);
                 SetOccupantsActive(true);
                 _advancing = false;
                 yield break;
@@ -424,7 +440,12 @@ namespace Shinzui.Temp.BotamochiStealth
         {
             s_floorNumber = 1;
             s_pendingSeed = null;
+            SkipNextFloorEnemy = false;
             GenerateTunnelTestBootstrap.RuntimeSeedOverride = null;
+            if (girlfriend != null)
+            {
+                girlfriend.ResetScenarioProgress();
+            }
         }
 
         private static int NextSeed(int seed, int floor)

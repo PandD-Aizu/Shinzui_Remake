@@ -19,15 +19,18 @@ namespace Shinzui.DI.TunnelAcoustics
         public static TunnelAudioBinding Attach(TunnelMapView view, TunnelAudioConfiguration configuration = null)
         {
             var existing=view.GetComponent<TunnelAudioBinding>();
-            if (existing) return existing;
+            if (existing && existing.Runtime != null) return existing;
             configuration=configuration ? configuration : Resources.Load<TunnelAudioConfiguration>("SpatialAudio/TunnelAudioConfiguration");
             if (!configuration) throw new System.InvalidOperationException("Tunnel audio configuration is missing. Run the acoustic asset export.");
-            var binding=view.gameObject.AddComponent<TunnelAudioBinding>();
+            var binding=existing ? existing : view.gameObject.AddComponent<TunnelAudioBinding>();
             binding.view=view;
-            binding.Runtime=new TunnelAudioRuntime(view.transform,configuration);
-            view.GeometryClearing+=binding.OnClearing;
-            view.GeometryReady+=binding.OnReady;
-            if (view.GeometryRoot) binding.OnReady(view.GeometryRoot);
+            if (binding.Runtime == null)
+            {
+                binding.Runtime=new TunnelAudioRuntime(view.transform,configuration);
+                view.GeometryClearing+=binding.OnClearing;
+                view.GeometryReady+=binding.OnReady;
+                if (view.GeometryRoot) binding.OnReady(view.GeometryRoot);
+            }
             return binding;
         }
         void OnClearing()

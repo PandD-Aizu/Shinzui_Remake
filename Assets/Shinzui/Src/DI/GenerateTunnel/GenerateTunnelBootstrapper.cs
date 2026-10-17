@@ -178,7 +178,14 @@ namespace Shinzui.DI.GenerateTunnel
             }
 
 #if STEAMAUDIO_ENABLED
-            Shinzui.DI.TunnelAcoustics.TunnelAudioBinding.Attach(mapView);
+            try
+            {
+                Shinzui.DI.TunnelAcoustics.TunnelAudioBinding.Attach(mapView);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[GenerateTunnelBootstrapper] Failed to attach TunnelAudioBinding: {ex.Message}");
+            }
 #endif
 
             // 3. 各層のインスタンスを生成・結線 (Composition Root)
