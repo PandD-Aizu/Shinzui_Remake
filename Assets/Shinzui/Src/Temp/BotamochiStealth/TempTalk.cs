@@ -153,9 +153,6 @@ namespace Shinzui.Temp.BotamochiStealth
         /// </summary>
         public static class Has
         {
-            public static readonly Func<bool> SpecialItem = () => TempSpecialItemState.HasItem;
-            public static readonly Func<bool> NoSpecialItem = () => !TempSpecialItemState.HasItem;
-
             // documentIdはTempDocumentItemのDocument Id
             public static Func<bool> Document(string documentId) => () => TempDocumentCollector.IsCollected(documentId);
         }

@@ -12,6 +12,8 @@ namespace Shinzui.Temp
         [SerializeField] private string documentId = "document_001"; // 重複収集防止用ID
         [SerializeField] private string documentTitle = "### 初期メッセージ(要変更😊) ###";
 
+        public string DocumentId => documentId;
+
         /// <summary>
         /// インタラクト時にドキュメントを収集済みとして記録する
         /// </summary>
