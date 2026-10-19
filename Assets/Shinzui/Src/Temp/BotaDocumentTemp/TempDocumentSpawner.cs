@@ -3,34 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
-using Shinzui.Temp;
 using Shinzui.View.GenerateTunnel;
 
-namespace Shinzui.Temp.BotamochiStealth
+namespace Shinzui.Temp
 {
     /// <summary>
-    /// 生成されたマップに特殊アイテムを置く。NavMesh上にしか置かないので壁には埋まらない
-    /// 階が作り直されるたびに置き直す。シーンに置かなくても勝手に起動する（置けばInspectorで調整できる）
+    /// 生成されたマップにドキュメントを置く。NavMesh上にしか置かないので壁には埋まらない
+    /// documentPrefabsの中から拾ってないものをランダムに選んで置く。階が作り直されるたびに置き直す
+    /// シーンに置かなくても勝手に起動する（documentPrefabsを設定するにはシーンに置いてInspectorで指定する）
     /// </summary>
     [DefaultExecutionOrder(500)]
-    public sealed class TempSpecialItemSpawner : MonoBehaviour
+    public sealed class TempDocumentSpawner : MonoBehaviour
     {
         private const string GeometryRootName = "Tunnel Map Geometry";
 
+        [Tooltip("置く候補のドキュメント（TempDocumentItemが付いたプレハブ）")]
+        [SerializeField] private TempDocumentItem[] documentPrefabs;
+
         [Header("出現数（min〜maxでランダム）")]
-        [SerializeField, Min(0)] private int spawnCountMin = 1;
-        [SerializeField, Min(0)] private int spawnCountMax = 1;
+        [SerializeField, Min(0)] private int spawnCountMin = 2;
+        [SerializeField, Min(0)] private int spawnCountMax = 4;
 
         [Header("配置")]
-        [Tooltip("アイテム同士の最低距離(m)")]
+        [Tooltip("ドキュメント同士の最低距離(m)")]
         [SerializeField] private float minSeparation = 8.0f;
         [Tooltip("1個あたりの抽選し直し回数")]
         [SerializeField] private int maxPlacementAttemptsPerItem = 30;
         [Tooltip("床からの高さ(m)")]
         [SerializeField] private float groundClearance = 0.5f;
-
-        [Header("見た目（空ならカプセル）")]
-        [SerializeField] private GameObject itemPrefab;
 
         [Header("完了待ち")]
         [Tooltip("マップ生成・NavMeshベイク待ちの最大秒数")]
@@ -61,7 +61,7 @@ namespace Shinzui.Temp.BotamochiStealth
         /// </summary>
         private static void TryAutoBootstrap()
         {
-            if (FindAnyObjectByType<TempSpecialItemSpawner>() != null)
+            if (FindAnyObjectByType<TempDocumentSpawner>() != null)
             {
                 return;
             }
@@ -71,8 +71,8 @@ namespace Shinzui.Temp.BotamochiStealth
                 return;
             }
 
-            var go = new GameObject("TempSpecialItemSpawner (Auto)");
-            go.AddComponent<TempSpecialItemSpawner>();
+            var go = new GameObject("TempDocumentSpawner (Auto)");
+            go.AddComponent<TempDocumentSpawner>();
         }
 
         private void Start()
@@ -110,8 +110,8 @@ namespace Shinzui.Temp.BotamochiStealth
                 if (geometry.GetEntityId() != _lastGeometryEntityId)
                 {
                     _lastGeometryEntityId = geometry.GetEntityId();
-                    // MapRoot配下に置くとトンネル音響の収集がカプセルコライダーで例外を出すので自分の下に置く
-                    SpawnItems(transform);
+                    // MapRoot配下に置くとトンネル音響の収集がコライダーで例外を出すので自分の下に置く
+                    SpawnDocuments(transform);
                 }
 
                 // 次の階層で作り直されるまで待つ
@@ -120,11 +120,11 @@ namespace Shinzui.Temp.BotamochiStealth
                     yield return null;
                 }
 
-                ClearSpawnedItems();
+                ClearSpawned();
             }
         }
 
-        private void ClearSpawnedItems()
+        private void ClearSpawned()
         {
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -149,20 +149,28 @@ namespace Shinzui.Temp.BotamochiStealth
         }
 
         /// <summary>
-        /// NavMesh上のランダムな位置に、min〜max個のアイテムをminSeparation以上離して置く
+        /// 拾ってないドキュメントからmin〜max個選んで、NavMesh上のランダムな位置にminSeparation以上離して置く
         /// </summary>
-        private void SpawnItems(Transform parent)
+        private void SpawnDocuments(Transform parent)
         {
-            // 1個しか持てないので、持ち越してる階では出さない
-            if (TempSpecialItemState.HasItem)
+            var candidates = new List<TempDocumentItem>();
+            if (documentPrefabs != null)
             {
+                foreach (TempDocumentItem prefab in documentPrefabs)
+                {
+                    if (prefab != null && !TempDocumentCollector.IsCollected(prefab.DocumentId)) candidates.Add(prefab);
+                }
+            }
+            if (candidates.Count == 0)
+            {
+                Debug.LogWarning("[TempDocumentSpawner] 置けるドキュメントが無いのでスキップしました（documentPrefabs未設定か全部拾い済み）。", this);
                 return;
             }
 
             NavMeshTriangulation tri = NavMesh.CalculateTriangulation();
             if (tri.vertices.Length == 0 || tri.indices.Length < 3)
             {
-                Debug.LogWarning("[TempSpecialItemSpawner] NavMeshが空のためアイテム配置をスキップしました。", this);
+                Debug.LogWarning("[TempDocumentSpawner] NavMeshが空のため配置をスキップしました。", this);
                 return;
             }
 
@@ -184,7 +192,7 @@ namespace Shinzui.Temp.BotamochiStealth
                 return;
             }
 
-            int count = Random.Range(spawnCountMin, spawnCountMax + 1);
+            int count = Mathf.Min(Random.Range(spawnCountMin, spawnCountMax + 1), candidates.Count);
             var placedPoints = new List<Vector3>(count);
 
             for (int i = 0; i < count; i++)
@@ -218,11 +226,16 @@ namespace Shinzui.Temp.BotamochiStealth
                     point = SampleRandomPointOnNavMesh(tri, cumulativeAreas, totalArea);
                 }
 
+                // 同じドキュメントを2回置かないように、選んだら候補から外す
+                int pick = Random.Range(0, candidates.Count);
+                TempDocumentItem prefab = candidates[pick];
+                candidates.RemoveAt(pick);
+
                 placedPoints.Add(point.Value);
-                SpawnOne(point.Value + Vector3.up * groundClearance, parent);
+                Instantiate(prefab, point.Value + Vector3.up * groundClearance, Quaternion.identity, parent);
             }
 
-            Debug.Log($"[TempSpecialItemSpawner] 特殊アイテムを{placedPoints.Count}箇所に配置しました。", this);
+            Debug.Log($"[TempDocumentSpawner] ドキュメントを{placedPoints.Count}箇所に配置しました。", this);
         }
 
         /// <summary>
@@ -261,48 +274,6 @@ namespace Shinzui.Temp.BotamochiStealth
                 return hit.position;
             }
             return point;
-        }
-
-        /// <summary>
-        /// 1個置く。itemPrefabが空なら黄色く光るカプセルを代わりに作る
-        /// </summary>
-        private void SpawnOne(Vector3 position, Transform parent)
-        {
-            GameObject go;
-            if (itemPrefab != null)
-            {
-                go = Instantiate(itemPrefab, position, Quaternion.identity, parent);
-            }
-            else
-            {
-                go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                go.name = "TempSpecialItem (Placeholder)";
-                go.transform.SetPositionAndRotation(position, Quaternion.identity);
-                go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
-                go.transform.SetParent(parent, true);
-
-                Renderer rend = go.GetComponent<Renderer>();
-                if (rend != null)
-                {
-                    Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-                    if (shader != null)
-                    {
-                        var mat = new Material(shader);
-                        mat.color = new Color(1.0f, 0.85f, 0.2f);
-                        if (mat.HasProperty("_EmissionColor"))
-                        {
-                            mat.EnableKeyword("_EMISSION");
-                            mat.SetColor("_EmissionColor", new Color(1.0f, 0.7f, 0.1f) * 1.5f);
-                        }
-                        rend.material = mat;
-                    }
-                }
-            }
-
-            if (go.GetComponent<TempSpecialItem>() == null)
-            {
-                go.AddComponent<TempSpecialItem>();
-            }
         }
     }
 }

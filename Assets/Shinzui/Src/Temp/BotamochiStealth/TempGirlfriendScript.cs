@@ -7,7 +7,7 @@ namespace Shinzui.Temp.BotamochiStealth
     // If(条件, ...)                 条件を満たすときだけ中を流す
     // Choose(Option(...), ...)      選択肢。Optionに.When(条件) .Once() .Back()を付けられる
     // Do(処理) End()
-    // 条件は Has.SpecialItem / Has.NoSpecialItem / Has.Document("id")
+    // 条件は Has.Document("id")
 
     /// <summary>
     /// 彼女の会話の台本。会話や分岐を足すときはここに書く
@@ -30,7 +30,6 @@ namespace Shinzui.Temp.BotamochiStealth
         {
             Say($"彼女『（仮）{floor}-1』"),
             Say($"彼女『（仮）{floor}-2』"),
-            If(Has.SpecialItem, Say($"彼女『（仮）{floor}-アイテム』")),
             Choose(CommonOptions(floor)),
         };
 
@@ -38,31 +37,13 @@ namespace Shinzui.Temp.BotamochiStealth
         private static IEnumerable<TempTalkOption> CommonOptions(int floor)
         {
             yield return Option("（仮）帰る",
-                    Say($"彼女『（仮）{floor}-帰る』", 2f),
-                    End())
-                .When(Has.NoSpecialItem);
+                Say($"彼女『（仮）{floor}-帰る』", 2f),
+                End());
 
-            yield return Option("（仮）帰る",
-                    Say($"彼女『（仮）{floor}-渡さない』", 2f),
-                    End())
-                .When(Has.SpecialItem);
-
-            yield return Option("（仮）アイテムを渡す",
-                    Do(GiveSpecialItem),
-                    Say($"彼女『（仮）{floor}-渡す』", 2f),
-                    End())
-                .When(Has.SpecialItem);
-
-            // ドキュメントやアイテムに反応させたいときはここに足す
+            // ドキュメントに反応させたいときはここに足す
             yield return Option("（仮）ドキュメントのことを聞く",
                     Say("彼女『（仮）document_001』"))
                 .When(Has.Document("document_001")).Once().Back();
-        }
-
-        private static void GiveSpecialItem()
-        {
-            TempSpecialItemState.Consume();
-            TempPastTunnelDirector.SkipNextFloorEnemy = true;
         }
     }
 }

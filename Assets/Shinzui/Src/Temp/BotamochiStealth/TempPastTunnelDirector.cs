@@ -47,11 +47,6 @@ namespace Shinzui.Temp.BotamochiStealth
         private static int s_floorNumber = 1;
         private static int? s_pendingSeed;
 
-        /// <summary>
-        /// 彼女にアイテムを渡すとtrue。次の階だけ敵を出さない
-        /// </summary>
-        public static bool SkipNextFloorEnemy;
-
         private bool _placed;
         private bool _advancing;
         private Vector3? _playerSpawn;
@@ -230,19 +225,9 @@ namespace Shinzui.Temp.BotamochiStealth
 
                 GameObject eo = stealthEnemy.gameObject;
                 eo.transform.position = enemyPoint + Vector3.up * 0.1f;
-
-                if (SkipNextFloorEnemy)
-                {
-                    SkipNextFloorEnemy = false;
-                    eo.SetActive(false);
-                    Debug.Log("[TempPastTunnelDirector] 特殊アイテムの効果でこの階層の敵配置をスキップしました。", this);
-                }
-                else
-                {
-                    eo.SetActive(true);
-                    // 前の階の会話で一時停止したままになっていることがあるので巡回を再開させる
-                    stealthEnemy.ResumeEnemy();
-                }
+                eo.SetActive(true);
+                // 前の階の会話で一時停止したままになっていることがあるので巡回を再開させる
+                stealthEnemy.ResumeEnemy();
             }
 
             _placed = true;
@@ -440,7 +425,6 @@ namespace Shinzui.Temp.BotamochiStealth
         {
             s_floorNumber = 1;
             s_pendingSeed = null;
-            SkipNextFloorEnemy = false;
             GenerateTunnelTestBootstrap.RuntimeSeedOverride = null;
             if (girlfriend != null)
             {

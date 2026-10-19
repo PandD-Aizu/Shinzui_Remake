@@ -6,13 +6,6 @@ namespace Shinzui.Temp
     /// </summary>
     public static class TempMessages
     {
-        public static class SpecialItem
-        {
-            public const string Prompt = "[E] 拾う（仮）";
-            public const string Examine = "（仮）特殊アイテムです";
-            public const string PickedUp = "（仮）特殊アイテムです";
-        }
-
         public static class Talk
         {
             public const string ChoicePrompt = "（仮）どうする？";
