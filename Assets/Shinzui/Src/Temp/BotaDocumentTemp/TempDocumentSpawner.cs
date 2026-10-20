@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
-using Shinzui.View.GenerateTunnel;
+using Shinzui.DI.GenerateTunnel;
 
 namespace Shinzui.Temp
 {
@@ -66,7 +66,7 @@ namespace Shinzui.Temp
                 return;
             }
 
-            if (FindAnyObjectByType<GenerateTunnelTestBootstrap>() == null)
+            if (FindAnyObjectByType<GenerateTunnelLifetimeScope>() == null)
             {
                 return;
             }

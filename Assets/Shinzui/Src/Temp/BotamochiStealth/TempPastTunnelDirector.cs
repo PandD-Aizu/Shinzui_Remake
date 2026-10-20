@@ -123,9 +123,9 @@ namespace Shinzui.Temp.BotamochiStealth
                 yield return null;
             }
 
-            if (special == null || !HasBakedNavMesh())
+            if (special == null)
             {
-                Debug.LogWarning("[TempPastTunnelDirector] Special Tunnel または NavMesh が見つかりませんでした。配置をスキップします（生成が無効なシーンでは正常）。", this);
+                Debug.LogWarning("[TempPastTunnelDirector] Special Tunnel が生成マップ内に見つかりませんでした。配置をスキップします（生成が無効なシーンでは正常）。", this);
                 if (stealthEnemy != null)
                 {
                     stealthEnemy.gameObject.SetActive(true);
@@ -133,7 +133,6 @@ namespace Shinzui.Temp.BotamochiStealth
                 yield break;
             }
 
-            WarpPlayerToStartTunnel();
             PlaceOccupants(special);
         }
 
@@ -365,9 +364,9 @@ namespace Shinzui.Temp.BotamochiStealth
                 yield return null;
             }
 
-            if (special == null || !HasBakedNavMesh())
+            if (special == null)
             {
-                Debug.LogWarning("[TempPastTunnelDirector] 再生成後に Special Tunnel または NavMesh が見つかりませんでした", this);
+                Debug.LogWarning("[TempPastTunnelDirector] 再生成後に Special Tunnel が見つかりませんでした", this);
                 SetOccupantsActive(true);
                 _advancing = false;
                 yield break;

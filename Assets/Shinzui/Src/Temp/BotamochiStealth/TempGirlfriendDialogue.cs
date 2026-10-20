@@ -84,6 +84,10 @@ namespace Shinzui.Temp.BotamochiStealth
 
             ShowMessage(TempMessages.Girlfriend.ReturnToModern);
 
+            // ドキュメントは次の階に持ち越さない
+            TempDocumentCollector.ResetAll();
+            TempTalk.ResetChosen();
+
             if (_director == null)
             {
                 _director = FindAnyObjectByType<TempPastTunnelDirector>();
