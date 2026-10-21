@@ -583,7 +583,8 @@ namespace Shinzui.View.LoopTunnel
 
         private static Material CreateMaterial(string name, Color color, float smoothness)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var shader = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset
+                ? Shader.Find("HDRP/Lit") : Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null)
             {
                 shader = Shader.Find("Standard");

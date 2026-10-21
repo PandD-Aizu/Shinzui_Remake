@@ -12,7 +12,7 @@ namespace Shinzui.View
     /// URP環境において、RenderTexture投影方式によるステンシルマスク付きポータル表現をセットアップ
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    public class TunnelGateView : MonoBehaviour
+    public partial class TunnelGateView : MonoBehaviour
     {
         [Header("Warp Configuration")]
         [Tooltip("対になるもう一方の端点のゲート（ワープ先）。")]
@@ -185,6 +185,7 @@ namespace Shinzui.View
         private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             if (targetGate == null) return;
+            if (UsesHdrp) return;
 
             // ポータルカメラ自身のレンダリング開始時：
             // URPによる自動的な射影行列の再計算を上書きし、フェイルセーフな斜め射影ニアクリップ面を適用する
@@ -220,6 +221,13 @@ namespace Shinzui.View
         private bool IsVisibleFromMainCamera(Camera mainCam)
         {
             if (mainCam == null) return false;
+
+            // Expanded trigger bounds are useful at edges, but must not schedule fully clipped HDRP views behind the player
+            if (UsesHdrp && HdrpNearPlaneCullEnabled && _portalRenderer != null)
+            {
+                GeometryUtility.CalculateFrustumPlanes(mainCam, _frustumPlanesScratch);
+                if (IsWhollyBehindNearPlane(_portalRenderer.bounds, _frustumPlanesScratch[4])) return false;
+            }
 
             Vector3 gateCenter = transform.position;
             if (_collider is BoxCollider box)
@@ -288,16 +296,21 @@ namespace Shinzui.View
         private void ReleasePortalTextures()
         {
             if (_portalCamera != null) _portalCamera.targetTexture = null;
+            if (_hdrpCameras != null)
+                foreach (var camera in _hdrpCameras) if (camera != null) camera.targetTexture = null;
             if (_portalRenderer != null && _portalRenderer.sharedMaterial != null)
             {
                 _portalRenderer.sharedMaterial.SetTexture("_MainTex", Texture2D.blackTexture);
             }
 
             ReleaseRecursionRenderTextures();
-            if (_portalRT == null) return;
-            _portalRT.Release();
-            Destroy(_portalRT);
-            _portalRT = null;
+            if (_portalRT != null)
+            {
+                if (_usesHdrpTextureCache) PortalRenderTextureCache.Release(_portalRT);
+                else { _portalRT.Release(); Destroy(_portalRT); }
+                _portalRT = null;
+            }
+            _usesHdrpTextureCache = false;
         }
 
         /// <summary>
@@ -305,6 +318,7 @@ namespace Shinzui.View
         /// </summary>
         private void ReleasePortalResources()
         {
+            ReleaseHdrpCameras();
             ReleasePortalTextures();
 
             if (_portalCamera != null)
@@ -731,25 +745,31 @@ namespace Shinzui.View
             _recursionRTs = new RenderTexture[depth];
             for (int i = 0; i < depth; i++)
             {
-                _recursionRTs[i] = new RenderTexture(width, height, 24, RenderTextureFormat.DefaultHDR)
+                string textureName = $"Portal_RecursionRT_{gameObject.name}_{i}";
+                if (_usesHdrpTextureCache)
+                    _recursionRTs[i] = PortalRenderTextureCache.Acquire(width, height, RenderTextureFormat.DefaultHDR, textureName);
+                else
                 {
-                    name = $"Portal_RecursionRT_{gameObject.name}_{i}",
-                    useMipMap = false
-                };
-                _recursionRTs[i].Create();
+                    _recursionRTs[i] = new RenderTexture(width, height, 24, RenderTextureFormat.DefaultHDR)
+                    { name = textureName, useMipMap = false };
+                    _recursionRTs[i].Create();
+                }
             }
         }
 
         private void ReleaseRecursionRenderTextures()
         {
+            if (_hdrpCameras != null)
+                for (int i = 1; i < _hdrpCameras.Length; i++)
+                    if (_hdrpCameras[i] != null) _hdrpCameras[i].targetTexture = null;
             if (_recursionRTs != null)
             {
                 for (int i = 0; i < _recursionRTs.Length; i++)
                 {
                     if (_recursionRTs[i] != null)
                     {
-                        _recursionRTs[i].Release();
-                        Destroy(_recursionRTs[i]);
+                        if (_usesHdrpTextureCache) PortalRenderTextureCache.Release(_recursionRTs[i]);
+                        else { _recursionRTs[i].Release(); Destroy(_recursionRTs[i]); }
                         _recursionRTs[i] = null;
                     }
                 }

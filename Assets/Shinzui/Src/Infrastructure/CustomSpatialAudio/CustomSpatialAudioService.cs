@@ -7,6 +7,7 @@ using Shinzui.Application.SpatialAudio;
 using Shinzui.Infrastructure.CustomSpatialAudio.Binaural;
 using Shinzui.Infrastructure.CustomSpatialAudio.Dsp;
 using UnityEngine;
+using Unity.Profiling;
 using static Shinzui.Infrastructure.CustomSpatialAudio.FmodRoomAcousticProcessor;
 
 namespace Shinzui.Infrastructure.CustomSpatialAudio
@@ -18,6 +19,8 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
     /// </summary>
     public sealed class CustomSpatialAudioService : ISpatialAudioService, IDisposable
     {
+        static readonly ProfilerMarker TickMarker = new(ProfilerCategory.Scripts, "Shinzui.SpatialAudioTick");
+        static readonly ProfilerMarker StartMarker = new(ProfilerCategory.Scripts, "Shinzui.SpatialVoiceStart");
         sealed class Slot
         {
             public SpatialVoiceHandle Handle;
@@ -145,6 +148,7 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
         }
         void Start(Slot slot, bool detach)
         {
+            using var profile = StartMarker.Auto();
             slot.Processor.Reset(Parameters(slot));
             slot.Processor.SetVolume(slot.Volume);
             Check(system.playSound(slot.Sound, slot.Processor.Group, true, out slot.Channel));
@@ -157,6 +161,7 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
 
         public void Tick(float unscaledDeltaTime)
         {
+            using var profile = TickMarker.Auto();
             if (disposed) return;
             float dt = Mathf.Clamp(unscaledDeltaTime, 0, .25f);
             updateCountdown -= dt;
@@ -174,8 +179,10 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
                 if (!slot.Draining)
                 {
                     var result = slot.Channel.isPlaying(out bool playing);
-                    if (result != RESULT.OK && result != RESULT.ERR_INVALID_HANDLE) Check(result);
-                    if (result == RESULT.ERR_INVALID_HANDLE || !playing) { slot.Draining = true; slot.Channel.clearHandle(); }
+                    // A channel reused by FMOD is no longer this voice's dry source; retain the group's acoustic tail
+                    bool ended = result == RESULT.ERR_INVALID_HANDLE || result == RESULT.ERR_CHANNEL_STOLEN;
+                    if (result != RESULT.OK && !ended) Check(result);
+                    if (ended || !playing) { slot.Draining = true; slot.Channel.clearHandle(); }
                 }
                 if (slot.Draining)
                 {

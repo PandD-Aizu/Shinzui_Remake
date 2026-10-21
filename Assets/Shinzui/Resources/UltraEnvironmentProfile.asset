@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4837a3ba6214cb586911c3060fc82e0, type: 3}
+  m_Name: UltraEnvironmentProfile
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.Rendering.UltraEnvironmentProfile
+  pipelineAsset: {fileID: 11400000, guid: 9d6a4cab252d47b49a215a029527ff7e, type: 2}
+  sourceMaterial: {fileID: 2100000, guid: 3ccf8c3dba546b64a96268b70add12e0, type: 2}
+  ultraMaterial: {fileID: 2100000, guid: 4443eabe7c39d5242a22e7fae2f06a18, type: 2}
+  ceilingLightIntensityMultiplier: 32
+  reflectionResolution: 1024
+  reflectionBoxSize: {x: 18, y: 10, z: 24}
+  reflectionRefreshSeconds: 1
+  reflectionIntensity: 1

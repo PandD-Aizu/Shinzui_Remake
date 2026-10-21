@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="12" result="Passed" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.1379229">
+  <test-suite type="TestSuite" id="1000" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="212" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.137923" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1256" name="Shinzui.SpiderDeityIK.Tests.dll" fullname="D:/Pandd/ShinShinzui/Library/ScriptAssemblies/Shinzui.SpiderDeityIK.Tests.dll" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.129422" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="51116" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1257" name="Shinzui" fullname="Shinzui" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.129007" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1258" name="Tests" fullname="Shinzui.Tests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.128852" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1259" name="SpiderDeityIK" fullname="Shinzui.Tests.SpiderDeityIK" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.128722" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1241" name="SpiderDeityIkTests" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.128098" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-suite type="ParameterizedMethod" id="1250" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.108137" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1242" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L01&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L01&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="1167567986" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.072215" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1243" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L02&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L02&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="325697420" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.004334" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1244" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L03&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L03&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="1034899552" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.004386" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1245" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L04&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_L04&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="1298195051" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.003764" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1246" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R01&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R01&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="1849814237" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.003867" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1247" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R02&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R02&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="1253901417" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.004212" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1248" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R03&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R03&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="1937859336" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.003824" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1249" name="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R04&quot;)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs(&quot;Leg_R04&quot;)" methodname="EachFootReachesItsTargetWithoutMovingBodyOrOtherLegs" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="74653171" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.003810" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-suite type="ParameterizedMethod" id="1255" name="UniformlyScaledRigStillReachesTargets" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.UniformlyScaledRigStillReachesTargets" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.004605" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+                <properties />
+                <test-case id="1253" name="UniformlyScaledRigStillReachesTargets(0.5f)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.UniformlyScaledRigStillReachesTargets(0.5f)" methodname="UniformlyScaledRigStillReachesTargets" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="180266643" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.002140" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+                <test-case id="1254" name="UniformlyScaledRigStillReachesTargets(3.0f)" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.UniformlyScaledRigStillReachesTargets(3.0f)" methodname="UniformlyScaledRigStillReachesTargets" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="368997320" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.001435" asserts="0">
+                  <properties>
+                    <property name="retryIteration" value="0" />
+                    <property name="repeatIteration" value="0" />
+                  </properties>
+                </test-case>
+              </test-suite>
+              <test-case id="1251" name="UnreachableTargetDoesNotStretchBonesOrProduceInvalidTransforms" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.UnreachableTargetDoesNotStretchBonesOrProduceInvalidTransforms" methodname="UnreachableTargetDoesNotStretchBonesOrProduceInvalidTransforms" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="709384605" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.004605" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1252" name="WeightZeroRestoresInputPoseAndRigRebuildResumesFollowing" fullname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests.WeightZeroRestoresInputPoseAndRigRebuildResumesFollowing" methodname="WeightZeroRestoresInputPoseAndRigRebuildResumesFollowing" classname="Shinzui.Tests.SpiderDeityIK.SpiderDeityIkTests" runstate="Runnable" seed="481281128" result="Passed" start-time="2026-09-26 10:09:11Z" end-time="2026-09-26 10:09:11Z" duration="0.003007" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/koton/AppData/LocalLow/PandD_org/Shinzui\TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

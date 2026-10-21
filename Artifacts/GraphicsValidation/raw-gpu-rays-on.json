@@ -1,0 +1,19 @@
+{
+  "error": false,
+  "width": 1920,
+  "height": 1080,
+  "layers": 9,
+  "source": "RayCountTextureDebug_1920x1080x9_R16_UInt_Tex2DArray_Dynamic",
+  "method": "Direct AsyncGPUReadback of per-pixel R16_UInt counts, CPU sum by ray type; HDRP reduction bypassed",
+  "values": {
+    "AmbientOcclusion": 0,
+    "ShadowDirectional": 0,
+    "ShadowPointSpot": 0,
+    "ShadowAreaLight": 0,
+    "DiffuseGI_Forward": 0,
+    "DiffuseGI_Deferred": 1961684,
+    "ReflectionForward": 0,
+    "ReflectionDeferred": 1961520,
+    "Recursive": 0
+  }
+}

@@ -2,6 +2,9 @@ using System;
 using Shinzui.Application.Interfaces;
 using Shinzui.Domain.Settings;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using GraphicsSettings = Shinzui.Domain.Settings.GraphicsSettings;
 
 namespace Shinzui.Infrastructure.Services
 {
@@ -18,6 +21,10 @@ namespace Shinzui.Infrastructure.Services
         private const string SystemBusPath = "bus:/System";
 
         private readonly IFMODVCAService _fmodVcaService;
+
+        private static GraphicsQualityPreset _cameraQualityPreset;
+        private static int _cameraAntiAliasingType;
+        private static bool _allowHdrOutput;
 
         public UnitySettingsApplier(IFMODVCAService fmodVcaService = null)
         {
@@ -55,57 +62,145 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// 描画プリセットと個別設定をエンジンおよびURPカメラへ適用する
+        /// </summary>
+        /// <param name="graphics">適用するグラフィックス設定</param>
+        private static GraphicsSettings _lastGraphics;
+
         public void ApplyGraphics(GraphicsSettings graphics)
         {
-#if UNITY_SWITCH && !UNITY_EDITOR
-            // Nintendo Switch実機では解像度やレンダリング品質の変更はシステムが自動処理するためスキップ
-            // 画面の明るさ(セーフエリア/表示領域調整)など一部項目のみ反映します
-            ApplySwitchGraphics(graphics);
-            return;
-#endif
-
-            // 画面解像度とウィンドウモードの適用
-            string[] resParts = graphics.Resolution.Split('x');
-            if (resParts.Length == 2 && int.TryParse(resParts[0], out int width) && int.TryParse(resParts[1], out int height))
-            {
-                FullScreenMode mode = graphics.ScreenMode switch
-                {
-                    0 => FullScreenMode.ExclusiveFullScreen, // フルスクリーン
-                    1 => FullScreenMode.Windowed,            // ウィンドウ
-                    2 => FullScreenMode.FullScreenWindow,    // 仮想フルスクリーン (ボーダーレスウィンドウ)
-                    _ => FullScreenMode.FullScreenWindow
-                };
-                
-                var refreshRate = new RefreshRate
-                {
-                    numerator = (uint)Math.Max(graphics.RefreshRate, 1),
-                    denominator = 1u
-                };
-
-                Screen.SetResolution(width, height, mode, refreshRate);
-            }
-
-            // 2. 垂直同期 (VSync) とフレームレート制限
+            graphics = graphics.Clone();
+            graphics.Validate();
+            ApplyQualityPreset(graphics.QualityPreset == GraphicsQualityPreset.Custom ? GraphicsQualityPreset.Ultra : graphics.QualityPreset);
+            if (_lastGraphics == null || graphics.DisplayDiffersFrom(_lastGraphics)) ApplyDisplay(graphics);
+            _lastGraphics = graphics.Clone();
             QualitySettings.vSyncCount = graphics.EnableVSync ? 1 : 0;
             UnityEngine.Application.targetFrameRate = graphics.FrameRateLimit > 0 ? graphics.FrameRateLimit : -1;
-
-            // 3. テクスチャ解像度 (0:高, 1:中, 2:低, 3:超低)
-            QualitySettings.globalTextureMipmapLimit = Mathf.Clamp(3 - graphics.TextureQuality, 0, 3);
-
-            // 4. アンチエイリアス
-            // 0: OFF, 2: 2x, 4: 4x, 8: 8x
-            QualitySettings.antiAliasing = graphics.AntiAliasingType switch
+            QualitySettings.globalTextureMipmapLimit = 3 - graphics.TextureQuality;
+            QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+            int anisotropy = 1 << (graphics.TextureFilteringQuality + 1);
+            Texture.SetGlobalAnisotropicFilteringLimits(anisotropy, anisotropy);
+            QualitySettings.lodBias = graphics.MeshQuality switch { 0 => .7f, 1 => 1f, _ => 2f };
+            QualitySettings.maximumLODLevel = 0;
+            QualitySettings.realtimeReflectionProbes = graphics.GiAndReflectionQuality > 0;
+            QualitySettings.antiAliasing = 0;
+            QualitySettings.shadows = graphics.ShadowQuality > 0 ? UnityEngine.ShadowQuality.All : UnityEngine.ShadowQuality.Disable;
+            RenderPipelineManager.beginCameraRendering -= ApplyCameraRenderingSettings;
+            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset)
             {
-                0 => 0,
-                1 => 2, // FXAA相当のマルチサンプル代替
-                2 => 4, // SMAA
-                3 => 8, // TAA/MSAA最大
-                _ => 0
+                HdrpGraphicsRuntime.Apply(graphics);
+                return;
+            }
+            _cameraQualityPreset = graphics.QualityPreset;
+            _cameraAntiAliasingType = graphics.AntiAliasingType;
+            _allowHdrOutput = graphics.EnableHDR;
+            RenderPipelineManager.beginCameraRendering += ApplyCameraRenderingSettings;
+            foreach (var camera in UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsInactive.Include))
+                ApplyCameraRenderingSettings(default, camera);
+        }
+
+        /// <summary>Apply an enumerated monitor mode only when display preferences change</summary>
+        /// <param name="graphics">Validated display candidate</param>
+        private static void ApplyDisplay(GraphicsSettings graphics)
+        {
+            string[] parts = (graphics.Resolution ?? string.Empty).Split('x');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out int width) || !int.TryParse(parts[1], out int height)) return;
+            var mode = graphics.ScreenMode switch { 0 => FullScreenMode.ExclusiveFullScreen, 1 => FullScreenMode.Windowed, _ => FullScreenMode.FullScreenWindow };
+            var refresh = Screen.currentResolution.refreshRateRatio;
+            bool supported = false;
+            foreach (var resolution in Screen.resolutions)
+            {
+                if (resolution.width == width && resolution.height == height && Mathf.RoundToInt((float)resolution.refreshRateRatio.value) == graphics.RefreshRate)
+                {
+                    refresh = resolution.refreshRateRatio;
+                    supported = true;
+                    break;
+                }
+            }
+            if (!supported && mode == FullScreenMode.ExclusiveFullScreen)
+            {
+                width = Screen.currentResolution.width;
+                height = Screen.currentResolution.height;
+            }
+            Screen.SetResolution(Mathf.Max(640, width), Mathf.Max(360, height), mode, refresh);
+            if (HDROutputSettings.main != null && HDROutputSettings.main.available)
+                HDROutputSettings.main.RequestHDRModeChange(graphics.EnableHDR);
+        }
+        /// <summary>
+        /// 保存用の品質番号をUnityの品質名へ変換して切り替える
+        /// </summary>
+        /// <param name="preset">適用する描画品質</param>
+        private static void ApplyQualityPreset(GraphicsQualityPreset preset)
+        {
+            string qualityName = preset == GraphicsQualityPreset.Medium ? "Midium" : preset.ToString();
+            string[] names = QualitySettings.names;
+            for (int index = 0; index < names.Length; index++)
+            {
+                // 既存プロジェクトのMidium表記と修正後のMedium表記を受け入れる
+                if (!string.Equals(names[index], qualityName, StringComparison.OrdinalIgnoreCase)
+                    && !(preset == GraphicsQualityPreset.Medium && names[index] == "Medium"))
+                {
+                    continue;
+                }
+
+                if (QualitySettings.GetQualityLevel() != index)
+                {
+                    QualitySettings.SetQualityLevel(index, true);
+                }
+                return;
+            }
+        }
+
+        /// <summary>
+        /// シーン遷移後のゲームカメラにもHDR描画とアンチエイリアスを反映する
+        /// </summary>
+        /// <param name="context">描画コンテキスト</param>
+        /// <param name="renderingCamera">描画対象のカメラ</param>
+        private static void ApplyCameraRenderingSettings(ScriptableRenderContext context, Camera renderingCamera)
+        {
+            // ポータルなどポスト処理を無効にした中間描画の設定を維持
+            if (renderingCamera.cameraType != CameraType.Game
+                || !renderingCamera.TryGetComponent<UniversalAdditionalCameraData>(out var cameraData)
+                || cameraData.renderType != CameraRenderType.Base
+                || (renderingCamera.targetTexture != null && !cameraData.renderPostProcessing))
+            {
+                return;
+            }
+
+            // HDR内部描画はディスプレイのHDR出力設定と独立して有効化
+            renderingCamera.allowHDR = true;
+            renderingCamera.allowMSAA = false;
+            renderingCamera.allowDynamicResolution = false;
+            cameraData.allowHDROutput = _allowHdrOutput;
+            cameraData.renderPostProcessing = true;
+            cameraData.antialiasing = _cameraAntiAliasingType switch
+            {
+                1 => AntialiasingMode.FastApproximateAntialiasing,
+                2 => AntialiasingMode.SubpixelMorphologicalAntiAliasing,
+                3 => AntialiasingMode.TemporalAntiAliasing,
+                _ => AntialiasingMode.None
             };
 
-            // 5. 影品質
-            // QualitySettingsのShadow設定などを適用
-            QualitySettings.shadows = graphics.ShadowQuality > 0 ? ShadowQuality.All : ShadowQuality.Disable;
+            // カメラスタックはURPのTAA対象外なのでSMAAへ切り替える
+            if (cameraData.antialiasing == AntialiasingMode.TemporalAntiAliasing && cameraData.cameraStack?.Count > 0)
+            {
+                cameraData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+            }
+            cameraData.antialiasingQuality = AntialiasingQuality.High;
+            cameraData.taaSettings.quality = _cameraQualityPreset == GraphicsQualityPreset.Ultra
+                ? TemporalAAQuality.VeryHigh : TemporalAAQuality.High;
+            cameraData.taaSettings.contrastAdaptiveSharpening = 0f;
+        }
+
+        /// <summary>
+        /// ドメインリロードを省略した再生開始時にもカメラ描画の購読を初期化する
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetCameraRenderingSettings()
+        {
+            RenderPipelineManager.beginCameraRendering -= ApplyCameraRenderingSettings;
+            _lastGraphics = null;
         }
 
         public void ApplyCamera(CameraSettings camera)

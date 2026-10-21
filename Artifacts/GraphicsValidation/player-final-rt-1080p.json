@@ -1,0 +1,6800 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3080",
+  "api": "Direct3D12",
+  "hardwareRT": true,
+  "pipelineRT": true,
+  "rayTracingFrameEnabled": true,
+  "giEnabled": true,
+  "giTracing": "RayTracing",
+  "reflectionEnabled": true,
+  "reflectionTracing": "RayTracing",
+  "scene": "Assets/Shinzui/Scenes/StageTemp.unity",
+  "seed": 2777,
+  "width": 1920,
+  "height": 1080,
+  "renderScale": 1,
+  "editor": false,
+  "developmentBuild": true,
+  "frozenGameplay": true,
+  "depthOfField": false,
+  "gates": 16,
+  "capability": "NVIDIA GeForce RTX 3080 / Direct3D12\nHardware RT: supported / HDRP RT resources: ready\nRT indirect lighting / reflections configured. Portal views use raster lighting.",
+  "rayCounts": null,
+  "rayCounterScope": "Separate main-camera-only diagnostic interval, excluded from frame timing samples",
+  "samples": [
+    {
+      "frame": 405,
+      "wallMs": 26.9497948,
+      "cpuMs": 25.9489,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 406,
+      "wallMs": 27.043602,
+      "cpuMs": 27.4551,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 407,
+      "wallMs": 25.8565044,
+      "cpuMs": 25.5095,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 408,
+      "wallMs": 27.4358,
+      "cpuMs": 26.9483,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 409,
+      "wallMs": 26.1647968,
+      "cpuMs": 27.0452,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 410,
+      "wallMs": 27.3205013,
+      "cpuMs": 25.8586,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 411,
+      "wallMs": 27.5954018,
+      "cpuMs": 27.442,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 412,
+      "wallMs": 27.0186,
+      "cpuMs": 26.1563,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 413,
+      "wallMs": 27.2881012,
+      "cpuMs": 27.3205,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 414,
+      "wallMs": 25.4230938,
+      "cpuMs": 27.5985,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 415,
+      "wallMs": 26.4693031,
+      "cpuMs": 27.0171,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 416,
+      "wallMs": 27.2845039,
+      "cpuMs": 27.2853,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 417,
+      "wallMs": 25.484,
+      "cpuMs": 25.4233,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 418,
+      "wallMs": 26.9733982,
+      "cpuMs": 26.4689,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 419,
+      "wallMs": 25.615099,
+      "cpuMs": 27.2869,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 420,
+      "wallMs": 27.4999,
+      "cpuMs": 25.4846,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 421,
+      "wallMs": 26.7002983,
+      "cpuMs": 26.9718,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 422,
+      "wallMs": 27.2572,
+      "cpuMs": 25.6168,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 423,
+      "wallMs": 27.3437,
+      "cpuMs": 27.4986,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 424,
+      "wallMs": 27.2184029,
+      "cpuMs": 26.7006,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 425,
+      "wallMs": 25.8841972,
+      "cpuMs": 27.2583,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 426,
+      "wallMs": 27.2878971,
+      "cpuMs": 27.3415,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 427,
+      "wallMs": 26.7416039,
+      "cpuMs": 27.2173,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 428,
+      "wallMs": 28.165,
+      "cpuMs": 25.885,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 429,
+      "wallMs": 26.1374,
+      "cpuMs": 27.2886,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 430,
+      "wallMs": 26.3168011,
+      "cpuMs": 26.7398,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 431,
+      "wallMs": 27.0641937,
+      "cpuMs": 28.1662,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 432,
+      "wallMs": 25.1755028,
+      "cpuMs": 26.1373,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 433,
+      "wallMs": 29.3205013,
+      "cpuMs": 26.3184,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 434,
+      "wallMs": 24.5185032,
+      "cpuMs": 27.0637,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 435,
+      "wallMs": 25.8693962,
+      "cpuMs": 25.1772,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 436,
+      "wallMs": 27.6831074,
+      "cpuMs": 29.3192,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 437,
+      "wallMs": 27.2616978,
+      "cpuMs": 24.5202,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 438,
+      "wallMs": 25.6513958,
+      "cpuMs": 25.8724,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 439,
+      "wallMs": 27.8831978,
+      "cpuMs": 27.6793,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 440,
+      "wallMs": 26.8516026,
+      "cpuMs": 27.2613,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 441,
+      "wallMs": 26.6582985,
+      "cpuMs": 25.6506,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 442,
+      "wallMs": 28.2545071,
+      "cpuMs": 27.8862,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 443,
+      "wallMs": 26.5913982,
+      "cpuMs": 26.8584,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 444,
+      "wallMs": 26.9863033,
+      "cpuMs": 26.648,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 445,
+      "wallMs": 27.1867981,
+      "cpuMs": 28.2551,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 446,
+      "wallMs": 26.1541958,
+      "cpuMs": 26.5903,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 447,
+      "wallMs": 26.4510059,
+      "cpuMs": 26.9882,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 448,
+      "wallMs": 26.6233978,
+      "cpuMs": 27.1868,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 449,
+      "wallMs": 26.1822987,
+      "cpuMs": 26.1506,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 450,
+      "wallMs": 26.1206989,
+      "cpuMs": 26.4535,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 451,
+      "wallMs": 28.4688988,
+      "cpuMs": 26.6217,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 452,
+      "wallMs": 25.3009987,
+      "cpuMs": 26.1838,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 453,
+      "wallMs": 26.7020054,
+      "cpuMs": 26.1212,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 454,
+      "wallMs": 26.6241989,
+      "cpuMs": 28.4672,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 455,
+      "wallMs": 26.6306973,
+      "cpuMs": 25.302,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 456,
+      "wallMs": 26.5023041,
+      "cpuMs": 26.7025,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 457,
+      "wallMs": 28.2402,
+      "cpuMs": 26.6239,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 458,
+      "wallMs": 27.2530975,
+      "cpuMs": 26.6309,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 459,
+      "wallMs": 28.1010971,
+      "cpuMs": 26.502,
+      "gpuMs": 0.013312
+    },
+    {
+      "frame": 460,
+      "wallMs": 29.4654045,
+      "cpuMs": 28.2405,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 461,
+      "wallMs": 27.2852974,
+      "cpuMs": 27.3165,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 462,
+      "wallMs": 26.6499023,
+      "cpuMs": 28.077,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 463,
+      "wallMs": 26.8877964,
+      "cpuMs": 29.4319,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 464,
+      "wallMs": 26.5525017,
+      "cpuMs": 27.2968,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 465,
+      "wallMs": 26.4684029,
+      "cpuMs": 26.6541,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 466,
+      "wallMs": 26.4850979,
+      "cpuMs": 26.8936,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 467,
+      "wallMs": 25.6587029,
+      "cpuMs": 26.5266,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 468,
+      "wallMs": 26.2404976,
+      "cpuMs": 26.4683,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 469,
+      "wallMs": 28.4734058,
+      "cpuMs": 26.4819,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 470,
+      "wallMs": 27.5726967,
+      "cpuMs": 25.6647,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 471,
+      "wallMs": 27.8070011,
+      "cpuMs": 26.2409,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 472,
+      "wallMs": 27.7668018,
+      "cpuMs": 28.4685,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 473,
+      "wallMs": 28.1049957,
+      "cpuMs": 27.5722,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 474,
+      "wallMs": 27.6157036,
+      "cpuMs": 27.8158,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 475,
+      "wallMs": 27.5498,
+      "cpuMs": 27.7647,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 476,
+      "wallMs": 28.5576954,
+      "cpuMs": 28.2341,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 477,
+      "wallMs": 26.6480026,
+      "cpuMs": 27.4787,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 478,
+      "wallMs": 28.1921978,
+      "cpuMs": 27.5512,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 479,
+      "wallMs": 28.6358,
+      "cpuMs": 28.5597,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 480,
+      "wallMs": 26.9584045,
+      "cpuMs": 26.6642,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 481,
+      "wallMs": 27.2987957,
+      "cpuMs": 28.1972,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 482,
+      "wallMs": 27.6825027,
+      "cpuMs": 28.6348,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 483,
+      "wallMs": 27.6736946,
+      "cpuMs": 26.9529,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 484,
+      "wallMs": 28.349802,
+      "cpuMs": 27.3077,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 485,
+      "wallMs": 27.5995045,
+      "cpuMs": 27.6562,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 486,
+      "wallMs": 26.9478951,
+      "cpuMs": 27.6781,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 487,
+      "wallMs": 27.0095024,
+      "cpuMs": 28.3451,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 488,
+      "wallMs": 27.4125,
+      "cpuMs": 27.6032,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 489,
+      "wallMs": 27.422102,
+      "cpuMs": 26.947,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 490,
+      "wallMs": 27.642,
+      "cpuMs": 27.0069,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 491,
+      "wallMs": 26.6269,
+      "cpuMs": 27.4143,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 492,
+      "wallMs": 26.0190964,
+      "cpuMs": 27.4224,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 493,
+      "wallMs": 26.6452026,
+      "cpuMs": 27.6388,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 494,
+      "wallMs": 26.9840984,
+      "cpuMs": 26.6276,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 495,
+      "wallMs": 27.4926014,
+      "cpuMs": 26.0201,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 496,
+      "wallMs": 26.4556961,
+      "cpuMs": 26.6453,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 497,
+      "wallMs": 26.0883,
+      "cpuMs": 26.9898,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 498,
+      "wallMs": 26.6078014,
+      "cpuMs": 27.4889,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 499,
+      "wallMs": 26.2115,
+      "cpuMs": 26.4568,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 500,
+      "wallMs": 26.1476974,
+      "cpuMs": 26.0845,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 501,
+      "wallMs": 25.9087,
+      "cpuMs": 26.6127,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 502,
+      "wallMs": 26.6680984,
+      "cpuMs": 26.2087,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 503,
+      "wallMs": 25.1377964,
+      "cpuMs": 26.1528,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 504,
+      "wallMs": 27.3852024,
+      "cpuMs": 25.9049,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 505,
+      "wallMs": 25.9321,
+      "cpuMs": 26.6655,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 506,
+      "wallMs": 27.2838,
+      "cpuMs": 25.139,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 507,
+      "wallMs": 26.6116982,
+      "cpuMs": 27.3825,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 508,
+      "wallMs": 27.4118977,
+      "cpuMs": 25.9315,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 509,
+      "wallMs": 25.8481026,
+      "cpuMs": 27.2851,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 510,
+      "wallMs": 26.8958,
+      "cpuMs": 26.6144,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 511,
+      "wallMs": 27.1905041,
+      "cpuMs": 27.4097,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 512,
+      "wallMs": 25.1984978,
+      "cpuMs": 25.8492,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 513,
+      "wallMs": 26.6674957,
+      "cpuMs": 26.896,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 514,
+      "wallMs": 26.1388035,
+      "cpuMs": 27.1964,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 515,
+      "wallMs": 27.2596016,
+      "cpuMs": 25.1933,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 516,
+      "wallMs": 26.3744965,
+      "cpuMs": 26.6648,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 517,
+      "wallMs": 27.0752983,
+      "cpuMs": 26.1399,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 518,
+      "wallMs": 27.2555046,
+      "cpuMs": 27.2609,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 519,
+      "wallMs": 25.5729942,
+      "cpuMs": 26.3742,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 520,
+      "wallMs": 27.5509,
+      "cpuMs": 27.0759,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 521,
+      "wallMs": 26.9719028,
+      "cpuMs": 27.2662,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 522,
+      "wallMs": 26.5287,
+      "cpuMs": 25.5609,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 523,
+      "wallMs": 27.9035988,
+      "cpuMs": 27.5514,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 524,
+      "wallMs": 26.166399,
+      "cpuMs": 26.9699,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 525,
+      "wallMs": 25.6383018,
+      "cpuMs": 26.5316,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 526,
+      "wallMs": 25.9786015,
+      "cpuMs": 27.9014,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 527,
+      "wallMs": 27.5661983,
+      "cpuMs": 26.1683,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 528,
+      "wallMs": 26.1253052,
+      "cpuMs": 25.6384,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 529,
+      "wallMs": 26.8353958,
+      "cpuMs": 25.9792,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 530,
+      "wallMs": 26.1014023,
+      "cpuMs": 27.5637,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 531,
+      "wallMs": 26.3385,
+      "cpuMs": 26.1261,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 532,
+      "wallMs": 27.3823986,
+      "cpuMs": 26.8629,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 533,
+      "wallMs": 27.1682053,
+      "cpuMs": 26.0766,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 534,
+      "wallMs": 26.7727966,
+      "cpuMs": 26.3393,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 535,
+      "wallMs": 26.6185017,
+      "cpuMs": 27.3773,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 536,
+      "wallMs": 26.0470028,
+      "cpuMs": 27.1688,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 537,
+      "wallMs": 26.5415955,
+      "cpuMs": 26.7729,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 538,
+      "wallMs": 26.9322987,
+      "cpuMs": 26.6185,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 539,
+      "wallMs": 25.4599056,
+      "cpuMs": 26.0472,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 540,
+      "wallMs": 27.4764957,
+      "cpuMs": 26.545,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 541,
+      "wallMs": 27.0567036,
+      "cpuMs": 26.9301,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 542,
+      "wallMs": 26.234602,
+      "cpuMs": 25.4588,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 543,
+      "wallMs": 27.2028,
+      "cpuMs": 27.4743,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 544,
+      "wallMs": 25.6819954,
+      "cpuMs": 27.0596,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 545,
+      "wallMs": 26.9183025,
+      "cpuMs": 26.2411,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 546,
+      "wallMs": 27.0972,
+      "cpuMs": 27.1948,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 547,
+      "wallMs": 26.9004955,
+      "cpuMs": 25.6812,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 548,
+      "wallMs": 27.7959042,
+      "cpuMs": 26.9205,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 549,
+      "wallMs": 25.5442944,
+      "cpuMs": 27.0974,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 550,
+      "wallMs": 27.2276,
+      "cpuMs": 26.899,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 551,
+      "wallMs": 26.8933029,
+      "cpuMs": 27.8177,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 552,
+      "wallMs": 27.5552,
+      "cpuMs": 27.3341,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 553,
+      "wallMs": 27.3722,
+      "cpuMs": 25.4609,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 554,
+      "wallMs": 25.0573978,
+      "cpuMs": 26.8512,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 555,
+      "wallMs": 26.5440979,
+      "cpuMs": 27.5526,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 556,
+      "wallMs": 26.9882011,
+      "cpuMs": 27.4174,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 557,
+      "wallMs": 25.4293,
+      "cpuMs": 25.0125,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 558,
+      "wallMs": 27.0456,
+      "cpuMs": 26.543,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 559,
+      "wallMs": 26.3758011,
+      "cpuMs": 26.9903,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 560,
+      "wallMs": 27.1544018,
+      "cpuMs": 25.4285,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 561,
+      "wallMs": 26.6016,
+      "cpuMs": 27.0455,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 562,
+      "wallMs": 26.5932961,
+      "cpuMs": 26.3822,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 563,
+      "wallMs": 25.4840984,
+      "cpuMs": 27.1481,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 564,
+      "wallMs": 27.5318031,
+      "cpuMs": 26.6009,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 565,
+      "wallMs": 27.0477962,
+      "cpuMs": 26.5953,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 566,
+      "wallMs": 26.6204014,
+      "cpuMs": 25.4826,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 567,
+      "wallMs": 28.0224972,
+      "cpuMs": 27.5314,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 568,
+      "wallMs": 27.3988018,
+      "cpuMs": 27.047,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 569,
+      "wallMs": 25.3820019,
+      "cpuMs": 26.6215,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 570,
+      "wallMs": 26.7516022,
+      "cpuMs": 28.0215,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 571,
+      "wallMs": 27.2361946,
+      "cpuMs": 27.4025,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 572,
+      "wallMs": 26.3371048,
+      "cpuMs": 25.3776,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 573,
+      "wallMs": 27.2850971,
+      "cpuMs": 26.7522,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 574,
+      "wallMs": 27.3394985,
+      "cpuMs": 27.2385,
+      "gpuMs": 0.017408
+    },
+    {
+      "frame": 575,
+      "wallMs": 25.4086037,
+      "cpuMs": 26.3347,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 576,
+      "wallMs": 27.5167027,
+      "cpuMs": 27.2848,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 577,
+      "wallMs": 26.1969967,
+      "cpuMs": 27.3417,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 578,
+      "wallMs": 26.3066044,
+      "cpuMs": 25.4102,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 579,
+      "wallMs": 26.7633018,
+      "cpuMs": 27.5276,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 580,
+      "wallMs": 27.0868969,
+      "cpuMs": 26.1869,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 581,
+      "wallMs": 26.9939976,
+      "cpuMs": 26.3085,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 582,
+      "wallMs": 26.9006023,
+      "cpuMs": 26.761,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 583,
+      "wallMs": 27.5517,
+      "cpuMs": 27.0969,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 584,
+      "wallMs": 25.4857,
+      "cpuMs": 26.9808,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 585,
+      "wallMs": 26.2392,
+      "cpuMs": 26.9075,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 586,
+      "wallMs": 27.3603954,
+      "cpuMs": 27.5545,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 587,
+      "wallMs": 25.9320011,
+      "cpuMs": 25.4759,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 588,
+      "wallMs": 33.4853058,
+      "cpuMs": 26.2402,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 589,
+      "wallMs": 21.0584965,
+      "cpuMs": 27.3631,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 590,
+      "wallMs": 27.6759987,
+      "cpuMs": 25.995,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 591,
+      "wallMs": 26.8416023,
+      "cpuMs": 33.4459,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 592,
+      "wallMs": 27.9657021,
+      "cpuMs": 21.116,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 593,
+      "wallMs": 30.2266941,
+      "cpuMs": 27.5961,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 594,
+      "wallMs": 23.409502,
+      "cpuMs": 26.8461,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 595,
+      "wallMs": 26.9581,
+      "cpuMs": 28.0352,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 596,
+      "wallMs": 25.8416023,
+      "cpuMs": 30.2044,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 597,
+      "wallMs": 27.4825974,
+      "cpuMs": 23.362,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 598,
+      "wallMs": 26.3403988,
+      "cpuMs": 26.9596,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 599,
+      "wallMs": 25.8840065,
+      "cpuMs": 25.8343,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 600,
+      "wallMs": 26.483099,
+      "cpuMs": 27.4781,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 601,
+      "wallMs": 26.5058956,
+      "cpuMs": 26.3475,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 602,
+      "wallMs": 25.2408,
+      "cpuMs": 25.8826,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 603,
+      "wallMs": 27.4702034,
+      "cpuMs": 26.4795,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 604,
+      "wallMs": 26.7917938,
+      "cpuMs": 26.5093,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 605,
+      "wallMs": 26.141,
+      "cpuMs": 25.3078,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 606,
+      "wallMs": 25.9703026,
+      "cpuMs": 27.4281,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 607,
+      "wallMs": 26.9967976,
+      "cpuMs": 26.7853,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 608,
+      "wallMs": 27.096302,
+      "cpuMs": 26.1236,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 609,
+      "wallMs": 26.7874,
+      "cpuMs": 25.9736,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 610,
+      "wallMs": 25.860899,
+      "cpuMs": 26.998,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 611,
+      "wallMs": 27.0284,
+      "cpuMs": 27.1713,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 612,
+      "wallMs": 26.8479023,
+      "cpuMs": 26.713,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 613,
+      "wallMs": 27.7456989,
+      "cpuMs": 25.8542,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 614,
+      "wallMs": 24.6246033,
+      "cpuMs": 27.0288,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 615,
+      "wallMs": 27.0206985,
+      "cpuMs": 26.8493,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 616,
+      "wallMs": 27.3225975,
+      "cpuMs": 27.7764,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 617,
+      "wallMs": 25.4975986,
+      "cpuMs": 24.6037,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 618,
+      "wallMs": 27.7556057,
+      "cpuMs": 27.0235,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 619,
+      "wallMs": 28.1252975,
+      "cpuMs": 27.3108,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 620,
+      "wallMs": 23.5729027,
+      "cpuMs": 25.4939,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 621,
+      "wallMs": 26.4852962,
+      "cpuMs": 27.7758,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 622,
+      "wallMs": 26.4860058,
+      "cpuMs": 28.1069,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 623,
+      "wallMs": 26.8493977,
+      "cpuMs": 23.5903,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 624,
+      "wallMs": 25.8147964,
+      "cpuMs": 26.4626,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 625,
+      "wallMs": 27.3869057,
+      "cpuMs": 26.4874,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 626,
+      "wallMs": 26.8867989,
+      "cpuMs": 26.8629,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 627,
+      "wallMs": 25.6177025,
+      "cpuMs": 25.8015,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 628,
+      "wallMs": 26.8559933,
+      "cpuMs": 27.3944,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 629,
+      "wallMs": 25.464407,
+      "cpuMs": 26.9264,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 630,
+      "wallMs": 27.2970943,
+      "cpuMs": 25.5697,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 631,
+      "wallMs": 27.0620041,
+      "cpuMs": 26.856,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 632,
+      "wallMs": 26.6986961,
+      "cpuMs": 25.4762,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 633,
+      "wallMs": 26.8679,
+      "cpuMs": 27.286,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 634,
+      "wallMs": 26.708,
+      "cpuMs": 27.0698,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 635,
+      "wallMs": 26.7098,
+      "cpuMs": 26.6908,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 636,
+      "wallMs": 26.5415039,
+      "cpuMs": 26.8677,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 637,
+      "wallMs": 26.5919,
+      "cpuMs": 26.7085,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 638,
+      "wallMs": 27.3429985,
+      "cpuMs": 26.7099,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 639,
+      "wallMs": 25.4185,
+      "cpuMs": 26.5408,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 640,
+      "wallMs": 27.0912,
+      "cpuMs": 26.5916,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 641,
+      "wallMs": 26.5768986,
+      "cpuMs": 27.3431,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 642,
+      "wallMs": 26.8548965,
+      "cpuMs": 25.4225,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 643,
+      "wallMs": 27.4274,
+      "cpuMs": 27.0899,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 644,
+      "wallMs": 26.3355026,
+      "cpuMs": 26.5759,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 645,
+      "wallMs": 26.5703011,
+      "cpuMs": 26.8518,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 646,
+      "wallMs": 26.3626,
+      "cpuMs": 27.4271,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 647,
+      "wallMs": 26.4378,
+      "cpuMs": 26.3377,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 648,
+      "wallMs": 27.1145973,
+      "cpuMs": 26.5701,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 649,
+      "wallMs": 27.0029049,
+      "cpuMs": 26.3633,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 650,
+      "wallMs": 26.5369968,
+      "cpuMs": 26.438,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 651,
+      "wallMs": 26.4438,
+      "cpuMs": 27.1141,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 652,
+      "wallMs": 25.8427029,
+      "cpuMs": 27.0004,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 653,
+      "wallMs": 26.955698,
+      "cpuMs": 26.5415,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 654,
+      "wallMs": 26.7027,
+      "cpuMs": 26.443,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 655,
+      "wallMs": 26.609,
+      "cpuMs": 25.8404,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 656,
+      "wallMs": 27.5102043,
+      "cpuMs": 26.9558,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 657,
+      "wallMs": 26.0046978,
+      "cpuMs": 26.7007,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 658,
+      "wallMs": 27.0018,
+      "cpuMs": 26.6123,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 659,
+      "wallMs": 26.3853035,
+      "cpuMs": 27.5187,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 660,
+      "wallMs": 26.8196,
+      "cpuMs": 26.002,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 661,
+      "wallMs": 26.4432964,
+      "cpuMs": 26.9945,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 662,
+      "wallMs": 26.7943039,
+      "cpuMs": 26.3867,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 663,
+      "wallMs": 27.5920982,
+      "cpuMs": 26.8193,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 664,
+      "wallMs": 25.9430981,
+      "cpuMs": 26.4415,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 665,
+      "wallMs": 26.637104,
+      "cpuMs": 26.7971,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 666,
+      "wallMs": 26.7741013,
+      "cpuMs": 27.5993,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 667,
+      "wallMs": 26.7297974,
+      "cpuMs": 25.9384,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 668,
+      "wallMs": 26.6972,
+      "cpuMs": 26.6347,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 669,
+      "wallMs": 26.652998,
+      "cpuMs": 26.7711,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 670,
+      "wallMs": 26.6958046,
+      "cpuMs": 26.731,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 671,
+      "wallMs": 26.4988956,
+      "cpuMs": 26.6977,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 672,
+      "wallMs": 26.7286,
+      "cpuMs": 26.6531,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 673,
+      "wallMs": 27.6439056,
+      "cpuMs": 26.6962,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 674,
+      "wallMs": 26.9742985,
+      "cpuMs": 26.498,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 675,
+      "wallMs": 26.8009014,
+      "cpuMs": 26.729,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 676,
+      "wallMs": 25.6019974,
+      "cpuMs": 27.6458,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 677,
+      "wallMs": 27.0586033,
+      "cpuMs": 26.9727,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 678,
+      "wallMs": 25.5738945,
+      "cpuMs": 26.802,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 679,
+      "wallMs": 27.2340069,
+      "cpuMs": 25.6016,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 680,
+      "wallMs": 26.6111965,
+      "cpuMs": 27.0578,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 681,
+      "wallMs": 26.538599,
+      "cpuMs": 25.5746,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 682,
+      "wallMs": 26.2329025,
+      "cpuMs": 27.2338,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 683,
+      "wallMs": 26.7855015,
+      "cpuMs": 26.6105,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 684,
+      "wallMs": 26.5278988,
+      "cpuMs": 26.543,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 685,
+      "wallMs": 27.0490017,
+      "cpuMs": 26.2298,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 686,
+      "wallMs": 26.6405964,
+      "cpuMs": 26.786,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 687,
+      "wallMs": 26.8230019,
+      "cpuMs": 26.5259,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 688,
+      "wallMs": 26.5407028,
+      "cpuMs": 27.0469,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 689,
+      "wallMs": 25.9935017,
+      "cpuMs": 26.6436,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 690,
+      "wallMs": 27.2316971,
+      "cpuMs": 26.8216,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 691,
+      "wallMs": 27.4672,
+      "cpuMs": 26.5414,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 692,
+      "wallMs": 25.7916031,
+      "cpuMs": 25.9923,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 693,
+      "wallMs": 26.8873,
+      "cpuMs": 27.2342,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 694,
+      "wallMs": 26.5797977,
+      "cpuMs": 27.465699999999998,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 695,
+      "wallMs": 26.7683048,
+      "cpuMs": 25.7918,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 696,
+      "wallMs": 27.0818958,
+      "cpuMs": 26.8876,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 697,
+      "wallMs": 27.0331,
+      "cpuMs": 26.5811,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 698,
+      "wallMs": 27.5336018,
+      "cpuMs": 26.7688,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 699,
+      "wallMs": 25.3050022,
+      "cpuMs": 27.0798,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 700,
+      "wallMs": 27.4621964,
+      "cpuMs": 27.0337,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 701,
+      "wallMs": 26.3942032,
+      "cpuMs": 27.5356,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 702,
+      "wallMs": 26.4823,
+      "cpuMs": 25.3039,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 703,
+      "wallMs": 27.455904,
+      "cpuMs": 27.4603,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 704,
+      "wallMs": 25.3209953,
+      "cpuMs": 26.3951,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 705,
+      "wallMs": 27.0824,
+      "cpuMs": 26.4884,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 706,
+      "wallMs": 26.3543015,
+      "cpuMs": 27.4522,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 707,
+      "wallMs": 26.7750015,
+      "cpuMs": 25.3179,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 708,
+      "wallMs": 26.917305,
+      "cpuMs": 27.0836,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 709,
+      "wallMs": 26.540596,
+      "cpuMs": 26.3546,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 710,
+      "wallMs": 26.7137966,
+      "cpuMs": 26.7742,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 711,
+      "wallMs": 26.7415028,
+      "cpuMs": 26.9166,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 712,
+      "wallMs": 26.8571,
+      "cpuMs": 26.5435,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 713,
+      "wallMs": 26.7038975,
+      "cpuMs": 26.7144,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 714,
+      "wallMs": 25.4489021,
+      "cpuMs": 26.739,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 715,
+      "wallMs": 26.6803,
+      "cpuMs": 26.8573,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 716,
+      "wallMs": 26.3242989,
+      "cpuMs": 26.7025,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 717,
+      "wallMs": 27.0244045,
+      "cpuMs": 25.449,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 718,
+      "wallMs": 28.5773945,
+      "cpuMs": 26.6823,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 719,
+      "wallMs": 23.7107983,
+      "cpuMs": 26.3254,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 720,
+      "wallMs": 26.3779049,
+      "cpuMs": 27.0248,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 721,
+      "wallMs": 25.5608978,
+      "cpuMs": 28.5792,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 722,
+      "wallMs": 26.8550949,
+      "cpuMs": 23.7078,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 723,
+      "wallMs": 25.7769051,
+      "cpuMs": 26.3805,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 724,
+      "wallMs": 26.7482014,
+      "cpuMs": 25.5755,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 725,
+      "wallMs": 24.7090988,
+      "cpuMs": 26.8372,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 726,
+      "wallMs": 26.1757011,
+      "cpuMs": 25.778199999999998,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 727,
+      "wallMs": 26.6426945,
+      "cpuMs": 26.7601,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 728,
+      "wallMs": 26.0923042,
+      "cpuMs": 24.7187,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 729,
+      "wallMs": 26.5438976,
+      "cpuMs": 26.1505,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 730,
+      "wallMs": 25.9396973,
+      "cpuMs": 26.6447,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 731,
+      "wallMs": 25.8986034,
+      "cpuMs": 26.1019,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 732,
+      "wallMs": 25.8257,
+      "cpuMs": 26.5368,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 733,
+      "wallMs": 25.4493961,
+      "cpuMs": 26.0053,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 734,
+      "wallMs": 27.3186,
+      "cpuMs": 25.8285,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 735,
+      "wallMs": 28.168602,
+      "cpuMs": 25.8289,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 736,
+      "wallMs": 25.6541958,
+      "cpuMs": 25.4518,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 737,
+      "wallMs": 25.5772038,
+      "cpuMs": 27.3151,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 738,
+      "wallMs": 26.5950966,
+      "cpuMs": 28.1757,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 739,
+      "wallMs": 27.1890011,
+      "cpuMs": 25.6497,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 740,
+      "wallMs": 27.2204018,
+      "cpuMs": 25.5733,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 741,
+      "wallMs": 25.9292011,
+      "cpuMs": 26.5951,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 742,
+      "wallMs": 25.1879959,
+      "cpuMs": 27.1916,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 743,
+      "wallMs": 26.6556988,
+      "cpuMs": 27.2199,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 744,
+      "wallMs": 26.7755032,
+      "cpuMs": 26.0356,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 745,
+      "wallMs": 25.5202026,
+      "cpuMs": 25.1045,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 746,
+      "wallMs": 27.8889942,
+      "cpuMs": 26.6307,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 747,
+      "wallMs": 25.7427,
+      "cpuMs": 26.7747,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 748,
+      "wallMs": 26.6239014,
+      "cpuMs": 25.5215,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 749,
+      "wallMs": 26.7267,
+      "cpuMs": 27.8913,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 750,
+      "wallMs": 32.1161,
+      "cpuMs": 25.7437,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 751,
+      "wallMs": 20.131,
+      "cpuMs": 26.6207,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 752,
+      "wallMs": 27.2855949,
+      "cpuMs": 26.7257,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 753,
+      "wallMs": 26.6650028,
+      "cpuMs": 32.1202,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 754,
+      "wallMs": 27.1750984,
+      "cpuMs": 20.1303,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 755,
+      "wallMs": 26.6842041,
+      "cpuMs": 27.291,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 756,
+      "wallMs": 27.261097,
+      "cpuMs": 26.6615,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 757,
+      "wallMs": 25.6481,
+      "cpuMs": 27.1736,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 758,
+      "wallMs": 27.9374,
+      "cpuMs": 26.6821,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 759,
+      "wallMs": 25.4766,
+      "cpuMs": 27.2589,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 760,
+      "wallMs": 28.1217976,
+      "cpuMs": 25.6497,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 761,
+      "wallMs": 27.2788982,
+      "cpuMs": 27.9833,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 762,
+      "wallMs": 26.9452038,
+      "cpuMs": 25.4328,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 763,
+      "wallMs": 25.6826038,
+      "cpuMs": 28.1199,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 764,
+      "wallMs": 26.9925957,
+      "cpuMs": 27.3271,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 765,
+      "wallMs": 26.6622028,
+      "cpuMs": 26.8962,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 766,
+      "wallMs": 27.6329021,
+      "cpuMs": 25.6886,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 767,
+      "wallMs": 27.0232,
+      "cpuMs": 26.9878,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 768,
+      "wallMs": 25.593,
+      "cpuMs": 26.6644,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 769,
+      "wallMs": 26.6389027,
+      "cpuMs": 27.6311,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 770,
+      "wallMs": 27.262394,
+      "cpuMs": 27.0227,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 771,
+      "wallMs": 27.7861042,
+      "cpuMs": 25.5925,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 772,
+      "wallMs": 26.0634,
+      "cpuMs": 26.6476,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 773,
+      "wallMs": 26.676199,
+      "cpuMs": 27.2555,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 774,
+      "wallMs": 25.8082962,
+      "cpuMs": 27.7837,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 775,
+      "wallMs": 25.3454018,
+      "cpuMs": 26.0714,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 776,
+      "wallMs": 25.758503,
+      "cpuMs": 26.6714,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 777,
+      "wallMs": 26.3108978,
+      "cpuMs": 25.8041,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 778,
+      "wallMs": 26.5395985,
+      "cpuMs": 25.3511,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 779,
+      "wallMs": 25.9035988,
+      "cpuMs": 25.7695,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 780,
+      "wallMs": 25.4717045,
+      "cpuMs": 26.3115,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 781,
+      "wallMs": 26.4347,
+      "cpuMs": 26.5399,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 782,
+      "wallMs": 25.6483,
+      "cpuMs": 25.9056,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 783,
+      "wallMs": 25.6036,
+      "cpuMs": 25.464,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 784,
+      "wallMs": 26.5419,
+      "cpuMs": 26.4272,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 785,
+      "wallMs": 24.176,
+      "cpuMs": 25.6837,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 786,
+      "wallMs": 24.9978962,
+      "cpuMs": 25.5969,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 787,
+      "wallMs": 26.1336021,
+      "cpuMs": 26.5244,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 788,
+      "wallMs": 26.3997021,
+      "cpuMs": 24.1601,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 789,
+      "wallMs": 25.6868973,
+      "cpuMs": 25.0014,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 790,
+      "wallMs": 25.2410984,
+      "cpuMs": 26.1359,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 791,
+      "wallMs": 25.9252968,
+      "cpuMs": 26.3965,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 792,
+      "wallMs": 25.1854019,
+      "cpuMs": 25.6858,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 793,
+      "wallMs": 25.528204,
+      "cpuMs": 25.2405,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 794,
+      "wallMs": 26.1669,
+      "cpuMs": 25.9286,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 795,
+      "wallMs": 27.081398,
+      "cpuMs": 25.1851,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 796,
+      "wallMs": 25.5973988,
+      "cpuMs": 25.5274,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 797,
+      "wallMs": 25.1946983,
+      "cpuMs": 26.1684,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 798,
+      "wallMs": 25.4151,
+      "cpuMs": 27.0796,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 799,
+      "wallMs": 24.8944016,
+      "cpuMs": 25.5951,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 800,
+      "wallMs": 26.2068958,
+      "cpuMs": 25.2119,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 801,
+      "wallMs": 26.3381023,
+      "cpuMs": 25.3989,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 802,
+      "wallMs": 25.836195,
+      "cpuMs": 24.8959,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 803,
+      "wallMs": 24.9766026,
+      "cpuMs": 26.2059,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 804,
+      "wallMs": 26.8699036,
+      "cpuMs": 26.3392,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 805,
+      "wallMs": 26.4028988,
+      "cpuMs": 25.85,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 806,
+      "wallMs": 25.3536,
+      "cpuMs": 24.9616,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 807,
+      "wallMs": 27.4315987,
+      "cpuMs": 26.915,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 808,
+      "wallMs": 26.2411976,
+      "cpuMs": 26.3571,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 809,
+      "wallMs": 26.2520046,
+      "cpuMs": 25.3527,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 810,
+      "wallMs": 27.2501984,
+      "cpuMs": 27.4336,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 811,
+      "wallMs": 24.9353943,
+      "cpuMs": 26.2434,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 812,
+      "wallMs": 26.1092052,
+      "cpuMs": 26.3022,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 813,
+      "wallMs": 26.1119976,
+      "cpuMs": 27.198,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 814,
+      "wallMs": 24.5789051,
+      "cpuMs": 24.9358,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 815,
+      "wallMs": 25.8875,
+      "cpuMs": 26.154,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 816,
+      "wallMs": 27.4181976,
+      "cpuMs": 26.0681,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 817,
+      "wallMs": 24.8316975,
+      "cpuMs": 24.587,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 818,
+      "wallMs": 25.9541035,
+      "cpuMs": 25.8843,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 819,
+      "wallMs": 25.8992977,
+      "cpuMs": 27.4122,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 820,
+      "wallMs": 26.1534,
+      "cpuMs": 24.9291,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 821,
+      "wallMs": 25.7358,
+      "cpuMs": 25.9031,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 822,
+      "wallMs": 26.8751,
+      "cpuMs": 25.9457,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 823,
+      "wallMs": 25.7238026,
+      "cpuMs": 26.0653,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 824,
+      "wallMs": 27.3833961,
+      "cpuMs": 25.7318,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 825,
+      "wallMs": 26.3607979,
+      "cpuMs": 26.8759,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 826,
+      "wallMs": 25.8270054,
+      "cpuMs": 25.7454,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 827,
+      "wallMs": 25.0136986,
+      "cpuMs": 27.3582,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 828,
+      "wallMs": 26.4683037,
+      "cpuMs": 26.3639,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 829,
+      "wallMs": 26.8528,
+      "cpuMs": 25.8257,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 830,
+      "wallMs": 26.9104958,
+      "cpuMs": 25.0117,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 831,
+      "wallMs": 26.2526016,
+      "cpuMs": 26.4701,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 832,
+      "wallMs": 26.5569019,
+      "cpuMs": 26.8523,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 833,
+      "wallMs": 27.3447,
+      "cpuMs": 26.9121,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 834,
+      "wallMs": 26.9126987,
+      "cpuMs": 26.2519,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 835,
+      "wallMs": 26.1508,
+      "cpuMs": 26.5614,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 836,
+      "wallMs": 26.2909012,
+      "cpuMs": 27.3366,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 837,
+      "wallMs": 25.925602,
+      "cpuMs": 26.9135,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 838,
+      "wallMs": 26.2844963,
+      "cpuMs": 26.1491,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 839,
+      "wallMs": 26.9729023,
+      "cpuMs": 26.2947,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 840,
+      "wallMs": 27.4186,
+      "cpuMs": 25.9252,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 841,
+      "wallMs": 25.9527,
+      "cpuMs": 26.2847,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 842,
+      "wallMs": 26.8767014,
+      "cpuMs": 26.9724,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 843,
+      "wallMs": 25.4034,
+      "cpuMs": 27.4186,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 844,
+      "wallMs": 25.5099983,
+      "cpuMs": 25.9557,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 845,
+      "wallMs": 25.9828033,
+      "cpuMs": 26.8747,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 846,
+      "wallMs": 26.3141937,
+      "cpuMs": 25.4045,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 847,
+      "wallMs": 25.6965065,
+      "cpuMs": 25.509,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 848,
+      "wallMs": 25.763895,
+      "cpuMs": 25.984,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 849,
+      "wallMs": 25.5376968,
+      "cpuMs": 26.3853,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 850,
+      "wallMs": 28.8606014,
+      "cpuMs": 25.6259,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 851,
+      "wallMs": 23.9918,
+      "cpuMs": 25.7792,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 852,
+      "wallMs": 25.757803,
+      "cpuMs": 25.543,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 853,
+      "wallMs": 26.2733974,
+      "cpuMs": 28.8444,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 854,
+      "wallMs": 25.2092972,
+      "cpuMs": 23.9851,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 855,
+      "wallMs": 25.7299042,
+      "cpuMs": 25.7573,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 856,
+      "wallMs": 25.4341984,
+      "cpuMs": 26.2744,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 857,
+      "wallMs": 25.9433041,
+      "cpuMs": 25.2155,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 858,
+      "wallMs": 26.0906963,
+      "cpuMs": 25.7248,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 859,
+      "wallMs": 26.7037964,
+      "cpuMs": 25.4334,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 860,
+      "wallMs": 26.3560028,
+      "cpuMs": 25.9409,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 861,
+      "wallMs": 25.211401,
+      "cpuMs": 26.0978,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 862,
+      "wallMs": 26.0521965,
+      "cpuMs": 26.6984,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 863,
+      "wallMs": 26.0387039,
+      "cpuMs": 26.3538,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 864,
+      "wallMs": 25.7329,
+      "cpuMs": 25.213,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 865,
+      "wallMs": 25.261898,
+      "cpuMs": 26.0524,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 866,
+      "wallMs": 26.851099,
+      "cpuMs": 26.0382,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 867,
+      "wallMs": 24.4317036,
+      "cpuMs": 25.7355,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 868,
+      "wallMs": 25.7273941,
+      "cpuMs": 25.2735,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 869,
+      "wallMs": 25.5396042,
+      "cpuMs": 26.859,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 870,
+      "wallMs": 25.5359974,
+      "cpuMs": 24.4081,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 871,
+      "wallMs": 25.7582,
+      "cpuMs": 25.7323,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 872,
+      "wallMs": 25.1728039,
+      "cpuMs": 25.5399,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 873,
+      "wallMs": 27.1939983,
+      "cpuMs": 25.5324,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 874,
+      "wallMs": 26.3306961,
+      "cpuMs": 25.7584,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 875,
+      "wallMs": 25.661005,
+      "cpuMs": 25.1739,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 876,
+      "wallMs": 26.5945015,
+      "cpuMs": 27.1933,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 877,
+      "wallMs": 26.3647957,
+      "cpuMs": 26.3313,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 878,
+      "wallMs": 25.419899,
+      "cpuMs": 25.6604,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 879,
+      "wallMs": 25.567503,
+      "cpuMs": 26.639,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 880,
+      "wallMs": 25.151,
+      "cpuMs": 26.3198,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 881,
+      "wallMs": 27.0926018,
+      "cpuMs": 25.4205,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 882,
+      "wallMs": 24.1913986,
+      "cpuMs": 25.5675,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 883,
+      "wallMs": 25.7893,
+      "cpuMs": 25.1512,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 884,
+      "wallMs": 26.1398029,
+      "cpuMs": 27.0921,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 885,
+      "wallMs": 25.7705,
+      "cpuMs": 24.1912,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 886,
+      "wallMs": 25.7750988,
+      "cpuMs": 25.7906,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 887,
+      "wallMs": 26.9426022,
+      "cpuMs": 26.1383,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 888,
+      "wallMs": 26.6153,
+      "cpuMs": 25.7721,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 889,
+      "wallMs": 26.8947,
+      "cpuMs": 25.7749,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 890,
+      "wallMs": 24.9247036,
+      "cpuMs": 26.9419,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 891,
+      "wallMs": 26.0298958,
+      "cpuMs": 26.6159,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 892,
+      "wallMs": 26.5649014,
+      "cpuMs": 26.8929,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 893,
+      "wallMs": 25.7526,
+      "cpuMs": 24.9255,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 894,
+      "wallMs": 26.4618969,
+      "cpuMs": 26.0293,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 895,
+      "wallMs": 26.2713013,
+      "cpuMs": 26.5656,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 896,
+      "wallMs": 26.7597,
+      "cpuMs": 25.7528,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 897,
+      "wallMs": 25.5045,
+      "cpuMs": 26.5304,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 898,
+      "wallMs": 25.5726967,
+      "cpuMs": 26.2037,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 899,
+      "wallMs": 26.2319012,
+      "cpuMs": 26.7584,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 900,
+      "wallMs": 26.0002975,
+      "cpuMs": 25.5105,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 901,
+      "wallMs": 26.1337013,
+      "cpuMs": 25.6587,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 902,
+      "wallMs": 25.4730015,
+      "cpuMs": 26.1404,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 903,
+      "wallMs": 25.6304989,
+      "cpuMs": 26.0064,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 904,
+      "wallMs": 25.5457,
+      "cpuMs": 26.127,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 905,
+      "wallMs": 26.4117985,
+      "cpuMs": 25.4824,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 906,
+      "wallMs": 25.4836025,
+      "cpuMs": 25.6451,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 907,
+      "wallMs": 25.8926029,
+      "cpuMs": 25.5217,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 908,
+      "wallMs": 26.6109982,
+      "cpuMs": 26.4133,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 909,
+      "wallMs": 25.9391022,
+      "cpuMs": 25.488,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 910,
+      "wallMs": 26.0610981,
+      "cpuMs": 25.8886,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 911,
+      "wallMs": 27.5929,
+      "cpuMs": 26.6118,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 912,
+      "wallMs": 25.5638046,
+      "cpuMs": 25.9373,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 913,
+      "wallMs": 25.5429,
+      "cpuMs": 26.0636,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 914,
+      "wallMs": 26.8892021,
+      "cpuMs": 27.5924,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 915,
+      "wallMs": 26.7453938,
+      "cpuMs": 25.5603,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 916,
+      "wallMs": 26.7828,
+      "cpuMs": 25.5439,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 917,
+      "wallMs": 26.6544,
+      "cpuMs": 26.888,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 918,
+      "wallMs": 26.3126984,
+      "cpuMs": 26.744,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 919,
+      "wallMs": 26.2285,
+      "cpuMs": 26.7847,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 920,
+      "wallMs": 26.4315052,
+      "cpuMs": 26.6571,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 921,
+      "wallMs": 26.3143978,
+      "cpuMs": 26.3111,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 922,
+      "wallMs": 27.1879959,
+      "cpuMs": 26.2275,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 923,
+      "wallMs": 26.380003,
+      "cpuMs": 26.4324,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 924,
+      "wallMs": 26.7118,
+      "cpuMs": 26.3175,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 925,
+      "wallMs": 27.7011,
+      "cpuMs": 27.1842,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 926,
+      "wallMs": 26.900404,
+      "cpuMs": 26.382,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 927,
+      "wallMs": 26.8939972,
+      "cpuMs": 26.7112,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 928,
+      "wallMs": 26.3518,
+      "cpuMs": 27.7021,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 929,
+      "wallMs": 26.133297,
+      "cpuMs": 26.9005,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 930,
+      "wallMs": 25.8887043,
+      "cpuMs": 26.8925,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 931,
+      "wallMs": 46.7300949,
+      "cpuMs": 26.3521,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 932,
+      "wallMs": 13.7819023,
+      "cpuMs": 26.1326,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 933,
+      "wallMs": 18.7461014,
+      "cpuMs": 25.8875,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 934,
+      "wallMs": 26.3133011,
+      "cpuMs": 46.7299,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 935,
+      "wallMs": 26.5198,
+      "cpuMs": 13.809,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 936,
+      "wallMs": 26.4629955,
+      "cpuMs": 18.7244,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 937,
+      "wallMs": 26.3045,
+      "cpuMs": 26.3133,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 938,
+      "wallMs": 25.1272049,
+      "cpuMs": 26.5146,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 939,
+      "wallMs": 26.0817947,
+      "cpuMs": 26.4706,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 940,
+      "wallMs": 25.6807041,
+      "cpuMs": 26.307,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 941,
+      "wallMs": 25.5594959,
+      "cpuMs": 25.1186,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 942,
+      "wallMs": 25.7721024,
+      "cpuMs": 26.1284,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 943,
+      "wallMs": 25.9451027,
+      "cpuMs": 25.6506,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 944,
+      "wallMs": 25.0428,
+      "cpuMs": 25.6283,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 945,
+      "wallMs": 25.6579018,
+      "cpuMs": 25.6854,
+      "gpuMs": 0.013312
+    },
+    {
+      "frame": 946,
+      "wallMs": 24.8112965,
+      "cpuMs": 25.9462,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 947,
+      "wallMs": 26.704401,
+      "cpuMs": 25.0439,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 948,
+      "wallMs": 26.8571987,
+      "cpuMs": 25.6582,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 949,
+      "wallMs": 26.518898,
+      "cpuMs": 24.8104,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 950,
+      "wallMs": 27.2029057,
+      "cpuMs": 26.7038,
+      "gpuMs": 0.013312
+    },
+    {
+      "frame": 951,
+      "wallMs": 27.2420979,
+      "cpuMs": 26.8572,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 952,
+      "wallMs": 26.2476978,
+      "cpuMs": 26.5241,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 953,
+      "wallMs": 26.383297,
+      "cpuMs": 27.1975,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 954,
+      "wallMs": 27.1976051,
+      "cpuMs": 27.2895,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 955,
+      "wallMs": 25.5498,
+      "cpuMs": 26.2034,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 956,
+      "wallMs": 26.7882938,
+      "cpuMs": 26.3847,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 957,
+      "wallMs": 27.254303,
+      "cpuMs": 27.1939,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 958,
+      "wallMs": 26.4477043,
+      "cpuMs": 25.5507,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 959,
+      "wallMs": 27.3654976,
+      "cpuMs": 26.7875,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 960,
+      "wallMs": 27.4277,
+      "cpuMs": 27.2555,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 961,
+      "wallMs": 26.5692043,
+      "cpuMs": 26.4467,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 962,
+      "wallMs": 25.2363949,
+      "cpuMs": 27.3647,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 963,
+      "wallMs": 26.7403,
+      "cpuMs": 27.4343,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 964,
+      "wallMs": 26.8002052,
+      "cpuMs": 26.5639,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 965,
+      "wallMs": 26.582,
+      "cpuMs": 25.2363,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 966,
+      "wallMs": 26.8398952,
+      "cpuMs": 26.7406,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 967,
+      "wallMs": 25.7652,
+      "cpuMs": 26.7978,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 968,
+      "wallMs": 26.6659012,
+      "cpuMs": 26.5847,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 969,
+      "wallMs": 27.7038975,
+      "cpuMs": 26.8357,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 970,
+      "wallMs": 26.4795,
+      "cpuMs": 25.7684,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 971,
+      "wallMs": 26.5212021,
+      "cpuMs": 26.6663,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 972,
+      "wallMs": 27.141,
+      "cpuMs": 27.7105,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 973,
+      "wallMs": 26.1615,
+      "cpuMs": 26.472,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 974,
+      "wallMs": 26.0991,
+      "cpuMs": 26.5224,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 975,
+      "wallMs": 27.3154984,
+      "cpuMs": 27.1423,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 976,
+      "wallMs": 26.9926014,
+      "cpuMs": 26.1628,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 977,
+      "wallMs": 26.3426018,
+      "cpuMs": 26.0964,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 978,
+      "wallMs": 28.0094948,
+      "cpuMs": 27.3187,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 979,
+      "wallMs": 25.5306053,
+      "cpuMs": 26.9872,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 980,
+      "wallMs": 26.4824963,
+      "cpuMs": 26.3443,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 981,
+      "wallMs": 26.5832977,
+      "cpuMs": 28.0128,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 982,
+      "wallMs": 26.7280045,
+      "cpuMs": 25.5283,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 983,
+      "wallMs": 27.4713,
+      "cpuMs": 26.4828,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 984,
+      "wallMs": 26.7319946,
+      "cpuMs": 26.5811,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 985,
+      "wallMs": 26.3558025,
+      "cpuMs": 26.727,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 986,
+      "wallMs": 25.8824978,
+      "cpuMs": 27.5181,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 987,
+      "wallMs": 27.1879044,
+      "cpuMs": 26.6885,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 988,
+      "wallMs": 27.1728954,
+      "cpuMs": 26.3578,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 989,
+      "wallMs": 27.9994049,
+      "cpuMs": 25.876,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 990,
+      "wallMs": 26.0840988,
+      "cpuMs": 27.1934,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 991,
+      "wallMs": 27.0149021,
+      "cpuMs": 27.176,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 992,
+      "wallMs": 26.4965,
+      "cpuMs": 27.9922,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 993,
+      "wallMs": 27.9173965,
+      "cpuMs": 26.1134,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 994,
+      "wallMs": 26.5579014,
+      "cpuMs": 26.9888,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 995,
+      "wallMs": 27.413805,
+      "cpuMs": 26.4943,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 996,
+      "wallMs": 25.1528,
+      "cpuMs": 27.9673,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 997,
+      "wallMs": 27.6439972,
+      "cpuMs": 26.5172,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 998,
+      "wallMs": 26.0553,
+      "cpuMs": 27.4458,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 999,
+      "wallMs": 24.776701,
+      "cpuMs": 25.1114,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1000,
+      "wallMs": 26.1661,
+      "cpuMs": 27.6463,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1001,
+      "wallMs": 27.9212017,
+      "cpuMs": 26.0539,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1002,
+      "wallMs": 26.303196,
+      "cpuMs": 24.7771,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1003,
+      "wallMs": 26.9888039,
+      "cpuMs": 26.1736,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1004,
+      "wallMs": 27.6066952,
+      "cpuMs": 27.9165,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1005,
+      "wallMs": 26.1963,
+      "cpuMs": 26.3057,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1006,
+      "wallMs": 25.3699989,
+      "cpuMs": 26.9978,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1007,
+      "wallMs": 26.3522053,
+      "cpuMs": 27.5902,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1008,
+      "wallMs": 27.5042019,
+      "cpuMs": 26.1955,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1009,
+      "wallMs": 27.1657944,
+      "cpuMs": 25.3778,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1010,
+      "wallMs": 26.0648041,
+      "cpuMs": 26.3492,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1011,
+      "wallMs": 29.0865,
+      "cpuMs": 27.5003,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1012,
+      "wallMs": 23.2822,
+      "cpuMs": 27.1679,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1013,
+      "wallMs": 27.7065,
+      "cpuMs": 26.0667,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1014,
+      "wallMs": 26.6018,
+      "cpuMs": 29.0848,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1015,
+      "wallMs": 26.028698,
+      "cpuMs": 23.2836,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1016,
+      "wallMs": 27.6299038,
+      "cpuMs": 27.7191,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1017,
+      "wallMs": 26.4354935,
+      "cpuMs": 26.5897,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1018,
+      "wallMs": 27.611105,
+      "cpuMs": 26.0252,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1019,
+      "wallMs": 26.5629959,
+      "cpuMs": 27.6335,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1020,
+      "wallMs": 27.900404,
+      "cpuMs": 26.4473,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1021,
+      "wallMs": 27.9117985,
+      "cpuMs": 27.6027,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1022,
+      "wallMs": 26.9346,
+      "cpuMs": 26.5565,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1023,
+      "wallMs": 26.6543,
+      "cpuMs": 27.9137,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1024,
+      "wallMs": 26.8292942,
+      "cpuMs": 27.8987,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1025,
+      "wallMs": 26.1870041,
+      "cpuMs": 26.9382,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1026,
+      "wallMs": 26.1347,
+      "cpuMs": 26.653,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1027,
+      "wallMs": 26.9822979,
+      "cpuMs": 26.8294,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1028,
+      "wallMs": 27.8992,
+      "cpuMs": 26.1889,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1029,
+      "wallMs": 24.987402,
+      "cpuMs": 26.1324,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1030,
+      "wallMs": 26.4401016,
+      "cpuMs": 26.984,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1031,
+      "wallMs": 26.1504974,
+      "cpuMs": 27.9054,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1032,
+      "wallMs": 25.5831,
+      "cpuMs": 24.9791,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1033,
+      "wallMs": 26.040802,
+      "cpuMs": 26.4439,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1034,
+      "wallMs": 26.7110062,
+      "cpuMs": 26.155,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1035,
+      "wallMs": 26.1747952,
+      "cpuMs": 25.579,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1036,
+      "wallMs": 26.3491,
+      "cpuMs": 26.0352,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1037,
+      "wallMs": 26.3663044,
+      "cpuMs": 26.7162,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1038,
+      "wallMs": 26.2209969,
+      "cpuMs": 26.1731,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1039,
+      "wallMs": 25.0211029,
+      "cpuMs": 26.344,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1040,
+      "wallMs": 25.240696,
+      "cpuMs": 26.3683,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1041,
+      "wallMs": 28.1012039,
+      "cpuMs": 26.2206,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1042,
+      "wallMs": 27.5156956,
+      "cpuMs": 25.0684,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1043,
+      "wallMs": 29.1090984,
+      "cpuMs": 25.1975,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1044,
+      "wallMs": 35.7733,
+      "cpuMs": 28.1169,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1045,
+      "wallMs": 20.4521046,
+      "cpuMs": 27.4976,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1046,
+      "wallMs": 22.2769966,
+      "cpuMs": 29.189,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1047,
+      "wallMs": 37.7259,
+      "cpuMs": 35.7061,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1048,
+      "wallMs": 26.2147045,
+      "cpuMs": 20.4656,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1049,
+      "wallMs": 14.2452946,
+      "cpuMs": 22.2495,
+      "gpuMs": 0.0
+    },
+    {
+      "frame": 1050,
+      "wallMs": 26.9618053,
+      "cpuMs": 37.7592,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1051,
+      "wallMs": 25.2092972,
+      "cpuMs": 26.2281,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1052,
+      "wallMs": 27.089,
+      "cpuMs": 14.1997,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1053,
+      "wallMs": 26.9434948,
+      "cpuMs": 26.9645,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1054,
+      "wallMs": 26.1687012,
+      "cpuMs": 25.3946,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1055,
+      "wallMs": 26.4779053,
+      "cpuMs": 26.9091,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1056,
+      "wallMs": 26.067,
+      "cpuMs": 26.9515,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1057,
+      "wallMs": 25.1377964,
+      "cpuMs": 26.1535,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1058,
+      "wallMs": 26.5066967,
+      "cpuMs": 26.4758,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1059,
+      "wallMs": 24.3928986,
+      "cpuMs": 26.0669,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1060,
+      "wallMs": 25.1655045,
+      "cpuMs": 25.1506,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1061,
+      "wallMs": 25.4536,
+      "cpuMs": 26.5187,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1062,
+      "wallMs": 26.5341,
+      "cpuMs": 24.3757,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1063,
+      "wallMs": 26.739399,
+      "cpuMs": 25.1633,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1064,
+      "wallMs": 26.715,
+      "cpuMs": 25.4933,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1065,
+      "wallMs": 26.1633,
+      "cpuMs": 26.5495,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1066,
+      "wallMs": 26.5057964,
+      "cpuMs": 26.7629,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1067,
+      "wallMs": 25.9182053,
+      "cpuMs": 26.6286,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1068,
+      "wallMs": 26.3469944,
+      "cpuMs": 26.1652,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1069,
+      "wallMs": 26.9040031,
+      "cpuMs": 26.512,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1070,
+      "wallMs": 26.4316959,
+      "cpuMs": 25.9172,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1071,
+      "wallMs": 25.9944019,
+      "cpuMs": 26.3416,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1072,
+      "wallMs": 26.5918026,
+      "cpuMs": 26.9035,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1073,
+      "wallMs": 25.9147949,
+      "cpuMs": 26.4323,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1074,
+      "wallMs": 25.0196018,
+      "cpuMs": 25.9971,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1075,
+      "wallMs": 25.1416016,
+      "cpuMs": 26.6492,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1076,
+      "wallMs": 25.3447,
+      "cpuMs": 25.8589,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1077,
+      "wallMs": 26.4284019,
+      "cpuMs": 25.0151,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1078,
+      "wallMs": 24.108,
+      "cpuMs": 25.1462,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1079,
+      "wallMs": 25.0435028,
+      "cpuMs": 25.3484,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1080,
+      "wallMs": 25.5923958,
+      "cpuMs": 26.43,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1081,
+      "wallMs": 25.9877987,
+      "cpuMs": 24.0925,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1082,
+      "wallMs": 25.6980019,
+      "cpuMs": 25.0486,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1083,
+      "wallMs": 25.1864014,
+      "cpuMs": 25.5916,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1084,
+      "wallMs": 26.4753952,
+      "cpuMs": 25.9866,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1085,
+      "wallMs": 26.8823051,
+      "cpuMs": 25.7719,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1086,
+      "wallMs": 26.0465984,
+      "cpuMs": 25.1747,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1087,
+      "wallMs": 27.3011971,
+      "cpuMs": 26.4336,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1088,
+      "wallMs": 26.776,
+      "cpuMs": 26.8657,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1089,
+      "wallMs": 26.7454014,
+      "cpuMs": 26.0477,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1090,
+      "wallMs": 26.4693031,
+      "cpuMs": 27.3015,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1091,
+      "wallMs": 27.9198,
+      "cpuMs": 26.8103,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1092,
+      "wallMs": 26.8644981,
+      "cpuMs": 26.7103,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1093,
+      "wallMs": 27.9616985,
+      "cpuMs": 26.486,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1094,
+      "wallMs": 27.9714,
+      "cpuMs": 27.9081,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1095,
+      "wallMs": 26.5343037,
+      "cpuMs": 26.863,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1096,
+      "wallMs": 26.6094952,
+      "cpuMs": 27.9693,
+      "gpuMs": 0.01024
+    },
+    {
+      "frame": 1097,
+      "wallMs": 27.1802,
+      "cpuMs": 27.9603,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1098,
+      "wallMs": 26.0249,
+      "cpuMs": 26.5435,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1099,
+      "wallMs": 27.4939,
+      "cpuMs": 26.5993,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1100,
+      "wallMs": 26.7570019,
+      "cpuMs": 27.1792,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1101,
+      "wallMs": 27.2859974,
+      "cpuMs": 26.0359,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1102,
+      "wallMs": 29.0072,
+      "cpuMs": 27.5188,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1103,
+      "wallMs": 23.3338013,
+      "cpuMs": 26.7804,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1104,
+      "wallMs": 28.0545979,
+      "cpuMs": 27.2364,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1105,
+      "wallMs": 27.2804,
+      "cpuMs": 29.04,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1106,
+      "wallMs": 25.9356022,
+      "cpuMs": 23.3932,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1107,
+      "wallMs": 27.5500011,
+      "cpuMs": 27.9608,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1108,
+      "wallMs": 26.3882027,
+      "cpuMs": 27.2751,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1109,
+      "wallMs": 30.0873013,
+      "cpuMs": 25.9502,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1110,
+      "wallMs": 26.4386978,
+      "cpuMs": 27.6209,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1111,
+      "wallMs": 26.0457973,
+      "cpuMs": 26.3011,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1112,
+      "wallMs": 24.6785984,
+      "cpuMs": 30.0872,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1113,
+      "wallMs": 25.9347019,
+      "cpuMs": 26.4652,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1114,
+      "wallMs": 26.5645046,
+      "cpuMs": 26.0162,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1115,
+      "wallMs": 26.8776989,
+      "cpuMs": 24.6805,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1116,
+      "wallMs": 26.8514957,
+      "cpuMs": 25.9349,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1117,
+      "wallMs": 26.5913048,
+      "cpuMs": 26.5674,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1118,
+      "wallMs": 27.0800953,
+      "cpuMs": 26.8747,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1119,
+      "wallMs": 26.5842037,
+      "cpuMs": 26.8651,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1120,
+      "wallMs": 29.4854946,
+      "cpuMs": 26.5779,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1121,
+      "wallMs": 26.495203,
+      "cpuMs": 27.0774,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1122,
+      "wallMs": 26.014101,
+      "cpuMs": 26.5887,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1123,
+      "wallMs": 28.0577946,
+      "cpuMs": 29.4991,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1124,
+      "wallMs": 26.4575043,
+      "cpuMs": 26.4992,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1125,
+      "wallMs": 26.1322,
+      "cpuMs": 26.0212,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1126,
+      "wallMs": 24.8440971,
+      "cpuMs": 28.0321,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1127,
+      "wallMs": 28.1890011,
+      "cpuMs": 26.482,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1128,
+      "wallMs": 27.0734978,
+      "cpuMs": 26.1077,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1129,
+      "wallMs": 26.415,
+      "cpuMs": 24.8722,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1130,
+      "wallMs": 26.8011971,
+      "cpuMs": 28.1759,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1131,
+      "wallMs": 25.0225048,
+      "cpuMs": 27.064,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1132,
+      "wallMs": 27.5787983,
+      "cpuMs": 26.4176,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1133,
+      "wallMs": 25.7267,
+      "cpuMs": 26.792,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1134,
+      "wallMs": 26.2798958,
+      "cpuMs": 25.0611,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1135,
+      "wallMs": 29.3164043,
+      "cpuMs": 27.5419,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1136,
+      "wallMs": 24.3513966,
+      "cpuMs": 25.7693,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1137,
+      "wallMs": 26.2765026,
+      "cpuMs": 26.2347,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1138,
+      "wallMs": 26.7359962,
+      "cpuMs": 29.3371,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1139,
+      "wallMs": 26.7344036,
+      "cpuMs": 24.3592,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1140,
+      "wallMs": 25.8233986,
+      "cpuMs": 26.2467,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1141,
+      "wallMs": 26.8136978,
+      "cpuMs": 26.7391,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1142,
+      "wallMs": 26.1710033,
+      "cpuMs": 26.736,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1143,
+      "wallMs": 26.9198971,
+      "cpuMs": 25.8222,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1144,
+      "wallMs": 27.4439,
+      "cpuMs": 26.8134,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1145,
+      "wallMs": 26.9534016,
+      "cpuMs": 26.1716,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1146,
+      "wallMs": 26.3537979,
+      "cpuMs": 26.9185,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1147,
+      "wallMs": 26.6230011,
+      "cpuMs": 27.4459,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1148,
+      "wallMs": 26.2096024,
+      "cpuMs": 26.9561,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1149,
+      "wallMs": 26.567297,
+      "cpuMs": 26.3549,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1150,
+      "wallMs": 27.0797043,
+      "cpuMs": 26.617,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1151,
+      "wallMs": 26.5525932,
+      "cpuMs": 26.2116,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1152,
+      "wallMs": 26.7994041,
+      "cpuMs": 26.5671,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1153,
+      "wallMs": 26.0223,
+      "cpuMs": 27.0776,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1154,
+      "wallMs": 26.7948971,
+      "cpuMs": 26.6482,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1155,
+      "wallMs": 26.2836037,
+      "cpuMs": 26.7094,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1156,
+      "wallMs": 26.3413,
+      "cpuMs": 26.021,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1157,
+      "wallMs": 27.2784,
+      "cpuMs": 26.7938,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1158,
+      "wallMs": 26.6125,
+      "cpuMs": 26.2812,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1159,
+      "wallMs": 27.4925957,
+      "cpuMs": 26.3423,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1160,
+      "wallMs": 26.6107,
+      "cpuMs": 27.2803,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1161,
+      "wallMs": 26.3462,
+      "cpuMs": 26.6116,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1162,
+      "wallMs": 26.3851,
+      "cpuMs": 27.4898,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1163,
+      "wallMs": 26.4356,
+      "cpuMs": 26.6104,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1164,
+      "wallMs": 26.9244061,
+      "cpuMs": 26.3462,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1165,
+      "wallMs": 25.7207,
+      "cpuMs": 26.3831,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1166,
+      "wallMs": 26.379797,
+      "cpuMs": 26.4379,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1167,
+      "wallMs": 26.3394966,
+      "cpuMs": 26.9292,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1168,
+      "wallMs": 25.635807,
+      "cpuMs": 25.7187,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1169,
+      "wallMs": 26.8372955,
+      "cpuMs": 26.3765,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1170,
+      "wallMs": 26.7636051,
+      "cpuMs": 26.3447,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1171,
+      "wallMs": 27.2062016,
+      "cpuMs": 25.633,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1172,
+      "wallMs": 26.2543926,
+      "cpuMs": 26.846,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1173,
+      "wallMs": 27.2084045,
+      "cpuMs": 26.7519,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1174,
+      "wallMs": 26.9891014,
+      "cpuMs": 27.2077,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1175,
+      "wallMs": 26.6321011,
+      "cpuMs": 26.2548,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1176,
+      "wallMs": 25.6263962,
+      "cpuMs": 27.2093,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1177,
+      "wallMs": 27.6469021,
+      "cpuMs": 26.9905,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1178,
+      "wallMs": 26.0291958,
+      "cpuMs": 26.6328,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1179,
+      "wallMs": 26.3601055,
+      "cpuMs": 25.6307,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1180,
+      "wallMs": 25.2034016,
+      "cpuMs": 27.6393,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1181,
+      "wallMs": 27.3843975,
+      "cpuMs": 26.0286,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1182,
+      "wallMs": 27.2328014,
+      "cpuMs": 26.3624,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1183,
+      "wallMs": 25.8252983,
+      "cpuMs": 25.2013,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1184,
+      "wallMs": 26.7341976,
+      "cpuMs": 27.3873,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1185,
+      "wallMs": 26.7483063,
+      "cpuMs": 27.2395,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1186,
+      "wallMs": 25.8022957,
+      "cpuMs": 25.8151,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1187,
+      "wallMs": 27.2850971,
+      "cpuMs": 26.7356,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1188,
+      "wallMs": 27.0320988,
+      "cpuMs": 26.7459,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1189,
+      "wallMs": 26.637598,
+      "cpuMs": 25.8036,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1190,
+      "wallMs": 26.5342045,
+      "cpuMs": 27.2848,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1191,
+      "wallMs": 25.3709965,
+      "cpuMs": 27.0338,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1192,
+      "wallMs": 27.1186,
+      "cpuMs": 26.6406,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1193,
+      "wallMs": 25.6607,
+      "cpuMs": 26.5305,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1194,
+      "wallMs": 26.870203,
+      "cpuMs": 25.3758,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1195,
+      "wallMs": 27.3584957,
+      "cpuMs": 27.1117,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1196,
+      "wallMs": 25.5819016,
+      "cpuMs": 25.6612,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1197,
+      "wallMs": 27.3456974,
+      "cpuMs": 26.8727,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1198,
+      "wallMs": 25.7555981,
+      "cpuMs": 27.3563,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1199,
+      "wallMs": 26.5349064,
+      "cpuMs": 25.638,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1200,
+      "wallMs": 27.2396965,
+      "cpuMs": 27.2974,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1201,
+      "wallMs": 26.2828026,
+      "cpuMs": 25.7501,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1202,
+      "wallMs": 26.8352966,
+      "cpuMs": 26.5343,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1203,
+      "wallMs": 26.4497032,
+      "cpuMs": 27.2409,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1204,
+      "wallMs": 26.9068031,
+      "cpuMs": 26.2809,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1205,
+      "wallMs": 26.3372936,
+      "cpuMs": 26.8405,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1206,
+      "wallMs": 27.6904049,
+      "cpuMs": 26.4427,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1207,
+      "wallMs": 27.2564,
+      "cpuMs": 26.9098,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1208,
+      "wallMs": 25.0592976,
+      "cpuMs": 26.3459,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1209,
+      "wallMs": 27.5055981,
+      "cpuMs": 27.6805,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1210,
+      "wallMs": 26.8411,
+      "cpuMs": 27.2576,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1211,
+      "wallMs": 26.8718033,
+      "cpuMs": 25.0606,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1212,
+      "wallMs": 27.2384014,
+      "cpuMs": 27.5042,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1213,
+      "wallMs": 26.7714,
+      "cpuMs": 26.8438,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1214,
+      "wallMs": 27.2698,
+      "cpuMs": 26.868,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1215,
+      "wallMs": 26.9759979,
+      "cpuMs": 27.2387,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1216,
+      "wallMs": 25.2194,
+      "cpuMs": 26.7707,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1217,
+      "wallMs": 27.0142021,
+      "cpuMs": 27.2706,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1218,
+      "wallMs": 25.8553,
+      "cpuMs": 26.9744,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1219,
+      "wallMs": 26.6573982,
+      "cpuMs": 25.2226,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1220,
+      "wallMs": 26.7541027,
+      "cpuMs": 27.0124,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1221,
+      "wallMs": 25.9378967,
+      "cpuMs": 25.855,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1222,
+      "wallMs": 26.6375,
+      "cpuMs": 26.6605,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1223,
+      "wallMs": 27.2387981,
+      "cpuMs": 26.7505,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1224,
+      "wallMs": 26.8371029,
+      "cpuMs": 25.9397,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1225,
+      "wallMs": 26.9488029,
+      "cpuMs": 26.6346,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1226,
+      "wallMs": 25.6263962,
+      "cpuMs": 27.2403,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1227,
+      "wallMs": 27.6479034,
+      "cpuMs": 26.8352,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1228,
+      "wallMs": 25.4653988,
+      "cpuMs": 26.9506,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1229,
+      "wallMs": 28.3738022,
+      "cpuMs": 25.6281,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1230,
+      "wallMs": 27.1674957,
+      "cpuMs": 27.6472,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1231,
+      "wallMs": 26.3098,
+      "cpuMs": 25.4675,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1232,
+      "wallMs": 27.1207066,
+      "cpuMs": 28.3733,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1233,
+      "wallMs": 25.9631939,
+      "cpuMs": 27.1655,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1234,
+      "wallMs": 27.7018013,
+      "cpuMs": 26.3098,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1235,
+      "wallMs": 26.6626,
+      "cpuMs": 27.1214,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1236,
+      "wallMs": 26.5617065,
+      "cpuMs": 25.9665,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1237,
+      "wallMs": 26.7514954,
+      "cpuMs": 27.6968,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1238,
+      "wallMs": 26.4163055,
+      "cpuMs": 26.6632,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1239,
+      "wallMs": 27.2163963,
+      "cpuMs": 26.5638,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1240,
+      "wallMs": 26.8426018,
+      "cpuMs": 26.8468,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1241,
+      "wallMs": 25.8152981,
+      "cpuMs": 26.3198,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1242,
+      "wallMs": 27.4357,
+      "cpuMs": 27.2313,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1243,
+      "wallMs": 26.7945,
+      "cpuMs": 26.8279,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1244,
+      "wallMs": 26.3894978,
+      "cpuMs": 25.8155,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1245,
+      "wallMs": 27.4093971,
+      "cpuMs": 27.4363,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1246,
+      "wallMs": 26.8763046,
+      "cpuMs": 26.8018,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1247,
+      "wallMs": 27.4775,
+      "cpuMs": 26.3813,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1248,
+      "wallMs": 26.2626,
+      "cpuMs": 27.4897,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1249,
+      "wallMs": 25.6645985,
+      "cpuMs": 26.7963,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1250,
+      "wallMs": 27.0895977,
+      "cpuMs": 27.4808,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1251,
+      "wallMs": 27.2498016,
+      "cpuMs": 26.2611,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1252,
+      "wallMs": 26.7424049,
+      "cpuMs": 25.664,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1253,
+      "wallMs": 27.3164959,
+      "cpuMs": 27.0881,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1254,
+      "wallMs": 26.2285,
+      "cpuMs": 27.2497,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1255,
+      "wallMs": 25.6293011,
+      "cpuMs": 26.7428,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1256,
+      "wallMs": 27.5497036,
+      "cpuMs": 27.316,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1257,
+      "wallMs": 26.835701,
+      "cpuMs": 26.2273,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1258,
+      "wallMs": 26.3033943,
+      "cpuMs": 25.6312,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1259,
+      "wallMs": 26.3270054,
+      "cpuMs": 27.5485,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1260,
+      "wallMs": 25.8571987,
+      "cpuMs": 26.8384,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1261,
+      "wallMs": 26.596096,
+      "cpuMs": 26.303,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1262,
+      "wallMs": 27.0951042,
+      "cpuMs": 26.3273,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1263,
+      "wallMs": 27.3128967,
+      "cpuMs": 25.8564,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1264,
+      "wallMs": 27.7947,
+      "cpuMs": 26.5937,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1265,
+      "wallMs": 26.0446,
+      "cpuMs": 27.0954,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1266,
+      "wallMs": 25.7250977,
+      "cpuMs": 27.313,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1267,
+      "wallMs": 26.2464,
+      "cpuMs": 27.7992,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1268,
+      "wallMs": 27.0092049,
+      "cpuMs": 26.0419,
+      "gpuMs": 0.013312
+    },
+    {
+      "frame": 1269,
+      "wallMs": 27.3937988,
+      "cpuMs": 25.7279,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1270,
+      "wallMs": 25.6412,
+      "cpuMs": 26.2455,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1271,
+      "wallMs": 27.1388969,
+      "cpuMs": 27.0138,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1272,
+      "wallMs": 27.6518,
+      "cpuMs": 27.3853,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1273,
+      "wallMs": 27.0174026,
+      "cpuMs": 25.6399,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1274,
+      "wallMs": 25.6498013,
+      "cpuMs": 27.1392,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1275,
+      "wallMs": 26.2747955,
+      "cpuMs": 27.6552,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1276,
+      "wallMs": 26.4634,
+      "cpuMs": 27.0134,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1277,
+      "wallMs": 27.3441048,
+      "cpuMs": 25.6508,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1278,
+      "wallMs": 25.9102955,
+      "cpuMs": 26.2897,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1279,
+      "wallMs": 27.4542027,
+      "cpuMs": 26.4568,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1280,
+      "wallMs": 26.5349979,
+      "cpuMs": 27.3396,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1281,
+      "wallMs": 27.048605,
+      "cpuMs": 25.9085,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1282,
+      "wallMs": 27.5019,
+      "cpuMs": 27.4531,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1283,
+      "wallMs": 25.4201965,
+      "cpuMs": 26.5432,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1284,
+      "wallMs": 26.3339,
+      "cpuMs": 27.0416,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1285,
+      "wallMs": 27.5465069,
+      "cpuMs": 27.514,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1286,
+      "wallMs": 26.3592,
+      "cpuMs": 25.4102,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1287,
+      "wallMs": 27.665596,
+      "cpuMs": 26.3343,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1288,
+      "wallMs": 25.1247025,
+      "cpuMs": 27.5404,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1289,
+      "wallMs": 25.8739014,
+      "cpuMs": 26.3618,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1290,
+      "wallMs": 26.654501,
+      "cpuMs": 27.6673,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1291,
+      "wallMs": 25.6221,
+      "cpuMs": 25.1222,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1292,
+      "wallMs": 26.9144974,
+      "cpuMs": 25.8754,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1293,
+      "wallMs": 26.8609962,
+      "cpuMs": 26.6534,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1294,
+      "wallMs": 26.8826046,
+      "cpuMs": 25.6223,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1295,
+      "wallMs": 26.1827946,
+      "cpuMs": 26.9151,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1296,
+      "wallMs": 26.1002045,
+      "cpuMs": 26.8628,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1297,
+      "wallMs": 27.5805988,
+      "cpuMs": 26.8809,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1298,
+      "wallMs": 25.2369976,
+      "cpuMs": 26.1815,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1299,
+      "wallMs": 26.9157028,
+      "cpuMs": 26.1044,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1300,
+      "wallMs": 26.8899021,
+      "cpuMs": 27.5771,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1301,
+      "wallMs": 26.0746937,
+      "cpuMs": 25.2436,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1302,
+      "wallMs": 27.4302,
+      "cpuMs": 26.9091,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1303,
+      "wallMs": 26.816803,
+      "cpuMs": 26.8918,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1304,
+      "wallMs": 25.6642017,
+      "cpuMs": 26.0777,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1305,
+      "wallMs": 26.6932964,
+      "cpuMs": 27.4277,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1306,
+      "wallMs": 27.3588,
+      "cpuMs": 26.8143,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1307,
+      "wallMs": 26.910099,
+      "cpuMs": 25.67,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1308,
+      "wallMs": 25.8591061,
+      "cpuMs": 26.6872,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1309,
+      "wallMs": 27.8429985,
+      "cpuMs": 27.3603,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1310,
+      "wallMs": 25.9040966,
+      "cpuMs": 26.9093,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1311,
+      "wallMs": 26.4280052,
+      "cpuMs": 25.8579,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1312,
+      "wallMs": 26.8744984,
+      "cpuMs": 27.8458,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1313,
+      "wallMs": 26.2608,
+      "cpuMs": 25.902,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1314,
+      "wallMs": 27.2219028,
+      "cpuMs": 26.4258,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1315,
+      "wallMs": 26.4507,
+      "cpuMs": 26.8821,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1316,
+      "wallMs": 26.3874989,
+      "cpuMs": 26.2556,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1317,
+      "wallMs": 26.8796978,
+      "cpuMs": 27.2253,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1318,
+      "wallMs": 26.8277,
+      "cpuMs": 26.4474,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1319,
+      "wallMs": 26.7735958,
+      "cpuMs": 26.3865,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1320,
+      "wallMs": 26.530302,
+      "cpuMs": 26.8817,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1321,
+      "wallMs": 26.1145,
+      "cpuMs": 26.8287,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1322,
+      "wallMs": 27.3111038,
+      "cpuMs": 26.7713,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1323,
+      "wallMs": 27.0316982,
+      "cpuMs": 26.5364,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1324,
+      "wallMs": 26.8062,
+      "cpuMs": 26.1106,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1325,
+      "wallMs": 26.1228027,
+      "cpuMs": 27.3078,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1326,
+      "wallMs": 26.5163975,
+      "cpuMs": 27.0379,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1327,
+      "wallMs": 28.2088013,
+      "cpuMs": 26.8033,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1328,
+      "wallMs": 27.1577034,
+      "cpuMs": 26.1228,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1329,
+      "wallMs": 27.1169,
+      "cpuMs": 26.5147,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1330,
+      "wallMs": 26.9713,
+      "cpuMs": 28.2079,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1331,
+      "wallMs": 25.5579929,
+      "cpuMs": 27.1615,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1332,
+      "wallMs": 27.2471,
+      "cpuMs": 27.1147,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1333,
+      "wallMs": 25.3311,
+      "cpuMs": 26.9765,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1334,
+      "wallMs": 27.2554989,
+      "cpuMs": 25.5521,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1335,
+      "wallMs": 26.7932034,
+      "cpuMs": 27.2469,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1336,
+      "wallMs": 25.5305977,
+      "cpuMs": 25.3302,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1337,
+      "wallMs": 27.0474,
+      "cpuMs": 27.2578,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1338,
+      "wallMs": 26.0124,
+      "cpuMs": 26.7956,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1339,
+      "wallMs": 27.3546982,
+      "cpuMs": 25.5276,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1340,
+      "wallMs": 26.9991,
+      "cpuMs": 27.0483,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1341,
+      "wallMs": 25.8089,
+      "cpuMs": 26.0137,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1342,
+      "wallMs": 26.649,
+      "cpuMs": 27.3515,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1343,
+      "wallMs": 26.6777,
+      "cpuMs": 27.0005,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1344,
+      "wallMs": 26.3117981,
+      "cpuMs": 25.805,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1345,
+      "wallMs": 26.3648033,
+      "cpuMs": 26.6527,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1346,
+      "wallMs": 27.0545979,
+      "cpuMs": 26.6863,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1347,
+      "wallMs": 26.6626,
+      "cpuMs": 26.3039,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1348,
+      "wallMs": 27.3069019,
+      "cpuMs": 26.3713,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1349,
+      "wallMs": 27.7019978,
+      "cpuMs": 27.049,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1350,
+      "wallMs": 27.3247032,
+      "cpuMs": 26.6627,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1351,
+      "wallMs": 27.3818951,
+      "cpuMs": 27.303,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1352,
+      "wallMs": 26.3177013,
+      "cpuMs": 27.7049,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1353,
+      "wallMs": 28.0565033,
+      "cpuMs": 27.3265,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1354,
+      "wallMs": 27.5017986,
+      "cpuMs": 27.3777,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1355,
+      "wallMs": 27.2658958,
+      "cpuMs": 26.3194,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1356,
+      "wallMs": 27.162302,
+      "cpuMs": 28.0559,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1357,
+      "wallMs": 26.7617989,
+      "cpuMs": 27.5025,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1358,
+      "wallMs": 25.5163059,
+      "cpuMs": 27.2651,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1359,
+      "wallMs": 26.7442951,
+      "cpuMs": 27.163,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1360,
+      "wallMs": 25.8046989,
+      "cpuMs": 26.7616,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1361,
+      "wallMs": 25.5977039,
+      "cpuMs": 25.5201,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1362,
+      "wallMs": 26.3721,
+      "cpuMs": 26.7381,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1363,
+      "wallMs": 25.3431969,
+      "cpuMs": 25.8078,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1364,
+      "wallMs": 28.0900021,
+      "cpuMs": 25.5976,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1365,
+      "wallMs": 27.1928,
+      "cpuMs": 26.3722,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1366,
+      "wallMs": 27.5205,
+      "cpuMs": 25.3427,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1367,
+      "wallMs": 28.2252979,
+      "cpuMs": 28.0916,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1368,
+      "wallMs": 26.2097988,
+      "cpuMs": 27.1942,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1369,
+      "wallMs": 27.2926025,
+      "cpuMs": 27.5159,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1370,
+      "wallMs": 26.626297,
+      "cpuMs": 28.2247,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1371,
+      "wallMs": 26.251997,
+      "cpuMs": 26.2125,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1372,
+      "wallMs": 26.0974064,
+      "cpuMs": 27.2944,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1373,
+      "wallMs": 26.1911983,
+      "cpuMs": 26.6252,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1374,
+      "wallMs": 26.0245972,
+      "cpuMs": 26.2504,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1375,
+      "wallMs": 25.6562,
+      "cpuMs": 26.0956,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1376,
+      "wallMs": 27.3249,
+      "cpuMs": 26.1946,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1377,
+      "wallMs": 25.6775017,
+      "cpuMs": 26.0369,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1378,
+      "wallMs": 26.8110962,
+      "cpuMs": 25.6437,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1379,
+      "wallMs": 26.4701042,
+      "cpuMs": 27.326,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1380,
+      "wallMs": 26.7948971,
+      "cpuMs": 25.6874,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1381,
+      "wallMs": 27.1542015,
+      "cpuMs": 26.7987,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1382,
+      "wallMs": 27.3117981,
+      "cpuMs": 26.471,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1383,
+      "wallMs": 26.7008,
+      "cpuMs": 26.7943,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1384,
+      "wallMs": 26.1825962,
+      "cpuMs": 27.1535,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1385,
+      "wallMs": 27.0510063,
+      "cpuMs": 27.3154,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1386,
+      "wallMs": 36.4279976,
+      "cpuMs": 26.7044,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1387,
+      "wallMs": 26.5200958,
+      "cpuMs": 26.18,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1388,
+      "wallMs": 27.6101036,
+      "cpuMs": 27.0529,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1389,
+      "wallMs": 26.9226971,
+      "cpuMs": 36.4258,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1390,
+      "wallMs": 26.0839,
+      "cpuMs": 26.515,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1391,
+      "wallMs": 27.0509,
+      "cpuMs": 27.627,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1392,
+      "wallMs": 27.4659023,
+      "cpuMs": 26.9065,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1393,
+      "wallMs": 26.3036,
+      "cpuMs": 26.0859,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1394,
+      "wallMs": 28.1837025,
+      "cpuMs": 27.052,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1395,
+      "wallMs": 28.0434952,
+      "cpuMs": 27.4628,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1396,
+      "wallMs": 26.1583042,
+      "cpuMs": 26.3089,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1397,
+      "wallMs": 27.6861954,
+      "cpuMs": 28.2076,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1398,
+      "wallMs": 26.9732018,
+      "cpuMs": 28.016,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1399,
+      "wallMs": 27.1443043,
+      "cpuMs": 26.1591,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1400,
+      "wallMs": 26.2488041,
+      "cpuMs": 27.6841,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1401,
+      "wallMs": 27.1099,
+      "cpuMs": 26.985,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1402,
+      "wallMs": 26.4265938,
+      "cpuMs": 27.1339,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1403,
+      "wallMs": 26.1698074,
+      "cpuMs": 26.2505,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1404,
+      "wallMs": 27.2141933,
+      "cpuMs": 27.1061,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1405,
+      "wallMs": 26.4378033,
+      "cpuMs": 26.4265,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1406,
+      "wallMs": 27.1918011,
+      "cpuMs": 26.1692,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1407,
+      "wallMs": 26.3362961,
+      "cpuMs": 27.2159,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1408,
+      "wallMs": 26.4827023,
+      "cpuMs": 26.4401,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1409,
+      "wallMs": 27.4115,
+      "cpuMs": 27.211,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1410,
+      "wallMs": 26.0333977,
+      "cpuMs": 26.3145,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1411,
+      "wallMs": 25.5369034,
+      "cpuMs": 26.4882,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1412,
+      "wallMs": 27.7305,
+      "cpuMs": 27.4058,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1413,
+      "wallMs": 27.6235981,
+      "cpuMs": 26.0331,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1414,
+      "wallMs": 27.2258,
+      "cpuMs": 25.5391,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1415,
+      "wallMs": 31.0720024,
+      "cpuMs": 27.7563,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1416,
+      "wallMs": 26.9070988,
+      "cpuMs": 27.5968,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1417,
+      "wallMs": 26.7424965,
+      "cpuMs": 27.2256,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1418,
+      "wallMs": 27.7144985,
+      "cpuMs": 31.0696,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1419,
+      "wallMs": 25.1438065,
+      "cpuMs": 26.9109,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1420,
+      "wallMs": 27.1905956,
+      "cpuMs": 26.7633,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1421,
+      "wallMs": 27.7479038,
+      "cpuMs": 27.6943,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1422,
+      "wallMs": 26.2475986,
+      "cpuMs": 25.1715,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1423,
+      "wallMs": 27.0726986,
+      "cpuMs": 27.1732,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1424,
+      "wallMs": 28.9347,
+      "cpuMs": 27.738,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1425,
+      "wallMs": 29.4508,
+      "cpuMs": 26.2599,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1426,
+      "wallMs": 28.1228027,
+      "cpuMs": 27.075,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1427,
+      "wallMs": 26.5467968,
+      "cpuMs": 28.9383,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1428,
+      "wallMs": 27.8065968,
+      "cpuMs": 29.4299,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1429,
+      "wallMs": 25.9694,
+      "cpuMs": 28.124,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1430,
+      "wallMs": 26.0137043,
+      "cpuMs": 26.5457,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1431,
+      "wallMs": 27.3449974,
+      "cpuMs": 27.8139,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1432,
+      "wallMs": 27.8546982,
+      "cpuMs": 25.9637,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1433,
+      "wallMs": 26.5954,
+      "cpuMs": 26.0128,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1434,
+      "wallMs": 27.4197979,
+      "cpuMs": 27.3752,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1435,
+      "wallMs": 26.1957,
+      "cpuMs": 27.8242,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1436,
+      "wallMs": 27.4793015,
+      "cpuMs": 26.6131,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1437,
+      "wallMs": 26.3141022,
+      "cpuMs": 27.4126,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1438,
+      "wallMs": 25.981802,
+      "cpuMs": 26.1892,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1439,
+      "wallMs": 26.1791954,
+      "cpuMs": 27.5077,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1440,
+      "wallMs": 26.5537,
+      "cpuMs": 27.0753,
+      "gpuMs": 0.013312
+    },
+    {
+      "frame": 1441,
+      "wallMs": 26.3501072,
+      "cpuMs": 25.1915,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1442,
+      "wallMs": 26.1362953,
+      "cpuMs": 26.1953,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1443,
+      "wallMs": 26.0019989,
+      "cpuMs": 26.5367,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1444,
+      "wallMs": 26.4953022,
+      "cpuMs": 26.3607,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1445,
+      "wallMs": 26.1522045,
+      "cpuMs": 26.1383,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1446,
+      "wallMs": 27.6899948,
+      "cpuMs": 25.9934,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1447,
+      "wallMs": 26.123003,
+      "cpuMs": 26.4879,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1448,
+      "wallMs": 27.153698,
+      "cpuMs": 26.1537,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1449,
+      "wallMs": 26.2865,
+      "cpuMs": 27.7054,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1450,
+      "wallMs": 27.4902,
+      "cpuMs": 26.1134,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1451,
+      "wallMs": 26.186903,
+      "cpuMs": 27.1473,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1452,
+      "wallMs": 27.5180969,
+      "cpuMs": 26.289,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1453,
+      "wallMs": 27.1204,
+      "cpuMs": 27.4862,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1454,
+      "wallMs": 27.1017017,
+      "cpuMs": 26.1884,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1455,
+      "wallMs": 26.8496952,
+      "cpuMs": 27.5272,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1456,
+      "wallMs": 27.0938988,
+      "cpuMs": 27.1268,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1457,
+      "wallMs": 25.9198055,
+      "cpuMs": 27.0863,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1458,
+      "wallMs": 28.4216,
+      "cpuMs": 26.8517,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1459,
+      "wallMs": 27.6198978,
+      "cpuMs": 27.1003,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1460,
+      "wallMs": 27.4891014,
+      "cpuMs": 25.9118,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1461,
+      "wallMs": 26.1092968,
+      "cpuMs": 28.4595,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1462,
+      "wallMs": 26.7062,
+      "cpuMs": 27.604,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1463,
+      "wallMs": 26.633,
+      "cpuMs": 27.5004,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1464,
+      "wallMs": 26.9526,
+      "cpuMs": 26.1071,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1465,
+      "wallMs": 25.8299046,
+      "cpuMs": 26.6978,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1466,
+      "wallMs": 50.760498,
+      "cpuMs": 26.6391,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1467,
+      "wallMs": 15.1407032,
+      "cpuMs": 26.9484,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1468,
+      "wallMs": 34.4210052,
+      "cpuMs": 25.804,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1469,
+      "wallMs": 18.7382946,
+      "cpuMs": 50.7866,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1470,
+      "wallMs": 17.7454014,
+      "cpuMs": 15.1579,
+      "gpuMs": 0.012288
+    },
+    {
+      "frame": 1471,
+      "wallMs": 26.4558029,
+      "cpuMs": 34.7665,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1472,
+      "wallMs": 26.5280952,
+      "cpuMs": 18.3794,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1473,
+      "wallMs": 26.3587017,
+      "cpuMs": 17.7139,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1474,
+      "wallMs": 25.4617,
+      "cpuMs": 26.4632,
+      "gpuMs": 0.011264
+    },
+    {
+      "frame": 1475,
+      "wallMs": 26.369997,
+      "cpuMs": 26.531,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1476,
+      "wallMs": 26.8464,
+      "cpuMs": 26.3514,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1477,
+      "wallMs": 26.2708054,
+      "cpuMs": 25.4605,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1478,
+      "wallMs": 27.1857986,
+      "cpuMs": 26.3742,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1479,
+      "wallMs": 25.5868,
+      "cpuMs": 26.8519,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1480,
+      "wallMs": 25.554903,
+      "cpuMs": 26.2646,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1481,
+      "wallMs": 26.3075962,
+      "cpuMs": 27.1932,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1482,
+      "wallMs": 26.2085037,
+      "cpuMs": 25.5984,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1483,
+      "wallMs": 26.6771965,
+      "cpuMs": 25.5552,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1484,
+      "wallMs": 26.0458984,
+      "cpuMs": 26.2839,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1485,
+      "wallMs": 26.1332054,
+      "cpuMs": 26.2097,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1486,
+      "wallMs": 25.9350986,
+      "cpuMs": 26.6796,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1487,
+      "wallMs": 25.6127,
+      "cpuMs": 26.0422,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1488,
+      "wallMs": 26.2134,
+      "cpuMs": 26.132,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1489,
+      "wallMs": 26.8308029,
+      "cpuMs": 25.9372,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1490,
+      "wallMs": 25.0582981,
+      "cpuMs": 25.6113,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1491,
+      "wallMs": 27.1402,
+      "cpuMs": 26.2149,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1492,
+      "wallMs": 25.547102,
+      "cpuMs": 26.8319,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1493,
+      "wallMs": 26.8175964,
+      "cpuMs": 25.0567,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1494,
+      "wallMs": 28.0460033,
+      "cpuMs": 27.1422,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1495,
+      "wallMs": 26.5908012,
+      "cpuMs": 25.5458,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1496,
+      "wallMs": 26.0018,
+      "cpuMs": 26.8169,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1497,
+      "wallMs": 26.8736973,
+      "cpuMs": 28.0482,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1498,
+      "wallMs": 26.0108986,
+      "cpuMs": 26.589,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1499,
+      "wallMs": 26.5519066,
+      "cpuMs": 26.0037,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1500,
+      "wallMs": 26.8367977,
+      "cpuMs": 26.8724,
+      "gpuMs": 0.007168
+    },
+    {
+      "frame": 1501,
+      "wallMs": 28.8128967,
+      "cpuMs": 26.0116,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1502,
+      "wallMs": 25.9619045,
+      "cpuMs": 26.5512,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1503,
+      "wallMs": 25.5037975,
+      "cpuMs": 26.8385,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1504,
+      "wallMs": 27.3958969,
+      "cpuMs": 28.8718,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1505,
+      "wallMs": 26.1311016,
+      "cpuMs": 25.9166,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1506,
+      "wallMs": 28.0104027,
+      "cpuMs": 25.5237,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1507,
+      "wallMs": 27.0039959,
+      "cpuMs": 27.3677,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1508,
+      "wallMs": 26.5228043,
+      "cpuMs": 26.1496,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1509,
+      "wallMs": 26.8474979,
+      "cpuMs": 27.9947,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1510,
+      "wallMs": 26.5894,
+      "cpuMs": 26.9998,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1511,
+      "wallMs": 27.0322,
+      "cpuMs": 26.5159,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1512,
+      "wallMs": 25.9071,
+      "cpuMs": 26.8487,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1513,
+      "wallMs": 26.6948967,
+      "cpuMs": 26.5943,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1514,
+      "wallMs": 26.7012043,
+      "cpuMs": 27.0308,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1515,
+      "wallMs": 26.1088,
+      "cpuMs": 25.904,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1516,
+      "wallMs": 26.1113949,
+      "cpuMs": 26.6938,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1517,
+      "wallMs": 25.571003,
+      "cpuMs": 26.7017,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1518,
+      "wallMs": 27.2750988,
+      "cpuMs": 26.1091,
+      "gpuMs": 0.00512
+    },
+    {
+      "frame": 1519,
+      "wallMs": 27.1047974,
+      "cpuMs": 26.1149,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1520,
+      "wallMs": 25.5076027,
+      "cpuMs": 25.5689,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1521,
+      "wallMs": 27.1149025,
+      "cpuMs": 27.2764,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1522,
+      "wallMs": 27.2753963,
+      "cpuMs": 27.1036,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1523,
+      "wallMs": 25.7737045,
+      "cpuMs": 25.5069,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1524,
+      "wallMs": 27.0653,
+      "cpuMs": 27.1126,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1525,
+      "wallMs": 26.9807968,
+      "cpuMs": 27.2772,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1526,
+      "wallMs": 26.2066059,
+      "cpuMs": 25.775,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1527,
+      "wallMs": 26.6191959,
+      "cpuMs": 27.0615,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1528,
+      "wallMs": 26.2957973,
+      "cpuMs": 26.9834,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1529,
+      "wallMs": 27.2067032,
+      "cpuMs": 26.205,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1530,
+      "wallMs": 27.1510983,
+      "cpuMs": 26.6204,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1531,
+      "wallMs": 27.0662975,
+      "cpuMs": 26.2998,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1532,
+      "wallMs": 25.4841061,
+      "cpuMs": 27.2032,
+      "gpuMs": 0.006144
+    },
+    {
+      "frame": 1533,
+      "wallMs": 27.6208973,
+      "cpuMs": 27.1503,
+      "gpuMs": 0.006144
+    }
+  ]
+}

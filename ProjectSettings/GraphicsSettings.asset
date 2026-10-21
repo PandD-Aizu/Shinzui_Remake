@@ -34,10 +34,28 @@ GraphicsSettings:
   - {fileID: 10753, guid: 0000000000000000f000000000000000, type: 0}
   - {fileID: 10770, guid: 0000000000000000f000000000000000, type: 0}
   - {fileID: 10783, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 4800000, guid: df4050fe7a5825e459345b9c72fff575, type: 3}
+  - {fileID: 4800000, guid: c7fb7100d691ae744b4088ca0ffa36d9, type: 3}
+  - {fileID: 4800000, guid: 9275c5d4804819d43baab8ce7778c6b2, type: 3}
+  - {fileID: 4800000, guid: 9acab4e2365e5334da88959375081a12, type: 3}
+  - {fileID: 4800000, guid: 927642d73ec2dbe4ea873a700b62e2bb, type: 3}
+  - {fileID: 4800000, guid: f339694f8a703d84fb436affa4ba8b12, type: 3}
+  - {fileID: 4800000, guid: 69d69d1e4c297ca43b4cb2563fa215ac, type: 3}
+  - {fileID: 4800000, guid: c6dbe80a94f8a234a9ec66f8482070bb, type: 3}
+  - {fileID: 4800000, guid: 7c22b4dd8cdda53408b3100e2c80a618, type: 3}
   m_PreloadedShaders: []
   m_PreloadShadersBatchTimeLimit: -1
+  m_GraphicsStateCollection: {fileID: 0}
+  m_CollectionStartupAction: 0
+  m_TraceSavePath: TracedCollection
+  m_TraceSendToEditor: 1
+  m_AdditionalWarmupCollections: []
+  m_WarmupAsync: 1
+  m_EnableCacheMissTracing: 0
+  m_WarmupProgressivelyLimit: -1
+  m_CacheMissCollectionPath: CacheMissCollection
   m_SpritesDefaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
-  m_CustomRenderPipeline: {fileID: 11400000, guid: 4c06b242f474dbc4b87593d9424b99b0, type: 2}
+  m_CustomRenderPipeline: {fileID: 11400000, guid: 8d730fb2cc1abc24587687f1d7135b6b, type: 2}
   m_TransparencySortMode: 0
   m_TransparencySortAxis: {x: 0, y: 0, z: 1}
   m_DefaultRenderingPath: 1
@@ -58,9 +76,12 @@ GraphicsSettings:
   m_FogKeepExp2: 1
   m_AlbedoSwatchInfos: []
   m_RenderPipelineGlobalSettingsMap:
+    UnityEngine.Rendering.HighDefinition.HDRenderPipeline: {fileID: 11400000, guid: 4c8c2482fadc04949a8a97a53b1c176e, type: 2}
     UnityEngine.Rendering.Universal.UniversalRenderPipeline: {fileID: 11400000, guid: 18dc0cd2c080841dea60987a38ce93fa, type: 2}
   m_ShaderBuildSettings:
     keywordDeclarationOverrides: []
+    numInternalDefines: 0
+    defines: []
   m_LightsUseLinearIntensity: 1
   m_LightsUseColorTemperature: 1
   m_LogWhenShaderIsCompiled: 0

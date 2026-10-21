@@ -106,7 +106,8 @@ namespace Shinzui.View.Flashlight
             }
 
             // ボリュメトリックライトコンポーネントを自動セットアップ
-            if (flashlightLight != null && enableVolumetric)
+            if (flashlightLight != null && enableVolumetric &&
+                !(UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset))
             {
                 _volumetricLight = flashlightLight.GetComponent<VolumetricAdditionalLight>();
                 if (_volumetricLight == null)
@@ -258,7 +259,10 @@ namespace Shinzui.View.Flashlight
 
             if (flashlightLight != null)
             {
-                flashlightLight.intensity = (_baseIntensity + maxStrobeBoost * _strobeFactor) * gain;
+                // Match the authored light migration from legacy units to HDRP candela
+                float unitScale = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is
+                    UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset ? 100f : 1f;
+                flashlightLight.intensity = (_baseIntensity + maxStrobeBoost * unitScale * _strobeFactor) * gain;
             }
 
             if (_volumetricLight != null)

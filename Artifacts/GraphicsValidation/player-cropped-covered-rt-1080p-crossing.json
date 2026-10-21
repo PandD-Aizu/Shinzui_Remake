@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "editor": false,
+  "seed": 2777,
+  "regeneratedSeed": 9182,
+  "warps": 1,
+  "observedOffset": "(0.0000, 0.0000, -39.9800)",
+  "expectedOffset": "(0.0000, 0.0000, -40.0000)",
+  "checks": {
+    "productionPlayerAndVisibleGate": true,
+    "productionWarpEventExactlyOnce": true,
+    "warpOffsetMatchesLinkedGate": true,
+    "cameraAndTargetSurviveCrossing": true,
+    "portalCamerasFiniteAfterCrossing": true,
+    "portalCamerasFiniteOffAxis": true,
+    "regenerationAccepted": true,
+    "sixteenGatesAfterRegeneration": true,
+    "cameraPreservedAfterRegeneration": true,
+    "hdrpCameraAfterRegeneration": true,
+    "portalCamerasFiniteAfterRegeneration": true
+  },
+  "movementFramesMs": [
+    12.0563993,
+    15.3834963,
+    14.8387051,
+    14.8148956,
+    13.289506,
+    18.1519,
+    20.8441963,
+    14.281002,
+    12.9879961,
+    13.0352039
+  ],
+  "movementScope": "Short scripted crossing, includes changing render-target allocation; not a traversal benchmark"
+}

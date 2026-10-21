@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "editor": false,
+  "api": "Direct3D12",
+  "width": 1280,
+  "height": 720,
+  "mode": "Windowed",
+  "isolatedSettingsFile": true,
+  "checks": {
+    "confirmedResolutionLoadedInNewProcess": true,
+    "nativeWindowMatchesSavedResolution": true
+  }
+}

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Shinzui.View.Rendering;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
@@ -60,18 +62,29 @@ namespace Shinzui.View.GenerateTunnel
         [Header("Ceiling Light Shadows")]
         [SerializeField, Min(0f)] private float ceilingShadowDistance = 15f;
         [SerializeField, Range(0, 16)] private int maxCeilingShadowLights = 8;
-        private readonly List<(Light light, LightShadows shadows, float strength)> _ceilingLights = new();
-        private readonly int[] _nearestShadowLights = new int[16];
-        private readonly float[] _nearestShadowDistances = new float[16];
+        private readonly List<(Light light, LightShadows shadows, float strength, float intensity,
+            UniversalAdditionalLightData data, int shadowTier)> _ceilingLights = new();
+        private readonly int[] _nearestShadowLights = new int[64];
+        private readonly float[] _nearestShadowDistances = new float[64];
 
         /// <summary>
-        /// カメラに近い蛍光灯だけ影を描画し、照明自体は遠方でも維持する
+        /// 画質ごとの距離と灯数に応じて蛍光灯の影を描画する
         /// </summary>
         private void LateUpdate()
         {
             Camera camera = Camera.main;
-            int budget = camera != null ? Mathf.Clamp(maxCeilingShadowLights, 0, 16) : 0;
-            float distanceLimit = Mathf.Max(0f, ceilingShadowDistance);
+            bool ultra = UltraEnvironmentQuality.IsActive;
+            bool hdrp = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset;
+            float lightIntensityMultiplier = UltraEnvironmentQuality.CeilingLightIntensityMultiplier;
+            int budget = camera != null ? (ultra ? 64 : Mathf.Clamp(maxCeilingShadowLights, 0, 16)) : 0;
+            float distanceLimit = ultra ? 100f : Mathf.Max(0f, ceilingShadowDistance);
+            if (hdrp)
+            {
+                int quality = Infrastructure.Services.HdrpGraphicsRuntime.ShadowQuality;
+                budget = camera == null ? 0 : quality switch { 0 => 0, 1 => 2, 2 => 4, _ => 8 };
+                distanceLimit = quality switch { 1 => 18, 2 => 35, _ => 60 };
+                lightIntensityMultiplier = 1f;
+            }
             Vector3 cameraPosition = camera != null ? camera.transform.position : Vector3.zero;
             for (int i = 0; i < budget; i++)
             {
@@ -83,9 +96,18 @@ namespace Shinzui.View.GenerateTunnel
             for (int i = 0; i < _ceilingLights.Count; i++)
             {
                 var entry = _ceilingLights[i];
-                if (entry.light == null || !entry.light.isActiveAndEnabled) continue;
+                if (entry.light == null) continue;
+
+                // 生成した蛍光灯と天井反射光だけを調整し、消灯状態は維持する
+                entry.light.intensity = entry.intensity * lightIntensityMultiplier;
+                if (!entry.light.isActiveAndEnabled) continue;
                 entry.light.shadows = LightShadows.None;
                 if (entry.shadows == LightShadows.None) continue;
+
+                // ULTRAでは遠方の蛍光灯にも高解像度の影を割り当てる
+                if (entry.data != null && UnityEngine.Application.isPlaying)
+                    entry.data.additionalLightsShadowResolutionTier = ultra
+                        ? UniversalAdditionalLightData.AdditionalLightsShadowResolutionTierHigh : entry.shadowTier;
 
                 float distance = (entry.light.transform.position - cameraPosition).sqrMagnitude;
                 for (int slot = 0; slot < budget; slot++)
@@ -103,20 +125,20 @@ namespace Shinzui.View.GenerateTunnel
                 }
             }
 
-            // 距離上限の手前で影を薄くして切り替えを目立ちにくくする
+            // ULTRAは影の強さを維持し、他の画質では距離上限の手前で薄くする
             for (int slot = 0; slot < budget; slot++)
             {
                 int index = _nearestShadowLights[slot];
                 if (index < 0) break;
                 var entry = _ceilingLights[index];
                 entry.light.shadows = entry.shadows;
-                entry.light.shadowStrength = entry.strength * (1f - Mathf.InverseLerp(
+                entry.light.shadowStrength = ultra ? entry.strength : entry.strength * (1f - Mathf.InverseLerp(
                     distanceLimit * 0.75f, distanceLimit, Mathf.Sqrt(_nearestShadowDistances[slot])));
             }
         }
 
         /// <summary>
-        /// 管理を停止するときに蛍光灯の元の影設定を復元する
+        /// 管理を停止するときに蛍光灯の元の光量と影設定を復元する
         /// </summary>
         private void OnDisable()
         {
@@ -125,6 +147,9 @@ namespace Shinzui.View.GenerateTunnel
                 if (entry.light == null) continue;
                 entry.light.shadows = entry.shadows;
                 entry.light.shadowStrength = entry.strength;
+                entry.light.intensity = entry.intensity;
+                if (entry.data != null && UnityEngine.Application.isPlaying)
+                    entry.data.additionalLightsShadowResolutionTier = entry.shadowTier;
             }
         }
 
@@ -499,7 +524,29 @@ namespace Shinzui.View.GenerateTunnel
             else
             {
                 float floorThickness = ShellThickness * 1.5f;
-                CreateStageBox(room, "Walkable Room Floor", Vector3.zero, new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
+                Transform passage = connection.Find("Corridor Before Room");
+                float floorHeight = MeasurePassageSurface(passage, false, floorThickness * .5f, tunnelHeight);
+                float ceilingHeight = MeasurePassageSurface(passage, true, tunnelHeight, tunnelHeight);
+                float wallHeight = Mathf.Max(1, ceilingHeight - floorHeight);
+                float wallCenter = floorHeight + wallHeight * .5f;
+                CreateStageBox(room, "Walkable Room Floor", Vector3.up * (floorHeight - floorThickness * .5f),
+                    new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
+                // Enclose the model-free fallback while preserving both corridor openings
+                CreateStageBox(room, "Room Ceiling", new Vector3(0, ceilingHeight + ShellThickness * .5f, 0),
+                    new Vector3(roomWidth + ShellThickness * 2, ShellThickness, roomLength + ShellThickness * 2), _smallRoomMaterial);
+                float wingWidth = Mathf.Max(0, (roomWidth - corridorWidth) * .5f);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    CreateStageBox(room, "Room Side Wall " + side, new Vector3(side * (roomWidth + ShellThickness) * .5f, wallCenter, 0),
+                        new Vector3(ShellThickness, wallHeight, roomLength), _smallRoomMaterial);
+                    if (wingWidth <= 0) continue;
+                    for (int end = -1; end <= 1; end += 2)
+                        CreateStageBox(room, $"Room Door Wall {side} {end}",
+                            new Vector3(side * (corridorWidth + wingWidth) * .5f, wallCenter, end * (roomLength + ShellThickness) * .5f),
+                            new Vector3(wingWidth, wallHeight, ShellThickness), _smallRoomMaterial);
+                }
+                ApplyTunnelPassageMaterial(room.gameObject);
+                CreateCeilingLights(room, roomLength, ceilingHeight);
             }
 
             return info;
@@ -615,6 +662,29 @@ namespace Shinzui.View.GenerateTunnel
             _markerMaterial = CreateMaterial("Entrance Candidate", new Color(0.1f, 0.9f, 0.65f));
         }
 
+        /// <summary>Match a fallback room to the actual walkable floor and inside ceiling of its adjoining model</summary>
+        /// <param name="passage">Already generated adjoining passage</param>
+        /// <param name="ceiling">Whether to trace upward to the inside ceiling</param>
+        /// <param name="fallback">Surface height for a passage without a matching collider</param>
+        /// <param name="height">Maximum vertical search distance</param>
+        /// <returns>Surface height in passage local space</returns>
+        private static float MeasurePassageSurface(Transform passage, bool ceiling, float fallback, float height)
+        {
+            if (passage == null) return fallback;
+            Physics.SyncTransforms();
+            var ray = new Ray(passage.TransformPoint(new Vector3(0, 1.5f, 0)), ceiling ? passage.up : -passage.up);
+            float distance = Mathf.Infinity;
+            float result = fallback;
+            foreach (Collider surface in passage.GetComponentsInChildren<Collider>(false))
+            {
+                if (surface.isTrigger || !surface.enabled) continue;
+                if (!surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height, 2) * passage.lossyScale.y)
+                    || hit.distance >= distance || Vector3.Dot(hit.normal, ceiling ? -passage.up : passage.up) < .5f) continue;
+                distance = hit.distance;
+                result = passage.InverseTransformPoint(hit.point).y;
+            }
+            return result;
+        }
         private void CreateRoomPassage(
             Transform connectionRoot,
             string objectName,
@@ -725,7 +795,9 @@ namespace Shinzui.View.GenerateTunnel
                 // 生成した蛍光灯のみを影予算の対象にし、懐中電灯は変更しない
                 foreach (Light source in light.GetComponentsInChildren<Light>(true))
                 {
-                    _ceilingLights.Add((source, source.shadows, source.shadowStrength));
+                    var data = source.GetComponent<UniversalAdditionalLightData>();
+                    _ceilingLights.Add((source, source.shadows, source.shadowStrength, source.intensity, data,
+                        data != null ? data.additionalLightsShadowResolutionTier : 0));
                     source.shadows = LightShadows.None;
                 }
             }
@@ -803,7 +875,8 @@ namespace Shinzui.View.GenerateTunnel
 
         private static Material CreateMaterial(string materialName, Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Shader shader = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.HighDefinition.HDRenderPipelineAsset
+                ? Shader.Find("HDRP/Lit") : Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             var material = new Material(shader) { name = materialName, color = color };
             return material;
         }

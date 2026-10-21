@@ -1,0 +1,91 @@
+{
+  "Controls": {
+    "EnableVibration": true,
+    "ControllerLayoutType": 0,
+    "LockCursorToWindow": true,
+    "InvertMouseClick": false,
+    "InvertMouseWheel": false
+  },
+  "Camera": {
+    "NormalCameraInversion": 0,
+    "AimCameraInversion": 0,
+    "MenuOperationInversion": 0,
+    "ControllerNormalSpeed": 50.0,
+    "ControllerAimSpeed": 30.0,
+    "ControllerNormalRotationSpeed": 50.0,
+    "ControllerAimRotationSpeed": 30.0,
+    "MouseNormalSensitivity": 50.0,
+    "MouseAimSensitivity": 30.0,
+    "MouseMenuSensitivity": 50.0
+  },
+  "Gameplay": {
+    "AimAssistStrength": 2,
+    "EnableDamageExpression": true,
+    "ShowTutorial": true,
+    "ShowHUD": true,
+    "ShowReticle": true,
+    "ReticleColorIndex": 0
+  },
+  "Graphics": {
+    "QualityPreset": 3,
+    "ShowPerformanceMetrics": false,
+    "DisplayAreaRatio": 1.0,
+    "BrightnessValue": 0.5,
+    "EnableHDR": false,
+    "ColorSpaceType": 1,
+    "ScreenMode": 0,
+    "Resolution": "1920x1080",
+    "RefreshRate": 60,
+    "FrameRateLimit": 60,
+    "EnableVSync": true,
+    "FsrMode": 0,
+    "RenderingPath": 1,
+    "ImageQualityScale": 1.0,
+    "EnableFidelityFxCas": false,
+    "AntiAliasingType": 3,
+    "EnableVrs": false,
+    "TextureQuality": 3,
+    "TextureFilteringQuality": 3,
+    "MeshQuality": 2,
+    "EnableRayTracing": true,
+    "EnableMotionBlur": false,
+    "PortalResolutionScale": 0.75,
+    "GiAndReflectionQuality": 2,
+    "ReflectionIntensity": 1.0,
+    "EnableAo": true,
+    "EnableSsr": true,
+    "VolumeLightQuality": 2,
+    "EnableSss": true,
+    "ShadowQuality": 3,
+    "EnableContactShadow": true,
+    "EnableShadowCache": true,
+    "EnableBloom": true,
+    "EnableLensFlare": true,
+    "EnableFilmGrain": true,
+    "EnableDepthOfField": true,
+    "EnableLensDistortion": true
+  },
+  "Audio": {
+    "VoiceVolume": 1.0,
+    "BgmVolume": 0.8,
+    "SeVolume": 1.0,
+    "SystemVolume": 0.8,
+    "EnableDynamicRangeControl": false,
+    "SpeakerType": 0,
+    "EnableVirtualSurround": false
+  },
+  "Language": {
+    "VoiceLanguage": "ja",
+    "DisplayLanguage": "ja",
+    "ShowSubtitles": true
+  },
+  "Accessibility": {
+    "TextSizeIndex": 1,
+    "TextColorIndex": 0,
+    "ShowTextBackground": true,
+    "TextBackgroundOpacity": 0.5,
+    "ShowSpeakerName": true,
+    "ShowSoundSubtitles": false,
+    "ShowCenterDot": false
+  }
+}

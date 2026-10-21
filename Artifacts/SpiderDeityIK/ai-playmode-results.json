@@ -1,0 +1,48 @@
+{
+  "status": "completed",
+  "duration": 16.05,
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "results": [
+    {
+      "FullName": "Shinzui.Tests.SpiderDeityIK.Runtime.SpiderAiPlayModeTests.MissingNavMeshDoesNotMoveAndMissingSupportReturnsBodyToNeutral",
+      "Status": "Passed",
+      "Duration": 2.275524,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderDeityIK.Runtime.SpiderAiPlayModeTests.ObstacleHasDetourAndUnreachableDestinationStops",
+      "Status": "Passed",
+      "Duration": 2.2403516,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderDeityIK.Runtime.SpiderAiPlayModeTests.PatrolAdvancesAfterArrivalAndDisabledDriverStops",
+      "Status": "Passed",
+      "Duration": 3.6188745,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderDeityIK.Runtime.SpiderAiPlayModeTests.SightChaseStopOcclusionMemoryAndTargetRemoval",
+      "Status": "Passed",
+      "Duration": 4.090876,
+      "Message": null,
+      "StackTrace": null
+    },
+    {
+      "FullName": "Shinzui.Tests.SpiderDeityIK.Runtime.SpiderAiPlayModeTests.SlopeAlignmentPreservesUprightNavigationAndFootReach",
+      "Status": "Passed",
+      "Duration": 3.7432331,
+      "Message": null,
+      "StackTrace": null
+    }
+  ]
+}

@@ -33,6 +33,7 @@ namespace Shinzui.Presentation.Settings
 
         private Button _dynamicDefaultButton;
         private Button _dynamicCloseButton;
+        private GraphicsOptionsPresenter _graphicsPresenter;
 
         public OptionPresenter(SettingsUseCase useCase, OptionWindowView view)
         {
@@ -50,6 +51,8 @@ namespace Shinzui.Presentation.Settings
 
             // 3. UIとUseCaseの双方向バインディング
             BindUi();
+            var details = _view.EnsureGraphicsDetails();
+            if (details != null) _graphicsPresenter = new GraphicsOptionsPresenter(_useCase, details);
 
             // 4. 初期カテゴリー選択
             SelectCategory(0);
@@ -143,13 +146,16 @@ namespace Shinzui.Presentation.Settings
                 {
                     _dynamicCloseButton.onClick.AddListener(() =>
                     {
-                        _useCase.SaveAndApply();
+                        _useCase.CancelEdit();
                         _view.gameObject.SetActive(false);
                     });
                 }
             }
         }
 
+        /// <summary>
+        /// 設定値と画面の入力を双方向に接続する
+        /// </summary>
         private void BindUi()
         {
             // --- UseCase -> View のバインディング (UseCaseのプロパティ値が変わったらUIへ反映する) ---
@@ -162,6 +168,18 @@ namespace Shinzui.Presentation.Settings
             _useCase.MouseNormalSensitivity.Subscribe(val => _view.MouseSensitivitySlider.value = val).AddTo(_disposables);
 
             _useCase.Brightness.Subscribe(val => _view.BrightnessSlider.value = val).AddTo(_disposables);
+
+            // PC版では既存のグラフィックス画面へ品質プリセットの選択を追加
+            if (!_useCase.IsConsolePlatform())
+            {
+                _view.EnsureGraphicsQualitySelector();
+                if (_view.GraphicsQualitySlider != null)
+                {
+                    _useCase.GraphicsQuality.Subscribe(_view.SetGraphicsQuality).AddTo(_disposables);
+                    OnSliderValueChanged(_view.GraphicsQualitySlider)
+                        .Subscribe(val => _useCase.GraphicsQuality.Value = Mathf.RoundToInt(val)).AddTo(_disposables);
+                }
+            }
 
             _useCase.ShowCenterDot.Subscribe(val => _view.CenterDotToggle.isOn = val).AddTo(_disposables);
 
@@ -217,6 +235,7 @@ namespace Shinzui.Presentation.Settings
 
         public void Dispose()
         {
+            _graphicsPresenter?.Dispose();
             _disposables.Dispose();
 
             // onClickリスナーは GameObject 破棄時にクリアされますが、念のため明示的解除

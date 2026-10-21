@@ -1,0 +1,7 @@
+{
+    "name": "Shinzui.SpiderDeityIK.Tests",
+    "references": ["Unity.Animation.Rigging", "InfrastructureLayer", "ApplicationLayer"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "autoReferenced": false
+}

@@ -1,0 +1,230 @@
+{
+  "method": "Mean FPS = 1000 / mean frame milliseconds. P95 uses nearest rank. 1% low = reciprocal of mean slowest 1% frame time. Capped native gameplay, not frozen.",
+  "status": "completed_with_display_fallback_and_frame_pacing_limits",
+  "runs": [
+    {
+      "label": "player-normal-ultra-seed2777",
+      "seed": 2777,
+      "regenerated": false,
+      "samples": 2399,
+      "durationSeconds": 45.0259512,
+      "averageWallMs": 16.67401546177574,
+      "averageFps": 59.97355599750072,
+      "p95WallMs": 26.6894073,
+      "p99WallMs": 26.6898041,
+      "onePercentLowFps": 26.455190691836393,
+      "worstFrameMs": 53.36591,
+      "lowestInstantaneousFps": 18.738554256828003,
+      "validRenderWorkload": true,
+      "dofMode": "UsePhysicalCamera",
+      "dofActive": true,
+      "savedUltra": true,
+      "vSync": true,
+      "fpsCap": 60,
+      "width": 1920,
+      "height": 1080,
+      "refreshHz": 74.973,
+      "timeScale": 1.0,
+      "cinemachineEnabled": true,
+      "autofocusComponents": 1,
+      "walkedMetres": 101.971893,
+      "portalCrossings": 2,
+      "warps": [
+        {
+          "seconds": 12.7349299,
+          "offset": "(0.000, -0.002, -39.980)"
+        },
+        {
+          "seconds": 30.459884100000004,
+          "offset": "(0.000, -0.001, -39.980)"
+        }
+      ],
+      "wasDead": false,
+      "enemyObservations": 92,
+      "movingEnemyObservations": 71,
+      "enabledEnemyObservations": 92,
+      "onNavMeshObservations": 92,
+      "directorPhases": [
+        "Ambient",
+        "Hunt",
+        "Search"
+      ],
+      "focusDistances": [
+        0.502,
+        1.377,
+        4.254,
+        6.641,
+        7.755,
+        8.966,
+        10.173,
+        11.4,
+        12.413,
+        14.498,
+        14.788,
+        26.466,
+        26.961,
+        27.45,
+        28.57,
+        29.683,
+        29.718,
+        29.963,
+        29.974,
+        29.999,
+        30.0,
+        32.982
+      ],
+      "actualDisplayMode": "FullScreenWindow",
+      "requestedDisplayMode": 0,
+      "requestedRefreshHz": 60,
+      "pipelineRT": true,
+      "rtFrame": true,
+      "renderedFrames": 2692,
+      "warnings": {
+        "dxgi: swapchain SetFullscreenState failed (887a0022).": 2,
+        "Failed to change display to ExclusiveFullscreen...reverting to FullscreenWindow": 2,
+        "Failed to create agent because there is no valid NavMesh": 2,
+        "Failed to create agent because it is not close enough to the NavMesh": 2
+      },
+      "errors": {},
+      "averageCpuMs": 16.66841679866611,
+      "reportedGpuMs": 7.3019988728636935,
+      "gpuZeroSamples": 499,
+      "gpuTimerUsable": false,
+      "shutdownInputAssertions": [
+        "Action count in old and new state must be the same",
+        "Map count in old and new state must be the same",
+        "Binding count in old and new state must be the same",
+        "Composite count in old and new state must be the same"
+      ],
+      "shutdownAllocationWarnings": [
+        "Leak Detected : Persistent allocates 10 individual allocations. To find out more, run with the command line argument '-native-leak-detection EnabledWithStackTrace' and reproduce the leak again."
+      ]
+    },
+    {
+      "label": "player-normal-ultra-regenerated9182",
+      "seed": 9182,
+      "regenerated": true,
+      "samples": 2381,
+      "durationSeconds": 45.018766899999996,
+      "averageWallMs": 16.805702471650566,
+      "averageFps": 59.50361204400076,
+      "p95WallMs": 26.689497,
+      "p99WallMs": 40.0143,
+      "onePercentLowFps": 21.675751808766165,
+      "worstFrameMs": 80.02901,
+      "lowestInstantaneousFps": 12.495468830615298,
+      "validRenderWorkload": true,
+      "dofMode": "UsePhysicalCamera",
+      "dofActive": true,
+      "savedUltra": true,
+      "vSync": true,
+      "fpsCap": 60,
+      "width": 1920,
+      "height": 1080,
+      "refreshHz": 74.973,
+      "timeScale": 1.0,
+      "cinemachineEnabled": true,
+      "autofocusComponents": 1,
+      "walkedMetres": 102.749954,
+      "portalCrossings": 3,
+      "warps": [
+        {
+          "seconds": 12.739594299999998,
+          "offset": "(0.000, -0.003, -39.980)"
+        },
+        {
+          "seconds": 29.345003,
+          "offset": "(0.000, -0.001, -39.980)"
+        },
+        {
+          "seconds": 43.724376899999996,
+          "offset": "(0.005, -0.002, -39.981)"
+        }
+      ],
+      "wasDead": false,
+      "enemyObservations": 92,
+      "movingEnemyObservations": 59,
+      "enabledEnemyObservations": 92,
+      "onNavMeshObservations": 92,
+      "directorPhases": [
+        "Ambient",
+        "Hunt",
+        "Search"
+      ],
+      "focusDistances": [
+        3.938,
+        7.944,
+        11.835,
+        14.002,
+        15.259,
+        15.952,
+        17.999,
+        19.987,
+        20.557,
+        22.023,
+        23.997,
+        25.84,
+        26.169,
+        29.926,
+        29.999,
+        30.0,
+        30.005,
+        30.616,
+        33.662,
+        33.73,
+        34.838,
+        36.825
+      ],
+      "actualDisplayMode": "FullScreenWindow",
+      "requestedDisplayMode": 0,
+      "requestedRefreshHz": 60,
+      "pipelineRT": true,
+      "rtFrame": true,
+      "renderedFrames": 2685,
+      "warnings": {
+        "dxgi: swapchain SetFullscreenState failed (887a0022).": 2,
+        "Failed to change display to ExclusiveFullscreen...reverting to FullscreenWindow": 2,
+        "Failed to create agent because there is no valid NavMesh": 2,
+        "Failed to create agent because it is not close enough to the NavMesh": 2
+      },
+      "errors": {},
+      "averageCpuMs": 16.80555207895842,
+      "reportedGpuMs": 6.871484263754725,
+      "gpuZeroSamples": 509,
+      "gpuTimerUsable": false,
+      "shutdownInputAssertions": [
+        "Action count in old and new state must be the same",
+        "Map count in old and new state must be the same",
+        "Binding count in old and new state must be the same",
+        "Composite count in old and new state must be the same"
+      ],
+      "shutdownAllocationWarnings": [
+        "Leak Detected : Persistent allocates 10 individual allocations. To find out more, run with the command line argument '-native-leak-detection EnabledWithStackTrace' and reproduce the leak again."
+      ]
+    }
+  ],
+  "launch": {
+    "runs": [
+      {
+        "seed": 2777,
+        "label": "player-normal-ultra-seed2777",
+        "pid": 100152,
+        "startedUtc": "2026-10-06T12:30:35.3784796Z",
+        "endedUtc": "2026-10-06T12:31:33.5387286Z",
+        "foregroundRequested": false,
+        "outcome": "Exited 0"
+      },
+      {
+        "seed": 9182,
+        "label": "player-normal-ultra-regenerated9182",
+        "pid": 55380,
+        "startedUtc": "2026-10-06T12:31:33.5469963Z",
+        "endedUtc": "2026-10-06T12:32:31.5978228Z",
+        "foregroundRequested": false,
+        "outcome": "Exited 0"
+      }
+    ],
+    "originalFocusRestored": true,
+    "finishedUtc": "2026-10-06T12:32:31.5995266Z"
+  }
+}

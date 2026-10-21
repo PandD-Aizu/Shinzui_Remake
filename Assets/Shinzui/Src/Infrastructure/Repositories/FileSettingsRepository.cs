@@ -85,12 +85,16 @@ namespace Shinzui.Infrastructure.Repositories
                     Directory.CreateDirectory(directory);
                 }
 
-                File.WriteAllText(_saveFilePath, json);
+                string temporary = _saveFilePath + ".tmp";
+                File.WriteAllText(temporary, json);
+                if (File.Exists(_saveFilePath)) File.Replace(temporary, _saveFilePath, _saveFilePath + ".bak");
+                else File.Move(temporary, _saveFilePath);
                 Debug.Log($"[Settings] Saved settings to: {_saveFilePath}");
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[Settings] Failed to save settings to {_saveFilePath}: {ex.Message}");
+                throw;
             }
 #endif
         }

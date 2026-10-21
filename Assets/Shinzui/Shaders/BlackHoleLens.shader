@@ -110,5 +110,113 @@ Shader "Shinzui/BlackHoleLens"
             ENDHLSL
         }
     }
+    SubShader
+    {
+        // One field for both eyes avoids overlapping quads erasing each other's rings.
+        Tags { "RenderPipeline" = "HDRenderPipeline" "Queue" = "Transparent-10" "RenderType" = "Transparent" }
+        Pass
+        {
+            Name "SurroundingGravitationalLens"
+            Tags { "LightMode" = "ForwardOnly" }
+            Cull Back
+            ZWrite Off
+            ZTest LEqual
+            Blend One One
+
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #pragma multi_compile_instancing
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+#include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariablesFunctions.hlsl"
+float4 ComputeScreenPos(float4 p) { float4 o=p*.5; o.xy=float2(o.x,o.y*_ProjectionParams.x)+o.w; o.zw=p.zw; return o; }
+float2 GetNormalizedScreenSpaceUV(float4 p) { return p.xy*_ScreenSize.zw; }
+TEXTURE2D_X(_ShinzuiOpaqueColor);
+float4 _ShinzuiOpaqueScale;
+
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _LensSize, _EyeA, _EyeB;
+                float _PullStrength, _TwistStrength, _RadiusScale;
+                float _FlowSpeed, _PulseStrength, _Opacity;
+            CBUFFER_END
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                float2 planePosition : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            Varyings Vert(Attributes input)
+            {
+                Varyings output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_TRANSFER_INSTANCE_ID(input, output);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.planePosition = input.positionOS.xy * _LensSize.xy;
+                return output;
+            }
+
+            float2 PullField(float2 planePoint, float4 eye, float direction, out float coverage)
+            {
+                float2 delta = planePoint - eye.xy;
+                float radius = max(eye.z * _RadiusScale, 0.001);
+                float radial = length(delta) / radius;
+                float falloff = saturate(1.0 - radial);
+                // Increasing time sends each pressure crest from the outside toward the eye.
+                float wave = radial * 14.0 + _Time.y * _FlowSpeed * 3.0 + eye.w;
+                float suction = _PullStrength * falloff * falloff * (1.0 + _PulseStrength * sin(wave));
+                float twist = direction * _TwistStrength * (0.8 + 0.2 * cos(wave + eye.w));
+                coverage = 1.0 - smoothstep(0.55, 1.0, radial);
+                // Sample farther OUT from the eye so scene features appear pulled IN.
+                // Sampling toward the centre would instead make the eye bulge outwards.
+                return suction * (delta + float2(-delta.y, delta.x) * twist);
+            }
+
+            float2 PlaneToScreenUV(float2 planePoint)
+            {
+                float4 clipPosition = TransformObjectToHClip(float3(planePoint / _LensSize.xy, 0));
+                float4 screenPosition = ComputeScreenPos(clipPosition);
+                return screenPosition.xy / max(screenPosition.w, 0.0001);
+            }
+
+            half4 Frag(Varyings input) : SV_Target
+            {
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+                float coverageA, coverageB;
+                float2 offset = PullField(input.planePosition, _EyeA, 1.0, coverageA);
+                offset += PullField(input.planePosition, _EyeB, -1.0, coverageB);
+                // Project displacement from the actual eye plane. Its apparent size scales
+                // with distance, camera FOV, perspective, and render resolution.
+                float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                float2 warpedUV = screenUV + PlaneToScreenUV(input.planePosition + offset) - PlaneToScreenUV(input.planePosition);
+                float2 margin = _ScreenSize.zw * 0.5;
+                half3 scene = SAMPLE_TEXTURE2D_X_LOD(_ShinzuiOpaqueColor, s_trilinear_clamp_sampler,
+                    clamp(warpedUV, margin, 1.0 - margin) * _ShinzuiOpaqueScale.xy, 0).rgb;
+                half3 unwarped = SAMPLE_TEXTURE2D_X_LOD(_ShinzuiOpaqueColor, s_trilinear_clamp_sampler,
+                    screenUV * _ShinzuiOpaqueScale.xy, 0).rgb;
+                float2 edgeDistance = abs(input.planePosition / _LensSize.xy) * 2.0;
+                float edge = 1.0 - smoothstep(0.88, 1.0, max(edgeDistance.x, edgeDistance.y));
+                half alpha = max(coverageA, coverageB) * edge * _Opacity;
+                // Apply only the refracted difference, preserving already-composited fog and portal exposure.
+                // At zero displacement this is exactly neutral rather than repainting the lens footprint.
+                return half4((scene - unwarped) * alpha, 0);
+            }
+            ENDHLSL
+        }
+    }
     Fallback Off
 }

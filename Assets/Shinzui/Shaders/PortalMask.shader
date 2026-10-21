@@ -55,4 +55,25 @@ Shader "Custom/PortalMask"
             ENDHLSL
         }
     }
+    SubShader
+    {
+        Tags { "RenderPipeline"="HDRenderPipeline" }
+        Pass
+        {
+            Name "HdrpPortalMask"
+            Tags { "LightMode"="ShinzuiPortal" }
+            Cull Off ZWrite On ZTest LEqual ColorMask 0
+            Stencil { Ref 64 ReadMask 64 WriteMask 64 Comp Always Pass Replace }
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+            float4 Vert(float3 positionOS : POSITION) : SV_POSITION { return TransformWorldToHClip(TransformObjectToWorld(positionOS)); }
+            float4 Frag() : SV_Target { return 0; }
+            ENDHLSL
+        }
+    }
 }
