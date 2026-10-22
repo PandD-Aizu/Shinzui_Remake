@@ -64,6 +64,8 @@ namespace Shinzui.View
         }
 
         public Vector3 CameraForward => mainCamera != null ? mainCamera.transform.forward : transform.forward;
+        /// <summary>導入演出による移動と姿勢更新の占有状態</summary>
+        public bool IsCinematicControlled { get; set; }
         public Vector3 CameraRight => mainCamera != null ? mainCamera.transform.right : transform.right;
         public Vector3 CameraPosition => mainCamera != null ? mainCamera.transform.position : transform.position;
         public float CameraNearClipPlane => mainCamera != null ? mainCamera.nearClipPlane : 0.3f;
@@ -391,11 +393,20 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>移動・着地・疲労・追跡状態をカメラの揺れへ反映</summary>
+        /// <param name="velocity">実際の移動速度</param>
+        /// <param name="isGrounded">接地しているか</param>
+        /// <param name="isRunning">走っているか</param>
+        /// <param name="landingSpeed">着地直前の落下速度</param>
+        /// <param name="staminaRatio">スタミナの残量割合</param>
+        /// <param name="isChased">敵に追跡されているか</param>
         public void UpdateCameraMotion(
             Vector3 velocity,
             bool isGrounded,
             bool isRunning,
-            float landingSpeed)
+            float landingSpeed,
+            float staminaRatio,
+            bool isChased)
         {
             if (_cameraMotion == null)
             {
@@ -408,6 +419,7 @@ namespace Shinzui.View
             }
 
             _cameraMotion.SetMotionState(velocity, isGrounded, isRunning, Time.deltaTime);
+            _cameraMotion.SetTensionState(staminaRatio, isChased);
             if (landingSpeed > 0.0f)
             {
                 _cameraMotion.RegisterLanding(landingSpeed);
