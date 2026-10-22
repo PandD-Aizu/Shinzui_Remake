@@ -25,15 +25,15 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _FlowSpeed: 1.6
+    - _FlowSpeed: 0.45
     - _Opacity: 1
-    - _PullStrength: 2.6
-    - _PulseStrength: 0.22
+    - _PullStrength: 2.8
+    - _PulseStrength: 0.035
     - _RadiusScale: 1
-    - _TwistStrength: 0.65
+    - _TwistStrength: 0.16
     m_Colors:
-    - _EyeA: {r: 0.225, g: -0.015, b: 0.7, a: 0.2}
-    - _EyeB: {r: -0.225, g: 0.02, b: 0.74, a: 2.1}
-    - _LensSize: {r: 1.95, g: 1.6, b: 0, a: 0}
+    - _EyeA: {r: 0.32, g: -0.015, b: 0.76, a: 0.2}
+    - _EyeB: {r: -0.32, g: 0.02, b: 0.72, a: 2.1}
+    - _LensSize: {r: 2.2, g: 1.6, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
