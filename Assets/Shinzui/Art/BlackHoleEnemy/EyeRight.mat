@@ -25,22 +25,22 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _Deformation: 0.085
+    - _Deformation: 0.012
     - _DeformationSpeed: 0.45
-    - _HorizonRadius: 0.21
+    - _HorizonRadius: 0.225
     - _InfallSpeed: 0.8
-    - _Intensity: 0.9
+    - _Intensity: 0.75
     - _LensStrength: 0.035
     - _Phase: 2.1
-    - _RingWidth: 0.014
-    - _SceneRefraction: 0.55
+    - _RingWidth: 0.012
+    - _SceneRefraction: 0.95
     - _SpiralTightness: 9
     - _SwirlSpeed: -0.55
     m_Colors:
-    - _DiskColor: {r: 0.1, g: 0.095, b: 0.08, a: 1}
-    - _EyeShape: {r: 0.86, g: 0.57, b: 0.18, a: 0}
-    - _PupilOffset: {r: -0.07, g: 0.055, b: 0, a: 0}
-    - _RingColor: {r: 0.62, g: 0.59, b: 0.5, a: 1}
+    - _DiskColor: {r: 0.12, g: 0.105, b: 0.085, a: 1}
+    - _EyeShape: {r: 0.63, g: 0.4, b: 0.06, a: 0}
+    - _PupilOffset: {r: 0, g: 0, b: 0, a: 0}
+    - _RingColor: {r: 0.78, g: 0.8, b: 0.76, a: 1}
     - _SocketColor: {r: 0.012, g: 0.01, b: 0.009, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -174,8 +174,10 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
                 if (!slot.Draining)
                 {
                     var result = slot.Channel.isPlaying(out bool playing);
-                    if (result != RESULT.OK && result != RESULT.ERR_INVALID_HANDLE) Check(result);
-                    if (result == RESULT.ERR_INVALID_HANDLE || !playing) { slot.Draining = true; slot.Channel.clearHandle(); }
+                    // 再利用されたチャンネルは終了済みとして残響の消化へ進める
+                    bool ended = result == RESULT.ERR_INVALID_HANDLE || result == RESULT.ERR_CHANNEL_STOLEN;
+                    if (result != RESULT.OK && !ended) Check(result);
+                    if (ended || !playing) { slot.Draining = true; slot.Channel.clearHandle(); }
                 }
                 if (slot.Draining)
                 {

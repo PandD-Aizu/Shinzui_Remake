@@ -1,6 +1,7 @@
 using System;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases;
+using Shinzui.Application.UseCases.Enemy;
 using R3;
 using Shinzui.View;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace Shinzui.Presentation
     {
         private readonly PlayerMoveUseCase _useCase;
         private readonly PlayerView _view;
+        private readonly EnemyDirectorUseCase _enemyDirector;
 
         private IDisposable _disposable;
         private bool _wasControllerGrounded;
@@ -31,12 +33,18 @@ namespace Shinzui.Presentation
             }
         }
 
+        /// <summary>移動とカメラの揺れに必要なプレイヤー・敵の状態を受け取る</summary>
+        /// <param name="useCase">移動とスタミナの状態</param>
+        /// <param name="view">プレイヤーの表示とカメラ</param>
+        /// <param name="enemyDirector">敵全体の追跡状態</param>
         public PlayerMovePresenter(
             PlayerMoveUseCase useCase,
-            PlayerView view)
+            PlayerView view,
+            EnemyDirectorUseCase enemyDirector)
         {
             _useCase = useCase;
             _view = view;
+            _enemyDirector = enemyDirector;
         }
 
         public void Initialize()
@@ -65,6 +73,13 @@ namespace Shinzui.Presentation
 
         public void Tick()
         {
+            // 転倒中は通常移動とカメラ揺れによる姿勢の上書きを止める
+            if (_view != null && _view.IsCinematicControlled)
+            {
+                _useCase.RestDuringCinematic(Time.deltaTime);
+                return;
+            }
+
             if (_view != null)
             {
                 _useCase.SetCrouchRatio(_view.CrouchRatio, _view.HeightChangeRate);
@@ -97,7 +112,8 @@ namespace Shinzui.Presentation
             // 計算された速度をUseCaseから取得し、Viewに適用して物理移動を実行
             Vector3 currentVelocity = _useCase.Velocity.CurrentValue;
             _view.Move(currentVelocity);
-            _view.UpdateCameraMotion(currentVelocity, isGrounded, _useCase.IsRunning, landingSpeed);
+            _view.UpdateCameraMotion(currentVelocity, isGrounded, _useCase.IsRunning, landingSpeed,
+                _useCase.StaminaRatio.CurrentValue, _enemyDirector.IsPlayerFound.CurrentValue);
 
             // Y回転をカメラに合わせる
             _view.AlignYRotationWithCamera(currentVelocity);

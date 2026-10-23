@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Shinzui.View;
 using UnityEditor;
@@ -36,24 +35,100 @@ namespace Shinzui.Editor
             var right = MaterialAsset("EyeRight", shader, new Color(0.62f, 0.59f, 0.5f));
             if (!AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath))
             {
-                left.SetFloat("_Phase", 0.2f);
-                left.SetFloat("_HorizonRadius", 0.28f);
-                left.SetVector("_EyeShape", new Vector4(1.08f, 0.72f, -0.12f, 0));
-                left.SetVector("_PupilOffset", new Vector4(0.035f, 0.012f, 0, 0));
-                right.SetFloat("_Phase", 2.1f);
-                right.SetFloat("_SwirlSpeed", -0.55f);
-                right.SetFloat("_HorizonRadius", 0.21f);
-                right.SetVector("_EyeShape", new Vector4(0.86f, 0.57f, 0.18f, 0));
-                right.SetVector("_PupilOffset", new Vector4(-0.07f, 0.055f, 0, 0));
-                var body = MaterialAsset("ObsidianVeil", Shader.Find("Shinzui/BlackHoleBody"), new Color(0.014f, 0.021f, 0.026f));
-                // These are saved once and remain freely editable by artists afterwards.
-                EditorUtility.SetDirty(left);
-                EditorUtility.SetDirty(right);
-                EditorUtility.SetDirty(body);
-                BuildPrefab(left, right, body);
+                ConfigureEyeMaterial(left, false);
+                ConfigureEyeMaterial(right, true);
+                BuildPrefab(left, right);
             }
             if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(PreviewPath)) BuildPreview();
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// 既存Prefabを背景が屈折する二つの浮遊眼へ更新
+        /// </summary>
+        [MenuItem("Shinzui/Enemies/Black Hole/Apply Floating Eyes")]
+        public static void ApplyFloatingEyes()
+        {
+            if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play Mode before authoring assets.");
+            var root = PrefabUtility.LoadPrefabContents(PrefabPath);
+            try
+            {
+                var visual = root.transform.Find("Visual");
+
+                // 胴体とフードのみ除去し、既存の行動と浮遊アニメーションを保持
+                foreach (string name in new[] { "Tattered Veil", "Hood", "Left Shoulder", "Right Shoulder", "Left Hanging Arm", "Right Hanging Arm" })
+                {
+                    var body = visual.Find(name);
+                    if (body) Object.DestroyImmediate(body.gameObject);
+                }
+
+                ConfigureEyeMaterial(visual.Find("Left Singularity").GetComponent<Renderer>().sharedMaterial, false);
+                ConfigureEyeMaterial(visual.Find("Right Singularity").GetComponent<Renderer>().sharedMaterial, true);
+                ConfigureFloatingEyes(visual);
+                PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// 暗い事象の地平面と背景を映す細い光輪を設定
+        /// </summary>
+        /// <param name="material">保存対象の眼マテリアル</param>
+        /// <param name="right">右眼の場合は位相と形状を変更</param>
+        private static void ConfigureEyeMaterial(Material material, bool right)
+        {
+            // 輪郭の大きなうねりを抑え、左右でわずかな非対称性を残す
+            material.SetFloat("_Phase", right ? 2.1f : 0.2f);
+            material.SetFloat("_HorizonRadius", right ? 0.29f : 0.31f);
+            material.SetFloat("_Deformation", 0.012f);
+            material.SetFloat("_RingWidth", 0.008f);
+            material.SetFloat("_Intensity", 0.75f);
+            material.SetFloat("_SceneRefraction", 0.95f);
+            material.SetFloat("_SwirlSpeed", right ? -0.55f : 0.7f);
+            material.SetVector("_EyeShape", new Vector4(1f, right ? 0.83f : 0.9f, right ? 0.06f : -0.04f, 0f));
+            material.SetVector("_PupilOffset", Vector4.zero);
+            material.SetColor("_RingColor", new Color(0.78f, 0.8f, 0.76f));
+            material.SetColor("_DiskColor", new Color(0.12f, 0.105f, 0.085f));
+            EditorUtility.SetDirty(material);
+        }
+
+        /// <summary>
+        /// 浮遊眼の間隔と周囲の重力レンズを揃える
+        /// </summary>
+        /// <param name="visual">眼とレンズを持つ描画ルート</param>
+        private static void ConfigureFloatingEyes(Transform visual)
+        {
+            // 眼の間隔を確保し、フードのない空間へ配置
+            var left = visual.Find("Left Singularity");
+            var right = visual.Find("Right Singularity");
+            left.localPosition = new Vector3(-0.32f, 2.03f, 0.348f);
+            right.localPosition = new Vector3(0.32f, 2.065f, 0.348f);
+            left.localScale = Vector3.one * 0.92f;
+            right.localScale = Vector3.one * 0.86f;
+
+            // 眼に対応する位置へ背景の屈折中心を移し、波打ちを抑制
+            AddLensing(visual);
+            var lens = visual.Find("Gravitational Lens");
+            lens.localScale = new Vector3(2.2f, 1.6f, 1f);
+            var material = lens.GetComponent<Renderer>().sharedMaterial;
+            material.SetVector("_LensSize", new Vector4(2.2f, 1.6f, 0f, 0f));
+            material.SetVector("_EyeA", new Vector4(0.32f, -0.015f, 0.76f, 0.2f));
+            material.SetVector("_EyeB", new Vector4(-0.32f, 0.02f, 0.72f, 2.1f));
+            material.SetFloat("_PullStrength", 2.8f);
+            material.SetFloat("_TwistStrength", 0.16f);
+            material.SetFloat("_PulseStrength", 0.035f);
+            material.SetFloat("_FlowSpeed", 0.45f);
+            EditorUtility.SetDirty(material);
+
+            // 眼の中心を保ち、左右の間隔と屈折範囲をまとめて縮小
+            var center = new Vector3(0f, 2.045f, 0.35f);
+            foreach (var part in new[] { left, right, lens })
+            {
+                part.localPosition = center + (part.localPosition - center) * 0.425f;
+                part.localScale *= 0.425f;
+            }
         }
 
         [MenuItem("Shinzui/Enemies/Black Hole/Enable Surrounding Distortion")]
@@ -120,12 +195,11 @@ namespace Shinzui.Editor
         }
 
         /// <summary>
-        /// ブラックホール眼と胴体を持つ敵Prefabを作成
+        /// 二つのブラックホール眼だけが浮遊する敵Prefabを作成
         /// </summary>
         /// <param name="left">左目のマテリアル</param>
         /// <param name="right">右目のマテリアル</param>
-        /// <param name="body">胴体のマテリアル</param>
-        private static void BuildPrefab(Material left, Material right, Material body)
+        private static void BuildPrefab(Material left, Material right)
         {
             var staging = new GameObject("BlackHoleEnemy Authoring");
             staging.SetActive(false);
@@ -152,18 +226,9 @@ namespace Shinzui.Editor
 
                 var visual = new GameObject("Visual").transform;
                 visual.SetParent(root.transform, false);
-                var cloak = new GameObject("Tattered Veil", typeof(MeshFilter), typeof(MeshRenderer));
-                cloak.transform.SetParent(visual, false);
-                cloak.GetComponent<MeshFilter>().sharedMesh = CreateVeilMesh();
-                cloak.GetComponent<MeshRenderer>().sharedMaterial = body;
-                Sphere("Hood", visual, new Vector3(0f, 2.00f, 0f), new Vector3(1.02f, 1.04f, 0.68f), body);
-                Sphere("Left Shoulder", visual, new Vector3(-0.42f, 1.54f, -0.03f), new Vector3(0.4f, 0.48f, 0.48f), body);
-                Sphere("Right Shoulder", visual, new Vector3(0.42f, 1.54f, -0.03f), new Vector3(0.4f, 0.48f, 0.48f), body);
-                Sphere("Left Hanging Arm", visual, new Vector3(-0.52f, 1.06f, 0f), new Vector3(0.22f, 1.0f, 0.26f), body);
-                Sphere("Right Hanging Arm", visual, new Vector3(0.53f, 1.13f, 0f), new Vector3(0.22f, 0.93f, 0.26f), body);
                 Eye("Left Singularity", visual, new Vector3(-0.225f, 2.03f, 0.348f), 0.80f, left);
                 Eye("Right Singularity", visual, new Vector3(0.225f, 2.065f, 0.348f), 0.88f, right);
-                AddLensing(visual);
+                ConfigureFloatingEyes(visual);
 
                 // 見た目だけをポータルから隠し、接触用コライダーのレイヤーは維持
                 int hiddenLayer = LayerMask.NameToLayer("PortalHidden");
@@ -214,50 +279,6 @@ namespace Shinzui.Editor
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;
-        }
-
-        private static void Sphere(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
-        {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            go.name = name;
-            Object.DestroyImmediate(go.GetComponent<Collider>());
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = position;
-            go.transform.localScale = scale;
-            go.GetComponent<MeshRenderer>().sharedMaterial = material;
-        }
-
-        private static Mesh CreateVeilMesh()
-        {
-            string path = Folder + "/Veil.asset";
-            var saved = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (saved) return saved;
-            const int segments = 64;
-            float[] heights = { 0.13f, 0.38f, 0.7f, 1.1f, 1.48f, 1.68f, 1.82f };
-            float[] widths = { 0.27f, 0.36f, 0.41f, 0.45f, 0.52f, 0.38f, 0.23f };
-            var vertices = new List<Vector3>();
-            var uv = new List<Vector2>();
-            var triangles = new List<int>();
-            for (int ring = 0; ring < heights.Length; ring++)
-            for (int i = 0; i <= segments; i++)
-            {
-                float a = (float)i / segments * Mathf.PI * 2f;
-                float fold = 1f + 0.085f * Mathf.Sin(a * 11f + ring * 0.26f) + 0.04f * Mathf.Cos(a * 7f);
-                float y = heights[ring] + (ring == 0 ? 0.18f * (0.5f + 0.5f * Mathf.Sin(a * 9f)) : 0f);
-                vertices.Add(new Vector3(Mathf.Cos(a) * widths[ring] * fold, y, Mathf.Sin(a) * widths[ring] * 0.65f * fold));
-                uv.Add(new Vector2((float)i / segments, (float)ring / (heights.Length - 1)));
-                if (ring == heights.Length - 1 || i == segments) continue;
-                int n = ring * (segments + 1) + i;
-                triangles.AddRange(new[] { n, n + segments + 1, n + 1, n + 1, n + segments + 1, n + segments + 2 });
-            }
-            var mesh = new Mesh { name = "Tattered Veil" };
-            mesh.SetVertices(vertices);
-            mesh.SetUVs(0, uv);
-            mesh.SetTriangles(triangles, 0);
-            mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
-            AssetDatabase.CreateAsset(mesh, path);
-            return mesh;
         }
 
         private static AnimationClip HoverClip()

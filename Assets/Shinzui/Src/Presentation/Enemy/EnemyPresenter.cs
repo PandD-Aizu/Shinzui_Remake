@@ -24,9 +24,12 @@ namespace Shinzui.Presentation
         private readonly IEnemyRuntime[] _runtimes;
         private readonly EnemyDirectorSettings _settings;
         private readonly PlayerMoveUseCase _playerMove;
+        private readonly PlayerView _playerView;
+        private readonly PlayerDeathView _deathView;
         private Vector3 _previousPlayerPosition;
         private float _footstepTimer;
         private bool _hasPreviousPosition;
+        private bool _cinematicPaused;
         private readonly List<EnemyController> _controllers = new();
         private readonly Dictionary<EnemyView, EnemyController> _controllersByView = new();
         private EnemyReport[] _enemyReports = Array.Empty<EnemyReport>();
@@ -39,7 +42,9 @@ namespace Shinzui.Presentation
             EnemyView[] enemyViews,
             IEnemyRuntime[] runtimes,
             EnemyDirectorSettings settings,
-            PlayerMoveUseCase playerMove)
+            PlayerMoveUseCase playerMove,
+            PlayerView playerView,
+            PlayerDeathView deathView)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
@@ -49,6 +54,8 @@ namespace Shinzui.Presentation
             _runtimes = runtimes ?? Array.Empty<IEnemyRuntime>();
             _settings = settings;
             _playerMove = playerMove;
+            _playerView = playerView;
+            _deathView = deathView;
         }
 
         public void Initialize()
@@ -70,7 +77,8 @@ namespace Shinzui.Presentation
                     _runtimes[i],
                     _enemyMoveUseCaseFactory(),
                     _playerDeathUseCase,
-                    _settings);
+                    _settings,
+                    CapturePlayer);
                 controller.Initialize();
 
                 _controllers.Add(controller);
@@ -87,6 +95,8 @@ namespace Shinzui.Presentation
 
         public void Tick()
         {
+            if (_cinematicPaused || _playerDeathUseCase.IsDead.CurrentValue) return;
+
             float deltaTime = Time.deltaTime;
             if (deltaTime <= 0f) return;
             EnemyCommand[] commands = DecideCommands(deltaTime);
@@ -97,7 +107,28 @@ namespace Shinzui.Presentation
                     ? commands[controller.Id]
                     : EnemyCommand.Wander;
                 controller.Tick(deltaTime, _playerTracker, _playerMove.CurrentHeight.CurrentValue, command);
+                if (_playerDeathUseCase.IsDead.CurrentValue) break;
             }
+        }
+
+        /// <summary>死亡回避を判定し、人型の捕獲だけ専用演出を予約</summary>
+        /// <param name="enemy">捕獲した敵</param>
+        /// <returns>死亡が確定した場合はtrue</returns>
+        private bool CapturePlayer(EnemyView enemy)
+        {
+            bool human = enemy.GetComponent<HumanEnemyLocomotion>() != null;
+            if (human) _deathView.PrepareHumanCapture(enemy, _playerView);
+            bool killed = _playerDeathUseCase.TryKillPlayer(playDeathSound: !human);
+            if (!killed) _deathView.PrepareHumanCapture(null, null);
+            else
+            {
+                SetCinematicPaused(true);
+
+                // 捕獲した敵を残し、周囲の敵を演出開始時に消す
+                foreach (var other in _enemyViews)
+                    if (other != null && other != enemy) other.FadeOut();
+            }
+            return killed;
         }
 
         public void Dispose()
@@ -113,8 +144,27 @@ namespace Shinzui.Presentation
         }
 
         /// <summary>
+        /// 導入中の通常AIと接触死亡判定をまとめて停止または再開
+        /// </summary>
+        /// <param name="paused">演出側が敵を操作する場合はtrue</param>
+        public void SetCinematicPaused(bool paused)
+        {
+            _cinematicPaused = paused;
+            _hasPreviousPosition = false;
+
+            // 演出側が動かす敵を含め、前の経路と速度設定を解除
+            foreach (var runtime in _runtimes)
+            {
+                if (runtime == null) continue;
+                runtime.Stop();
+                runtime.SetSpeed(paused ? 0f : 1f, paused);
+            }
+        }
+
+        /// <summary>
         /// 統括AIに現在の世界状態を渡してEnemyごとの命令を決定する
         /// </summary>
+        /// <param name="deltaTime">フレーム経過時間</param>
         /// <returns>EnemyのIdに対応する命令配列</returns>
         private EnemyCommand[] DecideCommands(float deltaTime)
         {
@@ -128,7 +178,7 @@ namespace Shinzui.Presentation
             for (int i = 0; i < _controllers.Count; i++)
             {
                 _enemyReports[i] = _controllers[i].CreateReport(deltaTime, _playerTracker.PlayerPosition,
-                    _playerMove.CurrentHeight.CurrentValue);
+                    _playerMove.CurrentHeight.CurrentValue, _playerView.MainCamera, _playerView.transform);
             }
 
             var tunnelBounds = _playerTracker.CurrentTunnelBounds;

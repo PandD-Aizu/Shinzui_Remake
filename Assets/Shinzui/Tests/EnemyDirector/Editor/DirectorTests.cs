@@ -21,7 +21,8 @@ namespace Shinzui.Tests.EnemyDirector
         }
         [TearDown] public void TearDown() => _director.Dispose();
         private static EnemyReport Report(int id = 0, bool visible = false, bool active = true, float z = 5f,
-            EnemyCommand command = default) => new(id, new Vector3(0, 0, z), command, 16f, active, visible);
+            EnemyCommand command = default, bool visibleToPlayer = true)
+            => new(id, new Vector3(0, 0, z), command, 16f, active, visible, visibleToPlayer);
         private EnemyCommand[] Step(float dt, Vector3 player, params EnemyReport[] reports)
             => _director.DecideCommands(new EnemyWorldState(player, reports, false, default, default), dt);
 
@@ -135,6 +136,43 @@ namespace Shinzui.Tests.EnemyDirector
             Step(.5f, Vector3.zero, Report(visible: true));
             Assert.That(_sound.OneShots, Is.EqualTo(1));
         }
+        /// <summary>視界外の敵は追跡を開始しても演出を発生させない</summary>
+        [Test] public void UnseenHunterDoesNotTriggerFeedback()
+        {
+            var commands = Step(.5f, Vector3.zero, Report(visible: true, visibleToPlayer: false));
+
+            Assert.That(commands[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
+            Assert.That(_director.IsPlayerFound.CurrentValue, Is.True);
+            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.False);
+            Assert.That(_sound.OneShots, Is.Zero);
+        }
+
+        /// <summary>追跡中に初めて敵を視認した時だけ演出を開始</summary>
+        [Test] public void SeeingHunterLaterTriggersFeedbackOnce()
+        {
+            Step(.5f, Vector3.zero, Report(visible: true, visibleToPlayer: false));
+            Step(.5f, Vector3.zero, Report(visible: true));
+            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.True);
+            Assert.That(_sound.OneShots, Is.EqualTo(1));
+
+            // 視線を外して戻しても同じ追跡で叫び直さない
+            Step(6f, Vector3.zero, Report(visible: true, visibleToPlayer: false));
+            Step(.5f, Vector3.zero, Report(visible: true));
+            Assert.That(_sound.OneShots, Is.EqualTo(1));
+
+            Step(.5f, Vector3.zero, Report());
+            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.False);
+        }
+
+        /// <summary>別の敵が見えていても視界外の追跡者の演出は開始しない</summary>
+        [Test] public void VisibleNonObserverDoesNotRevealHiddenHunter()
+        {
+            Step(.5f, Vector3.zero, Report(0, visible: true, visibleToPlayer: false), Report(1));
+
+            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.False);
+            Assert.That(_sound.OneShots, Is.Zero);
+        }
+
         [Test] public void InvalidDurationsUseFiniteDefaults()
         {
             _settings.ambientDuration = float.NaN;

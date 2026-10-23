@@ -16,6 +16,7 @@ namespace Shinzui.Application.UseCases.Enemy
         private readonly IEnemyEncounterFeedback _feedback;
         private readonly EnemyDirectorSettings _settings;
         private readonly ReactiveProperty<bool> _isPlayerFound = new(false);
+        private readonly ReactiveProperty<bool> _isEncounterRecognized = new(false);
         private readonly Dictionary<int, float> _sightTimers = new();
         private readonly List<int> _staleIds = new();
         private EnemyCommand[] _commands = Array.Empty<EnemyCommand>();
@@ -29,6 +30,7 @@ namespace Shinzui.Application.UseCases.Enemy
         private float _discoveryCooldown;
 
         public ReadOnlyReactiveProperty<bool> IsPlayerFound => _isPlayerFound;
+        public ReadOnlyReactiveProperty<bool> IsEncounterRecognized => _isEncounterRecognized;
         public EnemyDirectorPhase Phase { get; private set; }
         public float Pressure { get; private set; }
         public int FocusEnemyId { get; private set; } = -1;
@@ -39,6 +41,10 @@ namespace Shinzui.Application.UseCases.Enemy
             _settings = settings ?? new EnemyDirectorSettings();
         }
 
+        /// <summary>敵の索敵から行動を決定し、プレイヤーの視認に応じて演出を通知</summary>
+        /// <param name="world">プレイヤーと各敵の状態</param>
+        /// <param name="deltaTime">フレーム経過時間</param>
+        /// <returns>報告順に対応する敵への命令</returns>
         public EnemyCommand[] DecideCommands(EnemyWorldState world, float deltaTime)
         {
             ReadOnlySpan<EnemyReport> reports = world.EnemyReports.Span;
@@ -56,6 +62,7 @@ namespace Shinzui.Application.UseCases.Enemy
             float nearestVisible = float.MaxValue;
             float nearestHeard = float.MaxValue;
             float nearest = float.MaxValue;
+            bool recognized = false;
             for (int i = 0; i < reports.Length; i++)
             {
                 EnemyReport report = reports[i];
@@ -67,6 +74,9 @@ namespace Shinzui.Application.UseCases.Enemy
                 if (!report.CanReceiveCommand) continue;
                 float distance = Vector3.Distance(report.Position, world.PlayerPosition);
                 nearest = Mathf.Min(nearest, distance);
+                // 発見が確定した敵をプレイヤー自身が視認した場合だけ演出を許可
+                if (seenFor >= Positive(_settings.detectionTime, .3f) && report.IsVisibleToPlayer)
+                    recognized = true;
                 if (report.Id == FocusEnemyId) focused = i;
                 if (seenFor >= Positive(_settings.detectionTime, .3f) && distance < nearestVisible)
                 {
@@ -85,12 +95,15 @@ namespace Shinzui.Application.UseCases.Enemy
             if (focused >= 0 && reports[focused].CanSeePlayer &&
                 _sightTimers[FocusEnemyId] >= Positive(_settings.detectionTime, .3f)) visible = focused;
             bool found = visible >= 0;
-            if (found && !_isPlayerFound.CurrentValue && _discoveryCooldown <= 0f)
+            // 一度認知した追跡中は視線を外しても演出を繰り返さない
+            recognized = found && (recognized || _isEncounterRecognized.CurrentValue);
+            if (recognized && !_isEncounterRecognized.CurrentValue && _discoveryCooldown <= 0f)
             {
                 _feedback?.OnPlayerFound();
                 _discoveryCooldown = 5f;
             }
             _isPlayerFound.Value = found;
+            _isEncounterRecognized.Value = recognized;
             float pressureRate = found ? Positive(_settings.chasePressurePerSecond, .075f)
                 : Phase != EnemyDirectorPhase.Recovery && nearest < Positive(_settings.pressureDistance, 18f)
                     ? Positive(_settings.proximityPressurePerSecond, .025f)
@@ -246,6 +259,11 @@ namespace Shinzui.Application.UseCases.Enemy
         }
 
         private static float Positive(float value, float fallback) => EnemyDirectorSettings.Positive(value, fallback);
-        public void Dispose() => _isPlayerFound.Dispose();
+        /// <summary>発見状態と演出用の認知状態を解放</summary>
+        public void Dispose()
+        {
+            _isPlayerFound.Dispose();
+            _isEncounterRecognized.Dispose();
+        }
     }
 }

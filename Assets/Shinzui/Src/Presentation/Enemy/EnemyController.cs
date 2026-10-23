@@ -10,10 +10,12 @@ namespace Shinzui.Presentation
     internal sealed class EnemyController
     {
         private readonly EnemyView _view;
+        private readonly HumanEnemyLocomotion _humanMotion;
         private readonly IEnemyRuntime _runtime;
         private readonly EnemyMoveUseCase _movement;
         private readonly PlayerDeathUseCase _death;
         private readonly EnemyDirectorSettings _settings;
+        private readonly System.Func<EnemyView, bool> _capture;
         private float _wanderTimer;
         private float _wanderInterval;
         private float _wanderRadius;
@@ -24,14 +26,16 @@ namespace Shinzui.Presentation
         private EnemyCommand _currentCommand = EnemyCommand.Idle;
 
         public EnemyController(int id, EnemyView view, IEnemyRuntime runtime, EnemyMoveUseCase movement,
-            PlayerDeathUseCase death, EnemyDirectorSettings settings)
+            PlayerDeathUseCase death, EnemyDirectorSettings settings, System.Func<EnemyView, bool> capture = null)
         {
             Id = id;
             _view = view;
+            _humanMotion = view.GetComponent<HumanEnemyLocomotion>();
             _runtime = runtime;
             _movement = movement;
             _death = death;
             _settings = settings;
+            _capture = capture;
         }
 
         public int Id { get; }
@@ -43,15 +47,27 @@ namespace Shinzui.Presentation
             _view.SetGizmoChaseDistance(_settings.sightDistance);
         }
 
-        public EnemyReport CreateReport(float deltaTime, Vector3 playerPosition, float playerHeight)
+        /// <summary>敵の索敵状態とプレイヤーからの視認状態を報告</summary>
+        /// <param name="deltaTime">フレーム経過時間</param>
+        /// <param name="playerPosition">プレイヤーの位置</param>
+        /// <param name="playerHeight">プレイヤーの高さ</param>
+        /// <param name="playerCamera">プレイヤーの視点カメラ</param>
+        /// <param name="playerRoot">視線判定から除外するプレイヤー</param>
+        /// <returns>敵の状態報告</returns>
+        public EnemyReport CreateReport(float deltaTime, Vector3 playerPosition, float playerHeight,
+            Camera playerCamera, Transform playerRoot)
         {
             _runtime.Tick(deltaTime);
             _strobeRemaining = Mathf.Max(0f, _strobeRemaining - deltaTime);
             _deathTimer = Mathf.Max(0f, _deathTimer - deltaTime);
             if (_strobeRemaining <= 0f) { _strobeStops = false; _strobeMultiplier = 1f; }
             bool ready = _runtime.IsReady && !_strobeStops;
+            bool canSeePlayer = ready && _runtime.CanSee(playerPosition, playerHeight);
+
+            // 演出対象となる索敵中の敵だけプレイヤー側の視線を確認
             return new EnemyReport(Id, _runtime.Position, _currentCommand, _settings.sightDistance,
-                ready, ready && _runtime.CanSee(playerPosition, playerHeight));
+                ready, canSeePlayer,
+                canSeePlayer && _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers));
         }
 
         /// <summary>
@@ -68,6 +84,10 @@ namespace Shinzui.Presentation
             _currentCommand = command;
             float speed = command.Type == EnemyCommandType.ChasePlayer ? 1f : Mathf.Clamp(_settings.patrolSpeedMultiplier, .1f, 1f);
             _runtime.SetSpeed(speed * _strobeMultiplier, _strobeStops || command.Type == EnemyCommandType.Idle);
+            // 追跡命令を見た目へ反映し、腕をプレイヤーの上半身へ向ける
+            if (_humanMotion != null)
+                _humanMotion.SetChasePose(command.Type == EnemyCommandType.ChasePlayer && !_strobeStops && _runtime.IsReady,
+                    player.PlayerPosition + Vector3.up * playerHeight * .35f);
             if (_strobeStops || !_runtime.IsReady) return;
 
             // 移動用の原点ではなく体の中心から接近距離を測定
@@ -75,8 +95,9 @@ namespace Shinzui.Presentation
                 Vector3.Distance(_view.PlayerDeathPosition, player.PlayerPosition) <= _view.PlayerDeathDistance &&
                 _runtime.HasClearContact(player.PlayerPosition, playerHeight))
             {
-                _death.TryKillPlayer();
+                bool killed = _capture != null ? _capture(_view) : _death.TryKillPlayer();
                 _deathTimer = Mathf.Max(.1f, _view.DeathAttemptCooldown);
+                if (killed) return;
             }
 
             switch (command.Type)
