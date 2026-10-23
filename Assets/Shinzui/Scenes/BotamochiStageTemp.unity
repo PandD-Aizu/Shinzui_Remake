@@ -1333,14 +1333,11 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 0
   interactMessage: 
-  messages:
-  - "\u5F7C\u5973\u300E\u5F8C\u85E4\u5065\u5B50\u3067\u3059\u300F"
-  - "\u5F7C\u5973\u300E\u5E30\u3093\u306A\u300F"
-  modernTunnelPosition: {x: 0, y: 0, z: 0}
   messageView: {fileID: 168151109}
-  chasingEnemy: {fileID: 219652775}
   interactDistance: 3.5
   facingDotThreshold: 0.3
+  modernTunnelPosition: {x: 0, y: 0, z: 0}
+  chasingEnemy: {fileID: 219652775}
 --- !u!23 &278336990
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -4928,6 +4925,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.FlashlightView
   flashlightLight: {fileID: 775528540}
   targetCamera: {fileID: 632997464}
+  flashlightModel: {fileID: 0}
+  modelLightOffset: {x: -0.24, y: -0.23, z: 0.52}
+  useRealisticBeam: 0
+  beamShadows: 0
+  beamFocusDistance: 8
+  nearWallDistance: 2
+  nearWallIntensity: 0.12
+  beamObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   minSpeed: 2
   maxSpeed: 45
   maxAngle: 30
@@ -5449,6 +5456,30 @@ MonoBehaviour:
   playerDeathView: {fileID: 396944459}
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
+  enemyDirectorSettings:
+    ambientDuration: 12
+    buildUpDuration: 35
+    recoveryDuration: 18
+    searchDuration: 14
+    hintInterval: 8
+    hintCellSize: 12
+    searchRadius: 7
+    searchPointInterval: 3
+    retreatDistance: 18
+    pressureDistance: 18
+    chasePressurePerSecond: 0.075
+    proximityPressurePerSecond: 0.025
+    pressureDecayPerSecond: 0.06
+    sightDistance: 16
+    fieldOfView: 110
+    detectionTime: 0.3
+    eyeHeight: 1
+    walkingNoiseRadius: 4
+    runningNoiseRadius: 13
+    footstepInterval: 0.65
+    patrolSpeedMultiplier: 0.65
+    repathInterval: 0.3
+    sightBlockingLayers: -1
   needWeightSettings: {fileID: 0}
   itemCategoryClassifier: {fileID: 0}
 --- !u!4 &1431612332
@@ -6220,6 +6251,7 @@ MonoBehaviour:
   smallRoomWidth: 8
   smallRoomLength: 6
   tunnelLength: 153.12695
+  connectionPointSpacing: 51.042316
   tunnelWidth: 14.800003
   tunnelHeight: 5
   corridorLength: 8
@@ -6233,6 +6265,7 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
+  ceilingLightSpacing: 5
   basicTunnelModelScale: {x: 1, y: 1, z: 1}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}
@@ -6243,40 +6276,6 @@ MonoBehaviour:
   warpCorridorModelEuler: {x: 0, y: 0, z: 0}
   useModelBoundsForLayout: 1
   configureBasicTunnelExitParts: 1
---- !u!114 &1858695428
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1858695425}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c82b2015f49b5b69c200222222222015, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelMapView
-  mapRoot: {fileID: 1923252013}
-  overviewCamera: {fileID: 0}
-  showDebugGeometry: 0
---- !u!114 &1858695429
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1858695425}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c82b2018f49b5b69c200222222222018, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: DILayer::Shinzui.DI.GenerateTunnel.GenerateTunnelLifetimeScope
-  parentReference:
-    TypeName:
-  autoRun: 1
-  autoInjectGameObjects: []
-  generator: {fileID: 1858695426}
-  mapView: {fileID: 1858695428}
-  bootstrapView: {fileID: 0}
 --- !u!4 &1858695427
 Transform:
   m_ObjectHideFlags: 0
@@ -6292,6 +6291,98 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1858695428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1858695425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2015f49b5b69c200222222222015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelMapView
+  mapRoot: {fileID: 1923252013}
+  overviewCamera: {fileID: 0}
+  showDebugGeometry: 0
+  ceilingShadowDistance: 15
+  maxCeilingShadowLights: 8
+--- !u!114 &1858695429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1858695425}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c82b2018f49b5b69c200222222222018, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: DILayer::Shinzui.DI.GenerateTunnel.GenerateTunnelLifetimeScope
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  generator: {fileID: 1858695426}
+  mapView: {fileID: 1858695428}
+--- !u!1001 &1880675987
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4718203946512830001, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_Name
+      value: TempEscapeExit
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.4876513
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.404315
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 4.057067
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4718203946512830002, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 01cdf40cc5f040c980bd823ed4c050a5, type: 3}
 --- !u!1 &1923252012
 GameObject:
   m_ObjectHideFlags: 0
@@ -7459,3 +7550,5 @@ SceneRoots:
   - {fileID: 1858695427}
   - {fileID: 919127088}
   - {fileID: 1243143840}
+  - {fileID: 1547896403}
+  - {fileID: 1880675987}
