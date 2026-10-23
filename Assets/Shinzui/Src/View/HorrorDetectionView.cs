@@ -11,6 +11,16 @@ namespace Shinzui.View
         [SerializeField, Range(0f, 0.1f)] private float maxDistortionIntensity = 0.03f;
         [SerializeField, Range(0f, 0.05f)] private float maxChromaticAberrationIntensity = 0.015f;
         [SerializeField, Range(0f, 1f)] private float maxScanlineIntensity = 0.15f;
+        private float _eventIntensity;
+        private float _detectionIntensity;
+
+        /// <summary>イベントの砂嵐を追跡ノイズと合成</summary>
+        /// <param name="intensity">イベントの強度</param>
+        public void SetEventIntensity(float intensity)
+        {
+            _eventIntensity = Mathf.Clamp01(intensity);
+            UpdateEffect(_detectionIntensity);
+        }
 
         /// <summary>
         /// 現在のノイズ強度を元に、シェーダーのグローバルパラメータを更新する
@@ -20,7 +30,8 @@ namespace Shinzui.View
         {
             // shader側の _HorrorNoiseIntensity を変更する。
             // これにより、shader内部で歪み量や色収差、走査線もこの強度に応じて乗算される。
-            Shader.SetGlobalFloat("_HorrorNoiseIntensity", intensity);
+            _detectionIntensity = intensity;
+            Shader.SetGlobalFloat("_HorrorNoiseIntensity", Mathf.Max(intensity, _eventIntensity));
             Shader.SetGlobalFloat("_HorrorDistortionIntensity", maxDistortionIntensity);
             Shader.SetGlobalFloat("_HorrorChromaticAberrationIntensity", maxChromaticAberrationIntensity);
             Shader.SetGlobalFloat("_HorrorScanlineIntensity", maxScanlineIntensity);
