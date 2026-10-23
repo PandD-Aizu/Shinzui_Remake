@@ -27,7 +27,6 @@ namespace Shinzui.Infrastructure.SaveSystem
             SaveManager saveManager,
             IInputService inputService)
         {
-            Debug.Log("SaveController: Construct");
             _saveManager = saveManager;
             _inputService = inputService;
             

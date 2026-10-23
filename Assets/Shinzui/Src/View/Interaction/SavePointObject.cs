@@ -10,7 +10,6 @@ namespace Shinzui.View.Interaction
     {
         [SerializeField] private GameObject savePanel;
         public override string InteractableId => "SavePoint";
-        public override string InteractMessage => "これまでのことを記録しておこうか。";
 
         public override void ExecuteInteractEffect()
         {

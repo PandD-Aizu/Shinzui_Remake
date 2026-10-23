@@ -71,6 +71,7 @@ namespace Shinzui.Infrastructure.SaveSystem
             try
             {
                 string json = JsonUtility.ToJson(data);
+                Debug.Log($"SaveManager Save: key={SaveKey + idx}, data={json}");
                 PlayerPrefs.SetString(SaveKey + idx, json);
                 PlayerPrefs.Save();
             }
@@ -91,12 +92,14 @@ namespace Shinzui.Infrastructure.SaveSystem
         {
             if (!PlayerPrefs.HasKey(SaveKey + idx))
             {
+                Debug.Log("SaveManager Load: " + SaveKey + idx + " not found");
                 return Task.FromResult<GameSaveData>(null);
             }
 
             try
             {
-                string json = PlayerPrefs.GetString(SaveKey);
+                string json = PlayerPrefs.GetString(SaveKey + idx);
+                Debug.Log($"SaveManager Load: key={SaveKey + idx}, data={json}");
                 var data = JsonUtility.FromJson<GameSaveData>(json);
                 return Task.FromResult(data);
             }
