@@ -435,6 +435,10 @@ namespace Shinzui.Temp.BotamochiStealth
             s_floorNumber = 1;
             s_pendingSeed = null;
             GenerateTunnelLifetimeScope.RuntimeSeedOverride = null;
+            if (girlfriend != null)
+            {
+                girlfriend.ResetScenarioProgress();
+            }
         }
 
         private static int NextSeed(int seed, int floor)

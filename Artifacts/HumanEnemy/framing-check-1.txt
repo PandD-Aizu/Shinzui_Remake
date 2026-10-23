@@ -1,0 +1,1 @@
+phase=Approach frame=337 faceViewport=(0.318, 0.598, 0.816) face=(-0.301, 0.961, -0.524) camera=(0.023, 0.824, 0.247) forward=(-0.580, 0.000, -0.814)

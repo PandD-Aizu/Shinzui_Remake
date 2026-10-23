@@ -146,6 +146,13 @@ namespace Shinzui.DI
             RegisterPlayerQuickItemSlot(builder);
             RegisterPlayerDeath(builder);
             RegisterEnemies(builder);
+            // このシーンに配置された導入演出だけを既存サービスへ接続
+            var intro = FindFirstObjectByType<StageIntroView>();
+            if (intro != null)
+            {
+                builder.RegisterComponent(intro);
+                builder.RegisterEntryPoint<StageIntroPresenter>();
+            }
             
             // Domain & UseCase
             builder.Register<FlashlightEntity>(Lifetime.Singleton).WithParameter(false); // 初期状態: OFF

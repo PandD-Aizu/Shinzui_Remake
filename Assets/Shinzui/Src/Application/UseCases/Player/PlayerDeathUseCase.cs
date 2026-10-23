@@ -24,21 +24,26 @@ namespace Shinzui.Application.UseCases
         /// 死亡状態にする前に、特別なアイテムによる死亡回避が可能かを確認する
         /// </summary>
         /// <returns>死亡状態に成功した場合は true、それ以外は false</returns>
-        public bool TryKillPlayer()
+        /// <param name="allowDeathPrevention">アイテムによる死亡回避を許可するか</param>
+        /// <param name="playDeathSound">通常の死亡音を鳴らすか</param>
+        public bool TryKillPlayer(bool allowDeathPrevention = true, bool playDeathSound = true)
         {
             if (_isDead.CurrentValue)
             {
                 return false;
             }
 
-            if (_specialItemUseCase != null && _specialItemUseCase.TryConsumeDeathPrevention())
+            if (allowDeathPrevention && _specialItemUseCase != null && _specialItemUseCase.TryConsumeDeathPrevention())
             {
                 return false;
             }
 
             _isDead.Value = true;
-            _seService.PlayOneShot(FMODEventPath.SE_ON_DEAD.Reference);
-            _seService.PlayOneShot(FMODEventPath.SE_TINNITUS.Reference);
+            if (playDeathSound)
+            {
+                _seService.PlayOneShot(FMODEventPath.SE_ON_DEAD.Reference);
+                _seService.PlayOneShot(FMODEventPath.SE_TINNITUS.Reference);
+            }
             return true;
         }
     }

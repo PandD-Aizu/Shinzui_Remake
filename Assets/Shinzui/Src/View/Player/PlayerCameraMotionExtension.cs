@@ -36,6 +36,16 @@ namespace Shinzui.View
         [SerializeField] private float runFovIncrease = 1.5f;
         [SerializeField] private float fovBlendSpeed = 5.0f;
 
+        [Header("Continuous Tremor")]
+        [SerializeField, Min(0f)] private float idleTremorAngle = .08f;
+        [SerializeField, Min(0f)] private float exhaustedTremorAngle = .35f;
+        [SerializeField, Min(0f)] private float chaseTremorAngle = .85f;
+        [SerializeField, Min(0f)] private float standingChaseTremorMultiplier = 1.6f;
+        [SerializeField, Min(0f)] private float walkingChaseTremorMultiplier = .65f;
+        [SerializeField, Min(0f)] private float maximumTremorDistance = .004f;
+        [SerializeField, Min(1f)] private float tremorFrequency = 16f;
+        [SerializeField, Min(.1f)] private float tremorBlendSpeed = 6f;
+
         private Transform _player;
         private Vector3 _localVelocity;
         private Vector3 _previousLocalVelocity;
@@ -54,6 +64,19 @@ namespace Shinzui.View
         private float _landingPitch;
         private float _landingPitchVelocity;
         private float _fovOffset;
+        private float _staminaRatio = 1f;
+        private bool _isChased;
+        private float _tremorTime;
+        private float _tremorAngle;
+
+        /// <summary>スタミナと追跡状態から常時振動の目標強度を受け取る</summary>
+        /// <param name="staminaRatio">スタミナの残量割合</param>
+        /// <param name="isChased">敵に追跡されているか</param>
+        public void SetTensionState(float staminaRatio, bool isChased)
+        {
+            _staminaRatio = Mathf.Clamp01(staminaRatio);
+            _isChased = isChased;
+        }
 
         public void Configure(Transform player)
         {
@@ -117,6 +140,8 @@ namespace Shinzui.View
             _landingPitch = 0.0f;
             _landingPitchVelocity = 0.0f;
             _fovOffset = 0.0f;
+            _tremorTime = 0f;
+            _tremorAngle = idleTremorAngle;
         }
 
         protected override void PostPipelineStageCallback(
@@ -212,6 +237,37 @@ namespace Shinzui.View
                 targetFovOffset,
                 fovBlendSpeed * dt);
             state.Lens.FieldOfView += _fovOffset;
+
+            // 歩行の有無にかかわらず、最終視点へ小刻みな震えを重ねる
+            ApplyTremor(ref state, dt);
+        }
+
+        /// <summary>通常・疲労・追跡の順に震えを強め、基準姿勢へ加算する</summary>
+        /// <param name="state">このフレームのカメラ状態</param>
+        /// <param name="deltaTime">カメラ更新の経過時間</param>
+        private void ApplyTremor(ref CameraState state, float deltaTime)
+        {
+            // 追跡中は停止時に大きく震え、歩行では細かく、走行では従来の強度にする
+            float movingMultiplier = _isRunning ? 1f : walkingChaseTremorMultiplier;
+            float chaseMultiplier = Mathf.Lerp(standingChaseTremorMultiplier, movingMultiplier,
+                Mathf.InverseLerp(.05f, .5f, _horizontalSpeed));
+            float targetAngle = _isChased ? chaseTremorAngle * chaseMultiplier
+                : Mathf.Lerp(idleTremorAngle, exhaustedTremorAngle, 1f - _staminaRatio);
+
+            // 移動状態の切り替わりや追跡解除でも振幅を滑らかにつなぐ
+            _tremorAngle = Mathf.Lerp(_tremorAngle, targetAngle, 1f - Mathf.Exp(-tremorBlendSpeed * deltaTime));
+            _tremorTime += deltaTime;
+            float phase = _tremorTime * tremorFrequency * Mathf.PI * 2f;
+            var vibration = new Vector3(
+                Mathf.Sin(phase) * .7f + Mathf.Sin(phase * 1.73f) * .3f,
+                Mathf.Sin(phase * 1.31f),
+                Mathf.Sin(phase * .83f) * .6f);
+
+            // Cinemachineの補正値だけを変え、プレイヤーの照準やTransformへ揺れを累積させない
+            float distance = maximumTremorDistance * Mathf.Clamp01(_tremorAngle / Mathf.Max(.001f, chaseTremorAngle));
+            state.PositionCorrection += state.GetCorrectedOrientation()
+                * new Vector3(vibration.y, vibration.x, 0f) * distance;
+            state.OrientationCorrection *= Quaternion.Euler(vibration * _tremorAngle);
         }
     }
 }

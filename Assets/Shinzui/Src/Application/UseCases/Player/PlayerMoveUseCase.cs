@@ -21,6 +21,15 @@ namespace Shinzui.Application.UseCases
         public bool CrouchPressed => _inputService.CrouchPressed;
         public bool IsRunning => _playerEntityEntity.MovementState.Value == PlayerMovementState.Running;
         public bool IsCrouching => _playerEntityEntity.MovementState.Value == PlayerMovementState.Crouching;
+
+        /// <summary>演出中の移動速度を止め、待機状態でスタミナを回復</summary>
+        /// <param name="deltaTime">経過時間</param>
+        public void RestDuringCinematic(float deltaTime)
+        {
+            _playerEntityEntity.UpdateState(false, false, false);
+            _playerEntityEntity.Velocity.Value = Vector3.zero;
+            _playerEntityEntity.UpdateStamina(deltaTime);
+        }
         
         private Ray ray;                                          //現在いるトンネルを取得するために足元に飛ばすray
         [HideInInspector] public GameObject currentTunnelStart;   //現在いるトンネルのスタート地点
