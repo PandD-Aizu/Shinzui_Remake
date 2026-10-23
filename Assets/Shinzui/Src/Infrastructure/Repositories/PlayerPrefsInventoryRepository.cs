@@ -15,7 +15,6 @@ namespace Shinzui.Infrastructure.Repositories
             {
                 string json = JsonUtility.ToJson(data);
                 PlayerPrefs.SetString(SaveKey, json);
-                Debug.Log($"PlayerPrefs Save: key={SaveKey}, data={json}");
                 PlayerPrefs.Save();
             }
             catch (System.Exception ex)
@@ -35,7 +34,6 @@ namespace Shinzui.Infrastructure.Repositories
             try
             {
                 string json = PlayerPrefs.GetString(SaveKey);
-                Debug.Log($"PlayerPrefs Load: key={SaveKey}, data={json}");
                 var data = JsonUtility.FromJson<InventorySaveData>(json);
                 return Task.FromResult(data);
             }

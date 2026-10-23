@@ -17,6 +17,11 @@ namespace Shinzui.Infrastructure.SaveSystem
     
         private const string SaveKey = "shinzui_savedata_";
         private const int SaveDataSlotNum = 3;
+
+        /*private const GameSaveData emptyData = new GameSaveData(
+            new InventorySaveData(),
+            new SpecialItemSaveData());*/
+        
         public int SaveSlotNum => SaveDataSlotNum;
 
         public SaveManager(
@@ -53,6 +58,28 @@ namespace Shinzui.Infrastructure.SaveSystem
             await _specialItemUseCase.SetSpecialItemData(data.SpecialItemSaveData);
             return data;
         }
+
+        /// <summary>
+        /// セーブデータを削除する
+        /// </summary>
+        /// <param name="idx">セーブスロットのインデックス</param>
+        public Task DeleteSaveData(int idx)
+        {
+            if (idx >= SaveDataSlotNum || idx < 0)
+            {
+                Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
+                return Task.CompletedTask;
+            }
+            
+            if (!PlayerPrefs.HasKey(SaveKey + idx))
+            {
+                Debug.Log("SaveManager Load: " + SaveKey + idx + " not found");
+            }
+            
+            PlayerPrefs.DeleteKey(SaveKey + idx);
+            PlayerPrefs.Save();
+            return Task.CompletedTask;
+        }
     
         /// <summary>
         /// セーブデータをjsonファイルに変換しPlayerPrefsに保存する
@@ -62,7 +89,7 @@ namespace Shinzui.Infrastructure.SaveSystem
         /// <returns></returns>
         private Task SaveGameDataAsync(int idx, GameSaveData data)
         {
-            if (idx > SaveDataSlotNum)
+            if (idx >= SaveDataSlotNum || idx < 0)
             {
                 Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
                 return Task.CompletedTask;
@@ -90,15 +117,17 @@ namespace Shinzui.Infrastructure.SaveSystem
         /// <returns>指定したセーブスロットのゲームデータ</returns>
         private Task<GameSaveData> LoadGameDataAsync(int idx)
         {
-            if (!PlayerPrefs.HasKey(SaveKey + idx))
+            if (idx >= SaveDataSlotNum || idx < 0)
             {
-                Debug.Log("SaveManager Load: " + SaveKey + idx + " not found");
+                Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
                 return Task.FromResult<GameSaveData>(null);
             }
 
             try
             {
-                string json = PlayerPrefs.GetString(SaveKey + idx);
+                // セーブデータの読み込み
+                // セーブデータがない場合は@以降の設定で初期化する
+                string json = PlayerPrefs.GetString(SaveKey + idx, @"{""InventorySaveData"":{""Slots"":[{""SlotIndex"":0,""ItemId"":""stone"",""Quantity"":2}]},""SpecialItemSaveData"":{""ItemId"":""special_speed_boots""}}");
                 Debug.Log($"SaveManager Load: key={SaveKey + idx}, data={json}");
                 var data = JsonUtility.FromJson<GameSaveData>(json);
                 return Task.FromResult(data);

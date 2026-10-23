@@ -1,8 +1,17 @@
+using System.Threading.Tasks;
 using Shinzui.Application.Interfaces;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 using TMPro;
+
+public enum SaveMode
+{
+    None,
+    Save,
+    Load,
+    Delete
+}
 
 namespace Shinzui.Infrastructure.SaveSystem
 {
@@ -15,10 +24,15 @@ namespace Shinzui.Infrastructure.SaveSystem
         [SerializeField] private GameObject saveCheckPanel;
         [SerializeField] private Button saveButton;
         [SerializeField] private Button loadButton;
+        [SerializeField] private Button deleteButton;
         [SerializeField] private Button backButton;
+        [SerializeField] private Button yesButton;
+        [SerializeField] private Button noButton;
         [SerializeField] private TextMeshProUGUI saveText;
+        [SerializeField] private TextMeshProUGUI checkText;
         //[SerializeField] private List<Button> saveSlots;
         
+        private SaveMode _saveMode;
         private SaveManager _saveManager;
         private IInputService _inputService;
         
@@ -33,17 +47,30 @@ namespace Shinzui.Infrastructure.SaveSystem
             saveSlotSelectPanel.SetActive(false);
             saveCheckPanel.SetActive(false);
             
-            // セーブとロードの登録(現在は仮でスロットを0に固定)
+            _saveMode = SaveMode.None;
+            
+            // セーブ、ロード、削除の登録(現在は仮でスロットを0に固定)
             saveButton.onClick
-                .AddListener( () => SaveButton(0));
+                .AddListener( () => SetSaveMode(SaveMode.Save));
             loadButton.onClick
-                .AddListener( () => LoadButton(0));
+                .AddListener( () => SetSaveMode(SaveMode.Load));
+            deleteButton.onClick
+                .AddListener( () => SetSaveMode(SaveMode.Delete));
+            
+            // 決定、キャンセルの登録
+            yesButton.onClick
+                .AddListener( () => YesButton());
+            noButton.onClick
+                .AddListener(() => NoButton());
             
             // バックボタンを押すとセーブ画面を閉じる
             backButton.onClick
                 .AddListener(() => ChangeSavePanelActive(false));
-
-            saveText.text = "持ち物を確認しておかないと";
+            
+            // テキストの初期化
+            saveText.text = "古びたノートだ";
+            checkText.color = Color.red;
+            checkText.text = "本当に？";
         }
 
         public void ChangeSavePanelActive(bool active)
@@ -51,19 +78,68 @@ namespace Shinzui.Infrastructure.SaveSystem
             saveSlotSelectPanel.SetActive(active);
             _inputService.SetBlocked(active);
         }
+
+        private void ChangeCheckPanelActive(bool active)
+        {
+            saveCheckPanel.SetActive(active);
+            saveSlotSelectPanel.SetActive(!active);
+            _saveMode = !active ? SaveMode.None : _saveMode;
+        }
+
+        private void SetSaveMode(SaveMode mode)
+        {
+            _saveMode = mode;
+            ChangeCheckPanelActive(true);
+        }
         
-        public void SaveButton(int index)
+        private void Save(int index)
         {
             if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
             _saveManager.Save(index);
-            saveText.text = "持ち物を記憶した";
+            checkText.text = "持ち物を記録した";
         }
 
-        public void LoadButton(int index)
+        private void Load(int index)
         {
             if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
             _saveManager.Load(index);
-            saveText.text = "持ち物を思い出した";
+            checkText.text = "持ち物を思い出した";
+        }
+
+        private void Delete(int index)
+        {
+            if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
+            _saveManager.DeleteSaveData(index);
+            checkText.text = "記録を消した";
+        }
+
+        private async void YesButton()
+        {
+            checkText.color = Color.white;
+            switch (_saveMode)
+            {
+                case SaveMode.Save:
+                    Save(0);
+                    break;
+                case SaveMode.Load:
+                    Load(0);
+                    break;
+                case SaveMode.Delete:
+                    Delete(0);
+                    break;
+                default:
+                    break;
+            }
+
+            await Task.Delay(2000);
+            ChangeCheckPanelActive(false);
+            checkText.color = Color.red;
+            checkText.text = "本当に？";
+        }
+
+        private void NoButton()
+        {
+            ChangeCheckPanelActive(false);
         }
     }
 }
