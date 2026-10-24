@@ -6,7 +6,7 @@ using Shinzui.Domain.ValueObjects.Tunnel;
 namespace Shinzui.Domain.DomainServices.Tunnel
 {
     /// <summary>
-    /// 既存の端トンネルを傾斜させて上階と落下口を接続する
+    /// 既存の端トンネルを傾斜させて上下の隣接階層と落下口を接続する
     /// </summary>
     internal static class TunnelUpperFloorBuilder
     {
@@ -15,6 +15,8 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             public TunnelNodeLayout Ramp;
             public float Slope;
             public float CenterY;
+            public int ExitSign;
+            public int FloorDirection;
             public TunnelLayoutResult Upper;
             public int AnchorId;
             public int EntranceIndex;
@@ -24,16 +26,19 @@ namespace Shinzui.Domain.DomainServices.Tunnel
         }
 
         /// <summary>
-        /// 独立した上階を生成して既存トンネルの上端に接続する
+        /// 独立した隣接階層を生成して通常階の端トンネルに接続する
         /// </summary>
         /// <param name="lower">下階の生成結果</param>
         /// <param name="config">階層と落下口の設定</param>
         /// <param name="generateFloor">一階層分の生成処理</param>
+        /// <param name="floorDirection">上階は1、下階は-1</param>
         /// <returns>上下階と傾斜と落下口を含む生成結果</returns>
         public static TunnelLayoutResult Build(TunnelLayoutResult lower, TunnelGenerationConfig config,
-            Func<TunnelGenerationConfig, TunnelLayoutResult> generateFloor)
+            Func<TunnelGenerationConfig, TunnelLayoutResult> generateFloor, int floorDirection = 1)
         {
-            float height = Math.Max(config.UpperFloorHeight, config.TunnelHeight + 3.0f);
+            float distance = Math.Max(floorDirection > 0 ? config.UpperFloorHeight : config.LowerFloorDepth,
+                config.TunnelHeight + 3.0f);
+            float height = distance * floorDirection;
             Placement best = null;
             int requiredOpenings = Math.Max(2, config.DropOpeningCount);
 
@@ -41,7 +46,7 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             for (int retry = 0; retry < 8; retry++)
             {
                 var upperConfig = new TunnelGenerationConfig(config.TunnelCount,
-                    unchecked(config.Seed + 104729 * (retry + 1)), config.PlacementAttemptsPerTunnel,
+                    unchecked(config.Seed + floorDirection * 104729 * (retry + 1)), config.PlacementAttemptsPerTunnel,
                     config.SmallRoomCount, config.SmallRoomWidth, config.SmallRoomLength,
                     config.TunnelLength, config.MinTunnelLength, config.MaxTunnelLength,
                     config.ConnectionPointSpacing, config.TunnelWidth, config.TunnelHeight,
@@ -51,11 +56,12 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                 TunnelLayoutResult upper = generateFloor(upperConfig);
                 foreach (var ramp in lower.Tunnels)
                 {
-                    if (ramp.Id == 0 || ramp.IsSpecial) continue;
+                    if (ramp.Id == 0 || ramp.IsSpecial || ramp.FloorIndex != 0 || ramp.Slope != 0.0f) continue;
+                    if (lower.DropOpenings.Any(o => o.LowerTunnelId == ramp.Id || o.UpperTunnelId == ramp.Id)) continue;
                     var entrances = FindPhysicalEntrances(lower, ramp);
                     if (entrances.Count != 1) continue;
 
-                    // 接続済みの側面口から遠い方の端を上階まで持ち上げる
+                    // 接続口から遠い端を上下の接続先へ傾斜させる
                     float portZ = ramp.EntranceMarkers[entrances[0]].LocalPosition.Z;
                     float sign = portZ > 0.0f ? -1.0f : 1.0f;
                     float run = ramp.Length * 0.5f - sign * portZ;
@@ -74,12 +80,12 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                         TunnelVector3 port = anchor.Position + WorldOffset(anchor,
                             new TunnelVector3(marker.LocalPosition.X, 0, marker.LocalPosition.Z));
                         var offset = high - Rotate(port, turns);
-                        if (IntersectsRamp(upper, turns, offset, ramp, slope, -slope * portZ, config, height)) continue;
-                        var openings = FindOpenings(lower, upper, ramp.Id, turns, offset, config, height);
+                        if (IntersectsRamp(upper, turns, offset, ramp, slope, -slope * portZ, config, height, floorDirection)) continue;
+                        var openings = FindOpenings(lower, upper, ramp.Id, turns, offset, config, height, floorDirection);
                         if (best != null && openings.Count <= best.Openings.Count) continue;
                         best = new Placement { Ramp = ramp, Slope = slope, CenterY = -slope * portZ,
                             Upper = upper, AnchorId = anchor.Id, EntranceIndex = marker.Index,
-                            Turns = turns, Offset = offset, Openings = openings };
+                            Turns = turns, Offset = offset, Openings = openings, ExitSign = (int)sign, FloorDirection = floorDirection };
                     }
                 }
 
@@ -87,7 +93,7 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             }
 
             if (best == null || best.Openings.Count < requiredOpenings)
-                throw new InvalidOperationException("Unable to fit an upper floor with two safe overlaps; increase tunnel length or placement attempts");
+                throw new InvalidOperationException("Unable to fit an adjacent floor with two safe overlaps; increase tunnel length or placement attempts");
 
             return Combine(lower, best, config);
         }
@@ -124,9 +130,10 @@ namespace Shinzui.Domain.DomainServices.Tunnel
         /// <param name="centerY">傾斜の中央の高さ</param>
         /// <param name="config">寸法設定</param>
         /// <param name="height">上階の床高</param>
+        /// <param name="floorDirection">階層を生成する方向</param>
         /// <returns>傾斜と干渉するならtrue</returns>
         private static bool IntersectsRamp(TunnelLayoutResult upper, int turns, TunnelVector3 offset,
-            TunnelNodeLayout ramp, float slope, float centerY, TunnelGenerationConfig config, float height)
+            TunnelNodeLayout ramp, float slope, float centerY, TunnelGenerationConfig config, float height, int floorDirection)
         {
             var rampArea = Area(ramp.Position, ramp.Forward, config.TunnelWidth, ramp.Length);
             var areas = new List<TunnelOccupiedArea>();
@@ -154,8 +161,8 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                 float z0 = (min.X - ramp.Position.X) * ramp.Forward.X + (min.Y - ramp.Position.Z) * ramp.Forward.Y;
                 float z1 = (max.X - ramp.Position.X) * ramp.Forward.X + (max.Y - ramp.Position.Z) * ramp.Forward.Y;
                 // モデルの床厚と踊り場の補正分も天井の余裕として確保する
-                if (centerY + Math.Max(z0 * slope, z1 * slope) + config.TunnelHeight
-                    + Math.Max(1.5f, config.PlacementMargin) > height - 0.05f) return true;
+                if (centerY * floorDirection + Math.Max(z0 * slope * floorDirection, z1 * slope * floorDirection)
+                    + config.TunnelHeight + Math.Max(1.5f, config.PlacementMargin) > Math.Abs(height) - 0.05f) return true;
             }
             return false;
         }
@@ -170,19 +177,21 @@ namespace Shinzui.Domain.DomainServices.Tunnel
         /// <param name="offset">平行移動</param>
         /// <param name="config">開口部の設定</param>
         /// <param name="height">上階の高さ</param>
+        /// <param name="floorDirection">階層を生成する方向</param>
         /// <returns>下階へ安全に落下できる候補</returns>
         private static List<TunnelDropOpeningLayout> FindOpenings(TunnelLayoutResult lower, TunnelLayoutResult upper,
-            int rampId, int turns, TunnelVector3 offset, TunnelGenerationConfig config, float height)
+            int rampId, int turns, TunnelVector3 offset, TunnelGenerationConfig config, float height, int floorDirection)
         {
             var result = new List<TunnelDropOpeningLayout>();
             float size = Math.Min(config.DropOpeningSize, config.TunnelWidth - 1.0f);
             float usableWidth = Math.Min(config.TunnelWidth - 0.5f, size + 1.0f);
             foreach (var low in lower.Tunnels)
             {
-                if (low.Id == rampId) continue;
+                if (low.Id == rampId || low.FloorIndex != 0 || low.Slope != 0.0f) continue;
                 foreach (var high in upper.Tunnels)
                 {
-                    if (result.Any(o => o.UpperTunnelId == high.Id + lower.Tunnels.Count)) continue;
+                    int adjacentId = high.Id + lower.Tunnels.Count;
+                    if (result.Any(o => (floorDirection > 0 ? o.UpperTunnelId : o.LowerTunnelId) == adjacentId)) continue;
                     // 端のポータルや壁に落下口が重ならないよう前後に余裕を残す
                     float lowMargin = Math.Max(size + 2.0f, low.Length * 0.08f);
                     float highMargin = Math.Max(size + 2.0f, high.Length * 0.08f);
@@ -192,7 +201,12 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                     if (!Intersection(lowArea, highArea, out var min, out var max)) continue;
                     if (max.X - min.X < size + 0.25f || max.Y - min.Y < size + 0.25f) continue;
                     var center = new TunnelVector3((min.X + max.X) * 0.5f, 0, (min.Y + max.Y) * 0.5f);
-                    result.Add(new TunnelDropOpeningLayout(low.Id, high.Id + lower.Tunnels.Count, center, size, 0, height));
+                    // 上階からの着地点に下階への穴を重ねない
+                    if (lower.DropOpenings.Any(o => Math.Abs(o.Center.X - center.X) < (o.Size + size) * 0.5f + 1.0f
+                        && Math.Abs(o.Center.Z - center.Z) < (o.Size + size) * 0.5f + 1.0f)) continue;
+                    result.Add(floorDirection > 0
+                        ? new TunnelDropOpeningLayout(low.Id, adjacentId, center, size, 0, height)
+                        : new TunnelDropOpeningLayout(adjacentId, low.Id, center, size, height, 0));
                     break;
                 }
             }
@@ -229,9 +243,11 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                     new TunnelVector3(m.LocalPosition.X, m.LocalPosition.Y + (isRamp ? placement.Slope * m.LocalPosition.Z : 0), m.LocalPosition.Z),
                     m.IsActive, open[m.Index])).ToArray();
                 float length = isRamp ? node.Length * (float)Math.Sqrt(1.0f + placement.Slope * placement.Slope) : node.Length;
-                nodes.Add(new TunnelNodeLayout(node.Id, isRamp ? "Upper Floor Inclined Tunnel " + node.Id : node.Name,
+                string rampName = placement.FloorDirection > 0 ? "Upper Floor Inclined Tunnel " : "Lower Floor Inclined Tunnel ";
+                nodes.Add(new TunnelNodeLayout(node.Id, isRamp ? rampName + node.Id : node.Name,
                     node.Position + TunnelVector3.Up * (isRamp ? placement.CenterY : 0), node.Forward, length,
-                    node.IsSpecial, markers, open, 0, isRamp ? placement.Slope : 0));
+                    node.IsSpecial, markers, open, node.FloorIndex, isRamp ? placement.Slope : node.Slope,
+                    isRamp ? placement.ExitSign : node.SlopeExitSign));
             }
 
             // 消したワープの相手側も閉じ、残したペアのリスト番号を詰め直す
@@ -256,9 +272,10 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                 if (node.Id == placement.AnchorId) open[placement.EntranceIndex] = true;
                 var markers = node.EntranceMarkers.Select(m => new TunnelEntranceMarkerLayout(m.Index, m.Name,
                     m.LocalPosition, m.IsActive, open[m.Index])).ToArray();
-                nodes.Add(new TunnelNodeLayout(node.Id + nodeOffset, "Upper Floor " + node.Name,
+                string floorName = placement.FloorDirection > 0 ? "Upper Floor " : "Lower Floor ";
+                nodes.Add(new TunnelNodeLayout(node.Id + nodeOffset, floorName + node.Name,
                     Rotate(node.Position, placement.Turns) + placement.Offset, Rotate(node.Forward, placement.Turns),
-                    node.Length, node.IsSpecial, markers, open, 1));
+                    node.Length, node.IsSpecial, markers, open, placement.FloorDirection));
             }
             foreach (var c in placement.Upper.NormalCorridors)
                 corridors.Add(new NormalCorridorLayout(c.ConnectionIndex + connectionOffset,
@@ -270,9 +287,10 @@ namespace Shinzui.Domain.DomainServices.Tunnel
                     Rotate(r.Center, placement.Turns) + placement.Offset, Rotate(r.Direction, placement.Turns),
                     r.TotalLength, r.Width, r.RoomLength, r.PassageLength));
             int warpOffset = warps.Count;
+            int pairOffset = Math.Max(1000, warps.Count == 0 ? 0 : warps.Max(w => w.PairId) + 1);
             foreach (var w in placement.Upper.WarpCorridors)
             {
-                var copy = CopyWarp(w, placement.Turns, placement.Offset, nodeOffset, 1000);
+                var copy = CopyWarp(w, placement.Turns, placement.Offset, nodeOffset, pairOffset);
                 copy.PairedIndex = w.PairedIndex < 0 ? -1 : w.PairedIndex + warpOffset;
                 warps.Add(copy);
             }
@@ -292,7 +310,7 @@ namespace Shinzui.Domain.DomainServices.Tunnel
             var bounds = new TunnelBoundsLayout(new TunnelVector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f),
                 new TunnelVector3(maxX - minX, maxY - minY, maxZ - minZ));
             return new TunnelLayoutResult(nodes, corridors, rooms, warps, lower.SpecialTunnelId, bounds, config.Seed,
-                placement.Openings.Take(config.DropOpeningCount).ToArray());
+                lower.DropOpenings.Concat(placement.Openings.Take(config.DropOpeningCount)).ToArray());
         }
 
         /// <summary>

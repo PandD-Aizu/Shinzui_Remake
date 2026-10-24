@@ -31,6 +31,7 @@ namespace Shinzui.Application.DTOs.Tunnel
         public float Length { get; init; }
         public int FloorIndex { get; init; }
         public float Slope { get; init; }
+        public int SlopeExitSign { get; init; }
         public bool IsSpecial { get; init; }
         public IReadOnlyList<TunnelEntranceMarkerDto> EntranceMarkers { get; init; }
         public IReadOnlyList<bool> OpenEntrances { get; init; }

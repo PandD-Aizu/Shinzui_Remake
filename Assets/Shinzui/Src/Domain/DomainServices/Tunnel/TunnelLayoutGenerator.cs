@@ -120,8 +120,12 @@ namespace Shinzui.Domain.DomainServices.Tunnel
         public TunnelLayoutResult GenerateLayout(TunnelGenerationConfig config)
         {
             config ??= new TunnelGenerationConfig();
-            TunnelLayoutResult lower = GenerateSingleFloor(config);
-            return config.GenerateUpperFloor ? TunnelUpperFloorBuilder.Build(lower, config, GenerateSingleFloor) : lower;
+            TunnelLayoutResult layout = GenerateSingleFloor(config);
+            if (config.GenerateUpperFloor)
+                layout = TunnelUpperFloorBuilder.Build(layout, config, GenerateSingleFloor);
+            if (config.GenerateLowerFloor)
+                layout = TunnelUpperFloorBuilder.Build(layout, config, GenerateSingleFloor, -1);
+            return layout;
         }
 
         /// <summary>

@@ -181,13 +181,13 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
         {
             float length = node.Length / (float)Math.Sqrt(1 + node.Slope * node.Slope);
             var entrance = node.EntranceMarkers?.SingleOrDefault(marker => marker.IsOpen);
-            float sign = Math.Sign(node.Slope);
+            float sign = node.SlopeExitSign != 0 ? node.SlopeExitSign : Math.Sign(node.Slope);
             float startZ = entrance == null ? 0 : entrance.LocalPosZ + sign * (corridorWidth * .5f + .4f);
             float baselineFloor = entrance == null ? 0 : node.PositionY + node.Slope * entrance.LocalPosZ;
-            float highFloor = node.PositionY + Math.Abs(node.Slope) * length * .5f;
+            float highFloor = node.PositionY + node.Slope * sign * length * .5f;
             float actualAbsSlope = entrance == null ? Math.Abs(node.Slope) :
                 (highFloor - baselineFloor) / (length * .5f - sign * startZ);
-            float rise = actualAbsSlope * length;
+            float rise = Math.Abs(actualAbsSlope) * length;
             int count = Math.Min(64, Math.Max(1, (int)Math.Ceiling(Math.Max(length / 4f, rise / Math.Min(.5f, height * .125f)))));
 
             // 側面口を含む下端側を平坦に保ち、入口情報がない場合は従来の直線傾斜を使う

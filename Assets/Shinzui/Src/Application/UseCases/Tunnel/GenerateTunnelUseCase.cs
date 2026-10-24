@@ -105,6 +105,7 @@ namespace Shinzui.Application.UseCases.Tunnel
                     Length = tunnel.Length,
                     FloorIndex = tunnel.FloorIndex,
                     Slope = tunnel.Slope,
+                    SlopeExitSign = tunnel.SlopeExitSign,
                     IsSpecial = tunnel.IsSpecial,
                     EntranceMarkers = markerDtos,
                     OpenEntrances = tunnel.OpenEntrances

@@ -20,7 +20,7 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// 既存トンネルの水平配置を保ち床と天井を上階へ傾斜させる
+        /// 既存トンネルの水平配置を保ち床と天井を接続先の階層へ傾斜させる
         /// </summary>
         /// <param name="root">トンネルの配置先</param>
         /// <param name="width">トンネルの幅</param>
@@ -30,15 +30,17 @@ namespace Shinzui.View.GenerateTunnel
         /// <param name="entranceZ">下階の接続口の位置</param>
         /// <param name="corridorWidth">接続口の幅</param>
         /// <param name="openEntrances">下階と接続する側面口</param>
-        /// <param name="upperLanding">上階の接続先の実モデル</param>
+        /// <param name="upperLanding">接続先の階層の実モデル</param>
         /// <param name="upperEntranceIndex">接続先の側面口番号</param>
+        /// <param name="slopeExitSign">接続先の階層へ向かう端の符号</param>
         private void CreateInclinedTunnel(Transform root, float width, float height, float length, float slope,
-            float entranceZ, float corridorWidth, IReadOnlyList<bool> openEntrances, Transform upperLanding, int upperEntranceIndex)
+            float entranceZ, float corridorWidth, IReadOnlyList<bool> openEntrances, Transform upperLanding, int upperEntranceIndex,
+            int slopeExitSign)
         {
             float horizontalLength = length / Mathf.Sqrt(1.0f + slope * slope);
-            float sign = Mathf.Sign(slope);
+            float sign = slopeExitSign != 0 ? slopeExitSign : Mathf.Sign(slope);
 
-            // 上階の床の上面と開口幅を実モデルの面から測定する
+            // 接続先の床の上面と開口幅を実モデルの面から測定する
             ResolveUpperMouth(upperLanding, upperEntranceIndex, corridorWidth,
                 out float upperMouthFloor, out float upperMouthWidth, out float upperMouthHeight);
             float lowerFloor = ShellThickness * 0.75f;
@@ -75,7 +77,7 @@ namespace Shinzui.View.GenerateTunnel
                     horizontalLength * 0.5f - after * 0.5f), new Vector3(ShellThickness, height, after), rampStartZ);
             }
 
-            // 上端は上階の側面口に合わせた幅だけを開ける
+            // 出口は接続先の側面口に合わせた幅だけを開ける
             float openingWidth = Mathf.Min(width - ShellThickness, upperMouthWidth);
             float capWidth = (width - openingWidth) * 0.5f;
             float highZ = sign * horizontalLength * 0.5f;
@@ -98,7 +100,7 @@ namespace Shinzui.View.GenerateTunnel
                 for (int i = 0; i < vertices.Length; i++)
                 {
                     Vector3 p = root.InverseTransformPoint(filter.transform.TransformPoint(vertices[i]));
-                    p.y += Mathf.Abs(renderedSlope) * Mathf.Max(0.0f, sign * (p.z - rampStartZ));
+                    p.y += renderedSlope * sign * Mathf.Max(0.0f, sign * (p.z - rampStartZ));
                     vertices[i] = filter.transform.InverseTransformPoint(root.TransformPoint(p));
                 }
                 mesh.vertices = vertices;
@@ -116,7 +118,7 @@ namespace Shinzui.View.GenerateTunnel
             }
 
             ApplyTunnelPassageMaterial(root.gameObject);
-            CreateCeilingLights(root, horizontalLength, height, renderedSlope, floorOffset, rampStartZ);
+            CreateCeilingLights(root, horizontalLength, height, renderedSlope, floorOffset, rampStartZ, (int)sign);
         }
 
         /// <summary>

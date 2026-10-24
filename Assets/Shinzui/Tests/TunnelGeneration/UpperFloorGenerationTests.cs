@@ -37,7 +37,9 @@ namespace Shinzui.Tests.TunnelGeneration
             Assert.That(_presenter.ExecuteGeneration(new TunnelGenerationRequestDto
             {
                 GenerateUpperFloor = true,
+                GenerateLowerFloor = true,
                 UpperFloorHeight = 14,
+                LowerFloorDepth = 14,
                 SmallRoomWidth = 20,
                 SmallRoomLength = 20,
                 Seed = 2777
@@ -63,7 +65,7 @@ namespace Shinzui.Tests.TunnelGeneration
         [Test]
         public void ProductionGeometry_DropsReachTheLowerFloor()
         {
-            Assert.That(_presenter.CurrentMap.DropOpenings.Count, Is.EqualTo(2));
+            Assert.That(_presenter.CurrentMap.DropOpenings.Count, Is.EqualTo(4));
             foreach (var opening in _presenter.CurrentMap.DropOpenings)
             {
                 var origin = new Vector3(opening.CenterX, opening.UpperFloorY + 2.2f, opening.CenterZ);
@@ -84,8 +86,29 @@ namespace Shinzui.Tests.TunnelGeneration
         [Test]
         public void ProductionGeometry_CharacterCanWalkFromLowerMouthToUpperFloor()
         {
+            var ramp = _presenter.CurrentMap.Tunnels.Single(t => t.Slope != 0 && t.Slope * t.SlopeExitSign > 0);
+            AssertRampTraversal(ramp, 14.0f, false);
+        }
+
+        /// <summary>
+        /// 下階へ下ってから通常階へ歩いて戻れることを確認する
+        /// </summary>
+        [Test]
+        public void ProductionGeometry_CharacterCanDescendAndReturnToBaseFloor()
+        {
+            var ramp = _presenter.CurrentMap.Tunnels.Single(t => t.Slope != 0 && t.Slope * t.SlopeExitSign < 0);
+            AssertRampTraversal(ramp, -14.0f, true);
+        }
+
+        /// <summary>
+        /// 接続口から隣接階層へ歩き、必要に応じて通常階へ戻る
+        /// </summary>
+        /// <param name="ramp">歩行する傾斜トンネル</param>
+        /// <param name="targetFloorY">接続先の床高</param>
+        /// <param name="returnToBase">通常階へ戻るか</param>
+        private void AssertRampTraversal(TunnelNodeDto ramp, float targetFloorY, bool returnToBase)
+        {
             var map = _presenter.CurrentMap;
-            var ramp = map.Tunnels.Single(t => t.Slope != 0);
             var mouth = ramp.EntranceMarkers.Single(m => m.IsOpen);
             var forward = new Vector3(ramp.DirX, 0, ramp.DirZ);
             var side = new Vector3(ramp.DirZ, 0, -ramp.DirX) * (mouth.Index < 3 ? -1 : 1);
@@ -97,14 +120,19 @@ namespace Shinzui.Tests.TunnelGeneration
             start.y = floor.point.y + 0.05f;
             var controller = CreatePlayer(start);
 
-            // 側面口からトンネルの中央へ入り、上端を越えるまで移動する
+            // 側面口から中央へ入り、上下の接続先の入口を越えるまで移動する
             Move(controller, -side, map.Dimensions.TunnelWidth * 0.5f + 1.0f);
             float horizontalLength = ramp.Length / Mathf.Sqrt(1 + ramp.Slope * ramp.Slope);
-            float run = horizontalLength * 0.5f - Mathf.Sign(ramp.Slope) * mouth.LocalPosZ;
-            Move(controller, forward * Mathf.Sign(ramp.Slope), run + 2.0f);
-            Assert.That(controller.transform.position.y, Is.GreaterThanOrEqualTo(13.5f));
-            Assert.That(Vector3.Dot(controller.transform.position - center, forward * Mathf.Sign(ramp.Slope)),
+            float run = horizontalLength * 0.5f - ramp.SlopeExitSign * mouth.LocalPosZ;
+            Move(controller, forward * ramp.SlopeExitSign, run + 2.0f);
+            Assert.That(controller.transform.position.y, Is.InRange(targetFloorY - 0.5f, targetFloorY + 2.0f));
+            Assert.That(Vector3.Dot(controller.transform.position - center, forward * ramp.SlopeExitSign),
                 Is.GreaterThan(horizontalLength * 0.5f + 0.3f), "The capsule must cross the upper doorway, not stop in front of it");
+            if (returnToBase)
+            {
+                Move(controller, -forward * ramp.SlopeExitSign, run + 2.0f);
+                Assert.That(controller.transform.position.y, Is.InRange(-0.1f, 2.0f));
+            }
         }
 
         /// <summary>

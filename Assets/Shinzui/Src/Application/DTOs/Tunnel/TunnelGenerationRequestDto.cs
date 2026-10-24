@@ -13,6 +13,8 @@ namespace Shinzui.Application.DTOs.Tunnel
         public int PlacementAttemptsPerTunnel { get; init; } = 80;
         public bool GenerateUpperFloor { get; init; }
         public float UpperFloorHeight { get; init; } = 12.0f;
+        public bool GenerateLowerFloor { get; init; }
+        public float LowerFloorDepth { get; init; } = 12.0f;
         public int DropOpeningCount { get; init; } = 2;
         public float DropOpeningSize { get; init; } = 3.0f;
 
@@ -66,7 +68,9 @@ namespace Shinzui.Application.DTOs.Tunnel
                 GenerateUpperFloor,
                 UpperFloorHeight,
                 DropOpeningCount,
-                DropOpeningSize);
+                DropOpeningSize,
+                GenerateLowerFloor,
+                LowerFloorDepth);
         }
     }
 }

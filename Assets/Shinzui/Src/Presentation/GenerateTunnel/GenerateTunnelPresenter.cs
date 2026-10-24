@@ -62,6 +62,8 @@ namespace Shinzui.Presentation.GenerateTunnel
                 PlacementAttemptsPerTunnel = request.PlacementAttemptsPerTunnel,
                 GenerateUpperFloor = request.GenerateUpperFloor,
                 UpperFloorHeight = request.UpperFloorHeight,
+                GenerateLowerFloor = request.GenerateLowerFloor,
+                LowerFloorDepth = request.LowerFloorDepth,
                 DropOpeningCount = request.DropOpeningCount,
                 DropOpeningSize = request.DropOpeningSize,
                 SmallRoomCount = request.SmallRoomCount,
@@ -122,10 +124,11 @@ namespace Shinzui.Presentation.GenerateTunnel
                     foreach (var marker in tunnel.EntranceMarkers)
                         if (marker.IsOpen) slopeEntranceZ = marker.LocalPosZ;
 
-                    // 上階の実モデルを先に作り、傾斜の上端にある接続口を取得する
+                    // 接続先の階層の実モデルを先に作り、傾斜の出口を取得する
                     float halfLength = tunnel.Length / Mathf.Sqrt(1.0f + tunnel.Slope * tunnel.Slope) * 0.5f;
-                    Vector3 high = pos + (forward + Vector3.up * tunnel.Slope) * (halfLength * Mathf.Sign(tunnel.Slope));
-                    foreach (var upper in mapDto.Tunnels.Where(t => t.FloorIndex == 1))
+                    int exitSign = tunnel.SlopeExitSign != 0 ? tunnel.SlopeExitSign : (int)Mathf.Sign(tunnel.Slope);
+                    Vector3 high = pos + (forward + Vector3.up * tunnel.Slope) * (halfLength * exitSign);
+                    foreach (var upper in mapDto.Tunnels.Where(t => t.FloorIndex != tunnel.FloorIndex && t.Slope == 0.0f))
                     {
                         Transform upperRoot = tunnelRoots[upper.Id];
                         foreach (var marker in upper.EntranceMarkers)
@@ -152,7 +155,8 @@ namespace Shinzui.Presentation.GenerateTunnel
                     slopeEntranceZ,
                     mapDto.Dimensions.CorridorWidth,
                     upperLanding,
-                    upperEntranceIndex);
+                    upperEntranceIndex,
+                    tunnel.SlopeExitSign);
                 tunnelRoots.Add(tunnel.Id, tunnelRoot);
 
                 if (tunnel.EntranceMarkers != null)

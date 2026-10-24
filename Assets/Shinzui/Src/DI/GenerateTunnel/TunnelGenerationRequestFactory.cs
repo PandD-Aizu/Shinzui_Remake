@@ -16,6 +16,8 @@ namespace Shinzui.DI.GenerateTunnel
                     PlacementAttemptsPerTunnel = tunnelGenerator.PlacementAttemptsPerTunnel,
                     GenerateUpperFloor = tunnelGenerator.GenerateUpperFloor,
                     UpperFloorHeight = tunnelGenerator.UpperFloorHeight,
+                    GenerateLowerFloor = tunnelGenerator.GenerateLowerFloor,
+                    LowerFloorDepth = tunnelGenerator.LowerFloorDepth,
                     DropOpeningCount = tunnelGenerator.DropOpeningCount,
                     DropOpeningSize = tunnelGenerator.DropOpeningSize,
                     SmallRoomCount = tunnelGenerator.SmallRoomCount,

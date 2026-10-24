@@ -13,6 +13,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         public int PlacementAttemptsPerTunnel { get; init; } = 80;
         public bool GenerateUpperFloor { get; init; }
         public float UpperFloorHeight { get; init; } = 12.0f;
+        public bool GenerateLowerFloor { get; init; }
+        public float LowerFloorDepth { get; init; } = 12.0f;
         public int DropOpeningCount { get; init; } = 2;
         public float DropOpeningSize { get; init; } = 3.0f;
 
@@ -58,7 +60,9 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             bool generateUpperFloor = false,
             float upperFloorHeight = 12.0f,
             int dropOpeningCount = 2,
-            float dropOpeningSize = 3.0f)
+            float dropOpeningSize = 3.0f,
+            bool generateLowerFloor = false,
+            float lowerFloorDepth = 12.0f)
         {
             TunnelCount = Math.Max(5, tunnelCount);
             Seed = seed;
@@ -80,6 +84,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             SmallRoomOverlapSizeMultiplier = Math.Max(0.1f, smallRoomOverlapSizeMultiplier);
             GenerateUpperFloor = generateUpperFloor;
             UpperFloorHeight = Math.Max(TunnelHeight + 3.0f, upperFloorHeight);
+            GenerateLowerFloor = generateLowerFloor;
+            LowerFloorDepth = Math.Max(TunnelHeight + 3.0f, lowerFloorDepth);
             DropOpeningCount = Math.Max(0, dropOpeningCount);
             DropOpeningSize = Math.Max(2.0f, Math.Min(dropOpeningSize, TunnelWidth - 1.0f));
         }

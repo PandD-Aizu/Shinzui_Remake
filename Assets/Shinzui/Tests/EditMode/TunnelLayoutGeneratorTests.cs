@@ -8,6 +8,87 @@ namespace Shinzui.Tests
     public class TunnelLayoutGeneratorTests
     {
         /// <summary>
+        /// 上下階の生成を独立して切り替え、傾斜と落下口の接続を維持できることを確認する
+        /// </summary>
+        /// <param name="upper">上階を生成するか</param>
+        /// <param name="lower">下階を生成するか</param>
+        /// <param name="seed">生成シード</param>
+        [TestCase(false, false, 2777)]
+        [TestCase(true, false, 2777)]
+        [TestCase(false, true, 2777)]
+        [TestCase(true, true, 2777)]
+        [TestCase(true, true, 42)]
+        [TestCase(true, true, 12345)]
+        public void GenerateLayout_FloorTogglesPreserveSignedConnections(bool upper, bool lower, int seed)
+        {
+            var config = new TunnelGenerationConfig { GenerateUpperFloor = upper, GenerateLowerFloor = lower, Seed = seed };
+            var generator = new TunnelLayoutGenerator();
+            var result = generator.GenerateLayout(config);
+            var repeated = generator.GenerateLayout(config);
+            int adjacentCount = (upper ? 1 : 0) + (lower ? 1 : 0);
+
+            // 通常階の本数は変えず、有効な階層だけを同じ本数で追加する
+            Assert.That(result.Tunnels.Count(t => t.FloorIndex == 0), Is.EqualTo(8));
+            Assert.That(result.Tunnels.Count(t => t.FloorIndex == 1), Is.EqualTo(upper ? 8 : 0));
+            Assert.That(result.Tunnels.Count(t => t.FloorIndex == -1), Is.EqualTo(lower ? 8 : 0));
+            Assert.That(result.Tunnels.Select(t => t.Id).Distinct().Count(), Is.EqualTo(result.Tunnels.Count));
+            Assert.That(result.Tunnels.Count(t => t.Slope != 0), Is.EqualTo(adjacentCount));
+            Assert.That(result.DropOpenings.Count, Is.EqualTo(adjacentCount * 2));
+
+            foreach (var ramp in result.Tunnels.Where(t => t.Slope != 0))
+            {
+                Assert.That(ramp.FloorIndex, Is.Zero);
+                Assert.That(ramp.Id, Is.Not.Zero);
+                var mouth = ramp.EntranceMarkers.Single(m => m.IsOpen);
+                Assert.That(ramp.Position.Y + ramp.Slope * mouth.LocalPosition.Z, Is.EqualTo(0).Within(0.001f));
+                float half = ramp.Length / (float)System.Math.Sqrt(1 + ramp.Slope * ramp.Slope) * 0.5f;
+                var exit = ramp.Position + new TunnelVector3(ramp.Forward.X, ramp.Slope, ramp.Forward.Y) * (half * ramp.SlopeExitSign);
+                int floor = System.Math.Sign(exit.Y);
+                Assert.That(exit.Y, Is.EqualTo(floor > 0 ? config.UpperFloorHeight : -config.LowerFloorDepth).Within(0.001f));
+                Assert.That(result.Tunnels.Where(t => t.FloorIndex == floor).Any(t => t.EntranceMarkers.Any(m =>
+                {
+                    var port = t.Position + new TunnelVector3(t.Forward.Y * m.LocalPosition.X + t.Forward.X * m.LocalPosition.Z,
+                        0, -t.Forward.X * m.LocalPosition.X + t.Forward.Y * m.LocalPosition.Z);
+                    return m.IsOpen && (port - exit).Magnitude < 0.001f;
+                })), Is.True);
+            }
+
+            foreach (var opening in result.DropOpenings)
+            {
+                var lowNode = result.Tunnels.Single(t => t.Id == opening.LowerTunnelId);
+                var highNode = result.Tunnels.Single(t => t.Id == opening.UpperTunnelId);
+                Assert.That(lowNode.Slope, Is.Zero);
+                Assert.That(highNode.Slope, Is.Zero);
+                Assert.That(lowNode.FloorIndex, Is.EqualTo(highNode.FloorIndex - 1));
+                Assert.That(opening.LowerFloorY, Is.LessThan(opening.UpperFloorY));
+            }
+            Assert.That(repeated.Tunnels.Select(t => t.Position), Is.EqualTo(result.Tunnels.Select(t => t.Position)));
+            Assert.That(repeated.DropOpenings.Select(o => o.Center), Is.EqualTo(result.DropOpenings.Select(o => o.Center)));
+            foreach (var warp in result.WarpCorridors.Where(w => w.PairedIndex >= 0))
+            {
+                var paired = result.WarpCorridors[warp.PairedIndex];
+                Assert.That(paired.PairId, Is.EqualTo(warp.PairId));
+                Assert.That(result.WarpCorridors[paired.PairedIndex], Is.SameAs(warp));
+            }
+
+            // 下階を追加しても、生成済みの上階とその落下口を変更しない
+            if (upper && lower)
+            {
+                var upperOnly = generator.GenerateLayout(new TunnelGenerationConfig { GenerateUpperFloor = true, Seed = seed });
+                foreach (var node in upperOnly.Tunnels.Where(t => t.FloorIndex == 1 || t.Slope != 0))
+                {
+                    var retained = result.Tunnels.Single(t => t.Id == node.Id);
+                    Assert.That(retained.Position, Is.EqualTo(node.Position));
+                    Assert.That(retained.FloorIndex, Is.EqualTo(node.FloorIndex));
+                    Assert.That(retained.Slope, Is.EqualTo(node.Slope));
+                    Assert.That(retained.SlopeExitSign, Is.EqualTo(node.SlopeExitSign));
+                }
+                Assert.That(result.DropOpenings.Take(2).Select(o => o.Center),
+                    Is.EqualTo(upperOnly.DropOpenings.Select(o => o.Center)));
+            }
+        }
+
+        /// <summary>
         /// 同じ生成規則で上階ができ、傾斜の上下端と落下口がつながることを確認する
         /// </summary>
         /// <param name="seed">生成に使用するシード値</param>

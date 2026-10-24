@@ -14,6 +14,7 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         public float Length { get; }
         public int FloorIndex { get; }
         public float Slope { get; }
+        public int SlopeExitSign { get; }
         public bool IsSpecial { get; set; }
         public IReadOnlyList<TunnelEntranceMarkerLayout> EntranceMarkers { get; }
         public IReadOnlyList<bool> OpenEntrances { get; }
@@ -31,6 +32,7 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         /// <param name="openEntrances">使用する側面口</param>
         /// <param name="floorIndex">所属階層</param>
         /// <param name="slope">水平距離あたりの高さの変化</param>
+        /// <param name="slopeExitSign">別階層につながる長さ方向の端を示す符号</param>
         public TunnelNodeLayout(
             int id,
             string name,
@@ -41,7 +43,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             IReadOnlyList<TunnelEntranceMarkerLayout> entranceMarkers,
             IReadOnlyList<bool> openEntrances = null,
             int floorIndex = 0,
-            float slope = 0.0f)
+            float slope = 0.0f,
+            int slopeExitSign = 0)
         {
             Id = id;
             Name = name;
@@ -53,6 +56,7 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             OpenEntrances = openEntrances;
             FloorIndex = floorIndex;
             Slope = slope;
+            SlopeExitSign = slopeExitSign;
         }
     }
 

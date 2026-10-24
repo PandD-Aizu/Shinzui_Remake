@@ -18,6 +18,12 @@ namespace Shinzui.View.GenerateTunnel
         [Header("Upper Floor")]
         [SerializeField] private bool generateUpperFloor;
         [Min(8.0f)] [SerializeField] private float upperFloorHeight = 12.0f;
+
+        [Header("Lower Floor")]
+        [SerializeField] private bool generateLowerFloor;
+        [Min(8.0f)] [SerializeField] private float lowerFloorDepth = 12.0f;
+
+        [Header("Floor Connections")]
         [Min(0)] [SerializeField] private int dropOpeningCount = 2;
         [Min(2.0f)] [SerializeField] private float dropOpeningSize = 3.0f;
 
@@ -78,6 +84,8 @@ namespace Shinzui.View.GenerateTunnel
         public int PlacementAttemptsPerTunnel => placementAttemptsPerTunnel;
         public bool GenerateUpperFloor => generateUpperFloor;
         public float UpperFloorHeight => upperFloorHeight;
+        public bool GenerateLowerFloor => generateLowerFloor;
+        public float LowerFloorDepth => lowerFloorDepth;
         public int DropOpeningCount => dropOpeningCount;
         public float DropOpeningSize => dropOpeningSize;
         public int SmallRoomCount => smallRoomCount;

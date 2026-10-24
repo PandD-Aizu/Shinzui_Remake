@@ -78,18 +78,25 @@ namespace Shinzui.Tests.CustomSpatialAudio
         /// 上下階と傾斜路と落下口が重ならず容量内で物理的に接続することを確認する
         /// </summary>
         /// <param name="seed">生成に使用するシード値</param>
+        /// <param name="upper">上階を生成するか</param>
+        /// <param name="lower">下階を生成するか</param>
         [TestCase(2777)] [TestCase(42)]
-        public void UpperFloorProducesConnectedNonoverlappingCellsWithinCapacity(int seed)
+        [TestCase(2777, false, true)]
+        [TestCase(2777, true, true)]
+        [TestCase(42, true, true)]
+        public void UpperFloorProducesConnectedNonoverlappingCellsWithinCapacity(int seed, bool upper = true, bool lower = false)
         {
             var useCase = new GenerateTunnelUseCase(null);
             Assert.That(useCase.GenerateOnce(new TunnelGenerationRequestDto
             {
                 Seed = seed,
                 TunnelCount = 8,
-                GenerateUpperFloor = true
+                GenerateUpperFloor = upper,
+                GenerateLowerFloor = lower
             }, out var map));
-            Assert.That(map.Tunnels.Count, Is.EqualTo(16));
-            Assert.That(map.DropOpenings.Count, Is.EqualTo(2));
+            int adjacentCount = (upper ? 1 : 0) + (lower ? 1 : 0);
+            Assert.That(map.Tunnels.Count, Is.EqualTo(8 * (1 + adjacentCount)));
+            Assert.That(map.DropOpenings.Count, Is.EqualTo(2 * adjacentCount));
 
             // グラフの構築時にセル内部の重複と共有面の妥当性も検証される
             var world = new GeneratedAcousticWorld(map);

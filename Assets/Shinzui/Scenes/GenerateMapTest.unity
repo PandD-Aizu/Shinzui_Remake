@@ -4915,6 +4915,8 @@ MonoBehaviour:
   tunnelLength: 140
   generateUpperFloor: 1
   upperFloorHeight: 14
+  generateLowerFloor: 1
+  lowerFloorDepth: 14
   dropOpeningCount: 2
   dropOpeningSize: 3
   connectionPointSpacing: 11
