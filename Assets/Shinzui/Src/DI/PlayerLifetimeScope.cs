@@ -25,6 +25,7 @@ using Shinzui.Application.UseCases.ResourceNeed;
 using Shinzui.Domain.DomainServices.ResourceNeed;
 using Shinzui.Domain.ValueObjects.ResourceNeed;
 using Shinzui.Infrastructure.ResourceNeed;
+using Shinzui.Infrastructure.SaveSystem;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -53,6 +54,9 @@ namespace Shinzui.DI
         [Header("Resource Need")]
         [SerializeField] private PlayerNeedWeightSettingsSO needWeightSettings;
         [SerializeField] private ItemCategoryClassifierSO itemCategoryClassifier;
+        
+        [Header("SaveSystem")]
+        [SerializeField] private SaveController saveController;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -188,6 +192,13 @@ namespace Shinzui.DI
 
             // Presentation (EntryPoint)
             builder.RegisterEntryPoint<FlashlightPresenter>();
+            
+            // ==========================================
+            // セーブシステムの登録
+            // ==========================================
+            //ゲームのSave&Load管理
+            builder.Register<SaveManager>(Lifetime.Singleton);
+            builder.RegisterComponent(saveController);
 
             // ==========================================
             // インタラクトシステムのDI登録

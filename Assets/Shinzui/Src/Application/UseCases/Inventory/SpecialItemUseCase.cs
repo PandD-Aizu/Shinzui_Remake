@@ -103,6 +103,15 @@ namespace Shinzui.Application.UseCases.Inventory
             });
         }
 
+        // SpecialItemの反映
+        public Task SetSpecialItemData(SpecialItemSaveData data)
+        {
+            return _repository.SaveSpecialItemAsync(new SpecialItemSaveData
+            {
+                ItemId = data?.ItemId ?? ""
+            });
+        }
+
         /// <summary>
         /// 特殊アイテムの状態をプレイヤーに反映する
         /// </summary>
