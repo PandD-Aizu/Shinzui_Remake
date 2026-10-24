@@ -5,6 +5,7 @@ using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.Application.UseCases.Tunnel;
 using Shinzui.Presentation.GenerateTunnel;
+using Shinzui.View;
 using Shinzui.View.GenerateTunnel;
 using UnityEditor;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace Shinzui.Tests.TunnelGeneration
             _host = new GameObject("Upper Floor Geometry Test");
             var generator = _host.AddComponent<TunnelGenerator>();
             var serialized = new SerializedObject(generator);
-            serialized.FindProperty("basicTunnelModelScale").vector3Value = new Vector3(3, 1, 1);
+            serialized.FindProperty("basicTunnelModelScale").vector3Value = new Vector3(1, 0.75f, 0.75f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             _view = _host.AddComponent<TunnelMapView>();
             _view.Configure(generator);
@@ -40,8 +41,10 @@ namespace Shinzui.Tests.TunnelGeneration
                 GenerateLowerFloor = true,
                 UpperFloorHeight = 14,
                 LowerFloorDepth = 14,
-                SmallRoomWidth = 20,
-                SmallRoomLength = 20,
+                TunnelLength = 40,
+                MinTunnelLength = 60,
+                MaxTunnelLength = 76,
+                CorridorLength = 4,
                 Seed = 2777
             }), Is.True);
             Physics.SyncTransforms();
@@ -98,6 +101,163 @@ namespace Shinzui.Tests.TunnelGeneration
         {
             var ramp = _presenter.CurrentMap.Tunnels.Single(t => t.Slope != 0 && t.Slope * t.SlopeExitSign < 0);
             AssertRampTraversal(ramp, -14.0f, true);
+        }
+
+        /// <summary>
+        /// 異なる長さと向きのトンネルでも接続口の床高と内幅が通路に一致することを確認する
+        /// </summary>
+        [Test]
+        public void ProductionGeometry_AllFlatMouthsMatchCorridorDimensions()
+        {
+            var map = _presenter.CurrentMap;
+            Assert.That(map.Tunnels.Count, Is.EqualTo(24));
+            Assert.That(map.Tunnels.Where(t => t.Slope == 0).Select(t => t.Length).Distinct().Count(), Is.GreaterThan(1));
+            Assert.That(map.Dimensions.CorridorLength, Is.EqualTo(4));
+            Assert.That(map.Dimensions.CorridorWidth, Is.EqualTo(3));
+
+            foreach (var tunnel in map.Tunnels.Where(t => t.Slope == 0))
+            foreach (var marker in tunnel.EntranceMarkers.Where(m => m.IsOpen))
+            {
+                Vector3 forward = new Vector3(tunnel.DirX, 0, tunnel.DirZ);
+                Vector3 side = new Vector3(tunnel.DirZ, 0, -tunnel.DirX) * (marker.Index < 3 ? -1 : 1);
+                Vector3 port = new Vector3(tunnel.PositionX, tunnel.PositionY, tunnel.PositionZ)
+                    + forward * marker.LocalPosZ + side * (map.Dimensions.TunnelWidth * 0.5f - 0.1f);
+                Assert.That(Physics.Raycast(port + Vector3.up * 1.0f, Vector3.down, out var floor, 2), Is.True, tunnel.Name);
+                Assert.That(floor.point.y, Is.EqualTo(tunnel.PositionY + 0.15f).Within(0.03f), tunnel.Name);
+                foreach (int sign in new[] { -1, 1 })
+                {
+                    Assert.That(Physics.Raycast(port + Vector3.up, forward * sign, out var wall, 4), Is.True, tunnel.Name);
+                    Assert.That(wall.distance, Is.EqualTo(map.Dimensions.CorridorWidth * 0.5f).Within(0.06f),
+                        $"{tunnel.Name} mouth {marker.Index}, sign {sign}, collider {wall.collider.name}, point {wall.point}, port {port}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 平坦な各接続口を通路側から歩いて通過できることを確認する
+        /// </summary>
+        [Test]
+        public void ProductionGeometry_CharacterCanCrossFlatConnections()
+        {
+            var map = _presenter.CurrentMap;
+            foreach (var tunnel in map.Tunnels.Where(t => t.Slope == 0))
+            foreach (var marker in tunnel.EntranceMarkers.Where(m => m.IsOpen))
+            {
+                Vector3 forward = new Vector3(tunnel.DirX, 0, tunnel.DirZ);
+                Vector3 side = new Vector3(tunnel.DirZ, 0, -tunnel.DirX) * (marker.Index < 3 ? -1 : 1);
+                Vector3 port = new Vector3(tunnel.PositionX, tunnel.PositionY, tunnel.PositionZ)
+                    + forward * marker.LocalPosZ + side * (map.Dimensions.TunnelWidth * 0.5f);
+                Vector3 start = port + side * 0.6f + Vector3.up * 0.2f;
+                var controller = CreatePlayer(start);
+                float distance = map.Dimensions.TunnelWidth * 0.4f;
+                Move(controller, -side, distance);
+                Assert.That(Vector3.Dot(controller.transform.position - start, -side), Is.GreaterThan(distance - 0.3f),
+                    $"{tunnel.Name} mouth {marker.Index}");
+                Assert.That(controller.transform.position.y, Is.InRange(tunnel.PositionY - 0.1f, tunnel.PositionY + 0.4f));
+                Object.DestroyImmediate(_player);
+                _player = null;
+            }
+        }
+
+        /// <summary>
+        /// ループ用ゲートが全接続口より外側のトンネル端へ追従することを確認する
+        /// </summary>
+        [Test]
+        public void ProductionGeometry_LoopGatesRemainBeyondAllSideMouths()
+        {
+            foreach (var tunnel in _presenter.CurrentMap.Tunnels.Where(t => t.Slope == 0))
+            {
+                Transform root = _view.GeometryRoot.Find(tunnel.Name);
+                var gates = root.GetComponentsInChildren<TunnelGateView>(true);
+                Assert.That(gates.Length, Is.EqualTo(2), tunnel.Name);
+                foreach (var gate in gates)
+                {
+                    var box = gate.GetComponent<BoxCollider>();
+                    Vector3 center = root.InverseTransformPoint(gate.transform.TransformPoint(box.center));
+                    float halfDepth = root.InverseTransformVector(gate.transform.TransformVector(Vector3.forward * box.size.z)).magnitude * 0.5f;
+                    float outerMouth = tunnel.EntranceMarkers.Max(m => Mathf.Abs(m.LocalPosZ))
+                        + _presenter.CurrentMap.Dimensions.CorridorWidth * 0.5f;
+                    Assert.That(Mathf.Abs(center.z), Is.EqualTo(tunnel.Length * 0.5f).Within(0.01f), tunnel.Name);
+                    Assert.That(Mathf.Abs(center.z) - halfDepth, Is.GreaterThan(outerMouth + 0.5f), tunnel.Name);
+                    Assert.That(gate.TargetGate, Is.Not.Null, tunnel.Name);
+                    Assert.That(gate.TargetGate.TargetGate, Is.EqualTo(gate), tunnel.Name);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 断面の縦横倍率は設定値が異なる場合も同じ倍率になることを確認する
+        /// </summary>
+        [Test]
+        public void TunnelScale_PreservesOriginalCrossSectionRatio()
+        {
+            var generator = _host.GetComponent<TunnelGenerator>();
+            var serialized = new SerializedObject(generator);
+            serialized.FindProperty("basicTunnelModelScale").vector3Value = new Vector3(2, 0.8f, 0.4f);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Assert.That(generator.BasicTunnelModelScale, Is.EqualTo(new Vector3(2, 0.8f, 0.8f)));
+        }
+
+        /// <summary>
+        /// 通路の天井を側面口に合わせ、接続面の上向き視線が外へ抜けないことを確認する
+        /// </summary>
+        [Test]
+        public void ProductionGeometry_PassageRoofsCloseMouthSeams()
+        {
+            var map = _presenter.CurrentMap;
+            float height = _view.ResolvePassageHeight(map.Dimensions.TunnelHeight);
+            Assert.That(height, Is.LessThan(map.Dimensions.TunnelHeight));
+            foreach (var tunnel in map.Tunnels.Where(t => t.Slope == 0))
+            foreach (var marker in tunnel.EntranceMarkers.Where(m => m.IsOpen))
+            {
+                Vector3 forward = new Vector3(tunnel.DirX, 0, tunnel.DirZ);
+                Vector3 side = new Vector3(tunnel.DirZ, 0, -tunnel.DirX) * (marker.Index < 3 ? -1 : 1);
+                Vector3 port = new Vector3(tunnel.PositionX, tunnel.PositionY, tunnel.PositionZ)
+                    + forward * marker.LocalPosZ + side * (map.Dimensions.TunnelWidth * 0.5f);
+                foreach (float offset in new[] { -0.02f, 0.02f })
+                foreach (float lateral in new[] { -1.3f, 0, 1.3f })
+                {
+                    Vector3 origin = port + side * offset + forward * lateral + Vector3.up * 0.65f;
+                    Assert.That(Physics.Raycast(origin, Vector3.up, out var hit, height), Is.True, tunnel.Name);
+                    Assert.That(hit.point.y, Is.LessThanOrEqualTo(tunnel.PositionY + height + 0.02f), tunnel.Name);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 落下口の囲いが下階のアーチ天井より内側へ垂れ下がらないことを確認する
+        /// </summary>
+        [Test]
+        public void ProductionGeometry_DropShaftEndsFollowLowerCeiling()
+        {
+            foreach (var opening in _presenter.CurrentMap.DropOpenings)
+            {
+                var tunnel = _presenter.CurrentMap.Tunnels.Single(t => t.Id == opening.LowerTunnelId);
+                Transform lower = _view.GeometryRoot.Find(tunnel.Name);
+                Transform shaft = _view.GeometryRoot.Cast<Transform>().Single(t => t.name == "Drop Opening Shaft"
+                    && Mathf.Abs(t.localPosition.x - opening.CenterX) < 0.01f && Mathf.Abs(t.localPosition.z - opening.CenterZ) < 0.01f);
+                int checkedVertices = 0;
+                foreach (var filter in shaft.GetComponentsInChildren<MeshFilter>())
+                {
+                    Vector3[] vertices = filter.sharedMesh.vertices;
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        if (i % 4 >= 2) continue;
+                        Vector3 point = filter.transform.TransformPoint(vertices[i]);
+                        if (Mathf.Abs(point.x - opening.CenterX) < opening.Size * 0.5f + 0.19f
+                            && Mathf.Abs(point.z - opening.CenterZ) < opening.Size * 0.5f + 0.19f) continue;
+                        var ray = new Ray(new Vector3(point.x, opening.LowerFloorY + 0.65f, point.z), Vector3.up);
+                        float ceiling = float.PositiveInfinity;
+                        foreach (var collider in lower.GetComponentsInChildren<Collider>())
+                            if (!collider.isTrigger && collider.Raycast(ray, out var hit, 12) && hit.normal.y < -0.1f)
+                                ceiling = Mathf.Min(ceiling, hit.point.y);
+                        Assert.That(ceiling, Is.Not.EqualTo(float.PositiveInfinity), tunnel.Name);
+                        Assert.That(point.y, Is.EqualTo(ceiling - 0.01f).Within(0.03f), tunnel.Name);
+                        checkedVertices++;
+                    }
+                }
+                Assert.That(checkedVertices, Is.GreaterThan(0));
+            }
         }
 
         /// <summary>

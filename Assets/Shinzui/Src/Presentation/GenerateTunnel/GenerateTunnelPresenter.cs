@@ -173,6 +173,7 @@ namespace Shinzui.Presentation.GenerateTunnel
             }
 
             // 2. 通常通路の生成
+            float passageHeight = _mapView.ResolvePassageHeight(mapDto.Dimensions.TunnelHeight);
             foreach (NormalCorridorDto corridor in mapDto.NormalCorridors)
             {
                 Vector3 center = new Vector3(corridor.CenterX, corridor.CenterY, corridor.CenterZ);
@@ -184,7 +185,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                     corridor.Length,
                     corridor.ConnectionIndex,
                     mapDto.Dimensions.CorridorWidth,
-                    mapDto.Dimensions.TunnelHeight,
+                    passageHeight,
                     mapDto.Dimensions.CorridorLength,
                     corridor.OpenEnd,
                     corridor.OpenLeft,
@@ -205,7 +206,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                     room.RoomLength,
                     room.PassageLength,
                     mapDto.Dimensions.CorridorWidth,
-                    mapDto.Dimensions.TunnelHeight,
+                    passageHeight,
                     mapDto.Dimensions.CorridorLength);
             }
 
@@ -223,7 +224,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                     warp.PairId,
                     warp.SideName,
                     mapDto.Dimensions.CorridorWidth,
-                    mapDto.Dimensions.TunnelHeight,
+                    passageHeight,
                     mapDto.Dimensions.CorridorLength);
 
                 createdWarpInfos.Add(info);

@@ -4910,9 +4910,11 @@ MonoBehaviour:
   seed: 2777
   placementAttemptsPerTunnel: 80
   smallRoomCount: 1
-  smallRoomWidth: 20
-  smallRoomLength: 20
-  tunnelLength: 140
+  smallRoomWidth: 8
+  smallRoomLength: 6
+  tunnelLength: 40
+  minTunnelLength: 60
+  maxTunnelLength: 76
   generateUpperFloor: 1
   upperFloorHeight: 14
   generateLowerFloor: 1
@@ -4922,7 +4924,7 @@ MonoBehaviour:
   connectionPointSpacing: 11
   tunnelWidth: 14.800003
   tunnelHeight: 5
-  corridorLength: 8
+  corridorLength: 4
   corridorWidth: 3
   placementMargin: 2
   tunnelOverlapSizeMultiplier: 1
@@ -4933,9 +4935,9 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
-  basicTunnelModelScale: {x: 3, y: 1, z: 1}
+  basicTunnelModelScale: {x: 1, y: 0.75, z: 0.75}
   corridorModelScale: {x: 1, y: 1, z: 1}
-  smallRoomModelScale: {x: 40, y: 1, z: 40}
+  smallRoomModelScale: {x: 1, y: 1, z: 1}
   warpCorridorModelScale: {x: 1, y: 1, z: 1}
   basicTunnelModelEuler: {x: 0, y: 90, z: 0}
   corridorModelEuler: {x: 0, y: 0, z: 0}

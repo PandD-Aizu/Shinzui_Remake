@@ -63,6 +63,7 @@ namespace Shinzui.View.GenerateTunnel
         [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 5.0f;
 
         [Header("Model Scale")]
+        [Tooltip("Xは長さの基準倍率、Yは断面の倍率。縦横比を維持するためZはYと同じ倍率になる")]
         [SerializeField] private Vector3 basicTunnelModelScale = Vector3.one;
         [SerializeField] private Vector3 corridorModelScale = Vector3.one;
         [SerializeField] private Vector3 smallRoomModelScale = Vector3.one;
@@ -109,7 +110,14 @@ namespace Shinzui.View.GenerateTunnel
         public GameObject SmallRoomModel => smallRoomModel;
         public GameObject WarpCorridorModel => warpCorridorModel;
         public float CeilingLightSpacing => Mathf.Max(1.5f, ceilingLightSpacing);
-        public Vector3 BasicTunnelModelScale => SanitizeScale(basicTunnelModelScale);
+        public Vector3 BasicTunnelModelScale
+        {
+            get
+            {
+                Vector3 scale = SanitizeScale(basicTunnelModelScale);
+                return new Vector3(scale.x, scale.y, scale.y);
+            }
+        }
         public Vector3 CorridorModelScale => SanitizeScale(corridorModelScale);
         public Vector3 SmallRoomModelScale => SanitizeScale(smallRoomModelScale);
         public Vector3 WarpCorridorModelScale => SanitizeScale(warpCorridorModelScale);
@@ -119,6 +127,14 @@ namespace Shinzui.View.GenerateTunnel
         public Quaternion WarpCorridorModelRotation => Quaternion.Euler(warpCorridorModelEuler);
         public bool UseModelBoundsForLayout => useModelBoundsForLayout;
         public bool ConfigureBasicTunnelExitParts => configureBasicTunnelExitParts;
+
+        /// <summary>
+        /// Inspectorでも断面の縦横倍率を揃える
+        /// </summary>
+        private void OnValidate()
+        {
+            basicTunnelModelScale.z = basicTunnelModelScale.y;
+        }
 
         private static Vector3 SanitizeScale(Vector3 value)
         {

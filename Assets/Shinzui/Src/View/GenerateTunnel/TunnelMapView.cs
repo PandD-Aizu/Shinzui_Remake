@@ -164,8 +164,13 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// シーンまたはプロジェクトアセットから見本モデルを取得し、実測寸法を返す。
+        /// トンネル本体と接続口の実測寸法を取得し、生成通路の設定寸法は維持する
         /// </summary>
+        /// <param name="tunnelLength">トンネル本体の基準長</param>
+        /// <param name="tunnelWidth">左右の接続口先端を含む幅</param>
+        /// <param name="tunnelHeight">トンネルの占有高</param>
+        /// <param name="corridorLength">生成通路の基準長</param>
+        /// <param name="corridorWidth">生成通路の内幅</param>
         public void ResolveTemplateDimensions(
             ref float tunnelLength,
             ref float tunnelWidth,
@@ -179,11 +184,16 @@ namespace Shinzui.View.GenerateTunnel
             if (_tunnelPrefab != null && TryCalculateMeshBounds(_tunnelPrefab, GetTunnelModelScale(), out Bounds tunnelBounds))
             {
                 // モデルの実際の長軸を使って長さ方向だけを拡縮する
-                _tunnelTemplateLongAxisIsX = tunnelBounds.size.x >= tunnelBounds.size.z;
+                Transform floor = _tunnelPrefab.transform.Find("tunnel_floor");
+                Bounds bodyBounds = tunnelBounds;
+                if (floor != null && TryGetMeshBoundsInLocalSpace(floor, _tunnelPrefab.transform, out Bounds floorBounds))
+                    bodyBounds = new Bounds(Vector3.Scale(floorBounds.center, GetTunnelModelScale()),
+                        Vector3.Scale(floorBounds.size, Abs(GetTunnelModelScale())));
+                _tunnelTemplateLongAxisIsX = bodyBounds.size.x >= bodyBounds.size.z;
                 if (useBounds)
                 {
-                    tunnelLength = Mathf.Max(tunnelBounds.size.x, tunnelBounds.size.z);
-                    tunnelWidth = Mathf.Min(tunnelBounds.size.x, tunnelBounds.size.z);
+                    tunnelLength = _tunnelTemplateLongAxisIsX ? bodyBounds.size.x : bodyBounds.size.z;
+                    tunnelWidth = _tunnelTemplateLongAxisIsX ? tunnelBounds.size.z : tunnelBounds.size.x;
                     tunnelHeight = Mathf.Max(tunnelHeight, tunnelBounds.size.y);
                 }
             }
@@ -191,12 +201,7 @@ namespace Shinzui.View.GenerateTunnel
             if (_corridorTemplate != null && TryCalculateMeshBounds(_corridorTemplate, GetCorridorModelScale(false), out Bounds corridorBounds))
             {
                 _corridorTemplateLongAxisIsX = corridorBounds.size.x >= corridorBounds.size.z;
-                if (useBounds)
-                {
-                    corridorLength = Mathf.Max(corridorBounds.size.x, corridorBounds.size.z);
-                    corridorWidth = Mathf.Max(1.0f, Mathf.Min(corridorBounds.size.x, corridorBounds.size.z));
-                    tunnelHeight = Mathf.Max(tunnelHeight, corridorBounds.size.y);
-                }
+                // 通常通路はモデルを使わないため内幅と長さはInspectorの設定を維持する
             }
 
             if (_warpCorridorTemplate != null && TryCalculateMeshBounds(_warpCorridorTemplate, GetCorridorModelScale(true), out Bounds warpBounds))
@@ -210,7 +215,11 @@ namespace Shinzui.View.GenerateTunnel
             HideSceneTemplate(_warpCorridorTemplate);
         }
 
-        /// <summary>Measure side-mouth spacing from the same authored mesh used to draw the six exits.</summary>
+        /// <summary>
+        /// 接続口の床から長さ方向の間隔を測定する
+        /// </summary>
+        /// <param name="configuredSpacing">実測できない場合の設定間隔</param>
+        /// <returns>中央の接続口から前後の接続口までの間隔</returns>
         public float ResolveConnectionPointSpacing(float configuredSpacing)
         {
             if ((_generator != null && !_generator.UseModelBoundsForLayout) || !_tunnelPrefab) return configuredSpacing;
@@ -222,16 +231,26 @@ namespace Shinzui.View.GenerateTunnel
                 int middle = side * 3 + 1;
                 if (!TryMouthPosition(middle, out var centre)) continue;
                 foreach (int index in new[] { middle - 1, middle + 1 })
-                    if (TryMouthPosition(index, out var outer)) { total += Vector3.Distance(outer, centre); count++; }
+                    if (TryMouthPosition(index, out var outer))
+                    {
+                        total += Mathf.Abs(_tunnelTemplateLongAxisIsX ? outer.x - centre.x : outer.z - centre.z);
+                        count++;
+                    }
             }
             return count == 4 && total > .01f ? total / count : configuredSpacing;
         }
 
+        /// <summary>
+        /// 接続口の歩行面の中心をモデル倍率込みで取得する
+        /// </summary>
+        /// <param name="index">接続口番号</param>
+        /// <param name="position">モデル内の歩行面の中心</param>
+        /// <returns>中心を取得できたか</returns>
         private bool TryMouthPosition(int index, out Vector3 position)
         {
             position = default;
             var part = _tunnelPrefab.transform.Find(ExitPathNames[index]);
-            if (!part || !TryGetMeshBoundsInLocalSpace(part, _tunnelPrefab.transform, out var bounds)) return false;
+            if (!part || !TryGetMouthDeck(part, _tunnelPrefab.transform, out var bounds)) return false;
             position = Vector3.Scale(bounds.center, GetTunnelModelScale());
             return true;
         }
@@ -354,12 +373,16 @@ namespace Shinzui.View.GenerateTunnel
                 model.SetActive(true);
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = GetTunnelModelRotation();
-                model.transform.localScale = GetTunnelModelScale(length, standardTunnelLength);
+                model.transform.localScale = GetTunnelModelScale();
 
                 if (_generator == null || _generator.ConfigureBasicTunnelExitParts)
                 {
                     ConfigureTunnelExits(model, openEntrances);
                 }
+
+                // 接続口を一定幅に保ち、描画面と衝突面を同じ床高へ揃える
+                if (!FitTunnelConnections(model.transform, root, length, corridorWidth))
+                    model.transform.localScale = GetTunnelModelScale(length, standardTunnelLength);
 
                 if (isSpecial)
                 {
@@ -370,6 +393,8 @@ namespace Shinzui.View.GenerateTunnel
                 }
 
                 ApplyStageCollisionRecursive(model);
+                Physics.SyncTransforms();
+                CreateMouthHeaders(model.transform, root, openEntrances, corridorWidth, ResolvePassageHeight(height));
             }
             else
             {
@@ -695,7 +720,7 @@ namespace Shinzui.View.GenerateTunnel
             bool isWarpCorridor = false)
         {
             // 通常通路と小部屋前後の通路は寸法から床と壁を生成する
-            if (!isWarpCorridor)
+            if (!isWarpCorridor || _warpCorridorTemplate == null)
             {
                 CreateProceduralPassage(corridor, length, material, corridorWidth, tunnelHeight);
                 return;

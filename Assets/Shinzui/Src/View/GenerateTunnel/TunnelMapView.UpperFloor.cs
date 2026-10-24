@@ -75,6 +75,10 @@ namespace Shinzui.View.GenerateTunnel
                     -horizontalLength * 0.5f + before * 0.5f), new Vector3(ShellThickness, height, before), rampStartZ);
                 CreateSlopeBox(root, "Side Wall After Entrance", new Vector3(x, floorOffset + height * 0.5f,
                     horizontalLength * 0.5f - after * 0.5f), new Vector3(ShellThickness, height, after), rampStartZ);
+                float passageTop = ResolvePassageHeight(height) + ShellThickness * 0.5f - lowerFloor;
+                if (height > passageTop)
+                    CreateSlopeBox(root, "Side Entrance Header", new Vector3(x, floorOffset + (height + passageTop) * 0.5f, entranceZ),
+                        new Vector3(ShellThickness, height - passageTop, corridorWidth), rampStartZ);
             }
 
             // 出口は接続先の側面口に合わせた幅だけを開ける
@@ -174,7 +178,7 @@ namespace Shinzui.View.GenerateTunnel
                 nearest = hit.distance;
                 floor = landing.InverseTransformPoint(hit.point).y;
             }
-            width = bounds.size.z;
+            width = TryGetMouthDeck(mouth, landing, out Bounds deck) ? deck.size.z : fallbackWidth;
             height = Mathf.Max(2.0f, bounds.max.y - floor - ShellThickness * 2.0f);
         }
 
@@ -191,9 +195,33 @@ namespace Shinzui.View.GenerateTunnel
         public void CreateDropOpening(Transform lower, Transform upper, Vector3 center, float size,
             float lowerFloorY, float upperFloorY, float tunnelHeight)
         {
-            // 下階の床と上階の天井は残し、間の床や天井だけを切り取る
+            // 切断前の天井を測定し、囲いの下端をアーチ形状に揃える
             float lowerSurface = SampleTunnelFloor(lower, center, lowerFloorY);
             float upperSurface = SampleTunnelFloor(upper, center, upperFloorY);
+            var shaft = new GameObject("Drop Opening Shaft").transform;
+            shaft.SetParent(_geometryRoot, false);
+            shaft.localPosition = new Vector3(center.x, 0, center.z);
+            float edge = (size + ShellThickness) * 0.5f;
+            foreach (int sign in new[] { -1, 1 })
+            {
+                var walls = new[]
+                {
+                    (name: "Shaft X Wall", start: new Vector3(sign * edge, 0, -(size + ShellThickness * 2) * 0.5f),
+                        end: new Vector3(sign * edge, 0, (size + ShellThickness * 2) * 0.5f)),
+                    (name: "Shaft Z Wall", start: new Vector3(-size * 0.5f, 0, sign * edge),
+                        end: new Vector3(size * 0.5f, 0, sign * edge))
+                };
+                foreach (var wall in walls)
+                    CreateProfiledWall(shaft, wall.name, wall.start, wall.end, ShellThickness, point =>
+                    {
+                        Vector3 mapPoint = point + shaft.localPosition;
+                        float ceiling = SampleTunnelCeiling(lower, mapPoint, lowerSurface, lowerFloorY + tunnelHeight);
+                        return (ceiling - 0.01f, upperSurface - 0.02f);
+                    });
+            }
+            ApplyTunnelPassageMaterial(shaft.gameObject);
+
+            // 下階の床と上階の天井は残し、間の床や天井だけを切り取る
             float bottom = lowerSurface + 2.4f;
             float top = Mathf.Max(upperSurface + 0.25f, upperFloorY + 2.0f);
             Vector3 worldCenter = _geometryRoot.TransformPoint(new Vector3(center.x, (bottom + top) * 0.5f, center.z));
@@ -201,22 +229,6 @@ namespace Shinzui.View.GenerateTunnel
             TunnelDropOpeningCutter.Cut(lower, bounds, _generatedMeshes);
             TunnelDropOpeningCutter.Cut(upper, bounds, _generatedMeshes);
 
-            // 階層間の空間から外へ抜けないよう落下口の周囲を囲う
-            float shaftBottom = bottom;
-            float shaftHeight = upperSurface - 0.02f - shaftBottom;
-            if (shaftHeight <= 0.0f) return;
-            var shaft = new GameObject("Drop Opening Shaft").transform;
-            shaft.SetParent(_geometryRoot, false);
-            shaft.localPosition = new Vector3(center.x, shaftBottom, center.z);
-            float edge = (size + ShellThickness) * 0.5f;
-            foreach (int sign in new[] { -1, 1 })
-            {
-                CreateStageBox(shaft, "Shaft X Wall", new Vector3(sign * edge, shaftHeight * 0.5f, 0),
-                    new Vector3(ShellThickness, shaftHeight, size + ShellThickness * 2), _tunnelMaterial);
-                CreateStageBox(shaft, "Shaft Z Wall", new Vector3(0, shaftHeight * 0.5f, sign * edge),
-                    new Vector3(size, shaftHeight, ShellThickness), _tunnelMaterial);
-            }
-            ApplyTunnelPassageMaterial(shaft.gameObject);
         }
 
         /// <summary>
