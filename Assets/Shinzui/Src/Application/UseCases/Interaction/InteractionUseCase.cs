@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using FMOD;
 using R3;
 using Shinzui.Application.Interfaces.Inventory;
 using Shinzui.Application.UseCases.Inventory;
@@ -89,9 +90,15 @@ namespace Shinzui.Application.UseCases.Interaction
                 
                 if (success)
                 {
-                    // カスタムメッセージが指定されていない場合は、デフォルトの取得メッセージを表示
-                    if (string.IsNullOrEmpty(message))
+                    // メッセージ表示処理
+                    // インスペクターで設定されたカスタムメッセージがあれば表示
+                    if (!string.IsNullOrEmpty(message))
                     {
+                        _onShowMessage.OnNext(message);
+                    }
+                    else
+                    {
+                        // カスタムメッセージが指定されていない場合は、デフォルトの取得メッセージを表示
                         string displayName = item != null ? item.Name : itemId;
                         _onShowMessage.OnNext($"Obtained {displayName}.");
                     }
@@ -101,13 +108,6 @@ namespace Shinzui.Application.UseCases.Interaction
             }
             else
             {
-                // メッセージ表示処理
-                // インスペクターで設定されたカスタムメッセージがあれば表示
-                if (!string.IsNullOrEmpty(message))
-                {
-                    _onShowMessage.OnNext(message);
-                }
-                
                 // 将来的な他のオブジェクトに対するインタラクトロジック拡張用のプレースホルダー
                 
                 // カタログからアイテム情報を非同期で取得
@@ -132,9 +132,15 @@ namespace Shinzui.Application.UseCases.Interaction
                 
                 if (success)
                 {
-                    // カスタムメッセージが指定されていない場合は、デフォルトの取得メッセージを表示
-                    if (string.IsNullOrEmpty(message))
+                    // メッセージ表示処理
+                    // インスペクターで設定されたカスタムメッセージがあれば表示
+                    if (!string.IsNullOrEmpty(message))
                     {
+                        _onShowMessage.OnNext(message);
+                    }
+                    else
+                    {
+                        // カスタムメッセージが指定されていない場合は、デフォルトの取得メッセージを表示
                         string displayName = item != null ? item.Name : interactableId;
                         _onShowMessage.OnNext($"Obtained {displayName}.");
                     }
