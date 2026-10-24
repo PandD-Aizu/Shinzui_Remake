@@ -263,6 +263,11 @@ namespace Shinzui.Presentation.GenerateTunnel
 
         }
 
+        /// <summary>
+        /// ペア先の通路内へ、床からの相対的な高さを保って移動する
+        /// </summary>
+        /// <param name="source">進入元の通路</param>
+        /// <param name="player">移動するプレイヤー</param>
         private void OnWarpRequested(GeneratedCorridorInfo source, PlayerView player)
         {
             if (source == null || source.PairedCorridor == null || player == null ||
@@ -270,7 +275,11 @@ namespace Shinzui.Presentation.GenerateTunnel
                 return;
 
             Transform target = source.PairedCorridor.transform;
-            player.Warp(target.position - target.forward * 1.25f - source.transform.position);
+            float height = source.transform.InverseTransformPoint(player.transform.position).y;
+            Vector3 destination = target.TransformPoint(new Vector3(0, height, -1.25f));
+
+            // Warpは移動先座標ではなく現在位置からの移動量を受け取る
+            player.Warp(destination - player.transform.position, -target.forward);
             _lastWarpTime = Time.time;
         }
 

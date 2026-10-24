@@ -1,14 +1,18 @@
 #if UNITY_EDITOR
+using System.Collections;
 using System.Linq;
 using NUnit.Framework;
 using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.Application.UseCases.Tunnel;
+using Shinzui.Presentation;
 using Shinzui.Presentation.GenerateTunnel;
 using Shinzui.View;
 using Shinzui.View.GenerateTunnel;
 using UnityEditor;
+using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Shinzui.Tests.TunnelGeneration
 {
@@ -196,6 +200,197 @@ namespace Shinzui.Tests.TunnelGeneration
             serialized.FindProperty("basicTunnelModelScale").vector3Value = new Vector3(2, 0.8f, 0.4f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             Assert.That(generator.BasicTunnelModelScale, Is.EqualTo(new Vector3(2, 0.8f, 0.8f)));
+        }
+
+        /// <summary>
+        /// 通路の向きや階層が異なってもペア先の通路内へワープすることを確認する
+        /// </summary>
+        /// <param name="angle">ペア先の相対角度</param>
+        [TestCase(0)]
+        [TestCase(90)]
+        [TestCase(180)]
+        public void ProductionGeometry_WarpArrivesInsidePairedCorridor(float angle)
+        {
+            var warps = _view.GeometryRoot.GetComponentsInChildren<GeneratedCorridorInfo>()
+                .Where(c => c.Kind == GeneratedCorridorKind.Warp).ToArray();
+            Assert.That(warps, Is.Not.Empty);
+            foreach (var corridor in warps)
+            {
+                Assert.That(corridor.PairedCorridor, Is.Not.Null);
+                Assert.That(corridor.PairedCorridor.WarpPairId, Is.EqualTo(corridor.WarpPairId));
+                Assert.That(corridor.PairedCorridor.PairedCorridor, Is.SameAs(corridor));
+            }
+
+            var source = warps[0];
+            var target = source.PairedCorridor;
+            target.transform.rotation = source.transform.rotation * Quaternion.Euler(0, angle, 0);
+            target.transform.position += Vector3.up * 14;
+            var controller = CreatePlayer(source.transform.TransformPoint(new Vector3(0.3f, 0.2f, -0.9f)));
+            _player.AddComponent<PlayerView>();
+            source.GetComponentInChildren<GeneratedWarpCorridorTrigger>().SendMessage("OnTriggerEnter", controller);
+
+            Vector3 arrival = target.transform.InverseTransformPoint(_player.transform.position);
+            Assert.That(Vector3.Distance(arrival, new Vector3(0, 0.2f, -1.25f)), Is.LessThan(0.001f));
+            Assert.That(Physics.Raycast(_player.transform.position + Vector3.up, Vector3.down, out var floor, 2), Is.True);
+            Assert.That(floor.transform.IsChildOf(target.transform), Is.True);
+        }
+
+        /// <summary>
+        /// クールダウン後にペア先から元の通路へ戻れることを確認する
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ProductionGeometry_WarpCanReturnThroughItsPair()
+        {
+            var source = _view.GeometryRoot.GetComponentsInChildren<GeneratedCorridorInfo>()
+                .First(c => c.Kind == GeneratedCorridorKind.Warp);
+            var target = source.PairedCorridor;
+            var controller = CreatePlayer(source.transform.TransformPoint(new Vector3(-0.3f, 0.2f, -0.9f)));
+            _player.AddComponent<PlayerView>();
+            var sourceTrigger = source.GetComponentInChildren<GeneratedWarpCorridorTrigger>();
+            sourceTrigger.SendMessage("OnTriggerEnter", controller);
+            Vector3 arrival = _player.transform.position;
+            target.GetComponentInChildren<GeneratedWarpCorridorTrigger>().SendMessage("OnTriggerEnter", controller);
+            Assert.That(_player.transform.position, Is.EqualTo(arrival), "Immediate contact must not cause a return warp");
+
+            yield return new WaitForSeconds(0.4f);
+            _player.transform.position = target.transform.TransformPoint(new Vector3(0, 0.2f, -0.9f));
+            target.GetComponentInChildren<GeneratedWarpCorridorTrigger>().SendMessage("OnTriggerEnter", controller);
+            Assert.That(Vector3.Distance(source.transform.InverseTransformPoint(_player.transform.position),
+                new Vector3(0, 0.2f, -1.25f)), Is.LessThan(0.001f));
+        }
+
+        /// <summary>
+        /// 外部ワープで通過したループゲートが二重ワープを起こさないことを確認する
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ProductionGeometry_ExternalWarpDoesNotSweepThroughLoopGates()
+        {
+            CreatePlayer(new Vector3(3000, 1, 0));
+            var player = _player.AddComponent<PlayerView>();
+            TunnelGateView first = CreateLoopGate(new Vector3(3000, 5, 50));
+            TunnelGateView second = CreateLoopGate(new Vector3(3000, 5, 500));
+            var serialized = new SerializedObject(first);
+            serialized.FindProperty("targetGate").objectReferenceValue = second;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            var loop = new TunnelLoopPresenter(player);
+            loop.Initialize();
+            try
+            {
+                yield return new WaitForSeconds(0.2f);
+                player.Warp(new Vector3(0, 0, 100));
+                loop.Tick();
+                Assert.That(_player.transform.position.z, Is.EqualTo(100).Within(0.001f));
+                yield return new WaitForSeconds(0.2f);
+                loop.Tick();
+                Assert.That(_player.transform.position.z, Is.EqualTo(100).Within(0.001f));
+
+                // クールダウン後に実際にゲートを跨ぐ移動は従来どおりループする
+                _player.transform.position = new Vector3(3000, 1, 51);
+                loop.Tick();
+                _player.transform.position = new Vector3(3000, 1, 49);
+                loop.Tick();
+                Assert.That(_player.transform.position.z, Is.EqualTo(498.98f).Within(0.001f));
+            }
+            finally { loop.Dispose(); }
+        }
+
+        /// <summary>
+        /// 現在と直前のシードで全ワープ通路をループ判定と併用して検証する
+        /// </summary>
+        [UnityTest]
+        public IEnumerator ProductionGeometry_AllWarpPairsRemainInDestinationCorridors()
+        {
+            var controller = CreatePlayer(Vector3.zero);
+            var player = _player.AddComponent<PlayerView>();
+            var loop = new TunnelLoopPresenter(player);
+            loop.Initialize();
+            try
+            {
+                foreach (int seed in new[] { 2776, 2777 })
+                {
+                    _presenter.ExecuteGeneration(new TunnelGenerationRequestDto
+                    {
+                        Seed = seed, GenerateUpperFloor = true, GenerateLowerFloor = true,
+                        UpperFloorHeight = 14, LowerFloorDepth = 14,
+                        TunnelLength = 40, MinTunnelLength = 60, MaxTunnelLength = 76, CorridorLength = 4
+                    }, true);
+                    var warps = _view.GeometryRoot.GetComponentsInChildren<GeneratedCorridorInfo>()
+                        .Where(c => c.Kind == GeneratedCorridorKind.Warp).ToArray();
+                    Assert.That(warps, Is.Not.Empty);
+                    foreach (var source in warps)
+                    {
+                        Assert.That(source.PairedCorridor, Is.Not.Null, $"seed {seed}: {source.name}");
+                        yield return new WaitForSeconds(0.4f);
+                        _player.transform.position = source.transform.TransformPoint(new Vector3(0.3f, 0.2f, -0.9f));
+                        loop.Initialize();
+                        source.GetComponentInChildren<GeneratedWarpCorridorTrigger>().SendMessage("OnTriggerEnter", controller);
+                        loop.Tick();
+                        Transform target = source.PairedCorridor.transform;
+                        Assert.That(Vector3.Distance(target.InverseTransformPoint(_player.transform.position),
+                            new Vector3(0, 0.2f, -1.25f)), Is.LessThan(0.001f), $"seed {seed}: {source.name}");
+                        Assert.That(Physics.Raycast(_player.transform.position + Vector3.up, Vector3.down, out var floor, 2), Is.True);
+                        Assert.That(floor.transform.IsChildOf(target), Is.True, $"seed {seed}: {source.name}");
+                        Assert.That(Vector3.Dot(_player.transform.forward, -target.forward), Is.GreaterThan(0.999f));
+                    }
+                }
+            }
+            finally { loop.Dispose(); }
+        }
+
+        /// <summary>
+        /// 本体とカメラ制御が出口方向へ揃い、次フレームにも維持されることを確認する
+        /// </summary>
+        /// <param name="yaw">出口の向き</param>
+        /// <param name="parented">カメラをプレイヤーの子にするか</param>
+        [TestCase(0, true)]
+        [TestCase(90, false)]
+        [TestCase(180, true)]
+        [TestCase(270, false)]
+        public void ProductionGeometry_WarpAlignsPlayerAndCinemachine(float yaw, bool parented)
+        {
+            CreatePlayer(new Vector3(3000, 0.2f, 0));
+            var player = _player.AddComponent<PlayerView>();
+            var head = new GameObject("Warp Camera Target").transform;
+            head.SetParent(_player.transform, false);
+            head.localPosition = Vector3.up * 1.6f;
+            var camera = new GameObject("Warp Camera").AddComponent<Camera>();
+            camera.transform.SetParent(parented ? head : _host.transform, false);
+            camera.transform.position = head.position;
+            camera.transform.rotation = Quaternion.Euler(20, 35, 0);
+            var serialized = new SerializedObject(player);
+            serialized.FindProperty("mainCamera").objectReferenceValue = camera;
+            serialized.FindProperty("cameraTarget").objectReferenceValue = head;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            var virtualCamera = new GameObject("Warp Virtual Camera").AddComponent<CinemachineCamera>();
+            virtualCamera.transform.SetParent(_host.transform, false);
+            virtualCamera.Follow = head;
+            var panTilt = virtualCamera.gameObject.AddComponent<CinemachinePanTilt>();
+            panTilt.ReferenceFrame = CinemachinePanTilt.ReferenceFrames.World;
+            virtualCamera.InternalUpdateCameraState(Vector3.up, -1);
+            virtualCamera.ForceCameraPosition(camera.transform.position, camera.transform.rotation);
+
+            Vector3 forward = Quaternion.Euler(0, yaw, 0) * Vector3.forward;
+            player.Warp(Vector3.forward * 100, forward);
+            Assert.That(Vector3.Dot(player.transform.forward, forward), Is.GreaterThan(0.999f));
+            Assert.That(Vector3.Dot(Vector3.ProjectOnPlane(player.CameraForward, Vector3.up).normalized, forward), Is.GreaterThan(0.999f));
+            Assert.That(Mathf.DeltaAngle(camera.transform.eulerAngles.x, 20), Is.EqualTo(0).Within(0.01f));
+            virtualCamera.InternalUpdateCameraState(Vector3.up, -1);
+            Vector3 nextForward = virtualCamera.State.RawOrientation * Vector3.forward;
+            Assert.That(Vector3.Dot(Vector3.ProjectOnPlane(nextForward, Vector3.up).normalized, forward), Is.GreaterThan(0.999f));
+        }
+
+        /// <summary>
+        /// ループ判定用のゲートを作成する
+        /// </summary>
+        /// <param name="position">配置する位置</param>
+        /// <returns>ループ判定用のゲート</returns>
+        private TunnelGateView CreateLoopGate(Vector3 position)
+        {
+            var gate = new GameObject("Warp Sweep Test Gate");
+            gate.transform.SetParent(_host.transform, false);
+            gate.transform.position = position;
+            gate.AddComponent<BoxCollider>().size = new Vector3(10, 10, 0.2f);
+            return gate.AddComponent<TunnelGateView>();
         }
 
         /// <summary>

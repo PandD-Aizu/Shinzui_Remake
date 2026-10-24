@@ -1,7 +1,7 @@
 {
     "name": "Shinzui.TunnelGeneration.Tests",
     "references": [
-        "DILayer", "DomainLayer", "ApplicationLayer", "PresentationLayer", "ViewLayer", "VContainer", "Unity.AI.Navigation"
+        "DILayer", "DomainLayer", "ApplicationLayer", "PresentationLayer", "ViewLayer", "VContainer", "Unity.AI.Navigation", "Unity.Cinemachine"
     ],
     "optionalUnityReferences": ["TestAssemblies"],
     "autoReferenced": false

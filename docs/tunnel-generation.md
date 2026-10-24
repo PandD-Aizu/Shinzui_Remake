@@ -6,6 +6,8 @@
 
 ## Inspector
 
+`TunnelGenerator` の全設定項目は [インスペクター設定一覧](tunnel-generator-inspector.md) を参照する
+
 - `TunnelGenerator`: 個数、Seed、寸法、モデル、モデルの Scale / Rotation。
 - `GenerateTunnelLifetimeScope`: 同じシーンの Generator / Map View を参照する。
 - `TunnelMapView.Map Root`: 生成先。Prefab では子の MapRoot を設定済み。別シーンの参照は禁止。
@@ -13,7 +15,7 @@
 - `Show Debug Geometry`: 出入口マーカーとワープトリガーの可視化。通常は無効。
 
 モデルは Inspector にアセットを直接設定する。設定済み Prefab ではトンネル／通路の両方を参照しており、Editor 専用 AssetDatabase 検索やシーン内の同名オブジェクトに依存しない。
-既存のモデルスケール仕様は維持している。`Use Model Bounds For Layout` は未拡縮モデルの寸法を使い、`Model Scale` は表示モデルを拡縮する。接続点の間隔もモデルに合わせて設定する。
+`Use Model Bounds For Layout` は `Model Scale` を反映したモデルの実寸から、トンネルの基準寸法と接続点間隔を補正する。通常通路の長さ・内幅は Inspector の設定を維持する。
 
 ## 起動と破棄
 

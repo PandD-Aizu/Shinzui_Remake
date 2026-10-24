@@ -3397,6 +3397,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.FlashlightView
   flashlightLight: {fileID: 775528540}
   targetCamera: {fileID: 632997464}
+  flashlightModel: {fileID: 0}
+  modelLightOffset: {x: -0.24, y: -0.23, z: 0.52}
+  useRealisticBeam: 0
+  beamShadows: 0
+  beamFocusDistance: 8
+  nearWallDistance: 2
+  nearWallIntensity: 0.12
+  beamObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   minSpeed: 2
   maxSpeed: 45
   maxAngle: 30
@@ -3828,6 +3838,30 @@ MonoBehaviour:
   playerDeathView: {fileID: 0}
   enemyViews: []
   horrorDetectionView: {fileID: 0}
+  enemyDirectorSettings:
+    ambientDuration: 12
+    buildUpDuration: 35
+    recoveryDuration: 18
+    searchDuration: 14
+    hintInterval: 8
+    hintCellSize: 12
+    searchRadius: 7
+    searchPointInterval: 3
+    retreatDistance: 18
+    pressureDistance: 18
+    chasePressurePerSecond: 0.075
+    proximityPressurePerSecond: 0.025
+    pressureDecayPerSecond: 0.06
+    sightDistance: 16
+    fieldOfView: 110
+    detectionTime: 0.3
+    eyeHeight: 1
+    walkingNoiseRadius: 4
+    runningNoiseRadius: 13
+    footstepInterval: 0.65
+    patrolSpeedMultiplier: 0.65
+    repathInterval: 0.3
+    sightBlockingLayers: -1
   needWeightSettings: {fileID: 0}
   itemCategoryClassifier: {fileID: 0}
 --- !u!4 &1431612332
@@ -4907,20 +4941,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
   tunnelCount: 8
-  seed: 2777
+  seed: 2776
   placementAttemptsPerTunnel: 80
-  smallRoomCount: 1
-  smallRoomWidth: 8
-  smallRoomLength: 6
-  tunnelLength: 40
-  minTunnelLength: 60
-  maxTunnelLength: 76
   generateUpperFloor: 1
   upperFloorHeight: 14
   generateLowerFloor: 1
   lowerFloorDepth: 14
   dropOpeningCount: 2
   dropOpeningSize: 3
+  smallRoomCount: 1
+  smallRoomWidth: 8
+  smallRoomLength: 6
+  tunnelLength: 40
+  minTunnelLength: 60
+  maxTunnelLength: 76
   connectionPointSpacing: 11
   tunnelWidth: 14.800003
   tunnelHeight: 5
@@ -4935,6 +4969,7 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
+  ceilingLightSpacing: 5
   basicTunnelModelScale: {x: 1, y: 0.75, z: 0.75}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}
@@ -4960,6 +4995,8 @@ MonoBehaviour:
   mapRoot: {fileID: 379417648}
   overviewCamera: {fileID: 0}
   showDebugGeometry: 0
+  ceilingShadowDistance: 15
+  maxCeilingShadowLights: 8
 --- !u!114 &9001001005
 MonoBehaviour:
   m_ObjectHideFlags: 0

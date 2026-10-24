@@ -36,9 +36,20 @@ namespace Shinzui.Presentation
             Debug.Log("[TunnelLoopPresenter] Initialize called");
             if (_playerView != null)
             {
+                if (!_isInitialized) _playerView.Warped += OnPlayerWarped;
                 UpdateCameraSamplePoints(out _prevCameraPosition, out _prevCameraNearPosition, _prevCorners);
                 _isInitialized = true;
             }
+        }
+
+        /// <summary>
+        /// 外部ワープの移動区間を歩行として判定しないよう履歴を更新する
+        /// </summary>
+        /// <param name="offset">ワープによる移動量</param>
+        private void OnPlayerWarped(Vector3 offset)
+        {
+            UpdateCameraSamplePoints(out _prevCameraPosition, out _prevCameraNearPosition, _prevCorners);
+            _lastWarpTime = Time.time;
         }
 
         public void Tick()
@@ -286,7 +297,7 @@ namespace Shinzui.Presentation
 
         public void Dispose()
         {
-            // リソース解放処理
+            if (_playerView != null) _playerView.Warped -= OnPlayerWarped;
         }
     }
 }
