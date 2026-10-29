@@ -4,13 +4,14 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 using Shinzui.DI.GenerateTunnel;
+using Shinzui.View.GenerateTunnel;
 using Random = UnityEngine.Random;
 
 namespace Shinzui.Temp
 {
     /// <summary>
     /// 生成されたマップに脱出用の鍵と出口を置く。階が作り直されるたびに置き直す
-    /// 鍵はスタートから離れたところ、出口はスタートのすぐ近く
+    /// ゴールがある場合は手前に鍵とドアを配置し、ない場合は従来の配置を使用する
     /// 鍵を持ってる間は鍵を置かない。シーンに出口が置いてあれば出口は置かない
     /// シーンに置かなくても勝手に起動する
     /// </summary>
@@ -100,8 +101,13 @@ namespace Shinzui.Temp
                 if (geometry.GetEntityId() != _lastGeometryEntityId)
                 {
                     _lastGeometryEntityId = geometry.GetEntityId();
-                    SpawnKey();
-                    SpawnExit();
+                    var goal = geometry.GetComponentInChildren<GeneratedTunnelGoal>();
+                    if (goal != null) SpawnGoalItems(goal);
+                    else
+                    {
+                        SpawnKey();
+                        SpawnExit();
+                    }
                 }
 
                 // 次の階で作り直されたら、置いたものを消す
@@ -114,6 +120,77 @@ namespace Shinzui.Temp
                     Destroy(transform.GetChild(i).gameObject);
                 }
             }
+        }
+
+        /// <summary>
+        /// ゴール手前へ既存の鍵と仮ドアを配置する
+        /// </summary>
+        /// <param name="goal">接続するゴール</param>
+        public void SpawnGoalItems(GeneratedTunnelGoal goal)
+        {
+            Transform block = goal.transform.parent;
+            Transform tunnel = block.parent;
+            float sign = Mathf.Sign(block.localPosition.z);
+            Vector3 towardGoal = tunnel.forward * sign;
+            float floorY = block.localPosition.y - block.localScale.y * 0.5f;
+            float doorDistance = Mathf.Min(2.5f, Mathf.Abs(block.localPosition.z) * 0.2f);
+            Vector3 doorPosition = tunnel.TransformPoint(new Vector3(block.localPosition.x, floorY,
+                block.localPosition.z - sign * doorDistance));
+            Vector3 keyPosition = doorPosition - towardGoal * Mathf.Min(2, doorDistance)
+                + tunnel.up * groundClearance;
+
+            // 所持済みの鍵は重複配置せず、そのまま開錠に使用できる
+            if (!TempEscapeKey.HasKey())
+            {
+                if (keyPrefab != null) Instantiate(keyPrefab, keyPosition, tunnel.rotation, transform);
+                else CreatePlaceholderKey(keyPosition);
+            }
+
+            Quaternion facing = Quaternion.LookRotation(-towardGoal, tunnel.up);
+            TempEscapeExit exit = exitPrefab != null
+                ? Instantiate(exitPrefab, doorPosition, facing, transform)
+                : CreatePlaceholderExit(doorPosition, facing);
+            exit.name = "Goal Door";
+            exit.ConfigureForGoal(goal);
+
+            // 狭いドアの横や上からゴールへ迂回できないよう枠で塞ぐ
+            var frame = new GameObject("Goal Doorway").transform;
+            frame.SetParent(transform, false);
+            frame.SetPositionAndRotation(doorPosition, facing);
+            Renderer doorRenderer = exit.GetComponentInChildren<Renderer>();
+            Bounds doorBounds = doorRenderer.bounds;
+            float openingWidth = 2 * (Mathf.Abs(frame.right.x) * doorBounds.extents.x + Mathf.Abs(frame.right.z) * doorBounds.extents.z);
+            float openingHeight = doorBounds.max.y - doorPosition.y;
+            float sideWidth = Mathf.Max(0, (block.localScale.x - openingWidth) * 0.5f);
+            Material material = tunnel.Find("TunnelBaseModel/tunnel_6_exit")?.GetComponent<Renderer>()?.sharedMaterial;
+            foreach (int side in new[] { -1, 1 })
+                if (sideWidth > 0)
+                    CreateGoalFramePart(frame, "Side Wall", new Vector3(side * (openingWidth + sideWidth) * 0.5f,
+                        block.localScale.y * 0.5f, 0), new Vector3(sideWidth, block.localScale.y, 0.3f), material, block.gameObject.layer);
+            float headerHeight = block.localScale.y - openingHeight;
+            if (headerHeight > 0)
+                CreateGoalFramePart(frame, "Header", new Vector3(0, openingHeight + headerHeight * 0.5f, 0),
+                    new Vector3(openingWidth, headerHeight, 0.3f), material, block.gameObject.layer);
+        }
+
+        /// <summary>
+        /// ゴール前のドア枠を作成する
+        /// </summary>
+        /// <param name="parent">配置先</param>
+        /// <param name="name">部品名</param>
+        /// <param name="position">配置先内の中心位置</param>
+        /// <param name="size">寸法</param>
+        /// <param name="material">トンネルのマテリアル</param>
+        /// <param name="layer">壁のレイヤー</param>
+        private static void CreateGoalFramePart(Transform parent, string name, Vector3 position, Vector3 size, Material material, int layer)
+        {
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = name;
+            wall.layer = layer;
+            wall.transform.SetParent(parent, false);
+            wall.transform.localPosition = position;
+            wall.transform.localScale = size;
+            if (material != null) wall.GetComponent<Renderer>().sharedMaterial = material;
         }
 
         private static Transform FindGeometryRoot()
@@ -251,7 +328,10 @@ namespace Shinzui.Temp
         /// <summary>
         /// exitPrefabが無いときの仮の出口（赤茶色の扉）
         /// </summary>
-        private void CreatePlaceholderExit(Vector3 position, Quaternion rotation)
+        /// <param name="position">床面の配置位置</param>
+        /// <param name="rotation">ドアの向き</param>
+        /// <returns>生成した仮の出口</returns>
+        private TempEscapeExit CreatePlaceholderExit(Vector3 position, Quaternion rotation)
         {
             GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = "TempEscapeExit (Placeholder)";
@@ -259,7 +339,7 @@ namespace Shinzui.Temp
             go.transform.SetPositionAndRotation(position + Vector3.up * 1.2f, rotation);
             go.transform.localScale = new Vector3(1.4f, 2.4f, 0.2f);
             go.GetComponent<Renderer>().material.color = ExitColor;
-            go.AddComponent<TempEscapeExit>();
+            return go.AddComponent<TempEscapeExit>();
         }
 
         // 面積で重み付けしないと細い通路に偏るので、三角形の面積を足していった表を作っておく

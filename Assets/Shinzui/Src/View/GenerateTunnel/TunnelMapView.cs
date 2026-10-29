@@ -45,6 +45,7 @@ namespace Shinzui.View.GenerateTunnel
         private Material _warpCorridorMaterial;
         private Material _warpTriggerMaterial;
         private Material _markerMaterial;
+        private Material _goalMaterial;
 
         private AsyncOperationHandle<GameObject> _tunnelPrefabHandle;
         private GameObject _tunnelPrefab;
@@ -155,7 +156,7 @@ namespace Shinzui.View.GenerateTunnel
             GeometryClearing?.Invoke();
             ReleaseGeneratedMeshes();
             foreach (var material in new[] { _specialMaterial, _tunnelMaterial, _corridorMaterial,
-                _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial })
+                _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial, _goalMaterial })
                 if (material) Destroy(material);
             if (_tunnelPrefabHandle.IsValid())
             {
@@ -687,6 +688,7 @@ namespace Shinzui.View.GenerateTunnel
             // Rebuilding geometry reuses this view's materials; dispose them with the view.
             if (_specialMaterial) return;
             _specialMaterial = CreateMaterial("Special Tunnel", new Color(0.16f, 0.48f, 0.68f));
+            _goalMaterial = CreateMaterial("Tunnel Goal", new Color(0.15f, 0.8f, 0.35f));
             _tunnelMaterial = CreateMaterial("Tunnel", new Color(0.23f, 0.26f, 0.29f));
             _corridorMaterial = CreateMaterial("Connecting Corridor", new Color(0.72f, 0.48f, 0.13f));
             _smallRoomMaterial = CreateMaterial("Small Room Floor", new Color(0.38f, 0.34f, 0.25f));

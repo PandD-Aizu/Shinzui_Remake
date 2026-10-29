@@ -253,7 +253,17 @@ namespace Shinzui.Presentation.GenerateTunnel
                     opening.LowerFloorY, opening.UpperFloorY, mapDto.Dimensions.TunnelHeight);
             }
 
-            // 6. カメラフレーミング
+            // 6. 平坦な通常トンネルを一つ選び、片端をゴールにする
+            var goalCandidates = mapDto.Tunnels.Where(t => t.Slope == 0 && !t.IsSpecial && t.Id != 0).ToArray();
+            if (goalCandidates.Length > 0)
+            {
+                var random = new System.Random(unchecked(mapDto.Seed ^ 0x47504c));
+                TunnelNodeDto goalTunnel = goalCandidates[random.Next(goalCandidates.Length)];
+                _mapView.CreateTunnelGoal(tunnelRoots[goalTunnel.Id], goalTunnel.Length,
+                    mapDto.Dimensions.TunnelWidth, mapDto.Dimensions.TunnelHeight, random.Next(2) == 0 ? -1 : 1);
+            }
+
+            // 7. カメラフレーミング
             if (mapDto.Bounds != null)
             {
                 Vector3 boundsCenter = new Vector3(mapDto.Bounds.CenterX, mapDto.Bounds.CenterY, mapDto.Bounds.CenterZ);
