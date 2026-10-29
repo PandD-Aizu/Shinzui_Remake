@@ -38,7 +38,7 @@ namespace Shinzui.Application.AI.Enemy
         public EnemyBlackboard Blackboard { get; } = new();
         public string ActivePath => _tree.ActivePath;
         public EnemyIntent ActiveIntent => _intent;
-        public EnemyAwarenessLevel Awareness => _confirmed ? EnemyAwarenessLevel.Engaged : _searching ? EnemyAwarenessLevel.Alerted : _perception.Level;
+        public EnemyAwarenessLevel Awareness => Blackboard.IsBackstage ? EnemyAwarenessLevel.Unaware : _confirmed ? EnemyAwarenessLevel.Engaged : _searching ? EnemyAwarenessLevel.Alerted : _perception.Level;
         internal float SearchDuration => Positive(_settings.searchDuration, 20f);
         internal bool CanSearch => Blackboard.HasClue && (_searching || Awareness >= EnemyAwarenessLevel.Alerted);
         internal bool CanInvestigate => Blackboard.HasClue && (_investigating || Awareness >= EnemyAwarenessLevel.Suspicious);
@@ -65,11 +65,12 @@ namespace Shinzui.Application.AI.Enemy
         {
             if (deltaTime <= 0f || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime)) return _intent;
             _input = input;
+            Blackboard.IsBackstage = input.IsBackstage;
             _time += deltaTime;
             Blackboard.Directive = directive;
 
             // 停止中の物理サンプルを捨て、知覚の記憶だけを減衰する
-            bool sensesEnabled = input.IsReady && !input.IsStunned;
+            bool sensesEnabled = input.IsReady && !input.IsStunned && !input.IsBackstage;
             SightSample sight = sensesEnabled ? input.Sight : default;
             float noise = sensesEnabled ? input.NoiseGain : 0f;
             _perception.Update(sight, input.PlayerSignature, _directorSettings.sightDistance,
@@ -107,8 +108,54 @@ namespace Shinzui.Application.AI.Enemy
         /// <param name="ready">行動可能か</param>
         /// <param name="visibleToPlayer">プレイヤーが敵を視認しているか</param>
         /// <returns>現在の警戒と行動</returns>
-        public EnemyReport CreateReport(int id, Vector3 position, bool ready, bool visibleToPlayer)
-            => new(id, position, _intent, ready, visibleToPlayer, Awareness, Blackboard.IsBackstage);
+        /// <param name="pathDistance">プレイヤーまでの経路長</param>
+        public EnemyReport CreateReport(int id, Vector3 position, bool ready, bool visibleToPlayer, float pathDistance = float.MaxValue)
+            => new(id, position, _intent, ready, visibleToPlayer, Awareness, Blackboard.IsBackstage, pathDistance,
+                (Blackboard.Unlocked & EnemyBehaviorFlags.AmbushFromAbove) != 0);
+
+        /// <summary>物理層で退避が成功したことを反映</summary>
+        public void ConfirmBackstage()
+        {
+            Blackboard.IsBackstage = true;
+            _confirmed = false;
+            FinishClue();
+            _tree.Reset();
+        }
+
+        /// <summary>配置が成功してから曖昧なヒントの捜索を開始</summary>
+        /// <param name="hint">Directorがぼかした捜索位置</param>
+        public void ConfirmEmerged(Vector3 hint)
+        {
+            Blackboard.IsBackstage = false;
+            _confirmed = false;
+            FinishClue();
+            Blackboard.InvestigateTarget = hint;
+            Blackboard.HasClue = true;
+            _perception.BeginSearch();
+            _tree.Reset();
+        }
+
+        /// <summary>実際の舞台裏状態と退出地点への移動を優先処理</summary>
+        /// <param name="dt">経過秒数</param>
+        /// <returns>舞台裏制御中ならRunning</returns>
+        internal BtStatus Backstage(float dt)
+        {
+            DirectorDirective directive = Blackboard.Directive;
+            if (Blackboard.IsBackstage)
+            {
+                _intent = directive.Type == DirectorDirectiveType.EmergeAt
+                    ? new EnemyIntent(EnemyIntentType.Emerge, directive.Position)
+                    : new EnemyIntent(EnemyIntentType.Hidden);
+                return BtStatus.Running;
+            }
+            if (_confirmed || !_input.IsReady || _input.IsStunned
+                || directive.Type != DirectorDirectiveType.GoBackstage) return BtStatus.Failure;
+            _intent = Arrived(directive.Position) && !_input.IsVisibleToPlayer
+                ? new EnemyIntent(EnemyIntentType.Hidden)
+                : new EnemyIntent(EnemyIntentType.GoBackstage, directive.Position,
+                    Positive(_directorSettings.patrolSpeedMultiplier, .65f));
+            return BtStatus.Running;
+        }
 
         /// <summary>ストロボ停止または移動不能なら待機</summary>
         /// <param name="dt">経過秒数</param>

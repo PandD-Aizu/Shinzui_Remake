@@ -11,8 +11,9 @@ namespace Shinzui.Application.AI.Enemy
         /// <returns>初期化後に割り当てを行わないツリー</returns>
         public static BtNode Create(EnemyBrain brain)
         {
-            // 舞台への出入りはPhase 3、戦術による解放はPhase 4で接続する
+            // 戦術による解放はPhase 4で接続する
             return new BtSelector("Root",
+                new BtAction("Backstage", brain.Backstage),
                 new BtAction("Stunned", brain.Stunned),
                 new BtSelector("Chase",
                     new BtGate(EnemyBehaviorFlags.PredictiveChase,

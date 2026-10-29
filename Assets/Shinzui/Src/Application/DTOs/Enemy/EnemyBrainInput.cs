@@ -10,6 +10,8 @@ namespace Shinzui.Application.DTOs.Enemy
         public PlayerSignature PlayerSignature { get; }
         public float NoiseGain { get; }
         public NoiseEvent HeardNoise { get; }
+        public bool IsBackstage { get; }
+        public bool IsVisibleToPlayer { get; }
         public bool IsReady { get; }
         public bool IsStunned { get; }
 
@@ -21,9 +23,13 @@ namespace Shinzui.Application.DTOs.Enemy
         /// <param name="heardNoise">聞こえた中で最も強い音</param>
         /// <param name="isReady">行動可能か</param>
         /// <param name="isStunned">ストロボで停止中か</param>
+        /// <param name="isBackstage">実際に舞台裏へ切り替わったか</param>
+        /// <param name="isVisibleToPlayer">プレイヤーから見えているか</param>
         public EnemyBrainInput(Vector3 enemyPosition, SightSample sight, PlayerSignature playerSignature,
-            float noiseGain = 0f, NoiseEvent heardNoise = default, bool isReady = true, bool isStunned = false)
+            float noiseGain = 0f, NoiseEvent heardNoise = default, bool isReady = true, bool isStunned = false, bool isBackstage = false, bool isVisibleToPlayer = false)
         {
+            IsBackstage = isBackstage;
+            IsVisibleToPlayer = isVisibleToPlayer;
             EnemyPosition = enemyPosition;
             Sight = sight;
             PlayerSignature = playerSignature;

@@ -41,6 +41,14 @@ namespace Shinzui.Domain.Entities.Enemy
             Value = Math.Max(Value, Math.Min(.99f, Value + amount));
         }
 
+        /// <summary>出現後は追跡確定を持ち越さず警戒から開始</summary>
+        public void ResetToAlerted()
+        {
+            Value = .65f;
+            _holdRemaining = _holdTime;
+            _sawThisFrame = false;
+        }
+
         /// <summary>近距離の視認から追跡を確定</summary>
         public void ForceEngage()
         {

@@ -40,6 +40,9 @@ namespace Shinzui.Application.UseCases.Enemy
             _suspicion.Tick(deltaTime, gain > 0f || noiseGain > 0f);
         }
 
+        /// <summary>再出現後の警戒を開始</summary>
+        public void BeginSearch() => _suspicion.ResetToAlerted();
+
         public Shinzui.Domain.ValueObjects.Enemy.EnemyAwarenessLevel Level => _suspicion.Level;
 
         /// <summary>距離、視野、姿勢、光から毎秒の視覚刺激を計算</summary>

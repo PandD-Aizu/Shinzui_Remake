@@ -6,6 +6,7 @@ namespace Shinzui.Application.Interfaces
     /// <summary>Engine operations supplied by Infrastructure; no View or Presenter dependency.</summary>
     public interface IEnemyRuntime
     {
+        bool IsBackstage { get; }
         bool IsAvailable { get; }
         bool IsReady { get; }
         Vector3 Position { get; }
@@ -30,5 +31,16 @@ namespace Shinzui.Application.Interfaces
         void FaceTowards(Vector3 position);
         void SetSpeed(float multiplier, bool stopped);
         void WarpZ(float z);
+        /// <summary>NavMeshAgentの舞台裏状態を切り替える</summary>
+        /// <param name="backstage">退避するか</param>
+        void SetBackstage(bool backstage);
+        /// <summary>指定したNavMesh上の点へ移動し、失敗時は非表示を維持</summary>
+        /// <param name="position">検証済みの位置</param>
+        /// <returns>配置に成功したか</returns>
+        bool WarpTo(Vector3 position);
+        /// <summary>現在地からの到達可能な経路長を取得</summary>
+        /// <param name="position">到達先</param>
+        /// <returns>経路がない場合はfloat.MaxValue</returns>
+        float PathDistanceTo(Vector3 position);
     }
 }

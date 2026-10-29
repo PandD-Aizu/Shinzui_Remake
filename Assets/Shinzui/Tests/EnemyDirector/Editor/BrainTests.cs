@@ -74,6 +74,21 @@ namespace Shinzui.Tests.EnemyDirector
             var intent = brain.Tick(Seen(Vector3.forward * 2f), new DirectorDirective(DirectorDirectiveType.GoBackstage), .1f);
             Assert.That(intent.Type, Is.EqualTo(EnemyIntentType.Chase));
             Assert.That(brain.Blackboard.IsBackstage, Is.False);
+            var exit = new DirectorDirective(DirectorDirectiveType.GoBackstage, Vector3.zero);
+            var silent = new EnemyBrainInput(Vector3.zero, default, default);
+            Assert.That(brain.Tick(silent, exit, .5f).Type, Is.EqualTo(EnemyIntentType.Chase));
+            var visible = new EnemyBrainInput(Vector3.zero, default, default, isVisibleToPlayer: true);
+            Assert.That(brain.Tick(visible, exit, 1.1f).Type, Is.EqualTo(EnemyIntentType.GoBackstage));
+            Assert.That(brain.Tick(silent, exit, .1f).Type, Is.EqualTo(EnemyIntentType.Hidden));
+            brain.ConfirmBackstage();
+            var hidden = new EnemyBrainInput(Vector3.zero, default, default, 1f,
+                new NoiseEvent(NoiseKind.Alarm, Vector3.one, 30f), isReady: false, isBackstage: true);
+            Assert.That(brain.Tick(hidden, default, .1f).Type, Is.EqualTo(EnemyIntentType.Hidden));
+            Assert.That(brain.Blackboard.HasClue, Is.False);
+            Assert.That(brain.Tick(hidden, new DirectorDirective(DirectorDirectiveType.EmergeAt, Vector3.right * 20f), .1f).Type,
+                Is.EqualTo(EnemyIntentType.Emerge));
+            brain.ConfirmEmerged(Vector3.right * 10f);
+            Assert.That(brain.Awareness, Is.EqualTo(EnemyAwarenessLevel.Alerted));
         }
 
         /// <summary>ストロボ停止が追跡へ割り込み、解除後の視認で再開</summary>

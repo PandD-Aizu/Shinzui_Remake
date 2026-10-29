@@ -15,6 +15,9 @@ namespace Shinzui.Infrastructure.Services
         private readonly Func<bool> _isEnabled;
         private readonly EnemyDirectorSettings _settings;
         private readonly NavMeshPath _path = new();
+        private readonly Vector3[] _corners = new Vector3[128];
+        private bool _agentWasEnabled;
+        public bool IsBackstage { get; private set; }
         private readonly RaycastHit[] _hits = new RaycastHit[32];
         private readonly float _baseSpeed;
         private float _repathRemaining;
@@ -33,7 +36,7 @@ namespace Shinzui.Infrastructure.Services
             _baseSpeed = agent != null ? agent.speed : 0f;
         }
 
-        public bool IsAvailable => _body != null && _agent != null && _agent.isActiveAndEnabled && _isEnabled();
+        public bool IsAvailable => !IsBackstage && _body != null && _agent != null && _agent.isActiveAndEnabled && _isEnabled();
         public bool IsReady => IsAvailable && _agent.isOnNavMesh;
         public Vector3 Position => _body != null ? _body.position : Vector3.zero;
 
@@ -170,6 +173,57 @@ namespace Shinzui.Infrastructure.Services
             if (!IsAvailable) return;
             _agent.speed = _baseSpeed * Mathf.Max(0f, multiplier);
             if (IsReady) _agent.isStopped = stopped;
+        }
+
+        /// <summary>Agentの元の有効状態を保持して退避または復帰</summary>
+        /// <param name="backstage">退避するか</param>
+        public void SetBackstage(bool backstage)
+        {
+            if (_agent == null || IsBackstage == backstage) return;
+            if (backstage)
+            {
+                Stop();
+                _agentWasEnabled = _agent.enabled;
+                _agent.enabled = false;
+            }
+            else _agent.enabled = _agentWasEnabled;
+            IsBackstage = backstage;
+            _hasTarget = false;
+            _repathRemaining = 0f;
+        }
+
+        /// <summary>可視判定済みの点から位置をずらさずにWarpする</summary>
+        /// <param name="position">NavMesh上の検証済み位置</param>
+        /// <returns>配置に成功したか</returns>
+        public bool WarpTo(Vector3 position)
+        {
+            if (_agent == null || _body == null || !_body.gameObject.activeInHierarchy
+                || !NavMesh.SamplePosition(position, out NavMeshHit hit, .05f, Filter)
+                || (hit.position - position).sqrMagnitude > .0025f) return false;
+            Vector3 previous = Position;
+            bool enabled = _agent.enabled;
+            if (!enabled) { _body.position = hit.position; _agent.enabled = true; }
+            bool warped = _agent.isOnNavMesh && _agent.Warp(hit.position);
+            if (!warped) { _agent.enabled = enabled; _body.position = previous; }
+            else if (IsBackstage) _agent.enabled = false;
+            _hasTarget = false;
+            _repathRemaining = 0f;
+            return warped;
+        }
+
+        /// <summary>敵のAgent設定で完全経路の長さを測る</summary>
+        /// <param name="position">目標位置</param>
+        /// <returns>経路なしの場合はfloat.MaxValue</returns>
+        public float PathDistanceTo(Vector3 position)
+        {
+            if (!IsReady || !NavMesh.SamplePosition(position, out NavMeshHit hit, 2f, Filter)
+                || !NavMesh.CalculatePath(Position, hit.position, Filter, _path)
+                || _path.status != NavMeshPathStatus.PathComplete) return float.MaxValue;
+            int count = _path.GetCornersNonAlloc(_corners);
+            if (count == _corners.Length) return float.MaxValue;
+            float length = 0f;
+            for (int i = 1; i < count; i++) length += Vector3.Distance(_corners[i - 1], _corners[i]);
+            return length;
         }
 
         public void WarpZ(float z)

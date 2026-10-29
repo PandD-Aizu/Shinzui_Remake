@@ -28,6 +28,9 @@ namespace Shinzui.Presentation
         private readonly FlashlightUseCase _flashlight;
         private readonly NoiseEventHub _noiseHub;
         private readonly EnemyBrainSettings _brainSettings;
+        private readonly IEnemyEncounterFeedback _feedback;
+        private readonly Func<Vector3, bool> _visibility;
+        private readonly Func<int, Vector3, bool> _canReachExit;
         private readonly PlayerView _playerView;
         private readonly PlayerDeathView _deathView;
         private Vector3 _previousPlayerPosition;
@@ -52,6 +55,7 @@ namespace Shinzui.Presentation
         /// <param name="flashlight">光の状態</param>
         /// <param name="noiseHub">フレーム内の音</param>
         /// <param name="brainSettings">知覚設定</param>
+        /// <param name="feedback">敵の出現音通知</param>
         public EnemyPresenter(
             IPlayerTracker playerTracker,
             PlayerDeathUseCase playerDeathUseCase,
@@ -62,7 +66,7 @@ namespace Shinzui.Presentation
             EnemyDirectorSettings settings,
             PlayerMoveUseCase playerMove,
             PlayerView playerView,
-            PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings)
+            PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings, IEnemyEncounterFeedback feedback)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
@@ -77,6 +81,9 @@ namespace Shinzui.Presentation
             _flashlight = flashlight;
             _noiseHub = noiseHub;
             _brainSettings = brainSettings;
+            _feedback = feedback;
+            _visibility = IsPositionVisible;
+            _canReachExit = CanReachExit;
         }
 
         /// <summary>各敵に独立した知覚状態を作成</summary>
@@ -101,6 +108,7 @@ namespace Shinzui.Presentation
                     _playerDeathUseCase,
                     _settings,
                     _brainSettings,
+                    _feedback,
                     CapturePlayer);
                 controller.Initialize();
 
@@ -232,9 +240,27 @@ namespace Shinzui.Presentation
                 _enemyReports,
                 tunnelBounds.HasValue,
                 tunnelBounds.HasValue ? tunnelBounds.Value.start : Vector3.zero,
-                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero);
+                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero, isVisibleToPlayer: _visibility, canReachExit: _canReachExit);
 
             return _enemyDirectorUseCase.DecideDirectives(worldState, deltaTime);
+        }
+
+        /// <summary>対象の敵の経路を確認</summary>
+        /// <param name="id">敵の識別子</param>
+        /// <param name="position">退出候補</param>
+        /// <returns>到達可能か</returns>
+        private bool CanReachExit(int id, Vector3 position)
+            => id >= 0 && id < _controllers.Count && _controllers[id].CanReachExit(position);
+
+        /// <summary>どの敵の大きさでも見えてしまう候補を除外</summary>
+        /// <param name="position">出入り候補</param>
+        /// <returns>カメラ不明または候補が可視ならtrue</returns>
+        private bool IsPositionVisible(Vector3 position)
+        {
+            if (_controllers.Count == 0) return true;
+            foreach (var controller in _controllers)
+                if (controller.IsVisibleAt(position)) return true;
+            return false;
         }
 
         /// <summary>移動距離と足音間隔からノイズ半径を決定</summary>
@@ -335,6 +361,7 @@ namespace Shinzui.Presentation
 
             foreach (EnemyController controller in _controllers)
             {
+                if (controller.CurrentReport().IsBackstage) continue;
                 float sqrDistance = (controller.StrobeTargetPosition - position).sqrMagnitude;
                 if (sqrDistance > nearestSqrDistance)
                 {

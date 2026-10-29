@@ -1,6 +1,6 @@
 {
     "name": "Shinzui.EnemyDirector.PlayModeTests",
-    "references": ["ApplicationLayer", "InfrastructureLayer"],
+    "references": ["ApplicationLayer", "InfrastructureLayer", "ViewLayer"],
     "optionalUnityReferences": ["TestAssemblies"],
     "autoReferenced": false
 }

@@ -12,6 +12,10 @@ using Shinzui.Domain.Entities.Flashlight; // 【追加】
 using Shinzui.Domain.ValueObjects.Player;
 using Shinzui.Infrastructure.Repositories;
 using Shinzui.Infrastructure.Services;
+using Shinzui.Infrastructure.Enemy;
+using Shinzui.Presentation.GenerateTunnel;
+using Shinzui.View.GenerateTunnel;
+using Shinzui.DI.GenerateTunnel;
 using Shinzui.Presentation;
 using Shinzui.Presentation.Inventory;
 using Shinzui.Presentation.Flashlight;
@@ -60,6 +64,9 @@ namespace Shinzui.DI
         [Header("Enemy Director")]
         [SerializeField] private EnemyDirectorSettings enemyDirectorSettings = new();
 
+        [Header("Menace")]
+        [SerializeField] private MenaceSettings menaceSettings = new();
+
         [Header("Enemy Brain")]
         [SerializeField] private EnemyBrainSettings enemyBrainSettings = new();
 
@@ -96,6 +103,9 @@ namespace Shinzui.DI
             builder.RegisterInstance(enemyDirectorSettings);
             enemyBrainSettings ??= new EnemyBrainSettings();
             builder.RegisterInstance(enemyBrainSettings);
+            menaceSettings ??= new MenaceSettings();
+            builder.RegisterInstance(menaceSettings);
+            builder.Register<IEnemySearchPointProvider>(_ => CreateEnemySearchPointProvider(), Lifetime.Scoped);
             builder.Register<NoiseEventHub>(Lifetime.Scoped).As<INoiseEventSink>().AsSelf();
             builder.RegisterEntryPoint<EnemyNoisePresenter>();
             builder.Register<FMODEnemyEncounterFeedback>(Lifetime.Scoped).As<IEnemyEncounterFeedback>();
@@ -480,6 +490,34 @@ namespace Shinzui.DI
             image.preserveAspect = true;
             image.raycastTarget = false;
             return image;
+        }
+
+        /// <summary>生成スコープがないシーンでもNavMesh候補を使えるように接続</summary>
+        /// <returns>捜索と出入り地点のProvider</returns>
+        private IEnemySearchPointProvider CreateEnemySearchPointProvider()
+        {
+            GenerateTunnelLifetimeScope generation = null;
+            foreach (var scope in FindObjectsByType<GenerateTunnelLifetimeScope>(FindObjectsSortMode.None))
+                if (scope.gameObject.scene == gameObject.scene) { generation = scope; break; }
+            int agentType = UnityEngine.AI.NavMesh.GetSettingsCount() > 0
+                ? UnityEngine.AI.NavMesh.GetSettingsByIndex(0).agentTypeID : 0;
+            foreach (var enemy in FindObjectsByType<EnemyView>(FindObjectsSortMode.None))
+            {
+                if (enemy.gameObject.scene != gameObject.scene) continue;
+                var agent = enemy.ResolveAgent();
+                if (agent != null) { agentType = agent.agentTypeID; break; }
+            }
+
+            // マップ完成後や再生成後も最新のDTOとMapRoot変換を読む
+            return new NavMeshSearchPointProvider(
+                () => generation != null && generation.Container != null
+                    ? generation.Container.Resolve<GenerateTunnelPresenter>().CurrentMap : null,
+                () =>
+                {
+                    if (generation == null || generation.Container == null) return Matrix4x4.identity;
+                    var root = generation.Container.Resolve<TunnelMapView>().MapRootObject;
+                    return root != null ? root.transform.localToWorldMatrix : Matrix4x4.identity;
+                }, agentType);
         }
 
         private void RegisterEnemies(IContainerBuilder builder)

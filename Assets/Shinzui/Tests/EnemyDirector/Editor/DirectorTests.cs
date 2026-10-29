@@ -1,4 +1,6 @@
+using System;
 using NUnit.Framework;
+using Shinzui.Application.Interfaces.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases.Enemy;
@@ -13,13 +15,17 @@ namespace Shinzui.Tests.EnemyDirector
         private EnemyDirectorSettings _settings;
         private EnemyDirectorUseCase _director;
         private SoundSpy _sound;
+        private MenaceSettings _menace;
+        private bool _candidateVisible;
 
         /// <summary>各テストで統括状態を独立させる</summary>
         [SetUp] public void SetUp()
         {
             _settings = new EnemyDirectorSettings();
             _sound = new SoundSpy();
-            _director = new EnemyDirectorUseCase(_sound, _settings);
+            _menace = new MenaceSettings { backstageMinDuration = 20f, backstageMaxDuration = 20f };
+            _candidateVisible = false;
+            _director = new EnemyDirectorUseCase(_sound, _settings, _menace, new PointStub());
         }
         /// <summary>通知を解放</summary>
         [TearDown] public void TearDown() => _director.Dispose();
@@ -30,9 +36,11 @@ namespace Shinzui.Tests.EnemyDirector
         /// <param name="visible">プレイヤーに見えるか</param>
         /// <param name="active">動作可能か</param>
         /// <returns>報告</returns>
+        /// <param name="backstage">舞台裏にいるか</param>
+        /// <param name="pathDistance">経路長</param>
         private static EnemyReport Report(int id = 0, EnemyAwarenessLevel awareness = EnemyAwarenessLevel.Unaware,
-            bool visible = true, bool active = true)
-            => new(id, Vector3.forward * (id + 5f), default, active, visible, awareness);
+            bool visible = true, bool active = true, bool backstage = false, float pathDistance = -1f)
+            => new(id, Vector3.forward * (id + 5f), default, active, visible, awareness, backstage, pathDistance < 0f ? id + 5f : pathDistance);
 
         /// <summary>統括時間を進める</summary>
         /// <param name="dt">経過秒数</param>
@@ -40,7 +48,7 @@ namespace Shinzui.Tests.EnemyDirector
         /// <param name="reports">敵の報告</param>
         /// <returns>指示</returns>
         private DirectorDirective[] Step(float dt, Vector3 position, params EnemyReport[] reports)
-            => _director.DecideDirectives(new EnemyWorldState(position, reports, false, default, default), dt);
+            => _director.DecideDirectives(new EnemyWorldState(position, reports, false, default, default, isVisibleToPlayer: _ => _candidateVisible), dt);
 
         /// <summary>近いだけでは発見も直接追跡命令も生まれない</summary>
         [Test] public void ProximityOnlyProducesHints()
@@ -48,7 +56,7 @@ namespace Shinzui.Tests.EnemyDirector
             for (int i = 0; i < 30; i++)
             {
                 var type = Step(.5f, Vector3.zero, Report())[0].Type;
-                Assert.That(type == DirectorDirectiveType.None || type == DirectorDirectiveType.HintArea, Is.True);
+                Assert.That(type == DirectorDirectiveType.None || type == DirectorDirectiveType.HintArea || type == DirectorDirectiveType.GoBackstage, Is.True);
             }
             Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
             Assert.That(_sound.Count, Is.Zero);
@@ -74,6 +82,22 @@ namespace Shinzui.Tests.EnemyDirector
             var directives = Step(.1f, Vector3.zero, Report(1), Report(0));
             Assert.That(directives[0].Type, Is.EqualTo(DirectorDirectiveType.None));
             Assert.That(directives[1].Type, Is.EqualTo(DirectorDirectiveType.HintArea));
+            Step(.1f, Vector3.zero, Report(0, pathDistance: 10f), Report(1, pathDistance: 1f));
+            Assert.That(_director.FocusEnemyId, Is.EqualTo(0));
+            Step(20f, Vector3.zero, Report(0, pathDistance: 10f), Report(1, pathDistance: 1f));
+            Assert.That(_director.FocusEnemyId, Is.EqualTo(1));
+            Step(.1f, Vector3.zero, Report(0, awareness: EnemyAwarenessLevel.Engaged), Report(1));
+            Assert.That(_director.FocusEnemyId, Is.EqualTo(0));
+        }
+
+        /// <summary>通常の待ち時間より先に距離超過のヒントを出す</summary>
+        [Test] public void DistantFeaturedGetsHintAfterLeashTime()
+        {
+            _settings.ambientDuration = 1000f;
+            _menace.leashTime = 2f;
+            Assert.That(Step(1f, Vector3.right * 100f, Report())[0].Type, Is.EqualTo(DirectorDirectiveType.None));
+            Assert.That(Step(1f, Vector3.right * 100f, Report())[0].Type, Is.EqualTo(DirectorDirectiveType.HintArea));
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.BuildUp));
         }
 
         /// <summary>見えない追跡者では発見演出が発生せず、視認後に一度だけ鳴る</summary>
@@ -99,16 +123,26 @@ namespace Shinzui.Tests.EnemyDirector
             Assert.That(_director.FocusEnemyId, Is.EqualTo(-1));
         }
 
-        /// <summary>Pressure上限でも追跡はBrainに任せ、喪失後だけ休息へ移る</summary>
-        [Test] public void PressureDoesNotOverrideEngagement()
+        /// <summary>追跡後だけ退避し、最低時間と不可視条件を満たすまで復帰しない</summary>
+        [Test] public void MenaceRetreatWaitsForLostSightAndSafeEmergence()
         {
-            _settings.chasePressurePerSecond = 2f;
+            _menace.engagedPerSecond = 2f;
             var directives = Step(1f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged));
-            Assert.That(_director.Pressure, Is.EqualTo(1f));
+            Assert.That(_director.Menace, Is.EqualTo(1f));
             Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Hunt));
             Assert.That(directives[0].Type, Is.EqualTo(DirectorDirectiveType.None));
-            Step(.1f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Alerted));
+            directives = Step(.1f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Alerted));
+            Assert.That(directives[0].Type, Is.EqualTo(DirectorDirectiveType.GoBackstage));
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Search));
+
+            var hidden = Report(visible: false, backstage: true);
+            Assert.That(Step(19f, Vector3.zero, hidden)[0].Type, Is.EqualTo(DirectorDirectiveType.None));
             Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
+            Assert.That(_sound.BackstageMoves, Is.EqualTo(1));
+            _candidateVisible = true;
+            Assert.That(Step(1f, Vector3.zero, hidden)[0].Type, Is.EqualTo(DirectorDirectiveType.None));
+            _candidateVisible = false;
+            Assert.That(Step(2f, Vector3.zero, hidden)[0].Type, Is.EqualTo(DirectorDirectiveType.EmergeAt));
         }
 
         /// <summary>捜索を観測するだけで音源やプレイヤーの位置を命令しない</summary>
@@ -118,7 +152,7 @@ namespace Shinzui.Tests.EnemyDirector
             Assert.That(result[0].Type, Is.EqualTo(DirectorDirectiveType.None));
             Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Search));
             Step(.5f, Vector3.zero, Report());
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Ambient));
         }
 
         /// <summary>停止時間では統括状態と通知を進めない</summary>
@@ -134,14 +168,49 @@ namespace Shinzui.Tests.EnemyDirector
         {
             _settings.ambientDuration = float.NaN;
             _settings.hintCellSize = float.PositiveInfinity;
-            var hint = Step(12f, Vector3.zero, Report())[0];
+            var hint = Step(12f, Vector3.right * 100f, Report())[0];
             Assert.That(hint.Type, Is.EqualTo(DirectorDirectiveType.HintArea));
             Assert.That(float.IsNaN(hint.Position.x) || float.IsInfinity(hint.Position.x), Is.False);
+        }
+
+        /// <summary>可視判定をあえて行わずDirectorの再検証を確認するProvider</summary>
+        private sealed class PointStub : IEnemySearchPointProvider
+        {
+            /// <summary>固定の退出点を格納</summary>
+            /// <param name="from">現在位置</param>
+            /// <param name="buffer">格納先</param>
+            /// <returns>一点</returns>
+            public int GetExitPoints(Vector3 from, Span<Vector3> buffer) { buffer[0] = Vector3.left * 10f; return 1; }
+            /// <summary>捜索候補を格納</summary>
+            /// <param name="center">中心</param>
+            /// <param name="radius">範囲</param>
+            /// <param name="sideRooms">小部屋を含むか</param>
+            /// <param name="buffer">格納先</param>
+            /// <returns>一点</returns>
+            public int GetSearchPoints(Vector3 center, float radius, bool sideRooms, Span<Vector3> buffer)
+                => GetExitPoints(center, buffer);
+            /// <summary>視認判定を無視して固定候補を返す</summary>
+            /// <param name="player">プレイヤー位置</param>
+            /// <param name="min">最小距離</param>
+            /// <param name="max">最大距離</param>
+            /// <param name="upper">上階を含むか</param>
+            /// <param name="visible">視認判定</param>
+            /// <param name="point">候補</param>
+            /// <returns>true</returns>
+            public bool TryFindEmergePoint(Vector3 player, float min, float max, bool upper,
+                Func<Vector3, bool> visible, out Vector3 point) { point = Vector3.right * 20f; return true; }
         }
 
         private sealed class SoundSpy : IEnemyEncounterFeedback
         {
             public int Count;
+            public int BackstageMoves;
+            /// <summary>舞台裏音の通知を数える</summary>
+            /// <param name="position">音源位置</param>
+            public void OnEnemyBackstageMove(Vector3 position) => BackstageMoves++;
+            /// <summary>出現通知を受け取る</summary>
+            /// <param name="position">出現位置</param>
+            public void OnEnemyEmerge(Vector3 position) { }
             /// <summary>演出回数を記録</summary>
             public void OnPlayerFound() => Count++;
         }

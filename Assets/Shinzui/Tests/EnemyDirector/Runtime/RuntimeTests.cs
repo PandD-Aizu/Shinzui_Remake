@@ -2,7 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Shinzui.Application.DTOs.Enemy;
+using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Infrastructure.Services;
+using Shinzui.Infrastructure.Enemy;
+using Shinzui.View;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.TestTools;
@@ -116,6 +119,66 @@ namespace Shinzui.Tests.EnemyDirector
             Assert.That(_runtime.MoveTo(new Vector3(1000, 0, 1000)), Is.False);
             Assert.That(_agent.hasPath, Is.False);
         }
+        /// <summary>舞台裏ではAgentと表示、接触を無効化し、配置成功後だけ元の状態へ戻る</summary>
+        [Test] public void BackstageDisablesAndRestoresComponents()
+        {
+            var mesh = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            mesh.transform.SetParent(_enemy.transform, false);
+            var renderer = mesh.GetComponent<Renderer>();
+            var collider = mesh.GetComponent<Collider>();
+            var animator = mesh.AddComponent<Animator>();
+            animator.enabled = false;
+            var view = _enemy.AddComponent<EnemyView>();
+            view.PrepareBackstage();
+            var cameraObject = new GameObject("BackstageTestCamera");
+            cameraObject.transform.SetParent(_player.transform, false);
+            cameraObject.transform.position = new Vector3(0f, 1f, -5f);
+            var camera = cameraObject.AddComponent<Camera>();
+            Assert.That(view.IsVisibleAt(Vector3.zero, camera, _player.transform, -1), Is.True);
+            Assert.That(view.IsVisibleAt(Vector3.back * 10f, camera, _player.transform, -1), Is.False);
+            Assert.That(view.IsVisibleAt(Vector3.zero, null, _player.transform, -1), Is.True);
+            _runtime.SetBackstage(true);
+            view.SetBackstage(true);
+            Assert.That(_agent.enabled, Is.False);
+            Assert.That(renderer.enabled || collider.enabled || animator.enabled, Is.False);
+            view.enabled = false;
+            Assert.That(renderer.enabled || collider.enabled, Is.False);
+            view.enabled = true;
+            Assert.That(_runtime.HasClearContact(_player.transform.position, 2f), Is.False);
+            Assert.That(_runtime.WarpTo(Vector3.one * 1000f), Is.False);
+            Assert.That(_agent.enabled, Is.False);
+            Assert.That(NavMesh.SamplePosition(Vector3.forward * 10f, out NavMeshHit emergePoint, 1f, NavMesh.AllAreas), Is.True);
+            Assert.That(_runtime.WarpTo(emergePoint.position), Is.True);
+            Assert.That(_agent.enabled, Is.False);
+            _runtime.SetBackstage(false);
+            view.SetBackstage(false);
+            Assert.That(_runtime.IsReady, Is.True);
+            Assert.That(renderer.enabled && collider.enabled, Is.True);
+            Assert.That(animator.enabled, Is.False);
+            Assert.That(_runtime.PathDistanceTo(Vector3.zero), Is.EqualTo(10f).Within(.2f));
+        }
+
+        /// <summary>マップDTOがないシーンでも可視点と未接続点を出現候補から除外</summary>
+        [Test] public void EmergeProviderRejectsVisibleOrUnreachablePoints()
+        {
+            var provider = new NavMeshSearchPointProvider(agentTypeId: _agent.agentTypeID);
+            Assert.That(provider.TryFindEmergePoint(Vector3.zero, 5f, 15f, false, _ => true, out _), Is.False);
+            Assert.That(provider.TryFindEmergePoint(Vector3.zero, 5f, 15f, false, _ => false, out Vector3 point), Is.True);
+            Assert.That(Vector3.Distance(Vector3.zero, point), Is.InRange(5f, 15f));
+            Assert.That(_runtime.PathDistanceTo(point), Is.LessThan(float.MaxValue));
+            Assert.That(provider.TryFindEmergePoint(Vector3.one * 1000f, 5f, 15f, false, _ => false, out _), Is.False);
+
+            // マップの小部屋候補にはMapRootの変換を反映する
+            var map = new TunnelMapDto { SmallRooms = new[] { new SmallRoomDto { CenterX = 5f, CenterZ = 5f } } };
+            var generated = new NavMeshSearchPointProvider(() => map,
+                () => Matrix4x4.Translate(Vector3.right * 10f), _agent.agentTypeID);
+            var candidates = new Vector3[16];
+            int count = generated.GetSearchPoints(Vector3.zero, 20f, true, candidates);
+            bool hasRoom = false;
+            for (int i = 0; i < count; i++) hasRoom |= Vector3.Distance(candidates[i], new Vector3(15f, 0f, 5f)) < .2f;
+            Assert.That(hasRoom, Is.True);
+        }
+
         [UnityTest] public IEnumerator RuntimeRecoversAfterNavMeshBecomesAvailable()
         {
             _agent.enabled = false;

@@ -6,6 +6,8 @@ namespace Shinzui.Application.DTOs.Enemy
     /// <summary>敵自身の判断をDirectorが観測するための報告</summary>
     public readonly struct EnemyReport
     {
+        public float PathDistanceToPlayer { get; }
+        public bool CanAmbushFromAbove { get; }
         public int Id { get; }
         public Vector3 Position { get; }
         public EnemyIntent ActiveIntent { get; }
@@ -23,10 +25,14 @@ namespace Shinzui.Application.DTOs.Enemy
         /// <param name="isVisibleToPlayer">プレイヤーから視認できるか</param>
         /// <param name="awareness">警戒段階</param>
         /// <param name="isBackstage">舞台裏にいるか</param>
+        /// <param name="pathDistanceToPlayer">プレイヤーまでの経路長</param>
+        /// <param name="canAmbushFromAbove">上階からの出現が解放済みか</param>
         public EnemyReport(int id, Vector3 position, EnemyIntent activeIntent, bool canReceiveCommand,
             bool isVisibleToPlayer = false, EnemyAwarenessLevel awareness = EnemyAwarenessLevel.Unaware,
-            bool isBackstage = false)
+            bool isBackstage = false, float pathDistanceToPlayer = float.MaxValue, bool canAmbushFromAbove = false)
         {
+            PathDistanceToPlayer = pathDistanceToPlayer;
+            CanAmbushFromAbove = canAmbushFromAbove;
             Id = id;
             Position = position;
             ActiveIntent = activeIntent;

@@ -23,6 +23,11 @@ namespace Shinzui.Presentation
         private readonly EnemyBrain _brain;
         private EnemyBrainInput _input;
         private bool _visibleToPlayer;
+        private Camera _playerCamera;
+        private Transform _playerRoot;
+        private float _pathTimer;
+        private float _pathDistance = float.MaxValue;
+        private readonly IEnemyEncounterFeedback _feedback;
         private float _wanderTimer;
         private float _wanderInterval;
         private float _wanderRadius;
@@ -40,9 +45,10 @@ namespace Shinzui.Presentation
         /// <param name="death">死亡判定</param>
         /// <param name="settings">統括設定</param>
         /// <param name="brainSettings">知覚設定</param>
+        /// <param name="feedback">出現音の通知</param>
         /// <param name="capture">捕獲演出の開始処理</param>
         public EnemyController(int id, EnemyView view, IEnemyRuntime runtime, EnemyMoveUseCase movement,
-            PlayerDeathUseCase death, EnemyDirectorSettings settings, EnemyBrainSettings brainSettings, System.Func<EnemyView, bool> capture = null)
+            PlayerDeathUseCase death, EnemyDirectorSettings settings, EnemyBrainSettings brainSettings, IEnemyEncounterFeedback feedback, System.Func<EnemyView, bool> capture = null)
         {
             Id = id;
             _view = view;
@@ -54,6 +60,7 @@ namespace Shinzui.Presentation
             _brainSettings = brainSettings;
             _brain = new EnemyBrain(brainSettings, settings, id + 1);
             _capture = capture;
+            _feedback = feedback;
         }
 
         public int Id { get; }
@@ -63,6 +70,7 @@ namespace Shinzui.Presentation
         {
             (_wanderInterval, _wanderRadius, _) = _movement.GetWanderingInfo();
             _view.SetGizmoChaseDistance(_settings.sightDistance);
+            _view.PrepareBackstage();
         }
 
         /// <summary>敵の索敵状態とプレイヤーからの視認状態を報告</summary>
@@ -80,6 +88,14 @@ namespace Shinzui.Presentation
             PlayerSignature signature, IReadOnlyList<NoiseEvent> noises)
         {
             _runtime.Tick(deltaTime);
+            _playerCamera = playerCamera;
+            _playerRoot = playerRoot;
+            _pathTimer -= deltaTime;
+            if (_pathTimer <= 0f && !_runtime.IsBackstage)
+            {
+                _pathDistance = _runtime.PathDistanceTo(playerPosition);
+                _pathTimer = .5f;
+            }
             _strobeRemaining = Mathf.Max(0f, _strobeRemaining - deltaTime);
             _deathTimer = Mathf.Max(0f, _deathTimer - deltaTime);
             if (_strobeRemaining <= 0f) { _strobeStops = false; _strobeMultiplier = 1f; }
@@ -104,16 +120,17 @@ namespace Shinzui.Presentation
                 }
             }
             // Brainへは視覚サンプルと聞こえた音だけを渡す
+            bool visibleForTransition = IsVisibleAt(_runtime.Position);
             _input = new EnemyBrainInput(_runtime.Position, sight, signature, totalNoiseGain, heardNoise,
-                _runtime.IsReady, _strobeStops);
-            _visibleToPlayer = _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers);
+                _runtime.IsReady, _strobeStops, _runtime.IsBackstage, visibleForTransition);
+            _visibleToPlayer = !_runtime.IsBackstage && _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers);
             return CurrentReport();
         }
 
         /// <summary>行動決定後の状態を演出へ渡す</summary>
         /// <returns>最新のBrain報告</returns>
         public EnemyReport CurrentReport()
-            => _brain.CreateReport(Id, _runtime.Position, _runtime.IsReady && !_strobeStops, _visibleToPlayer);
+            => _brain.CreateReport(Id, _runtime.Position, (_runtime.IsReady && !_strobeStops) || _runtime.IsBackstage, _visibleToPlayer, _pathDistance);
 
         /// <summary>
         /// 接近による死亡判定とBrainの移動意図を処理
@@ -124,8 +141,45 @@ namespace Shinzui.Presentation
         /// <param name="directive">統括AIのヒント</param>
         public void Tick(float deltaTime, IPlayerTracker player, float playerHeight, DirectorDirective directive)
         {
-            if (player == null || _view == null || !_runtime.IsAvailable) return;
+            if (player == null || _view == null || (!_runtime.IsAvailable && !_runtime.IsBackstage)) return;
             EnemyIntent intent = _brain.Tick(_input, directive, deltaTime);
+            // 移動用の原点ではなく体の中心から接近距離を測定
+            if (!_runtime.IsBackstage && _runtime.IsReady && !_strobeStops && _death != null && _deathTimer <= 0f &&
+                Vector3.Distance(_view.PlayerDeathPosition, player.PlayerPosition) <= _view.PlayerDeathDistance &&
+                _runtime.HasClearContact(player.PlayerPosition, playerHeight))
+            {
+                bool killed = _capture != null ? _capture(_view) : _death.TryKillPlayer();
+                _deathTimer = Mathf.Max(.1f, _view.DeathAttemptCooldown);
+                if (killed) return;
+            }
+
+            // 表示と接触を切り替える直前に再確認し、見えている間は切り替えない
+            if (intent.Type == EnemyIntentType.Hidden)
+            {
+                if (!_runtime.IsBackstage && !IsVisibleAt(_runtime.Position))
+                {
+                    _runtime.SetBackstage(true);
+                    _view.SetBackstage(true);
+                    _brain.ConfirmBackstage();
+                }
+                return;
+            }
+            if (intent.Type == EnemyIntentType.Emerge)
+            {
+                if (_runtime.IsBackstage && !IsVisibleAt(intent.Target) && _runtime.WarpTo(intent.Target)
+                    && !IsVisibleAt(_runtime.Position))
+                {
+                    _runtime.SetBackstage(false);
+                    // Agent固有の経路でもプレイヤーと接続されていることを確認する
+                    if (!_runtime.IsReady || _runtime.PathDistanceTo(player.PlayerPosition) == float.MaxValue)
+                    { _runtime.SetBackstage(true); return; }
+                    _view.SetBackstage(false);
+                    _brain.ConfirmEmerged(directive.SearchHint);
+                    _feedback?.OnEnemyEmerge(_runtime.Position);
+                    _pathTimer = 0f;
+                }
+                return;
+            }
             bool changed = intent.Type != _currentIntent.Type;
             _currentIntent = intent;
             bool stopped = intent.Type == EnemyIntentType.Idle || intent.Type == EnemyIntentType.LookAround;
@@ -135,16 +189,6 @@ namespace Shinzui.Presentation
                 _humanMotion.SetChasePose(intent.Type == EnemyIntentType.Chase && !_strobeStops && _runtime.IsReady,
                     intent.Target + Vector3.up * playerHeight * .35f);
             if (_strobeStops || !_runtime.IsReady) return;
-
-            // 移動用の原点ではなく体の中心から接近距離を測定
-            if (_death != null && _deathTimer <= 0f &&
-                Vector3.Distance(_view.PlayerDeathPosition, player.PlayerPosition) <= _view.PlayerDeathDistance &&
-                _runtime.HasClearContact(player.PlayerPosition, playerHeight))
-            {
-                bool killed = _capture != null ? _capture(_view) : _death.TryKillPlayer();
-                _deathTimer = Mathf.Max(.1f, _view.DeathAttemptCooldown);
-                if (killed) return;
-            }
 
             switch (intent.Type)
             {
@@ -166,6 +210,7 @@ namespace Shinzui.Presentation
                     _runtime.Stop();
                     _runtime.FaceTowards(intent.Target);
                     break;
+                case EnemyIntentType.GoBackstage:
                 case EnemyIntentType.MoveTo:
                 case EnemyIntentType.Chase:
                     _movement.StartChasing();
@@ -188,6 +233,17 @@ namespace Shinzui.Presentation
                 else if (_runtime.Position.z < tunnel.Value.start.z) _runtime.WarpZ(tunnel.Value.end.z);
             }
         }
+
+        /// <summary>実位置と候補位置の保守的な視認判定</summary>
+        /// <param name="position">判定する位置</param>
+        /// <returns>一部でも見えるか、カメラが不明ならtrue</returns>
+        public bool IsVisibleAt(Vector3 position)
+            => _view.IsVisibleAt(position, _playerCamera, _playerRoot, _settings.sightBlockingLayers);
+
+        /// <summary>退出点がこの敵のAgentでも到達可能か確認</summary>
+        /// <param name="position">退出候補</param>
+        /// <returns>完全経路があるか</returns>
+        public bool CanReachExit(Vector3 position) => _runtime.PathDistanceTo(position) < float.MaxValue;
 
         public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration)
         {

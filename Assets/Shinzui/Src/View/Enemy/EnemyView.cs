@@ -18,15 +18,24 @@ namespace Shinzui.View
         [SerializeField] private NavMeshAgent agentOverride;
 
         private float _gizmoChaseDistance = -1.0f;
+        private readonly Plane[] _visibilityPlanes = new Plane[6];
         private readonly RaycastHit[] _visibilityHits = new RaycastHit[32];
         private readonly List<(Renderer renderer, Material[] originals, bool visible)> _fadeRenderers = new();
         private readonly List<(Material material, Color color, float opacity)> _fadeMaterials = new();
         private Coroutine _fadeCoroutine;
+        private Renderer[] _backstageRenderers;
+        private Collider[] _backstageColliders;
+        private Animator[] _backstageAnimators;
+        private bool[] _rendererEnabled;
+        private bool[] _colliderEnabled;
+        private bool[] _animatorEnabled;
+        private Transform _body;
+        public bool IsBackstage { get; private set; }
 
         /// <summary>捕獲演出に映り込まないよう実時間でフェードアウト</summary>
         public void FadeOut()
         {
-            if (!isActiveAndEnabled || _fadeRenderers.Count > 0) return;
+            if (IsBackstage || !isActiveAndEnabled || _fadeRenderers.Count > 0) return;
 
             // 共有マテリアルを変更せず、敵本体の描画だけを複製して操作
             var agent = ResolveAgent();
@@ -97,12 +106,98 @@ namespace Shinzui.View
             {
                 if (entry.renderer == null) continue;
                 entry.renderer.sharedMaterials = entry.originals;
-                entry.renderer.enabled = entry.visible;
+                entry.renderer.enabled = !IsBackstage && entry.visible;
             }
 
             foreach (var entry in _fadeMaterials) Destroy(entry.material);
             _fadeRenderers.Clear();
             _fadeMaterials.Clear();
+        }
+
+        /// <summary>敵本体のコンポーネントを初期化時に収集</summary>
+        public void PrepareBackstage()
+        {
+            if (_backstageRenderers != null) return;
+            var agent = ResolveAgent();
+            _body = agent != null && transform.IsChildOf(agent.transform) ? agent.transform : transform;
+            _backstageRenderers = _body.GetComponentsInChildren<Renderer>(true);
+            _backstageColliders = _body.GetComponentsInChildren<Collider>(true);
+            _backstageAnimators = _body.GetComponentsInChildren<Animator>(true);
+            _rendererEnabled = new bool[_backstageRenderers.Length];
+            _colliderEnabled = new bool[_backstageColliders.Length];
+            _animatorEnabled = new bool[_backstageAnimators.Length];
+        }
+
+        /// <summary>元から無効な部品を有効化せず描画、接触、アニメーションを切り替える</summary>
+        /// <param name="backstage">退避するか</param>
+        public void SetBackstage(bool backstage)
+        {
+            if (IsBackstage == backstage) return;
+            PrepareBackstage();
+            IsBackstage = backstage;
+            for (int i = 0; i < _backstageRenderers.Length; i++)
+            {
+                if (_backstageRenderers[i] == null) continue;
+                if (backstage) _rendererEnabled[i] = _backstageRenderers[i].enabled;
+                _backstageRenderers[i].enabled = !backstage && _rendererEnabled[i];
+            }
+            for (int i = 0; i < _backstageColliders.Length; i++)
+            {
+                if (_backstageColliders[i] == null) continue;
+                if (backstage) _colliderEnabled[i] = _backstageColliders[i].enabled;
+                _backstageColliders[i].enabled = !backstage && _colliderEnabled[i];
+            }
+            for (int i = 0; i < _backstageAnimators.Length; i++)
+            {
+                if (_backstageAnimators[i] == null) continue;
+                if (backstage) _animatorEnabled[i] = _backstageAnimators[i].enabled;
+                _backstageAnimators[i].enabled = !backstage && _animatorEnabled[i];
+            }
+        }
+
+        /// <summary>出入り前に敵全体の範囲を仮の位置へ移して視認を確認</summary>
+        /// <param name="position">候補位置</param>
+        /// <param name="camera">プレイヤーカメラ</param>
+        /// <param name="playerRoot">プレイヤー本体</param>
+        /// <param name="blockingLayers">遮蔽レイヤー</param>
+        /// <returns>カメラ不明、または敵の一部が見える場合はtrue</returns>
+        public bool IsVisibleAt(Vector3 position, Camera camera, Transform playerRoot, LayerMask blockingLayers)
+        {
+            if (camera == null || !camera.isActiveAndEnabled) return true;
+            PrepareBackstage();
+            var agent = ResolveAgent();
+            float height = agent != null ? agent.height : 2f;
+            Bounds bounds = new(_body.position + Vector3.up * height * .5f, new Vector3(1f, height, 1f));
+            for (int i = 0; i < _backstageRenderers.Length; i++)
+                if (_backstageRenderers[i] != null) bounds.Encapsulate(_backstageRenderers[i].bounds);
+            bounds.center += position - EnemyPosition;
+            GeometryUtility.CalculateFrustumPlanes(camera, _visibilityPlanes);
+            if (!GeometryUtility.TestPlanesAABB(_visibilityPlanes, bounds)) return false;
+            if (bounds.Contains(camera.transform.position)) return true;
+            bool hasProjectedPoint = IsInsideViewport(bounds.center, camera);
+            Vector3 head = bounds.center + Vector3.up * bounds.extents.y * .8f;
+            hasProjectedPoint |= IsInsideViewport(head, camera);
+            if (IsPointVisible(head, camera, _body, playerRoot, blockingLayers)) return true;
+            if (IsPointVisible(bounds.center, camera, _body, playerRoot, blockingLayers)) return true;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = bounds.center + Vector3.Scale(bounds.extents,
+                    new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                hasProjectedPoint |= IsInsideViewport(corner, camera);
+                if (IsPointVisible(corner, camera, _body, playerRoot, blockingLayers)) return true;
+            }
+            // 画面端と交差する大きな敵で代表点が全て画面外なら安全側へ倒す
+            return !hasProjectedPoint;
+        }
+
+        /// <summary>候補点がカメラの描画範囲内にあるか確認</summary>
+        /// <param name="point">対象位置</param>
+        /// <param name="camera">プレイヤーカメラ</param>
+        /// <returns>画面内か</returns>
+        private static bool IsInsideViewport(Vector3 point, Camera camera)
+        {
+            Vector3 p = camera.WorldToViewportPoint(point);
+            return p.z >= camera.nearClipPlane && p.z <= camera.farClipPlane && p.x >= 0f && p.x <= 1f && p.y >= 0f && p.y <= 1f;
         }
 
         public float PlayerDeathDistance => playerDeathDistance;
