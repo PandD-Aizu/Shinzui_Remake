@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Shinzui.Application.AI.Enemy
 {
     /// <summary>視覚、聴覚、ぼかしたヒントだけで行動を選ぶ敵一体の脳</summary>
-    public sealed class EnemyBrain
+    public sealed partial class EnemyBrain
     {
         private readonly EnemyBrainSettings _settings;
         private readonly EnemyDirectorSettings _directorSettings;
@@ -47,11 +47,16 @@ namespace Shinzui.Application.AI.Enemy
         /// <param name="settings">知覚と行動の設定</param>
         /// <param name="directorSettings">視野と巡回速度の設定</param>
         /// <param name="seed">敵ごとの巡回用乱数種</param>
-        public EnemyBrain(EnemyBrainSettings settings, EnemyDirectorSettings directorSettings, int seed = 1)
+        /// <param name="tactics">共有する戦術の記録先</param>
+        /// <param name="points">捜索点の取得先</param>
+        public EnemyBrain(EnemyBrainSettings settings, EnemyDirectorSettings directorSettings, int seed = 1,
+            PlayerTacticTracker tactics = null, Shinzui.Application.Interfaces.Enemy.IEnemySearchPointProvider points = null)
         {
             _settings = settings;
             _directorSettings = directorSettings;
             _perception = new EnemyPerception(settings);
+            _tactics = tactics;
+            _points = points;
             _random = (uint)seed + 1u;
             _tree = EnemyBrainTreeFactory.Create(this);
         }
@@ -73,6 +78,7 @@ namespace Shinzui.Application.AI.Enemy
             bool sensesEnabled = input.IsReady && !input.IsStunned && !input.IsBackstage;
             SightSample sight = sensesEnabled ? input.Sight : default;
             float noise = sensesEnabled ? input.NoiseGain : 0f;
+            ObserveSightLoss(sight, sensesEnabled);
             _perception.Update(sight, input.PlayerSignature, _directorSettings.sightDistance,
                 _directorSettings.fieldOfView, noise, deltaTime);
 
@@ -84,6 +90,8 @@ namespace Shinzui.Application.AI.Enemy
                 Blackboard.LastSeenTime = _time;
                 Blackboard.InvestigateTarget = sight.SeenPosition;
                 Blackboard.HasClue = true;
+                _impactClue = false;
+                _backtrackPending = false;
                 if (_perception.Level == EnemyAwarenessLevel.Engaged) _confirmed = true;
             }
             else if (_time - Blackboard.LastSeenTime >= Positive(_settings.chaseGraceTime, 1.5f))
@@ -95,6 +103,8 @@ namespace Shinzui.Application.AI.Enemy
                 Blackboard.LastHeardNoise = input.HeardNoise;
                 Blackboard.InvestigateTarget = input.HeardNoise.Position;
                 Blackboard.HasClue = true;
+                _impactClue = input.HeardNoise.Kind == NoiseKind.Impact;
+                _backtrackPending = false;
             }
 
             _intent = new EnemyIntent(EnemyIntentType.Idle);
@@ -116,6 +126,7 @@ namespace Shinzui.Application.AI.Enemy
         /// <summary>物理層で退避が成功したことを反映</summary>
         public void ConfirmBackstage()
         {
+            _backtrackPending = false;
             Blackboard.IsBackstage = true;
             _confirmed = false;
             FinishClue();
@@ -126,6 +137,7 @@ namespace Shinzui.Application.AI.Enemy
         /// <param name="hint">Directorがぼかした捜索位置</param>
         public void ConfirmEmerged(Vector3 hint)
         {
+            _backtrackPending = false;
             Blackboard.IsBackstage = false;
             _confirmed = false;
             FinishClue();
@@ -199,16 +211,25 @@ namespace Shinzui.Application.AI.Enemy
         {
             if (!_searching)
             {
+                if (_cornerPending) _tactics?.Record(PlayerTacticKind.BrokeSightAtCorner);
+                _cornerPending = false;
                 _searching = true;
                 _investigating = false;
-                for (int i = 0; i < Blackboard.SearchPoints.Length; i++)
+                _searchOrigin = Blackboard.InvestigateTarget;
+                _searchPointCount = _points?.GetSearchPoints(_searchOrigin, Positive(_settings.searchRadius, 7f),
+                    HasBehavior(EnemyBehaviorFlags.SearchSideRooms), Blackboard.SearchPoints) ?? 0;
+                if (_searchPointCount == 0)
                 {
-                    float angle = i * 2.399963f;
-                    float radius = Positive(_settings.searchRadius, 7f) * (i + 1) / Blackboard.SearchPoints.Length;
-                    Blackboard.SearchPoints[i] = Blackboard.InvestigateTarget + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+                    _searchPointCount = Blackboard.SearchPoints.Length;
+                    for (int i = 0; i < _searchPointCount; i++)
+                    {
+                        float angle = i * 2.399963f;
+                        float radius = Positive(_settings.searchRadius, 7f) * (i + 1) / _searchPointCount;
+                        Blackboard.SearchPoints[i] = _searchOrigin + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+                    }
                 }
             }
-            return Move(Blackboard.InvestigateTarget, Positive(_settings.searchSpeedMultiplier, .8f), dt, ref _searchMoveTime);
+            return Move(Blackboard.InvestigateTarget, SearchSpeed, dt, ref _searchMoveTime);
         }
 
         /// <summary>捜索地点で周囲を見回す</summary>
@@ -225,7 +246,7 @@ namespace Shinzui.Application.AI.Enemy
             if (!_patrolLooking)
             {
                 _patrolTime += dt;
-                _intent = new EnemyIntent(EnemyIntentType.MoveTo, target, Positive(_settings.searchSpeedMultiplier, .8f));
+                _intent = new EnemyIntent(EnemyIntentType.MoveTo, target, SearchSpeed);
                 if (Arrived(target) || _patrolTime >= Positive(_settings.moveTimeout, 6f)) _patrolLooking = true;
             }
             else
@@ -234,7 +255,7 @@ namespace Shinzui.Application.AI.Enemy
                 SetLook(_patrolLookTime);
                 if (_patrolLookTime >= Positive(_settings.lookAroundDuration, 2f))
                 {
-                    _pointIndex = (_pointIndex + 1) % Blackboard.SearchPoints.Length;
+                    _pointIndex = (_pointIndex + 1) % _searchPointCount;
                     _patrolTime = _patrolLookTime = 0f;
                     _patrolLooking = false;
                 }
@@ -247,6 +268,7 @@ namespace Shinzui.Application.AI.Enemy
         /// <returns>向き直り完了でSuccess</returns>
         internal BtStatus TurnToClue(float dt)
         {
+            if (!_investigating && _impactClue) _tactics?.RecordDecoy(Blackboard.LastHeardNoise);
             _investigating = true;
             _turnTime += dt;
             _intent = new EnemyIntent(EnemyIntentType.LookAround, Blackboard.InvestigateTarget);
@@ -338,7 +360,14 @@ namespace Shinzui.Application.AI.Enemy
             <= Mathf.Pow(Positive(_settings.arrivalDistance, 1f), 2f);
 
         /// <summary>調査と捜索を終了</summary>
-        internal void FinishClue() { Blackboard.HasClue = false; _searching = false; _investigating = false; }
+        internal void FinishClue()
+        {
+            Blackboard.HasClue = false;
+            _searching = false;
+            _investigating = false;
+            _impactClue = false;
+            _cornerPending = false;
+        }
         /// <summary>捜索開始の移動時間を破棄</summary>
         internal void ResetSearchMove() => _searchMoveTime = 0f;
         /// <summary>捜索開始の見回し時間を破棄</summary>
@@ -350,7 +379,7 @@ namespace Shinzui.Application.AI.Enemy
         /// <summary>向き直りの経過時間を破棄</summary>
         internal void ResetTurn() => _turnTime = 0f;
         /// <summary>捜索点の巡回を初期化</summary>
-        internal void ResetPatrol() { _pointIndex = 0; _patrolTime = _patrolLookTime = 0f; _patrolLooking = false; }
+        internal void ResetPatrol() { _pointIndex = 0; _patrolTime = _patrolLookTime = _stalkTime = 0f; _patrolLooking = false; }
         /// <summary>割り込まれたヒント巡回を解除</summary>
         internal void ResetHint() => _hasHint = false;
         /// <summary>無効な設定値を既定値に置換</summary>

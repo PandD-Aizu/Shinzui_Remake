@@ -3,6 +3,8 @@ using Shinzui.Application.UseCases.Enemy;
 using Shinzui.Application.AI.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
+using Shinzui.Application.Interfaces.Enemy;
+using Shinzui.Domain.ValueObjects.Enemy;
 using Shinzui.Application.UseCases;
 using Shinzui.View;
 using UnityEngine;
@@ -36,6 +38,10 @@ namespace Shinzui.Presentation
         private float _strobeMultiplier = 1f;
         private bool _strobeStops;
         private EnemyIntent _currentIntent;
+        private readonly PlayerTacticTracker _tactics;
+        private Vector3 _strobeSource;
+        private bool _investigateAfterStrobe;
+        private float _debugTimer;
 
         /// <summary>敵一体の知覚と移動を初期化</summary>
         /// <param name="id">敵の識別子</param>
@@ -47,8 +53,11 @@ namespace Shinzui.Presentation
         /// <param name="brainSettings">知覚設定</param>
         /// <param name="feedback">出現音の通知</param>
         /// <param name="capture">捕獲演出の開始処理</param>
+        /// <param name="tactics">共有する学習状態</param>
+        /// <param name="points">捜索候補の取得先</param>
         public EnemyController(int id, EnemyView view, IEnemyRuntime runtime, EnemyMoveUseCase movement,
-            PlayerDeathUseCase death, EnemyDirectorSettings settings, EnemyBrainSettings brainSettings, IEnemyEncounterFeedback feedback, System.Func<EnemyView, bool> capture = null)
+            PlayerDeathUseCase death, EnemyDirectorSettings settings, EnemyBrainSettings brainSettings, IEnemyEncounterFeedback feedback,
+            System.Func<EnemyView, bool> capture = null, PlayerTacticTracker tactics = null, IEnemySearchPointProvider points = null)
         {
             Id = id;
             _view = view;
@@ -58,7 +67,8 @@ namespace Shinzui.Presentation
             _death = death;
             _settings = settings;
             _brainSettings = brainSettings;
-            _brain = new EnemyBrain(brainSettings, settings, id + 1);
+            _tactics = tactics;
+            _brain = new EnemyBrain(brainSettings, settings, id + 1, tactics, points);
             _capture = capture;
             _feedback = feedback;
         }
@@ -88,6 +98,7 @@ namespace Shinzui.Presentation
             PlayerSignature signature, IReadOnlyList<NoiseEvent> noises)
         {
             _runtime.Tick(deltaTime);
+            if (_tactics != null) _brain.Blackboard.Unlocked = _tactics.State.Unlocked;
             _playerCamera = playerCamera;
             _playerRoot = playerRoot;
             _pathTimer -= deltaTime;
@@ -98,7 +109,13 @@ namespace Shinzui.Presentation
             }
             _strobeRemaining = Mathf.Max(0f, _strobeRemaining - deltaTime);
             _deathTimer = Mathf.Max(0f, _deathTimer - deltaTime);
-            if (_strobeRemaining <= 0f) { _strobeStops = false; _strobeMultiplier = 1f; }
+            if (_strobeRemaining <= 0f)
+            {
+                _strobeStops = false;
+                _strobeMultiplier = 1f;
+                if (_investigateAfterStrobe) _brain.InvestigateStrobe(_strobeSource);
+                _investigateAfterStrobe = false;
+            }
             bool ready = _runtime.IsReady && !_strobeStops;
             SightSample sight = ready ? _runtime.SampleSight(playerPosition, playerHeight, playerVelocity) : default;
             // 聴覚は遮蔽を反映し、最も強い刺激だけを調査対象にする
@@ -111,8 +128,9 @@ namespace Shinzui.Presentation
                 {
                     NoiseEvent noise = noises[i];
                     float distance = Vector3.Distance(_runtime.Position, noise.Position);
-                    if (distance >= noise.Radius) continue;
-                    float gain = EnemyPerception.NoiseGain(noise, distance, _runtime.HasLineTo(noise.Position), _brainSettings);
+                    if (distance >= noise.Radius * (_brain.HasBehavior(EnemyBehaviorFlags.SlowStalk) ? 1.3f : 1f)) continue;
+                    float gain = EnemyPerception.NoiseGain(noise, distance, _runtime.HasLineTo(noise.Position), _brainSettings,
+                        _brain.Blackboard.Unlocked);
                     totalNoiseGain += gain;
                     if (gain <= strongest) continue;
                     strongest = gain;
@@ -143,6 +161,15 @@ namespace Shinzui.Presentation
         {
             if (player == null || _view == null || (!_runtime.IsAvailable && !_runtime.IsBackstage)) return;
             EnemyIntent intent = _brain.Tick(_input, directive, deltaTime);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _debugTimer -= deltaTime;
+            if (_debugTimer <= 0f)
+            {
+                _debugTimer = .5f;
+                _view.SetLearningDebug(_brain.ActivePath, _brain.Blackboard.Unlocked.ToString(),
+                    _tactics == null ? "" : $"Sneak:{_tactics.State.Count(PlayerTacticKind.SneakNearEnemy)} Decoy:{_tactics.State.Count(PlayerTacticKind.DecoyThrow)} Strobe:{_tactics.State.Count(PlayerTacticKind.StrobeHitEnemy)} Escape:{_tactics.State.Count(PlayerTacticKind.EscapedSearch)} Corner:{_tactics.State.Count(PlayerTacticKind.BrokeSightAtCorner)} Cooldown:{_tactics.State.CooldownRemaining:F1}");
+            }
+#endif
             // 移動用の原点ではなく体の中心から接近距離を測定
             if (!_runtime.IsBackstage && _runtime.IsReady && !_strobeStops && _death != null && _deathTimer <= 0f &&
                 Vector3.Distance(_view.PlayerDeathPosition, player.PlayerPosition) <= _view.PlayerDeathDistance &&
@@ -245,9 +272,21 @@ namespace Shinzui.Presentation
         /// <returns>完全経路があるか</returns>
         public bool CanReachExit(Vector3 position) => _runtime.PathDistanceTo(position) < float.MaxValue;
 
-        public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration)
+        /// <summary>命中を記録し、耐性解放後は停止時間と解除後の調査を変える</summary>
+        /// <param name="stopMovement">移動を止めるか</param>
+        /// <param name="speedMultiplier">減速倍率</param>
+        /// <param name="duration">効果時間</param>
+        /// <param name="source">命中時の光源位置</param>
+        public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration, Vector3 source)
         {
             if (!_runtime.IsAvailable || duration <= 0f) return;
+            _tactics?.Record(PlayerTacticKind.StrobeHitEnemy);
+            duration = _brain.StrobeDuration(duration, stopMovement);
+            if (_brain.HasBehavior(EnemyBehaviorFlags.StrobeResistance))
+            {
+                _strobeSource = source;
+                _investigateAfterStrobe = true;
+            }
             if (!stopMovement && _strobeStops) return;
             _strobeStops |= stopMovement;
             _strobeMultiplier = Mathf.Min(_strobeMultiplier, Mathf.Clamp01(speedMultiplier));

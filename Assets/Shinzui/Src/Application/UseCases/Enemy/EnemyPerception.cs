@@ -1,6 +1,7 @@
 using Shinzui.Application.DTOs.Enemy;
 using UnityEngine;
 using Shinzui.Domain.Entities.Enemy;
+using Shinzui.Domain.ValueObjects.Enemy;
 
 namespace Shinzui.Application.UseCases.Enemy
 {
@@ -70,11 +71,15 @@ namespace Shinzui.Application.UseCases.Enemy
         /// <param name="distance">音源までの距離</param>
         /// <param name="hasLine">遮蔽がないか</param>
         /// <param name="settings">知覚設定</param>
+        /// <param name="behaviors">解放された知覚補正</param>
         /// <returns>疑いの増分</returns>
-        public static float NoiseGain(NoiseEvent noise, float distance, bool hasLine, EnemyBrainSettings settings)
+        public static float NoiseGain(NoiseEvent noise, float distance, bool hasLine, EnemyBrainSettings settings,
+            EnemyBehaviorFlags behaviors = EnemyBehaviorFlags.None)
         {
-            float radius = noise.Radius * (hasLine ? 1f : .6f);
-            return radius > 0f ? EnemyDirectorSettings.Positive(settings.noiseBase, .6f) * Mathf.Clamp01(1f - distance / radius) : 0f;
+            float radius = noise.Radius * (hasLine ? 1f : .6f)
+                * ((behaviors & EnemyBehaviorFlags.SlowStalk) != 0 ? 1.3f : 1f);
+            float gain = radius > 0f ? EnemyDirectorSettings.Positive(settings.noiseBase, .6f) * Mathf.Clamp01(1f - distance / radius) : 0f;
+            return noise.Kind == NoiseKind.Impact && (behaviors & EnemyBehaviorFlags.DecoyWariness) != 0 ? gain * .5f : gain;
         }
     }
 }

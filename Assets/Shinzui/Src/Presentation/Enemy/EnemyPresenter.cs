@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Shinzui.Application.Interfaces;
+using Shinzui.Application.Interfaces.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.UseCases;
 using Shinzui.Application.UseCases.Enemy;
@@ -40,6 +41,9 @@ namespace Shinzui.Presentation
         private readonly List<EnemyController> _controllers = new();
         private readonly Dictionary<EnemyView, EnemyController> _controllersByView = new();
         private EnemyReport[] _enemyReports = Array.Empty<EnemyReport>();
+        private readonly PlayerTacticTracker _tactics;
+        private readonly IEnemySearchPointProvider _points;
+        private IEnemyStageProgress _stageProgress;
 
         /// <summary>敵の知覚と統括AIをプレイヤー状態へ接続</summary>
         /// <param name="playerTracker">プレイヤーの位置</param>
@@ -56,6 +60,8 @@ namespace Shinzui.Presentation
         /// <param name="noiseHub">フレーム内の音</param>
         /// <param name="brainSettings">知覚設定</param>
         /// <param name="feedback">敵の出現音通知</param>
+        /// <param name="tactics">全敵で共有する学習</param>
+        /// <param name="points">捜索点の取得</param>
         public EnemyPresenter(
             IPlayerTracker playerTracker,
             PlayerDeathUseCase playerDeathUseCase,
@@ -66,7 +72,8 @@ namespace Shinzui.Presentation
             EnemyDirectorSettings settings,
             PlayerMoveUseCase playerMove,
             PlayerView playerView,
-            PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings, IEnemyEncounterFeedback feedback)
+            PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings,
+            IEnemyEncounterFeedback feedback, PlayerTacticTracker tactics, IEnemySearchPointProvider points)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
@@ -82,6 +89,8 @@ namespace Shinzui.Presentation
             _noiseHub = noiseHub;
             _brainSettings = brainSettings;
             _feedback = feedback;
+            _tactics = tactics;
+            _points = points;
             _visibility = IsPositionVisible;
             _canReachExit = CanReachExit;
         }
@@ -91,6 +100,11 @@ namespace Shinzui.Presentation
         {
             _controllers.Clear();
             _controllersByView.Clear();
+
+            // 仮の進行処理にもインターフェイスだけで接続し、手置きシーンでは一階扱い
+            foreach (var component in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+                if (component.gameObject.scene == _playerView.gameObject.scene && component is IEnemyStageProgress progress)
+                { _stageProgress = progress; break; }
 
             for (int i = 0; i < _enemyViews.Length; i++)
             {
@@ -109,7 +123,7 @@ namespace Shinzui.Presentation
                     _settings,
                     _brainSettings,
                     _feedback,
-                    CapturePlayer);
+                    CapturePlayer, _tactics, _points);
                 controller.Initialize();
 
                 _controllers.Add(controller);
@@ -149,6 +163,9 @@ namespace Shinzui.Presentation
 
             // 同じフレームに確定した発見を演出へ反映する
             _enemyDirectorUseCase.ObserveReports(_enemyReports);
+            if (!_playerDeathUseCase.IsDead.CurrentValue)
+                _tactics.Tick(deltaTime, _playerMove.IsCrouching, _playerTracker.PlayerPosition, _enemyReports,
+                    _stageProgress?.FloorNumber ?? 1);
         }
 
         /// <summary>死亡回避を判定し、人型の捕獲だけ専用演出を予約</summary>

@@ -197,7 +197,7 @@ namespace Shinzui.Presentation.Flashlight
 
             if (shouldStop)
             {
-                enemy.ApplyStrobeEffect(true, 0f, _view.StopDuration);
+                enemy.ApplyStrobeEffect(true, 0f, _view.StopDuration, origin);
                 return;
             }
 
@@ -209,7 +209,7 @@ namespace Shinzui.Presentation.Flashlight
                 return;
             }
 
-            enemy.ApplyStrobeEffect(false, _view.SlowSpeedMultiplier, duration);
+            enemy.ApplyStrobeEffect(false, _view.SlowSpeedMultiplier, duration, origin);
         }
 
         /// <summary>

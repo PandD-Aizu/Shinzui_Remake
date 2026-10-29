@@ -11,7 +11,7 @@ namespace Shinzui.Application.AI.Enemy
         /// <returns>初期化後に割り当てを行わないツリー</returns>
         public static BtNode Create(EnemyBrain brain)
         {
-            // 戦術による解放はPhase 4で接続する
+            // 未解放の追加行動はGateで通過させない
             return new BtSelector("Root",
                 new BtAction("Backstage", brain.Backstage),
                 new BtAction("Stunned", brain.Stunned),
@@ -24,13 +24,22 @@ namespace Shinzui.Application.AI.Enemy
                         new BtSequence("Route",
                             new BtAction("Approach", brain.SearchApproach, brain.ResetSearchMove),
                             new BtAction("LookAround", brain.SearchLook, brain.ResetSearchLook),
-                            new BtAction("Patrol", brain.SearchPatrol, brain.ResetPatrol)), brain.FinishClue)),
+                            new BtSelector("Patrol",
+                                new BtGate(EnemyBehaviorFlags.SlowStalk,
+                                    new BtAction("ListenAndWalk", brain.SlowStalk, brain.ResetSlowStalk), () => brain.Blackboard.Unlocked),
+                                new BtAction("Walk", brain.SearchPatrol, brain.ResetPatrol))), brain.SearchExpired)),
                 new BtGuard("Investigate", () => brain.CanInvestigate,
                     new BtSequence("Inspect",
                         new BtAction("Turn", brain.TurnToClue, brain.ResetTurn),
                         new BtAction("Approach", brain.InvestigateApproach, brain.ResetMove),
+                        new BtSelector("Decoy",
+                            new BtGate(EnemyBehaviorFlags.DecoyWariness,
+                                new BtAction("Reverse", brain.ReverseDecoy, brain.ResetReverse), () => brain.Blackboard.Unlocked),
+                            new BtAction("Skip", brain.Skip)),
                         new BtAction("LookAround", brain.InvestigateLook, brain.ResetLook),
                         new BtAction("Finish", brain.FinishInvestigation))),
+                new BtGate(EnemyBehaviorFlags.Backtrack,
+                    new BtAction("Backtrack", brain.Backtrack), () => brain.Blackboard.Unlocked),
                 new BtAction("FollowHint", brain.FollowHint, brain.ResetHint),
                 new BtAction("Wander", brain.Wander));
         }

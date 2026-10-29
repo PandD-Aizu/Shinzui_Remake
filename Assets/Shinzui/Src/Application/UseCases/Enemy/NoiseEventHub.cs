@@ -9,10 +9,12 @@ namespace Shinzui.Application.UseCases.Enemy
     {
         private List<NoiseEvent> _pending = new(16);
         private List<NoiseEvent> _current = new(16);
+        private long _nextId;
 
         /// <summary>次の知覚更新に音を追加</summary>
         /// <param name="noise">音の刺激</param>
-        public void Emit(NoiseEvent noise) => _pending.Add(noise);
+        public void Emit(NoiseEvent noise)
+            => _pending.Add(new NoiseEvent(noise.Kind, noise.Position, noise.Radius, noise.Direction, ++_nextId));
 
         /// <summary>蓄積した音を取り出し、次のフレーム用バッファを空にする</summary>
         /// <returns>次回Drainまで有効な音の一覧</returns>

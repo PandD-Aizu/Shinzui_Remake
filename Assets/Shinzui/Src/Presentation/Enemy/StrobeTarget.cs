@@ -27,14 +27,15 @@ namespace Shinzui.Presentation
         /// <param name="stopMovement">移動を停止するかどうか</param>
         /// <param name="speedMultiplier">速度の倍率</param>
         /// <param name="duration">持続時間</param>
-        public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration)
+        /// <param name="source">命中時の光源位置</param>
+        public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration, Vector3 source)
         {
             if (!IsValid)
             {
                 return;
             }
 
-            _controller.ApplyStrobeEffect(stopMovement, speedMultiplier, duration);
+            _controller.ApplyStrobeEffect(stopMovement, speedMultiplier, duration, source);
         }
     }
 }

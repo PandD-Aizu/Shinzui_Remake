@@ -17,7 +17,7 @@ namespace Shinzui.Temp.BotamochiStealth
     /// Tempアセンブリ内で完結する
     /// </summary>
     [DefaultExecutionOrder(500)]
-    public sealed class TempPastTunnelDirector : MonoBehaviour
+    public sealed class TempPastTunnelDirector : MonoBehaviour, Shinzui.Application.Interfaces.Enemy.IEnemyStageProgress
     {
         public static TempPastTunnelDirector Instance { get; private set; }
 

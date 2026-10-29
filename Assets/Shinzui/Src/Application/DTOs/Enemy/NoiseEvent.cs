@@ -12,18 +12,21 @@ namespace Shinzui.Application.DTOs.Enemy
         public Vector3 Position { get; }
         public float Radius { get; }
         public Vector3 Direction { get; }
+        public long EventId { get; }
 
         /// <summary>音の刺激を作成</summary>
         /// <param name="kind">種類</param>
         /// <param name="position">発生位置</param>
         /// <param name="radius">最大可聴距離</param>
         /// <param name="direction">飛来方向</param>
-        public NoiseEvent(NoiseKind kind, Vector3 position, float radius, Vector3 direction = default)
+        /// <param name="eventId">ハブが付けるラン内の識別子</param>
+        public NoiseEvent(NoiseKind kind, Vector3 position, float radius, Vector3 direction = default, long eventId = 0)
         {
             Kind = kind;
             Position = position;
             Radius = radius;
             Direction = direction;
+            EventId = eventId;
         }
     }
 }

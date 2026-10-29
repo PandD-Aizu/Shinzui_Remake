@@ -67,6 +67,9 @@ namespace Shinzui.DI
         [Header("Menace")]
         [SerializeField] private MenaceSettings menaceSettings = new();
 
+        [Header("Enemy Learning")]
+        [SerializeField] private BehaviorUnlockSettings behaviorUnlockSettings = new();
+
         [Header("Enemy Brain")]
         [SerializeField] private EnemyBrainSettings enemyBrainSettings = new();
 
@@ -105,6 +108,10 @@ namespace Shinzui.DI
             builder.RegisterInstance(enemyBrainSettings);
             menaceSettings ??= new MenaceSettings();
             builder.RegisterInstance(menaceSettings);
+            behaviorUnlockSettings ??= new BehaviorUnlockSettings();
+            builder.RegisterInstance(behaviorUnlockSettings);
+            builder.Register<Shinzui.Domain.Entities.Enemy.BehaviorUnlockEntity>(Lifetime.Scoped);
+            builder.Register<PlayerTacticTracker>(Lifetime.Scoped);
             builder.Register<IEnemySearchPointProvider>(_ => CreateEnemySearchPointProvider(), Lifetime.Scoped);
             builder.Register<NoiseEventHub>(Lifetime.Scoped).As<INoiseEventSink>().AsSelf();
             builder.RegisterEntryPoint<EnemyNoisePresenter>();

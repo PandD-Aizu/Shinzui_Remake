@@ -31,6 +31,25 @@ namespace Shinzui.View
         private bool[] _animatorEnabled;
         private Transform _body;
         public bool IsBackstage { get; private set; }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        [Header("AI Debug (Runtime)")]
+        [SerializeField] private string activeBehaviorPath;
+        [SerializeField] private string unlockedBehaviors;
+        [SerializeField] private string observedTactics;
+#endif
+
+        /// <summary>開発時のInspectorへ判断と学習状態を表示</summary>
+        /// <param name="path">実行中の行動パス</param>
+        /// <param name="unlocked">解放済みの行動</param>
+        /// <param name="tactics">戦術回数と解放間隔</param>
+        public void SetLearningDebug(string path, string unlocked, string tactics)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            activeBehaviorPath = path;
+            unlockedBehaviors = unlocked;
+            observedTactics = tactics;
+#endif
+        }
 
         /// <summary>捕獲演出に映り込まないよう実時間でフェードアウト</summary>
         public void FadeOut()
