@@ -26,6 +26,12 @@ namespace Shinzui.Application.DTOs.Tunnel
         public float PositionX { get; init; }
         public float PositionY { get; init; }
         public float PositionZ { get; init; }
+        public float DirX { get; init; }
+        public float DirZ { get; init; }
+        public float Length { get; init; }
+        public int FloorIndex { get; init; }
+        public float Slope { get; init; }
+        public int SlopeExitSign { get; init; }
         public bool IsSpecial { get; init; }
         public IReadOnlyList<TunnelEntranceMarkerDto> EntranceMarkers { get; init; }
         public IReadOnlyList<bool> OpenEntrances { get; init; }
@@ -50,6 +56,9 @@ namespace Shinzui.Application.DTOs.Tunnel
         public float DirY { get; init; }
         public float DirZ { get; init; }
         public float Length { get; init; }
+        public bool OpenEnd { get; init; } = true;
+        public bool OpenLeft { get; init; }
+        public bool OpenRight { get; init; }
     }
 
     /// <summary>
@@ -135,5 +144,20 @@ namespace Shinzui.Application.DTOs.Tunnel
         public TunnelBoundsDto Bounds { get; init; }
         public TunnelDimensionsDto Dimensions { get; init; }
         public int Seed { get; init; }
+        public IReadOnlyList<TunnelDropOpeningDto> DropOpenings { get; init; } = System.Array.Empty<TunnelDropOpeningDto>();
+    }
+
+    /// <summary>
+    /// 上階の床と下階の天井に設ける落下口のDTO
+    /// </summary>
+    public sealed class TunnelDropOpeningDto
+    {
+        public int LowerTunnelId { get; init; }
+        public int UpperTunnelId { get; init; }
+        public float CenterX { get; init; }
+        public float CenterZ { get; init; }
+        public float Size { get; init; }
+        public float LowerFloorY { get; init; }
+        public float UpperFloorY { get; init; }
     }
 }

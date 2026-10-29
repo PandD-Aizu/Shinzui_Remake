@@ -27,6 +27,7 @@ namespace Shinzui.Src.Title
         [SerializeField] private TextMeshProUGUI accessibilityOptionText;
 
         public event Action StartGameRequested;
+        public event Action ContinueGameRequested;
         public event Action CreditsRequested;
         public event Action OpenOptionsRequested;
         public event Action CloseOptionsRequested;
@@ -55,6 +56,8 @@ namespace Shinzui.Src.Title
         };
 
         public void StartGame() => StartGameRequested?.Invoke();
+        /// <summary>セーブ選択画面への遷移を要求する</summary>
+        public void ContinueGame() => ContinueGameRequested?.Invoke();
         public void StartCredits() => CreditsRequested?.Invoke();
         public void OpenOptions() => OpenOptionsRequested?.Invoke();
         public void CloseOptions() => CloseOptionsRequested?.Invoke();

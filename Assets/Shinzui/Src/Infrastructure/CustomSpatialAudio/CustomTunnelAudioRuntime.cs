@@ -112,7 +112,6 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
                 Voices.SetListener(Pose(listener));
             }
             Voices.Tick(deltaTime);
-            if (!paused && World != null) Footsteps?.Tick(deltaTime, grounded);
         }
         public void LateTick()
         {

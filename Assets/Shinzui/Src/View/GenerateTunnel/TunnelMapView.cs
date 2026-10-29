@@ -13,7 +13,7 @@ namespace Shinzui.View.GenerateTunnel
     /// ドメイン層やプレゼンテーション層に依存せず、純粋なUnityオブジェクト構築責務を持つ。
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class TunnelMapView : MonoBehaviour
+    public sealed partial class TunnelMapView : MonoBehaviour
     {
         private const string MapRootName = "MapRoot";
         private const string GeometryRootName = "Tunnel Map Geometry";
@@ -45,6 +45,7 @@ namespace Shinzui.View.GenerateTunnel
         private Material _warpCorridorMaterial;
         private Material _warpTriggerMaterial;
         private Material _markerMaterial;
+        private Material _goalMaterial;
 
         private AsyncOperationHandle<GameObject> _tunnelPrefabHandle;
         private GameObject _tunnelPrefab;
@@ -52,6 +53,7 @@ namespace Shinzui.View.GenerateTunnel
         private GameObject _corridorTemplate;
         private GameObject _smallRoomTemplate;
         private GameObject _warpCorridorTemplate;
+        private bool _tunnelTemplateLongAxisIsX = true;
         private bool _corridorTemplateLongAxisIsX;
         private bool _warpCorridorTemplateLongAxisIsX;
         private TunnelGenerator _generator;
@@ -152,8 +154,9 @@ namespace Shinzui.View.GenerateTunnel
         private void OnDestroy()
         {
             GeometryClearing?.Invoke();
+            ReleaseGeneratedMeshes();
             foreach (var material in new[] { _specialMaterial, _tunnelMaterial, _corridorMaterial,
-                _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial })
+                _smallRoomMaterial, _warpCorridorMaterial, _warpTriggerMaterial, _markerMaterial, _goalMaterial })
                 if (material) Destroy(material);
             if (_tunnelPrefabHandle.IsValid())
             {
@@ -162,8 +165,13 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// シーンまたはプロジェクトアセットから見本モデルを取得し、実測寸法を返す。
+        /// トンネル本体と接続口の実測寸法を取得し、生成通路の設定寸法は維持する
         /// </summary>
+        /// <param name="tunnelLength">トンネル本体の基準長</param>
+        /// <param name="tunnelWidth">左右の接続口先端を含む幅</param>
+        /// <param name="tunnelHeight">トンネルの占有高</param>
+        /// <param name="corridorLength">生成通路の基準長</param>
+        /// <param name="corridorWidth">生成通路の内幅</param>
         public void ResolveTemplateDimensions(
             ref float tunnelLength,
             ref float tunnelWidth,
@@ -174,22 +182,27 @@ namespace Shinzui.View.GenerateTunnel
             FindTemplates();
 
             bool useBounds = _generator == null || _generator.UseModelBoundsForLayout;
-            if (useBounds && _tunnelPrefab != null && TryCalculateMeshBounds(_tunnelPrefab, GetTunnelModelScale(), out Bounds tunnelBounds))
+            if (_tunnelPrefab != null && TryCalculateMeshBounds(_tunnelPrefab, GetTunnelModelScale(), out Bounds tunnelBounds))
             {
-                tunnelLength = Mathf.Max(tunnelBounds.size.x, tunnelBounds.size.z);
-                tunnelWidth = Mathf.Min(tunnelBounds.size.x, tunnelBounds.size.z);
-                tunnelHeight = Mathf.Max(tunnelHeight, tunnelBounds.size.y);
+                // モデルの実際の長軸を使って長さ方向だけを拡縮する
+                Transform floor = _tunnelPrefab.transform.Find("tunnel_floor");
+                Bounds bodyBounds = tunnelBounds;
+                if (floor != null && TryGetMeshBoundsInLocalSpace(floor, _tunnelPrefab.transform, out Bounds floorBounds))
+                    bodyBounds = new Bounds(Vector3.Scale(floorBounds.center, GetTunnelModelScale()),
+                        Vector3.Scale(floorBounds.size, Abs(GetTunnelModelScale())));
+                _tunnelTemplateLongAxisIsX = bodyBounds.size.x >= bodyBounds.size.z;
+                if (useBounds)
+                {
+                    tunnelLength = _tunnelTemplateLongAxisIsX ? bodyBounds.size.x : bodyBounds.size.z;
+                    tunnelWidth = _tunnelTemplateLongAxisIsX ? tunnelBounds.size.z : tunnelBounds.size.x;
+                    tunnelHeight = Mathf.Max(tunnelHeight, tunnelBounds.size.y);
+                }
             }
 
             if (_corridorTemplate != null && TryCalculateMeshBounds(_corridorTemplate, GetCorridorModelScale(false), out Bounds corridorBounds))
             {
                 _corridorTemplateLongAxisIsX = corridorBounds.size.x >= corridorBounds.size.z;
-                if (useBounds)
-                {
-                    corridorLength = Mathf.Max(corridorBounds.size.x, corridorBounds.size.z);
-                    corridorWidth = Mathf.Max(1.0f, Mathf.Min(corridorBounds.size.x, corridorBounds.size.z));
-                    tunnelHeight = Mathf.Max(tunnelHeight, corridorBounds.size.y);
-                }
+                // 通常通路はモデルを使わないため内幅と長さはInspectorの設定を維持する
             }
 
             if (_warpCorridorTemplate != null && TryCalculateMeshBounds(_warpCorridorTemplate, GetCorridorModelScale(true), out Bounds warpBounds))
@@ -203,7 +216,11 @@ namespace Shinzui.View.GenerateTunnel
             HideSceneTemplate(_warpCorridorTemplate);
         }
 
-        /// <summary>Measure side-mouth spacing from the same authored mesh used to draw the six exits.</summary>
+        /// <summary>
+        /// 接続口の床から長さ方向の間隔を測定する
+        /// </summary>
+        /// <param name="configuredSpacing">実測できない場合の設定間隔</param>
+        /// <returns>中央の接続口から前後の接続口までの間隔</returns>
         public float ResolveConnectionPointSpacing(float configuredSpacing)
         {
             if ((_generator != null && !_generator.UseModelBoundsForLayout) || !_tunnelPrefab) return configuredSpacing;
@@ -215,16 +232,26 @@ namespace Shinzui.View.GenerateTunnel
                 int middle = side * 3 + 1;
                 if (!TryMouthPosition(middle, out var centre)) continue;
                 foreach (int index in new[] { middle - 1, middle + 1 })
-                    if (TryMouthPosition(index, out var outer)) { total += Vector3.Distance(outer, centre); count++; }
+                    if (TryMouthPosition(index, out var outer))
+                    {
+                        total += Mathf.Abs(_tunnelTemplateLongAxisIsX ? outer.x - centre.x : outer.z - centre.z);
+                        count++;
+                    }
             }
             return count == 4 && total > .01f ? total / count : configuredSpacing;
         }
 
+        /// <summary>
+        /// 接続口の歩行面の中心をモデル倍率込みで取得する
+        /// </summary>
+        /// <param name="index">接続口番号</param>
+        /// <param name="position">モデル内の歩行面の中心</param>
+        /// <returns>中心を取得できたか</returns>
         private bool TryMouthPosition(int index, out Vector3 position)
         {
             position = default;
             var part = _tunnelPrefab.transform.Find(ExitPathNames[index]);
-            if (!part || !TryGetMeshBoundsInLocalSpace(part, _tunnelPrefab.transform, out var bounds)) return false;
+            if (!part || !TryGetMouthDeck(part, _tunnelPrefab.transform, out var bounds)) return false;
             position = Vector3.Scale(bounds.center, GetTunnelModelScale());
             return true;
         }
@@ -271,6 +298,7 @@ namespace Shinzui.View.GenerateTunnel
         public void PrepareBuild()
         {
             GeometryClearing?.Invoke();
+            ReleaseGeneratedMeshes();
             _ceilingLights.Clear();
             EnsureMapRoot();
             CreateMaterials();
@@ -293,20 +321,52 @@ namespace Shinzui.View.GenerateTunnel
         /// <summary>
         /// トンネルGameObjectを作成する。
         /// </summary>
+        /// <param name="position">中心位置</param>
+        /// <param name="forward">水平の長さ方向</param>
+        /// <param name="objectName">生成名</param>
+        /// <param name="isSpecial">特殊トンネルか</param>
+        /// <param name="width">幅</param>
+        /// <param name="height">高さ</param>
+        /// <param name="length">トンネル長</param>
+        /// <param name="standardTunnelLength">モデルの基準長</param>
+        /// <param name="openEntrances">使用する側面口</param>
+        /// <param name="slope">水平距離あたりの高さ</param>
+        /// <param name="slopeEntranceZ">下階の接続口の位置</param>
+        /// <param name="corridorWidth">下階の通路幅</param>
+        /// <param name="upperLanding">接続先の階層のトンネル</param>
+        /// <param name="upperEntranceIndex">接続先の側面口の番号</param>
+        /// <param name="slopeExitSign">接続先の階層へ向かう端の符号</param>
+        /// <returns>トンネルの配置先</returns>
         public Transform CreateTunnelNode(
             Vector3 position,
+            Vector3 forward,
             string objectName,
             bool isSpecial,
             float width,
             float height,
             float length,
-            IReadOnlyList<bool> openEntrances = null)
+            float standardTunnelLength,
+            IReadOnlyList<bool> openEntrances = null,
+            float slope = 0.0f,
+            float slopeEntranceZ = 0.0f,
+            float corridorWidth = 3.0f,
+            Transform upperLanding = null,
+            int upperEntranceIndex = 1,
+            int slopeExitSign = 0)
         {
             var root = new GameObject(objectName).transform;
             root.SetParent(_geometryRoot, false);
             root.localPosition = position;
+            root.localRotation = forward.sqrMagnitude > 1e-6f ? Quaternion.LookRotation(forward, Vector3.up) : Quaternion.identity;
 
             Material shellMaterial = isSpecial ? _specialMaterial : _tunnelMaterial;
+            if (Mathf.Abs(slope) > 0.0001f)
+            {
+                CreateInclinedTunnel(root, width, height, length, slope, slopeEntranceZ, corridorWidth,
+                    openEntrances, upperLanding, upperEntranceIndex, slopeExitSign);
+                return root;
+            }
+
             if (_tunnelPrefab != null)
             {
                 GameObject model = Instantiate(_tunnelPrefab, root, false);
@@ -321,6 +381,10 @@ namespace Shinzui.View.GenerateTunnel
                     ConfigureTunnelExits(model, openEntrances);
                 }
 
+                // 接続口を一定幅に保ち、描画面と衝突面を同じ床高へ揃える
+                if (!FitTunnelConnections(model.transform, root, length, corridorWidth))
+                    model.transform.localScale = GetTunnelModelScale(length, standardTunnelLength);
+
                 if (isSpecial)
                 {
                     foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
@@ -330,6 +394,8 @@ namespace Shinzui.View.GenerateTunnel
                 }
 
                 ApplyStageCollisionRecursive(model);
+                Physics.SyncTransforms();
+                CreateMouthHeaders(model.transform, root, openEntrances, corridorWidth, ResolvePassageHeight(height));
             }
             else
             {
@@ -432,8 +498,19 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// 通常通路GameObjectを作成する。
+        /// 通常通路の床と壁を区間の長さと開口部に合わせて作成する
         /// </summary>
+        /// <param name="center">区間の中心</param>
+        /// <param name="direction">区間の前方向</param>
+        /// <param name="length">区間の長さ</param>
+        /// <param name="index">接続の識別番号</param>
+        /// <param name="corridorWidth">通路の内幅</param>
+        /// <param name="tunnelHeight">通路の高さ</param>
+        /// <param name="standardCorridorLength">見本通路の基準長</param>
+        /// <param name="openEnd">前方を開けるか</param>
+        /// <param name="openLeft">左側を開けるか</param>
+        /// <param name="openRight">右側を開けるか</param>
+        /// <returns>生成された通路の情報</returns>
         public GeneratedCorridorInfo CreateNormalCorridor(
             Vector3 center,
             Vector3 direction,
@@ -441,7 +518,10 @@ namespace Shinzui.View.GenerateTunnel
             int index,
             float corridorWidth,
             float tunnelHeight,
-            float standardCorridorLength)
+            float standardCorridorLength,
+            bool openEnd = true,
+            bool openLeft = false,
+            bool openRight = false)
         {
             var corridor = new GameObject($"Corridor {index:00}").transform;
             corridor.SetParent(_geometryRoot, false);
@@ -451,7 +531,8 @@ namespace Shinzui.View.GenerateTunnel
             var info = corridor.gameObject.AddComponent<GeneratedCorridorInfo>();
             info.Initialize(GeneratedCorridorKind.Normal);
 
-            CreatePassageShell(corridor, length, _corridorMaterial, corridorWidth, tunnelHeight, standardCorridorLength);
+            CreateProceduralPassage(corridor, length, _corridorMaterial, corridorWidth, tunnelHeight,
+                openEnd, openLeft, openRight);
             return info;
         }
 
@@ -607,6 +688,7 @@ namespace Shinzui.View.GenerateTunnel
             // Rebuilding geometry reuses this view's materials; dispose them with the view.
             if (_specialMaterial) return;
             _specialMaterial = CreateMaterial("Special Tunnel", new Color(0.16f, 0.48f, 0.68f));
+            _goalMaterial = CreateMaterial("Tunnel Goal", new Color(0.15f, 0.8f, 0.35f));
             _tunnelMaterial = CreateMaterial("Tunnel", new Color(0.23f, 0.26f, 0.29f));
             _corridorMaterial = CreateMaterial("Connecting Corridor", new Color(0.72f, 0.48f, 0.13f));
             _smallRoomMaterial = CreateMaterial("Small Room Floor", new Color(0.38f, 0.34f, 0.25f));
@@ -639,6 +721,13 @@ namespace Shinzui.View.GenerateTunnel
             float standardCorridorLength,
             bool isWarpCorridor = false)
         {
+            // 通常通路と小部屋前後の通路は寸法から床と壁を生成する
+            if (!isWarpCorridor || _warpCorridorTemplate == null)
+            {
+                CreateProceduralPassage(corridor, length, material, corridorWidth, tunnelHeight);
+                return;
+            }
+
             GameObject template = isWarpCorridor && _warpCorridorTemplate != null ? _warpCorridorTemplate : _corridorTemplate;
             bool longAxisIsX = isWarpCorridor && _warpCorridorTemplate != null ? _warpCorridorTemplateLongAxisIsX : _corridorTemplateLongAxisIsX;
 
@@ -673,12 +762,63 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
+        /// 通路の床と天井と開口部以外の壁を寸法から生成する
+        /// </summary>
+        /// <param name="corridor">区間の配置先</param>
+        /// <param name="length">区間の長さ</param>
+        /// <param name="material">見本モデルがない場合のマテリアル</param>
+        /// <param name="width">通路の内幅</param>
+        /// <param name="height">通路の高さ</param>
+        /// <param name="openEnd">前方を開けるか</param>
+        /// <param name="openLeft">左側を開けるか</param>
+        /// <param name="openRight">右側を開けるか</param>
+        private void CreateProceduralPassage(Transform corridor, float length, Material material, float width, float height,
+            bool openEnd = true, bool openLeft = false, bool openRight = false)
+        {
+            // 隣接する区間と同じ床高と内幅で床と天井をつなぐ
+            float floorThickness = ShellThickness * 1.5f;
+            CreateStageBox(corridor, "Floor", Vector3.zero,
+                new Vector3(width, floorThickness, length), material);
+            CreateStageBox(corridor, "Ceiling", new Vector3(0.0f, height, 0.0f),
+                new Vector3(width, ShellThickness, length), material);
+
+            // 曲がる方向の側壁を省き、曲がり角の正面だけを閉じる
+            float sideOffset = (width + ShellThickness) * 0.5f;
+            if (!openLeft)
+            {
+                CreateStageBox(corridor, "Left Wall", new Vector3(-sideOffset, height * 0.5f, 0.0f),
+                    new Vector3(ShellThickness, height, length), material);
+            }
+
+            if (!openRight)
+            {
+                CreateStageBox(corridor, "Right Wall", new Vector3(sideOffset, height * 0.5f, 0.0f),
+                    new Vector3(ShellThickness, height, length), material);
+            }
+
+            if (!openEnd)
+            {
+                CreateStageBox(corridor, "End Wall", new Vector3(0.0f, height * 0.5f, (length + ShellThickness) * 0.5f),
+                    new Vector3(width + ShellThickness * 2.0f, height, ShellThickness), material);
+            }
+
+            // トンネル出口の既存マテリアルと蛍光灯を使って外観を揃える
+            ApplyTunnelPassageMaterial(corridor.gameObject);
+            CreateCeilingLights(corridor, length, height);
+        }
+
+        /// <summary>
         /// 天井の内面を測定して通路の中央へ蛍光灯を一定間隔で配置する
         /// </summary>
         /// <param name="passage">配置先のトンネルまたは廊下</param>
         /// <param name="length">通路の長さ</param>
         /// <param name="height">天井を探索する高さ</param>
-        private void CreateCeilingLights(Transform passage, float length, float height)
+        /// <param name="slope">水平距離あたりの高さ</param>
+        /// <param name="floorOffset">床の補正高</param>
+        /// <param name="slopeStartZ">平坦な踊り場の終端</param>
+        /// <param name="slopeExitSign">接続先の階層へ向かう端の符号</param>
+        private void CreateCeilingLights(Transform passage, float length, float height, float slope = 0.0f,
+            float floorOffset = 0.0f, float? slopeStartZ = null, int slopeExitSign = 0)
         {
             // 共通プレハブを再利用し、短い通路でも器具が端からはみ出さないようにする
             if (_ceilingLightPrefab == null)
@@ -700,7 +840,12 @@ namespace Shinzui.View.GenerateTunnel
             lightRoot.SetParent(passage, false);
             for (int i = 0; i < count; i++)
             {
-                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, 1.5f, start + i * spacing));
+                float localZ = start + i * spacing;
+                float exitSign = slopeExitSign != 0 ? slopeExitSign : Mathf.Sign(slope);
+                float rise = slopeStartZ.HasValue
+                    ? slope * exitSign * Mathf.Max(0.0f, exitSign * (localZ - slopeStartZ.Value))
+                    : slope * localZ;
+                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, 1.5f + floorOffset + rise, localZ));
                 var ray = new Ray(origin, passage.up);
                 float distance = Mathf.Infinity;
                 Vector3 ceiling = default;
@@ -868,7 +1013,16 @@ namespace Shinzui.View.GenerateTunnel
 
         private Vector3 GetTunnelModelScale()
         {
-            return _generator != null ? _generator.BasicTunnelModelScale : Vector3.one;
+            return GetTunnelModelScale(1.0f, 1.0f);
+        }
+
+        private Vector3 GetTunnelModelScale(float length, float standardTunnelLength)
+        {
+            Vector3 baseScale = _generator != null ? _generator.BasicTunnelModelScale : Vector3.one;
+            float lengthScale = standardTunnelLength > Mathf.Epsilon ? Mathf.Max(0.01f, length / standardTunnelLength) : 1.0f;
+            return _tunnelTemplateLongAxisIsX
+                ? new Vector3(baseScale.x * lengthScale, baseScale.y, baseScale.z)
+                : new Vector3(baseScale.x, baseScale.y, baseScale.z * lengthScale);
         }
 
         private Quaternion GetTunnelModelRotation()

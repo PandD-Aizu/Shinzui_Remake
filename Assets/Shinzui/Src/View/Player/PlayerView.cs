@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FMODUnity;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Cinemachine;
@@ -20,6 +21,12 @@ namespace Shinzui.View
         [SerializeField] private float bodyFreeLookAngle = 8.0f;
         [SerializeField] private float groundProbeDistance = 0.25f;
         [SerializeField] private LayerMask groundLayers = ~0;
+
+        [Header("Footstep Settings")]
+        [SerializeField, Min(0.1f)] private float footstepDistance = 0.8f;
+        [SerializeField, Min(0.1f)] private float minimumFootstepInterval = 0.37f;
+        private float _footstepTravel;
+        private float _footstepElapsed;
 
         [Header("Crouch Settings")]
         [Tooltip("しゃがみ時の高さ倍率")]
@@ -45,6 +52,7 @@ namespace Shinzui.View
         private Vector3 _standingCameraLocalPosition;
         private float _footLocalY;
         private float _standingHeadHeightFromFeet;
+        private bool _initialized;
         private PlayerCameraMotionExtension _cameraMotion;
         private readonly Dictionary<int, MotionModifier> _motionModifiers = new();
         private const float StaminaFadeDelay = 2.0f;
@@ -68,6 +76,8 @@ namespace Shinzui.View
         public bool IsCinematicControlled { get; set; }
         public Vector3 CameraRight => mainCamera != null ? mainCamera.transform.right : transform.right;
         public Vector3 CameraPosition => mainCamera != null ? mainCamera.transform.position : transform.position;
+        /// <summary>カメラ演出を含まない姿勢制御用の視点位置</summary>
+        public Vector3 PostureEyePosition => cameraTarget != null ? cameraTarget.position : CameraPosition;
         public float CameraNearClipPlane => mainCamera != null ? mainCamera.nearClipPlane : 0.3f;
         public Vector3 CameraNearPosition => CameraPosition + CameraForward * CameraNearClipPlane;
 
@@ -93,13 +103,26 @@ namespace Shinzui.View
         public float CrouchRatio => crouchRatio > 0.0f ? crouchRatio : 0.5f;
         public float HeightChangeRate => heightChangeRate > 0.01f ? heightChangeRate : 10.0f;
 
+        public bool IsChased { get; private set; }          // 敵に追跡されているか
+        public float StaminaRatio { get; private set; } = 1f; // スタミナの残量割合
+
         /// <summary>
         /// プレイヤーの現在の移動速度を取得します。
         /// </summary>
         public Vector3 CurrentVelocity => characterController != null ? characterController.velocity : Vector3.zero;
 
+        /// <summary>コライダーと視点の基準姿勢を初期化</summary>
         private void Awake()
         {
+            Initialize();
+        }
+
+        /// <summary>DIからAwakeより先に呼ばれる場合も基準姿勢を一度だけ保存</summary>
+        private void Initialize()
+        {
+            if (_initialized) return;
+
+            // 身長更新で変更される前のコライダーと視点を基準にする
             if (characterController != null)
             {
                 _standingCharacterHeight = characterController.height;
@@ -157,6 +180,8 @@ namespace Shinzui.View
             {
                 SetLayerRecursive(gameObject, playerLayer);
             }
+
+            _initialized = true;
         }
 
         private void SetLayerRecursive(GameObject obj, int newLayer)
@@ -228,7 +253,21 @@ namespace Shinzui.View
         /// </summary>
         public event System.Action<Vector3> Warped;
 
+        /// <summary>
+        /// 向きを変えず指定量だけワープする
+        /// </summary>
+        /// <param name="offset">現在位置からの移動量</param>
         public void Warp(Vector3 offset)
+        {
+            Warp(offset, Vector3.zero);
+        }
+
+        /// <summary>
+        /// 指定方向へ本体と視線を揃えてワープする
+        /// </summary>
+        /// <param name="offset">現在位置からの移動量</param>
+        /// <param name="exitForward">ワープ先で向く水平方向、ゼロなら現在の向きを維持</param>
+        public void Warp(Vector3 offset, Vector3 exitForward)
         {
             if (characterController != null)
             {
@@ -249,14 +288,45 @@ namespace Shinzui.View
 
             // Cinemachineの追従遅れによる一瞬の空の映り込みを防ぐため、ワープを通知する
             CinemachineCore.OnTargetObjectWarped(transform, offset);
+            if (exitForward.sqrMagnitude > 0.0001f) AlignWarpDirection(exitForward);
             _rotationVelocity = 0.0f;
             _cameraMotion?.ResetMotion();
             Warped?.Invoke(offset);
         }
 
         /// <summary>
+        /// 見上げ角を保ち、カメラ制御の内部状態も出口方向へ更新する
+        /// </summary>
+        /// <param name="exitForward">出口へ向かう方向</param>
+        private void AlignWarpDirection(Vector3 exitForward)
+        {
+            Vector3 forward = Vector3.ProjectOnPlane(exitForward, Vector3.up).normalized;
+            if (forward.sqrMagnitude < 0.0001f) return;
+            Vector3 current = Vector3.ProjectOnPlane(CameraForward, Vector3.up);
+            if (current.sqrMagnitude < 0.0001f) current = transform.forward;
+            Quaternion yaw = Quaternion.AngleAxis(Vector3.SignedAngle(current, forward, Vector3.up), Vector3.up);
+            Quaternion cameraRotation = yaw * (mainCamera != null ? mainCamera.transform.rotation : transform.rotation);
+            Quaternion targetRotation = cameraTarget != null ? yaw * cameraTarget.rotation : cameraRotation;
+
+            // 親子関係にかかわらず本体とカメラへ回転を一度だけ適用する
+            transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+            if (cameraTarget != null && cameraTarget != transform) cameraTarget.rotation = targetRotation;
+            if (mainCamera != null) mainCamera.transform.rotation = cameraRotation;
+
+            // Pan/Tiltの古い角度で次フレームに視線が戻ることを防ぐ
+            foreach (CinemachineCamera camera in FindObjectsByType<CinemachineCamera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                Transform follow = camera.Follow;
+                if (follow == null || (follow != transform && !follow.IsChildOf(transform) && follow != cameraTarget)) continue;
+                Vector3 position = mainCamera != null ? mainCamera.transform.position : follow.position;
+                camera.ForceCameraPosition(position, cameraRotation);
+            }
+        }
+
+        /// <summary>
         /// 物理的な移動を実行
         /// </summary>
+        /// <param name="velocity">移動補正前の速度</param>
         public void Move(Vector3 velocity)
         {
             if (characterController != null && characterController.enabled)
@@ -276,7 +346,36 @@ namespace Shinzui.View
                 modifiedVelocity.z *= horizontalMultiplier;
                 modifiedVelocity += additiveVelocity;
                 characterController.Move(modifiedVelocity * Time.deltaTime);
+                UpdateFootstep(Time.deltaTime);
             }
+        }
+
+        /// <summary>接地中の実移動距離に応じて足元で足音を再生する</summary>
+        /// <param name="deltaTime">今回の移動に使った経過時間</param>
+        private void UpdateFootstep(float deltaTime)
+        {
+            // 停止、空中、演出中は次の歩き始めまで歩数をリセットする
+            Vector3 horizontalVelocity = characterController.velocity;
+            horizontalVelocity.y = 0f;
+            if (deltaTime <= 0f || IsCinematicControlled || !characterController.isGrounded
+                || horizontalVelocity.sqrMagnitude < 0.01f)
+            {
+                _footstepTravel = 0f;
+                _footstepElapsed = 0f;
+                return;
+            }
+
+            // 壁に阻まれた分を含めず、走行中も音が過密にならない間隔で再生する
+            _footstepTravel += horizontalVelocity.magnitude * deltaTime;
+            _footstepElapsed += deltaTime;
+            if (_footstepTravel < footstepDistance || _footstepElapsed < minimumFootstepInterval)
+                return;
+
+            _footstepTravel = 0f;
+            _footstepElapsed = 0f;
+            Vector3 feetPosition = transform.TransformPoint(characterController.center)
+                - transform.up * (characterController.height * transform.lossyScale.y * 0.5f);
+            RuntimeManager.PlayOneShot("event:/SE/WalkConcrete", feetPosition);
         }
 
         /// <summary>
@@ -304,8 +403,12 @@ namespace Shinzui.View
         /// <summary>
         /// コライダーの高さを更新
         /// </summary>
+        /// <param name="height">足元を固定したコライダーの高さ</param>
         public void SetHeight(float height)
         {
+            // DIの即時購読通知がAwakeに先行しても足元の基準を維持
+            Initialize();
+
             if (playerCollider != null)
             {
                 playerCollider.radius = Mathf.Min(_standingColliderRadius, height * 0.5f);
@@ -408,6 +511,10 @@ namespace Shinzui.View
             float staminaRatio,
             bool isChased)
         {
+            // 全身モデルの怯え表現でも参照できるよう緊張状態を保持
+            IsChased = isChased;
+            StaminaRatio = staminaRatio;
+
             if (_cameraMotion == null)
             {
                 EnsureCameraMotionExtension();

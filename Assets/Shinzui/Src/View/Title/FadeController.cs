@@ -103,6 +103,9 @@ namespace Shinzui.Src.Title
             }
         }
 
+        /// <summary>
+        /// 開始ディレイ後に画像のフェードと移動を同時に再生
+        /// </summary>
         private void AnimateImages()
         {
             if (fadeInObjects == null) return;
@@ -135,8 +138,8 @@ namespace Shinzui.Src.Title
                     sequence.AppendInterval(imageStartDelay);
                 }
 
-                // アルファと位置を同時開始
-                sequence.Join(
+                // 待ち時間の後にアルファを追加し、位置を同時開始
+                sequence.Append(
                     LMotion.Create(0f, 1f, fadeDuration)
                         .WithEase(fadeEase)
                         .Bind(
@@ -160,6 +163,9 @@ namespace Shinzui.Src.Title
             }
         }
 
+        /// <summary>
+        /// テキストをリスト順に指定間隔でフェードおよび移動
+        /// </summary>
         private void AnimateTexts()
         {
             if (fadeInTexts == null || fadeInTexts.Count == 0) return;
@@ -253,7 +259,8 @@ namespace Shinzui.Src.Title
                         sequence.AppendInterval(delay);
                     }
 
-                    sequence.Join(
+                    // 待ち時間の後にアルファを追加し、位置を同時開始
+                    sequence.Append(
                         LMotion.Create(0f, 1f, fadeDuration)
                             .WithEase(fadeEase)
                             .Bind(

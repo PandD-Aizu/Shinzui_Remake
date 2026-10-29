@@ -18,6 +18,10 @@ using Shinzui.View;
 using Shinzui.View.Inventory;
 using Shinzui.View.Flashlight;
 using Shinzui.Application.UseCases.Interaction;
+using Shinzui.Application.UseCases.Objective;
+using Shinzui.Domain.Entities.Objective;
+using Shinzui.Presentation.Objective;
+using Shinzui.View.Objective;
 using Shinzui.Presentation.Interaction;
 using Shinzui.View.Interaction;
 using Shinzui.Application.Interfaces.ResourceNeed;
@@ -25,6 +29,7 @@ using Shinzui.Application.UseCases.ResourceNeed;
 using Shinzui.Domain.DomainServices.ResourceNeed;
 using Shinzui.Domain.ValueObjects.ResourceNeed;
 using Shinzui.Infrastructure.ResourceNeed;
+using Shinzui.Infrastructure.SaveSystem;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -47,15 +52,31 @@ namespace Shinzui.DI
         [SerializeField] private EnemyView[] enemyViews;
         [SerializeField] private HorrorDetectionView horrorDetectionView;
 
+        [Header("Objective")]
+        [SerializeField] private ObjectiveView objectiveView;
+        [SerializeField] private Sprite objectiveIcon;
+
         [Header("Enemy Director")]
         [SerializeField] private EnemyDirectorSettings enemyDirectorSettings = new();
 
         [Header("Resource Need")]
         [SerializeField] private PlayerNeedWeightSettingsSO needWeightSettings;
         [SerializeField] private ItemCategoryClassifierSO itemCategoryClassifier;
+        
+        [Header("SaveSystem")]
+        [SerializeField] private SaveController saveController;
 
+        /// <summary>
+        /// プレイヤーとシーン内の各機能をDIコンテナに登録
+        /// </summary>
+        /// <param name="builder">登録先のコンテナビルダー</param>
         protected override void Configure(IContainerBuilder builder)
         {
+            // ゲーム本編とセーブ地点に共通のポーズ画面を追加する
+            var sceneName = gameObject.scene.name;
+            if (sceneName == "StageTemp" || sceneName == "SaveStage" || sceneName == "SavePoint" || sceneName == "AddSavePoint")
+                gameObject.AddComponent<PauseMenuController>();
+
             var player = CreatePlayer();
 
             // シングルトンインスタンスとして登録
@@ -116,8 +137,7 @@ namespace Shinzui.DI
 
             // Infrastructure (Catalog & Repository & Sound)
             builder.Register<IItemCatalog, AddressableItemCatalog>(Lifetime.Singleton);
-            builder.Register<IInventoryRepository, PlayerPrefsInventoryRepository>(Lifetime.Singleton);
-            builder.Register<ISpecialItemRepository, PlayerPrefsInventoryRepository>(Lifetime.Singleton);
+            builder.Register<MemoryInventoryRepository>(Lifetime.Singleton).As<IInventoryRepository>().As<ISpecialItemRepository>();
             builder.Register<IFMODSEService, FMODSEService>(Lifetime.Singleton);
 
             // View (シーン上のUIコンポーネント)
@@ -141,6 +161,7 @@ namespace Shinzui.DI
             RegisterSpecialItemHud(builder);
             RegisterPlayerQuickItemSlot(builder);
             RegisterPlayerDeath(builder);
+            RegisterObjective(builder);
             RegisterEnemies(builder);
             // このシーンに配置された導入演出だけを既存サービスへ接続
             var intro = FindFirstObjectByType<StageIntroView>();
@@ -188,6 +209,25 @@ namespace Shinzui.DI
 
             // Presentation (EntryPoint)
             builder.RegisterEntryPoint<FlashlightPresenter>();
+            
+            // ==========================================
+            // セーブシステムの登録
+            // ==========================================
+            //ゲームのSave&Load管理
+            builder.Register<SaveManager>(Lifetime.Singleton);
+            builder.RegisterInstance(new SaveFileStore());
+
+            // 未指定なら非アクティブなセーブUIも検索し、配置されている場合だけ登録
+            var saveControllerInstance = saveController;
+            if (saveControllerInstance == null)
+            {
+                saveControllerInstance = FindFirstObjectByType<SaveController>(FindObjectsInactive.Include);
+            }
+
+            if (saveControllerInstance != null)
+            {
+                builder.RegisterComponent(saveControllerInstance);
+            }
 
             // ==========================================
             // インタラクトシステムのDI登録
@@ -486,6 +526,49 @@ namespace Shinzui.DI
 
             builder.RegisterComponent(deathViewInstance);
             builder.RegisterEntryPoint<PlayerDeathPresenter>();
+        }
+
+        /// <summary>
+        /// 現在の目標表示をDIコンテナに登録する
+        /// Viewが未配置ならHUDCanvas配下に自動生成する
+        /// </summary>
+        /// <param name="builder">登録先のコンテナビルダー</param>
+        private void RegisterObjective(IContainerBuilder builder)
+        {
+            // Domain & UseCase
+            builder.Register<ObjectiveEntity>(Lifetime.Singleton);
+            builder.Register<ObjectiveUseCase>(Lifetime.Singleton);
+
+            // 未指定ならシーン内を検索し、それでも無ければHUDCanvasへ生成する
+            var objectiveViewInstance = objectiveView;
+            if (objectiveViewInstance == null)
+            {
+                objectiveViewInstance = FindFirstObjectByType<ObjectiveView>();
+            }
+
+            if (objectiveViewInstance == null)
+            {
+                var hudCanvas = GameObject.Find("HUDCanvas");
+                if (hudCanvas == null)
+                {
+                    Debug.LogWarning("ObjectiveView was not assigned and HUDCanvas was not found.");
+                    return;
+                }
+
+                var objectiveObject = new GameObject("ObjectiveHud", typeof(RectTransform));
+                objectiveObject.transform.SetParent(hudCanvas.transform, false);
+                objectiveViewInstance = objectiveObject.AddComponent<ObjectiveView>();
+            }
+
+            // アイコンが指定されていれば反映する
+            if (objectiveIcon != null)
+            {
+                objectiveViewInstance.Configure(objectiveIcon);
+            }
+
+            // View & Presentation
+            builder.RegisterComponent(objectiveViewInstance);
+            builder.RegisterEntryPoint<ObjectivePresenter>();
         }
 
         private static PlayerEntity CreatePlayer()

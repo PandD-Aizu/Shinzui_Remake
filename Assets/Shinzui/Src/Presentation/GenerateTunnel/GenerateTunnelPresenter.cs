@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.View;
@@ -51,16 +52,26 @@ namespace Shinzui.Presentation.GenerateTunnel
             float cWidth = request.CorridorWidth;
 
             _mapView.ResolveTemplateDimensions(ref tLen, ref tWidth, ref tHeight, ref cLen, ref cWidth);
+            float minTunnelLength = Mathf.Approximately(request.MinTunnelLength, request.TunnelLength) ? tLen : request.MinTunnelLength;
+            float maxTunnelLength = Mathf.Approximately(request.MaxTunnelLength, request.TunnelLength) ? tLen : request.MaxTunnelLength;
 
             var adjustedRequest = new TunnelGenerationRequestDto
             {
                 TunnelCount = request.TunnelCount,
                 Seed = request.Seed,
                 PlacementAttemptsPerTunnel = request.PlacementAttemptsPerTunnel,
+                GenerateUpperFloor = request.GenerateUpperFloor,
+                UpperFloorHeight = request.UpperFloorHeight,
+                GenerateLowerFloor = request.GenerateLowerFloor,
+                LowerFloorDepth = request.LowerFloorDepth,
+                DropOpeningCount = request.DropOpeningCount,
+                DropOpeningSize = request.DropOpeningSize,
                 SmallRoomCount = request.SmallRoomCount,
                 SmallRoomWidth = request.SmallRoomWidth,
                 SmallRoomLength = request.SmallRoomLength,
                 TunnelLength = tLen,
+                MinTunnelLength = minTunnelLength,
+                MaxTunnelLength = maxTunnelLength,
                 ConnectionPointSpacing = _mapView.ResolveConnectionPointSpacing(request.ConnectionPointSpacing),
                 TunnelWidth = tWidth,
                 TunnelHeight = tHeight,
@@ -90,23 +101,63 @@ namespace Shinzui.Presentation.GenerateTunnel
             return true;
         }
 
+        /// <summary>
+        /// 全階層のモデルを生成し傾斜と落下口をつなぐ
+        /// </summary>
+        /// <param name="mapDto">生成済みの配置情報</param>
         private void BuildSceneHierarchy(TunnelMapDto mapDto)
         {
             Dispose();
             _mapView.PrepareBuild();
+            var tunnelRoots = new Dictionary<int, Transform>();
 
             // 1. トンネルノードと出入口候補マーカーの生成
-            foreach (TunnelNodeDto tunnel in mapDto.Tunnels)
+            foreach (TunnelNodeDto tunnel in mapDto.Tunnels.OrderBy(t => t.Slope != 0.0f))
             {
                 Vector3 pos = new Vector3(tunnel.PositionX, tunnel.PositionY, tunnel.PositionZ);
+                Vector3 forward = new Vector3(tunnel.DirX, 0.0f, tunnel.DirZ);
+                float slopeEntranceZ = 0.0f;
+                Transform upperLanding = null;
+                int upperEntranceIndex = 1;
+                if (tunnel.Slope != 0.0f && tunnel.EntranceMarkers != null)
+                {
+                    foreach (var marker in tunnel.EntranceMarkers)
+                        if (marker.IsOpen) slopeEntranceZ = marker.LocalPosZ;
+
+                    // 接続先の階層の実モデルを先に作り、傾斜の出口を取得する
+                    float halfLength = tunnel.Length / Mathf.Sqrt(1.0f + tunnel.Slope * tunnel.Slope) * 0.5f;
+                    int exitSign = tunnel.SlopeExitSign != 0 ? tunnel.SlopeExitSign : (int)Mathf.Sign(tunnel.Slope);
+                    Vector3 high = pos + (forward + Vector3.up * tunnel.Slope) * (halfLength * exitSign);
+                    foreach (var upper in mapDto.Tunnels.Where(t => t.FloorIndex != tunnel.FloorIndex && t.Slope == 0.0f))
+                    {
+                        Transform upperRoot = tunnelRoots[upper.Id];
+                        foreach (var marker in upper.EntranceMarkers)
+                        {
+                            Vector3 port = upperRoot.localPosition + upperRoot.localRotation
+                                * new Vector3(marker.LocalPosX, 0, marker.LocalPosZ);
+                            if (!marker.IsOpen || (port - high).sqrMagnitude > 0.0001f) continue;
+                            upperLanding = upperRoot;
+                            upperEntranceIndex = marker.Index;
+                        }
+                    }
+                }
                 Transform tunnelRoot = _mapView.CreateTunnelNode(
                     pos,
+                    forward,
                     tunnel.Name,
                     tunnel.IsSpecial,
                     mapDto.Dimensions.TunnelWidth,
                     mapDto.Dimensions.TunnelHeight,
+                    tunnel.Length,
                     mapDto.Dimensions.TunnelLength,
-                    tunnel.OpenEntrances);
+                    tunnel.OpenEntrances,
+                    tunnel.Slope,
+                    slopeEntranceZ,
+                    mapDto.Dimensions.CorridorWidth,
+                    upperLanding,
+                    upperEntranceIndex,
+                    tunnel.SlopeExitSign);
+                tunnelRoots.Add(tunnel.Id, tunnelRoot);
 
                 if (tunnel.EntranceMarkers != null)
                 {
@@ -122,6 +173,7 @@ namespace Shinzui.Presentation.GenerateTunnel
             }
 
             // 2. 通常通路の生成
+            float passageHeight = _mapView.ResolvePassageHeight(mapDto.Dimensions.TunnelHeight);
             foreach (NormalCorridorDto corridor in mapDto.NormalCorridors)
             {
                 Vector3 center = new Vector3(corridor.CenterX, corridor.CenterY, corridor.CenterZ);
@@ -133,8 +185,11 @@ namespace Shinzui.Presentation.GenerateTunnel
                     corridor.Length,
                     corridor.ConnectionIndex,
                     mapDto.Dimensions.CorridorWidth,
-                    mapDto.Dimensions.TunnelHeight,
-                    mapDto.Dimensions.CorridorLength);
+                    passageHeight,
+                    mapDto.Dimensions.CorridorLength,
+                    corridor.OpenEnd,
+                    corridor.OpenLeft,
+                    corridor.OpenRight);
             }
 
             // 3. 小部屋接続の生成
@@ -151,7 +206,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                     room.RoomLength,
                     room.PassageLength,
                     mapDto.Dimensions.CorridorWidth,
-                    mapDto.Dimensions.TunnelHeight,
+                    passageHeight,
                     mapDto.Dimensions.CorridorLength);
             }
 
@@ -169,7 +224,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                     warp.PairId,
                     warp.SideName,
                     mapDto.Dimensions.CorridorWidth,
-                    mapDto.Dimensions.TunnelHeight,
+                    passageHeight,
                     mapDto.Dimensions.CorridorLength);
 
                 createdWarpInfos.Add(info);
@@ -190,7 +245,25 @@ namespace Shinzui.Presentation.GenerateTunnel
                 }
             }
 
-            // 5. カメラフレーミング
+            // 5. 上階の床と下階の天井を貫く落下口を生成する
+            foreach (var opening in mapDto.DropOpenings)
+            {
+                _mapView.CreateDropOpening(tunnelRoots[opening.LowerTunnelId], tunnelRoots[opening.UpperTunnelId],
+                    new Vector3(opening.CenterX, 0, opening.CenterZ), opening.Size,
+                    opening.LowerFloorY, opening.UpperFloorY, mapDto.Dimensions.TunnelHeight);
+            }
+
+            // 6. 平坦な通常トンネルを一つ選び、片端をゴールにする
+            var goalCandidates = mapDto.Tunnels.Where(t => t.Slope == 0 && !t.IsSpecial && t.Id != 0).ToArray();
+            if (goalCandidates.Length > 0)
+            {
+                var random = new System.Random(unchecked(mapDto.Seed ^ 0x47504c));
+                TunnelNodeDto goalTunnel = goalCandidates[random.Next(goalCandidates.Length)];
+                _mapView.CreateTunnelGoal(tunnelRoots[goalTunnel.Id], goalTunnel.Length,
+                    mapDto.Dimensions.TunnelWidth, mapDto.Dimensions.TunnelHeight, random.Next(2) == 0 ? -1 : 1);
+            }
+
+            // 7. カメラフレーミング
             if (mapDto.Bounds != null)
             {
                 Vector3 boundsCenter = new Vector3(mapDto.Bounds.CenterX, mapDto.Bounds.CenterY, mapDto.Bounds.CenterZ);
@@ -200,6 +273,11 @@ namespace Shinzui.Presentation.GenerateTunnel
 
         }
 
+        /// <summary>
+        /// ペア先の通路内へ、床からの相対的な高さを保って移動する
+        /// </summary>
+        /// <param name="source">進入元の通路</param>
+        /// <param name="player">移動するプレイヤー</param>
         private void OnWarpRequested(GeneratedCorridorInfo source, PlayerView player)
         {
             if (source == null || source.PairedCorridor == null || player == null ||
@@ -207,7 +285,11 @@ namespace Shinzui.Presentation.GenerateTunnel
                 return;
 
             Transform target = source.PairedCorridor.transform;
-            player.Warp(target.position - target.forward * 1.25f - source.transform.position);
+            float height = source.transform.InverseTransformPoint(player.transform.position).y;
+            Vector3 destination = target.TransformPoint(new Vector3(0, height, -1.25f));
+
+            // Warpは移動先座標ではなく現在位置からの移動量を受け取る
+            player.Warp(destination - player.transform.position, -target.forward);
             _lastWarpTime = Time.time;
         }
 

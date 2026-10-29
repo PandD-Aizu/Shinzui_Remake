@@ -11,12 +11,20 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
         public int TunnelCount { get; init; } = 8;
         public int Seed { get; init; } = 2777;
         public int PlacementAttemptsPerTunnel { get; init; } = 80;
+        public bool GenerateUpperFloor { get; init; }
+        public float UpperFloorHeight { get; init; } = 12.0f;
+        public bool GenerateLowerFloor { get; init; }
+        public float LowerFloorDepth { get; init; } = 12.0f;
+        public int DropOpeningCount { get; init; } = 2;
+        public float DropOpeningSize { get; init; } = 3.0f;
 
         public int SmallRoomCount { get; init; } = 1;
         public float SmallRoomWidth { get; init; } = 8.0f;
         public float SmallRoomLength { get; init; } = 6.0f;
 
         public float TunnelLength { get; init; } = 153.12695f;
+        public float MinTunnelLength { get; init; } = 153.12695f;
+        public float MaxTunnelLength { get; init; } = 153.12695f;
         public float ConnectionPointSpacing { get; init; } = 51.042316f;
         public float TunnelWidth { get; init; } = 14.800003f;
         public float TunnelHeight { get; init; } = 5.0f;
@@ -38,6 +46,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             float smallRoomWidth,
             float smallRoomLength,
             float tunnelLength,
+            float minTunnelLength,
+            float maxTunnelLength,
             float connectionPointSpacing,
             float tunnelWidth,
             float tunnelHeight,
@@ -46,7 +56,13 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             float placementMargin,
             float tunnelOverlapSizeMultiplier,
             float corridorOverlapSizeMultiplier,
-            float smallRoomOverlapSizeMultiplier)
+            float smallRoomOverlapSizeMultiplier,
+            bool generateUpperFloor = false,
+            float upperFloorHeight = 12.0f,
+            int dropOpeningCount = 2,
+            float dropOpeningSize = 3.0f,
+            bool generateLowerFloor = false,
+            float lowerFloorDepth = 12.0f)
         {
             TunnelCount = Math.Max(5, tunnelCount);
             Seed = seed;
@@ -55,6 +71,8 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             SmallRoomWidth = Math.Max(1.0f, smallRoomWidth);
             SmallRoomLength = Math.Max(1.0f, smallRoomLength);
             TunnelLength = Math.Max(4.0f, tunnelLength);
+            MinTunnelLength = Math.Max(4.0f, Math.Min(minTunnelLength, maxTunnelLength));
+            MaxTunnelLength = Math.Max(MinTunnelLength, Math.Max(minTunnelLength, maxTunnelLength));
             ConnectionPointSpacing = Math.Max(0.0f, connectionPointSpacing);
             TunnelWidth = Math.Max(3.0f, tunnelWidth);
             TunnelHeight = Math.Max(2.0f, tunnelHeight);
@@ -64,6 +82,12 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
             TunnelOverlapSizeMultiplier = Math.Max(0.1f, tunnelOverlapSizeMultiplier);
             CorridorOverlapSizeMultiplier = Math.Max(0.1f, corridorOverlapSizeMultiplier);
             SmallRoomOverlapSizeMultiplier = Math.Max(0.1f, smallRoomOverlapSizeMultiplier);
+            GenerateUpperFloor = generateUpperFloor;
+            UpperFloorHeight = Math.Max(TunnelHeight + 3.0f, upperFloorHeight);
+            GenerateLowerFloor = generateLowerFloor;
+            LowerFloorDepth = Math.Max(TunnelHeight + 3.0f, lowerFloorDepth);
+            DropOpeningCount = Math.Max(0, dropOpeningCount);
+            DropOpeningSize = Math.Max(2.0f, Math.Min(dropOpeningSize, TunnelWidth - 1.0f));
         }
     }
 }

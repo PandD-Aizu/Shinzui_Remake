@@ -15,6 +15,18 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private int seed = 2777;
         [Min(1)] [SerializeField] private int placementAttemptsPerTunnel = 80;
 
+        [Header("Upper Floor")]
+        [SerializeField] private bool generateUpperFloor;
+        [Min(8.0f)] [SerializeField] private float upperFloorHeight = 12.0f;
+
+        [Header("Lower Floor")]
+        [SerializeField] private bool generateLowerFloor;
+        [Min(8.0f)] [SerializeField] private float lowerFloorDepth = 12.0f;
+
+        [Header("Floor Connections")]
+        [Min(0)] [SerializeField] private int dropOpeningCount = 2;
+        [Min(2.0f)] [SerializeField] private float dropOpeningSize = 3.0f;
+
         [Header("Small Rooms")]
         [Min(0)] [SerializeField] private int smallRoomCount = 1;
         [Min(1.0f)] [SerializeField] private float smallRoomWidth = 8.0f;
@@ -22,6 +34,8 @@ namespace Shinzui.View.GenerateTunnel
 
         [Header("Layout Size")]
         [Min(4.0f)] [SerializeField] private float tunnelLength = 153.12695f;
+        [Min(4.0f)] [SerializeField] private float minTunnelLength = 153.12695f;
+        [Min(4.0f)] [SerializeField] private float maxTunnelLength = 153.12695f;
         [Tooltip("Distance from the center connection point to the front/back connection points on each tunnel side.")]
         [Min(0.0f)] [SerializeField] private float connectionPointSpacing = 51.042316f;
         [Min(3.0f)] [SerializeField] private float tunnelWidth = 14.800003f;
@@ -49,6 +63,7 @@ namespace Shinzui.View.GenerateTunnel
         [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 5.0f;
 
         [Header("Model Scale")]
+        [Tooltip("Xは長さの基準倍率、Yは断面の倍率。縦横比を維持するためZはYと同じ倍率になる")]
         [SerializeField] private Vector3 basicTunnelModelScale = Vector3.one;
         [SerializeField] private Vector3 corridorModelScale = Vector3.one;
         [SerializeField] private Vector3 smallRoomModelScale = Vector3.one;
@@ -68,10 +83,18 @@ namespace Shinzui.View.GenerateTunnel
         public int TunnelCount => tunnelCount;
         public int Seed => seed;
         public int PlacementAttemptsPerTunnel => placementAttemptsPerTunnel;
+        public bool GenerateUpperFloor => generateUpperFloor;
+        public float UpperFloorHeight => upperFloorHeight;
+        public bool GenerateLowerFloor => generateLowerFloor;
+        public float LowerFloorDepth => lowerFloorDepth;
+        public int DropOpeningCount => dropOpeningCount;
+        public float DropOpeningSize => dropOpeningSize;
         public int SmallRoomCount => smallRoomCount;
         public float SmallRoomWidth => smallRoomWidth;
         public float SmallRoomLength => smallRoomLength;
         public float TunnelLength => tunnelLength;
+        public float MinTunnelLength => Mathf.Min(minTunnelLength, maxTunnelLength);
+        public float MaxTunnelLength => Mathf.Max(minTunnelLength, maxTunnelLength);
         public float ConnectionPointSpacing => connectionPointSpacing * Mathf.Abs(BasicTunnelModelScale.x);
         public float TunnelWidth => tunnelWidth;
         public float TunnelHeight => tunnelHeight;
@@ -87,7 +110,14 @@ namespace Shinzui.View.GenerateTunnel
         public GameObject SmallRoomModel => smallRoomModel;
         public GameObject WarpCorridorModel => warpCorridorModel;
         public float CeilingLightSpacing => Mathf.Max(1.5f, ceilingLightSpacing);
-        public Vector3 BasicTunnelModelScale => SanitizeScale(basicTunnelModelScale);
+        public Vector3 BasicTunnelModelScale
+        {
+            get
+            {
+                Vector3 scale = SanitizeScale(basicTunnelModelScale);
+                return new Vector3(scale.x, scale.y, scale.y);
+            }
+        }
         public Vector3 CorridorModelScale => SanitizeScale(corridorModelScale);
         public Vector3 SmallRoomModelScale => SanitizeScale(smallRoomModelScale);
         public Vector3 WarpCorridorModelScale => SanitizeScale(warpCorridorModelScale);
@@ -97,6 +127,14 @@ namespace Shinzui.View.GenerateTunnel
         public Quaternion WarpCorridorModelRotation => Quaternion.Euler(warpCorridorModelEuler);
         public bool UseModelBoundsForLayout => useModelBoundsForLayout;
         public bool ConfigureBasicTunnelExitParts => configureBasicTunnelExitParts;
+
+        /// <summary>
+        /// Inspectorでも断面の縦横倍率を揃える
+        /// </summary>
+        private void OnValidate()
+        {
+            basicTunnelModelScale.z = basicTunnelModelScale.y;
+        }
 
         private static Vector3 SanitizeScale(Vector3 value)
         {
