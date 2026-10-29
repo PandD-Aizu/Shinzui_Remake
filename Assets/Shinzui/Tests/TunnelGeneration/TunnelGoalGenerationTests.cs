@@ -1,10 +1,17 @@
 #if UNITY_EDITOR
 using System.Collections;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Shinzui.Application.DTOs.Tunnel;
 using Shinzui.Application.Interfaces.Tunnel;
 using Shinzui.Application.UseCases.Tunnel;
+using Shinzui.Application.Interfaces.Inventory;
+using Shinzui.Application.UseCases.Inventory;
+using Shinzui.Domain.Entities.Inventory;
+using Shinzui.Domain.ValueObjects.Inventory;
+using Shinzui.DI;
+using Shinzui.Temp;
 using Shinzui.Presentation.GenerateTunnel;
 using Shinzui.View;
 using Shinzui.View.GenerateTunnel;
@@ -12,6 +19,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using VContainer;
 
 namespace Shinzui.Tests.TunnelGeneration
 {
@@ -90,6 +98,87 @@ namespace Shinzui.Tests.TunnelGeneration
         }
 
         /// <summary>
+        /// ドアを迂回してゴールへ触れても開錠前は遷移しないことを確認する
+        /// </summary>
+        [Test]
+        public void PlayerCannotActivateLockedGoal()
+        {
+            var player = new GameObject("Locked Goal Player");
+            player.transform.SetParent(_host.transform, false);
+            player.AddComponent<PlayerView>();
+            var goal = _view.GeometryRoot.GetComponentInChildren<GeneratedTunnelGoal>();
+            goal.SendMessage("OnTriggerEnter", player.AddComponent<BoxCollider>());
+            Assert.That(goal.IsUnlocked, Is.False);
+            Assert.That(goal.IsTransitioning, Is.False);
+        }
+
+        /// <summary>
+        /// 鍵とドアがゴール手前に並び、鍵がない場合は開錠できないことを確認する
+        /// </summary>
+        [Test]
+        public void KeyAndDoorArePlacedBeforeLockedGoal()
+        {
+            var goal = _view.GeometryRoot.GetComponentInChildren<GeneratedTunnelGoal>();
+            var spawner = _host.AddComponent<TempEscapeSpawner>();
+            spawner.enabled = false;
+            spawner.SpawnGoalItems(goal);
+            var key = spawner.GetComponentInChildren<TempEscapeKeyItem>();
+            var door = spawner.GetComponentInChildren<TempEscapeExit>();
+            Transform block = goal.transform.parent;
+            Transform tunnel = block.parent;
+            float sign = Mathf.Sign(block.localPosition.z);
+            float keyZ = sign * tunnel.InverseTransformPoint(key.transform.position).z;
+            float doorZ = sign * tunnel.InverseTransformPoint(door.transform.position).z;
+            Assert.That(keyZ, Is.LessThan(doorZ));
+            Assert.That(doorZ, Is.LessThan(Mathf.Abs(block.localPosition.z)));
+            Assert.That(key.InteractableId, Is.EqualTo(TempEscapeKey.ItemId));
+            door.ExecuteInteractEffect();
+            Assert.That(goal.IsUnlocked, Is.False);
+            Assert.That(door.CanInteract, Is.True);
+        }
+
+        /// <summary>
+        /// 取得した既存の鍵を1本消費してドアが開き、ゴールが有効になることを確認する
+        /// </summary>
+        [UnityTest]
+        public IEnumerator CollectedKeyOpensGoalDoor()
+        {
+            var scopeObject = new GameObject("Goal Inventory");
+            scopeObject.SetActive(false);
+            scopeObject.transform.SetParent(_host.transform, false);
+            var scope = scopeObject.AddComponent<GoalInventoryScope>();
+            scope.Inventory = new InventoryUseCase(new InventoryEntity(2), new GoalItemCatalog(), new GoalInventoryRepository(), null);
+            scopeObject.SetActive(true);
+            var goal = _view.GeometryRoot.GetComponentInChildren<GeneratedTunnelGoal>();
+            var spawner = _host.AddComponent<TempEscapeSpawner>();
+            spawner.enabled = false;
+            spawner.SpawnGoalItems(goal);
+            var key = spawner.GetComponentInChildren<TempEscapeKeyItem>();
+            var door = spawner.GetComponentInChildren<TempEscapeExit>();
+
+            var acquire = scope.Inventory.AddItemAsync(key.InteractableId, 1);
+            yield return new WaitUntil(() => acquire.IsCompleted);
+            Assert.That(acquire.Result, Is.True);
+            key.ExecuteInteractEffect();
+            Assert.That(TempEscapeKey.HasKey(), Is.True);
+            Scene sceneBefore = SceneManager.GetActiveScene();
+            var ray = new Ray(door.GetComponentInChildren<Renderer>().bounds.center + door.transform.forward * 0.6f,
+                -door.transform.forward);
+            Physics.SyncTransforms();
+            Assert.That(Physics.Raycast(ray, out var closedHit, 1.2f), Is.True);
+            Assert.That(closedHit.collider.GetComponentInParent<TempEscapeExit>(), Is.SameAs(door));
+            door.ExecuteInteractEffect();
+            float deadline = Time.realtimeSinceStartup + 3;
+            while (!goal.IsUnlocked && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(goal.IsUnlocked, Is.True);
+            Assert.That(TempEscapeKey.HasKey(), Is.False);
+            Assert.That(door.CanInteract, Is.False);
+            Physics.SyncTransforms();
+            Assert.That(Physics.Raycast(ray, 1.2f), Is.False, "The opened door must leave the central passage clear");
+            Assert.That(SceneManager.GetActiveScene().handle, Is.EqualTo(sceneBefore.handle));
+        }
+
+        /// <summary>
         /// プレイヤーの接触でStageSelectへ実際に遷移することを確認する
         /// </summary>
         [UnityTest]
@@ -105,6 +194,7 @@ namespace Shinzui.Tests.TunnelGeneration
             controller.center = Vector3.up * 0.9f;
             controller.radius = 0.3f;
             var goal = _view.GeometryRoot.GetComponentInChildren<GeneratedTunnelGoal>();
+            goal.Unlock();
             Transform block = goal.transform.parent;
             Transform tunnel = block.parent;
             float sign = Mathf.Sign(block.localPosition.z);
@@ -133,6 +223,44 @@ namespace Shinzui.Tests.TunnelGeneration
             /// </summary>
             /// <returns>生成を継続するためtrue</returns>
             public bool BuildNavMesh() => true;
+        }
+
+        private sealed class GoalInventoryScope : PlayerLifetimeScope
+        {
+            public InventoryUseCase Inventory;
+
+            /// <summary>
+            /// 開錠テスト用のインベントリのみ登録する
+            /// </summary>
+            /// <param name="builder">登録先</param>
+            protected override void Configure(IContainerBuilder builder) => builder.RegisterInstance(Inventory);
+        }
+
+        private sealed class GoalItemCatalog : IItemCatalog
+        {
+            /// <summary>
+            /// 既存の古びた鍵の定義を返す
+            /// </summary>
+            /// <param name="itemId">アイテムID</param>
+            /// <returns>鍵の定義</returns>
+            public Task<ItemDefinition> GetItemAsync(string itemId) => Task.FromResult(
+                new ItemDefinition(TempEscapeKey.ItemId, "Key", "", "", ItemType.Key, 1));
+        }
+
+        private sealed class GoalInventoryRepository : IInventoryRepository
+        {
+            /// <summary>
+            /// テストでは外部へ保存しない
+            /// </summary>
+            /// <param name="data">保存内容</param>
+            /// <returns>完了した処理</returns>
+            public Task SaveInventoryAsync(InventorySaveData data) => Task.CompletedTask;
+
+            /// <summary>
+            /// 空の保存内容を返す
+            /// </summary>
+            /// <returns>空の保存内容</returns>
+            public Task<InventorySaveData> LoadInventoryAsync() => Task.FromResult(new InventorySaveData());
         }
     }
 }

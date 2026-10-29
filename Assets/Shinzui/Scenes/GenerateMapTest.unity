@@ -3864,6 +3864,7 @@ MonoBehaviour:
     sightBlockingLayers: -1
   needWeightSettings: {fileID: 0}
   itemCategoryClassifier: {fileID: 0}
+  saveController: {fileID: 0}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0
@@ -4941,7 +4942,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
   tunnelCount: 8
-  seed: 2776
+  seed: 30
   placementAttemptsPerTunnel: 80
   generateUpperFloor: 1
   upperFloorHeight: 14

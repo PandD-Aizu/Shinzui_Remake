@@ -198,7 +198,12 @@ namespace Shinzui.DI
             // ==========================================
             //ゲームのSave&Load管理
             builder.Register<SaveManager>(Lifetime.Singleton);
-            builder.RegisterComponent(saveController);
+
+            // セーブ画面を持たない検証シーンではUIの登録を省略する
+            if (saveController != null)
+            {
+                builder.RegisterComponent(saveController);
+            }
 
             // ==========================================
             // インタラクトシステムのDI登録
