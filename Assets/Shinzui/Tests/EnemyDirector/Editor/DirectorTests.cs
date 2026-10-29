@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using Shinzui.Domain.ValueObjects.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases.Enemy;
@@ -21,8 +22,9 @@ namespace Shinzui.Tests.EnemyDirector
         }
         [TearDown] public void TearDown() => _director.Dispose();
         private static EnemyReport Report(int id = 0, bool visible = false, bool active = true, float z = 5f,
-            EnemyCommand command = default, bool visibleToPlayer = true)
-            => new(id, new Vector3(0, 0, z), command, 16f, active, visible, visibleToPlayer);
+            EnemyCommand command = default, bool visibleToPlayer = true, float noiseGain = 0f, Vector3 heardPosition = default)
+            => new(id, new Vector3(0, 0, z), command, 16f, active, visible, visibleToPlayer,
+                visible ? EnemyAwarenessLevel.Engaged : EnemyAwarenessLevel.Unaware, noiseGain, heardPosition);
         private EnemyCommand[] Step(float dt, Vector3 player, params EnemyReport[] reports)
             => _director.DecideCommands(new EnemyWorldState(player, reports, false, default, default), dt);
 
@@ -33,12 +35,13 @@ namespace Shinzui.Tests.EnemyDirector
             Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
             Assert.That(_sound.OneShots, Is.Zero);
         }
-        [Test] public void SightRequiresContinuousConfirmation()
+        /// <summary>視認だけでは追跡せず疑いゲージの確定を待つ</summary>
+        [Test] public void SightRequiresEngagedAwareness()
         {
-            Assert.That(Step(.1f, Vector3.zero, Report(visible: true))[0].Type, Is.Not.EqualTo(EnemyCommandType.ChasePlayer));
-            Step(.1f, Vector3.zero, Report());
-            Assert.That(Step(.2f, Vector3.zero, Report(visible: true))[0].Type, Is.Not.EqualTo(EnemyCommandType.ChasePlayer));
-            Assert.That(Step(.2f, Vector3.zero, Report(visible: true))[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
+            var suspicious = new EnemyReport(0, Vector3.forward * 5f, default, 16f, true, true, true,
+                EnemyAwarenessLevel.Suspicious);
+            Assert.That(Step(1f, Vector3.zero, suspicious)[0].Type, Is.Not.EqualTo(EnemyCommandType.ChasePlayer));
+            Assert.That(Step(.1f, Vector3.zero, Report(visible: true))[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
         }
         [Test] public void LostSightSearchesLastKnownPositionNotMovingPlayer()
         {
@@ -102,16 +105,18 @@ namespace Shinzui.Tests.EnemyDirector
         }
         [Test] public void SoundInvestigatesOnlyWithinAudibleRadius()
         {
-            var reports = new[] { Report(0, z: 3f), Report(1, z: 30f) };
-            var commands = _director.DecideCommands(new EnemyWorldState(Vector3.zero, reports, false, default, default, 4f), .5f);
+            Vector3 impact = new(4, 0, 2);
+            var reports = new[] { Report(0, z: 3f, noiseGain: .4f, heardPosition: impact), Report(1, z: 30f) };
+            var commands = _director.DecideCommands(new EnemyWorldState(Vector3.zero, reports, false, default, default), .5f);
             Assert.That(commands[0].Type, Is.EqualTo(EnemyCommandType.InvestigatePosition));
+            Assert.That(commands[0].TargetPosition, Is.EqualTo(impact));
             Assert.That(commands[1].Type, Is.EqualTo(EnemyCommandType.Wander));
             Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
         }
         [Test] public void ContinuousNoiseDoesNotResetSearchBudget()
         {
             _settings.searchDuration = 2f;
-            var world = new EnemyWorldState(Vector3.zero, new[] { Report() }, false, default, default, 10f);
+            var world = new EnemyWorldState(Vector3.zero, new[] { Report(noiseGain: .3f) }, false, default, default);
             for (int i = 0; i < 4; i++) _director.DecideCommands(world, .5f);
             Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
         }

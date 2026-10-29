@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using Shinzui.Domain.ValueObjects.Enemy;
 using R3;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
@@ -17,8 +17,6 @@ namespace Shinzui.Application.UseCases.Enemy
         private readonly EnemyDirectorSettings _settings;
         private readonly ReactiveProperty<bool> _isPlayerFound = new(false);
         private readonly ReactiveProperty<bool> _isEncounterRecognized = new(false);
-        private readonly Dictionary<int, float> _sightTimers = new();
-        private readonly List<int> _staleIds = new();
         private EnemyCommand[] _commands = Array.Empty<EnemyCommand>();
         private float _phaseTime;
         private float _hintTime;
@@ -53,47 +51,40 @@ namespace Shinzui.Application.UseCases.Enemy
             _phaseTime += deltaTime;
             _hintTime -= deltaTime;
             _discoveryCooldown -= deltaTime;
-            _staleIds.Clear();
-            foreach (int id in _sightTimers.Keys) _staleIds.Add(id);
 
             int focused = -1;
             int visible = -1;
             int heard = -1;
             float nearestVisible = float.MaxValue;
-            float nearestHeard = float.MaxValue;
+            float strongestHeard = 0f;
             float nearest = float.MaxValue;
             bool recognized = false;
             for (int i = 0; i < reports.Length; i++)
             {
                 EnemyReport report = reports[i];
                 _commands[i] = report.CanReceiveCommand ? EnemyCommand.Wander : EnemyCommand.Idle;
-                _staleIds.Remove(report.Id);
-                _sightTimers.TryGetValue(report.Id, out float seenFor);
-                seenFor = report.CanReceiveCommand && report.CanSeePlayer ? seenFor + deltaTime : 0f;
-                _sightTimers[report.Id] = seenFor;
                 if (!report.CanReceiveCommand) continue;
                 float distance = Vector3.Distance(report.Position, world.PlayerPosition);
                 nearest = Mathf.Min(nearest, distance);
                 // 発見が確定した敵をプレイヤー自身が視認した場合だけ演出を許可
-                if (seenFor >= Positive(_settings.detectionTime, .3f) && report.IsVisibleToPlayer)
+                if (report.CanSeePlayer && report.Awareness == EnemyAwarenessLevel.Engaged && report.IsVisibleToPlayer)
                     recognized = true;
                 if (report.Id == FocusEnemyId) focused = i;
-                if (seenFor >= Positive(_settings.detectionTime, .3f) && distance < nearestVisible)
+                if (report.CanSeePlayer && report.Awareness == EnemyAwarenessLevel.Engaged && distance < nearestVisible)
                 {
                     visible = i;
                     nearestVisible = distance;
                 }
-                if (world.PlayerNoiseRadius > 0f && distance <= world.PlayerNoiseRadius && distance < nearestHeard)
+                if (report.HeardNoiseGain > strongestHeard)
                 {
                     heard = i;
-                    nearestHeard = distance;
+                    strongestHeard = report.HeardNoiseGain;
                 }
             }
-            foreach (int id in _staleIds) _sightTimers.Remove(id);
 
             // Keep a confirmed observer selected to prevent frame-by-frame ownership oscillation.
             if (focused >= 0 && reports[focused].CanSeePlayer &&
-                _sightTimers[FocusEnemyId] >= Positive(_settings.detectionTime, .3f)) visible = focused;
+                reports[focused].Awareness == EnemyAwarenessLevel.Engaged) visible = focused;
             bool found = visible >= 0;
             // 一度認知した追跡中は視線を外しても演出を繰り返さない
             recognized = found && (recognized || _isEncounterRecognized.CurrentValue);
@@ -149,7 +140,7 @@ namespace Shinzui.Application.UseCases.Enemy
             {
                 FocusEnemyId = reports[heard].Id;
                 focused = heard;
-                _lastKnownPosition = world.PlayerPosition; // A sound event is a clue, never a chase target.
+                _lastKnownPosition = reports[heard].HeardPosition; // 音源の位置だけを手掛かりにする
                 _hasClue = true;
                 _searchTime = 0f;
                 _hintTime = 0f;
@@ -159,7 +150,7 @@ namespace Shinzui.Application.UseCases.Enemy
             {
                 if (heard == focused)
                 {
-                    _lastKnownPosition = world.PlayerPosition;
+                    _lastKnownPosition = reports[heard].HeardPosition;
                     _investigationTarget = _lastKnownPosition;
                     _hintTime = Positive(_settings.searchPointInterval, 3f);
                 }

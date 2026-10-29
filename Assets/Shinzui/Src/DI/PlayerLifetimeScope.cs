@@ -1,4 +1,5 @@
 using Shinzui.Application.Interfaces;
+using Shinzui.Application.Interfaces.Enemy;
 using Shinzui.Application.Interfaces.Inventory;
 using Shinzui.Application.UseCases;
 using Shinzui.Application.UseCases.Enemy;
@@ -59,6 +60,9 @@ namespace Shinzui.DI
         [Header("Enemy Director")]
         [SerializeField] private EnemyDirectorSettings enemyDirectorSettings = new();
 
+        [Header("Enemy Brain")]
+        [SerializeField] private EnemyBrainSettings enemyBrainSettings = new();
+
         [Header("Resource Need")]
         [SerializeField] private PlayerNeedWeightSettingsSO needWeightSettings;
         [SerializeField] private ItemCategoryClassifierSO itemCategoryClassifier;
@@ -90,6 +94,10 @@ namespace Shinzui.DI
             builder.Register<PlayerThrowUseCase>(Lifetime.Scoped);
             enemyDirectorSettings ??= new EnemyDirectorSettings();
             builder.RegisterInstance(enemyDirectorSettings);
+            enemyBrainSettings ??= new EnemyBrainSettings();
+            builder.RegisterInstance(enemyBrainSettings);
+            builder.Register<NoiseEventHub>(Lifetime.Scoped).As<INoiseEventSink>().AsSelf();
+            builder.RegisterEntryPoint<EnemyNoisePresenter>();
             builder.Register<FMODEnemyEncounterFeedback>(Lifetime.Scoped).As<IEnemyEncounterFeedback>();
             builder.Register<EnemyDirectorUseCase>(Lifetime.Scoped);
             builder.Register<EnemyMoveUseCase>(Lifetime.Transient);

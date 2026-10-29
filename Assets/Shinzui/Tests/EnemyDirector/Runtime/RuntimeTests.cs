@@ -55,9 +55,15 @@ namespace Shinzui.Tests.EnemyDirector
         [Test] public void DetectsFrontButNotBehind()
         {
             Assert.That(_runtime.CanSee(_player.transform.position, 2f), Is.True);
+            var sight = _runtime.SampleSight(_player.transform.position, 2f, Vector3.forward);
+            Assert.That(sight.VisibleRatio, Is.EqualTo(1f));
+            Assert.That(sight.SeenPosition, Is.EqualTo(_player.transform.position));
+            Assert.That(sight.SeenVelocity, Is.EqualTo(Vector3.forward));
             _player.transform.position = new Vector3(0, 0, -5);
             Physics.SyncTransforms();
             Assert.That(_runtime.CanSee(_player.transform.position, 2f), Is.False);
+            Assert.That(_runtime.SampleSight(_player.transform.position, 2f, Vector3.forward).SeenPosition,
+                Is.EqualTo(Vector3.zero));
         }
         [Test] public void WallBlocksBothSightAndContactKill()
         {
@@ -67,6 +73,10 @@ namespace Shinzui.Tests.EnemyDirector
             Physics.SyncTransforms();
             Assert.That(_runtime.CanSee(_player.transform.position, 2f), Is.False);
             Assert.That(_runtime.HasClearContact(_player.transform.position, 2f), Is.False);
+            Assert.That(_runtime.HasLineTo(_player.transform.position), Is.False);
+            var sight = _runtime.SampleSight(_player.transform.position, 2f, Vector3.one);
+            Assert.That(sight.VisibleRatio, Is.Zero);
+            Assert.That(sight.SeenVelocity, Is.EqualTo(Vector3.zero));
         }
         [Test] public void TriggerDoesNotOccludeSight()
         {

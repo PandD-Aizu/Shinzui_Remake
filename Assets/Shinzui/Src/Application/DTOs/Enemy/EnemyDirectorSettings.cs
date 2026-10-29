@@ -30,7 +30,11 @@ namespace Shinzui.Application.DTOs.Enemy
         public float repathInterval = 0.3f;
         public int sightBlockingLayers = -1;
 
-        internal static float Positive(float value, float fallback)
+        /// <summary>非正値や非有限値を既定値へ置き換える</summary>
+        /// <param name="value">設定値</param>
+        /// <param name="fallback">既定値</param>
+        /// <returns>有効な正の値</returns>
+        public static float Positive(float value, float fallback)
             => float.IsNaN(value) || float.IsInfinity(value) || value <= 0f ? fallback : value;
     }
 

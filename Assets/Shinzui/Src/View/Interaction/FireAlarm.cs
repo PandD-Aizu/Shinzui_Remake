@@ -42,6 +42,9 @@ namespace Shinzui.View.Interaction
         private float _nextActivationTime;
         private float _nextPlayerSearchTime;
         private float _activatedAt;
+        private float _nextNoiseTime;
+        /// <summary>手置きと動的生成の報知器の鳴動を通知</summary>
+        public static event System.Action<FireAlarm, Vector3> Rang;
         private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
 
         public bool IsAlarmActive { get; private set; }
@@ -113,6 +116,9 @@ namespace Shinzui.View.Interaction
                 if (state == PLAYBACK_STATE.STOPPED) _alarmInstance.start();
             }
 
+            // 鳴動中も一定間隔で聴覚刺激を発行する
+            if (Time.time >= _nextNoiseTime) EmitNoise();
+
             float phase = (Time.time - _activatedAt) / Mathf.Max(0.1f, flashInterval);
             SetLight(Mathf.Repeat(phase, 1f) < 0.5f ? 1f : 0.15f);
         }
@@ -123,6 +129,7 @@ namespace Shinzui.View.Interaction
             IsAlarmActive = true;
             CanInteract = true;
             _activatedAt = Time.time;
+            EmitNoise();
             SetLight(1f);
 
             // 各報知器が自分のインスタンスを所有し、他の警報を停止しない
@@ -131,6 +138,13 @@ namespace Shinzui.View.Interaction
                 : RuntimeManager.CreateInstance(alarmEvent);
             _alarmInstance.set3DAttributes(RuntimeUtils.To3DAttributes(lightOrigin.position));
             _alarmInstance.start();
+        }
+
+        /// <summary>現在の音源位置を通知して次の発行時刻を設定</summary>
+        private void EmitNoise()
+        {
+            Rang?.Invoke(this, lightOrigin.position);
+            _nextNoiseTime = Time.time + 1f;
         }
 
         /// <summary>警報を停止し、この時点からクールダウンを開始</summary>

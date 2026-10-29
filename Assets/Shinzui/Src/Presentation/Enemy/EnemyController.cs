@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Shinzui.Application.UseCases.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases;
@@ -16,6 +18,8 @@ namespace Shinzui.Presentation
         private readonly PlayerDeathUseCase _death;
         private readonly EnemyDirectorSettings _settings;
         private readonly System.Func<EnemyView, bool> _capture;
+        private readonly EnemyBrainSettings _brainSettings;
+        private readonly EnemyPerception _perception;
         private float _wanderTimer;
         private float _wanderInterval;
         private float _wanderRadius;
@@ -25,8 +29,17 @@ namespace Shinzui.Presentation
         private bool _strobeStops;
         private EnemyCommand _currentCommand = EnemyCommand.Idle;
 
+        /// <summary>敵一体の知覚と移動を初期化</summary>
+        /// <param name="id">敵の識別子</param>
+        /// <param name="view">敵の表示</param>
+        /// <param name="runtime">物理と経路探索</param>
+        /// <param name="movement">移動状態</param>
+        /// <param name="death">死亡判定</param>
+        /// <param name="settings">統括設定</param>
+        /// <param name="brainSettings">知覚設定</param>
+        /// <param name="capture">捕獲演出の開始処理</param>
         public EnemyController(int id, EnemyView view, IEnemyRuntime runtime, EnemyMoveUseCase movement,
-            PlayerDeathUseCase death, EnemyDirectorSettings settings, System.Func<EnemyView, bool> capture = null)
+            PlayerDeathUseCase death, EnemyDirectorSettings settings, EnemyBrainSettings brainSettings, System.Func<EnemyView, bool> capture = null)
         {
             Id = id;
             _view = view;
@@ -35,6 +48,8 @@ namespace Shinzui.Presentation
             _movement = movement;
             _death = death;
             _settings = settings;
+            _brainSettings = brainSettings;
+            _perception = new EnemyPerception(brainSettings);
             _capture = capture;
         }
 
@@ -53,21 +68,46 @@ namespace Shinzui.Presentation
         /// <param name="playerHeight">プレイヤーの高さ</param>
         /// <param name="playerCamera">プレイヤーの視点カメラ</param>
         /// <param name="playerRoot">視線判定から除外するプレイヤー</param>
+        /// <param name="playerVelocity">プレイヤーの速度</param>
+        /// <param name="signature">姿勢と光</param>
+        /// <param name="noises">フレーム内のノイズ</param>
         /// <returns>敵の状態報告</returns>
         public EnemyReport CreateReport(float deltaTime, Vector3 playerPosition, float playerHeight,
-            Camera playerCamera, Transform playerRoot)
+            Camera playerCamera, Transform playerRoot, Vector3 playerVelocity,
+            PlayerSignature signature, IReadOnlyList<NoiseEvent> noises)
         {
             _runtime.Tick(deltaTime);
             _strobeRemaining = Mathf.Max(0f, _strobeRemaining - deltaTime);
             _deathTimer = Mathf.Max(0f, _deathTimer - deltaTime);
             if (_strobeRemaining <= 0f) { _strobeStops = false; _strobeMultiplier = 1f; }
             bool ready = _runtime.IsReady && !_strobeStops;
-            bool canSeePlayer = ready && _runtime.CanSee(playerPosition, playerHeight);
+            SightSample sight = ready ? _runtime.SampleSight(playerPosition, playerHeight, playerVelocity) : default;
+            bool canSeePlayer = sight.VisibleRatio > 0f;
+            // 聴覚は遮蔽を反映し、最も強い刺激だけを調査対象にする
+            float strongest = 0f;
+            float totalNoiseGain = 0f;
+            Vector3 heardPosition = default;
+            if (ready)
+            {
+                for (int i = 0; i < noises.Count; i++)
+                {
+                    NoiseEvent noise = noises[i];
+                    float distance = Vector3.Distance(_runtime.Position, noise.Position);
+                    if (distance >= noise.Radius) continue;
+                    float gain = EnemyPerception.NoiseGain(noise, distance, _runtime.HasLineTo(noise.Position), _brainSettings);
+                    totalNoiseGain += gain;
+                    if (gain <= strongest) continue;
+                    strongest = gain;
+                    heardPosition = noise.Position;
+                }
+            }
+            _perception.Update(sight, signature, _settings.sightDistance, _settings.fieldOfView, totalNoiseGain, deltaTime);
 
             // 演出対象となる索敵中の敵だけプレイヤー側の視線を確認
-            return new EnemyReport(Id, _runtime.Position, _currentCommand, _settings.sightDistance,
+            return _perception.CreateReport(Id, _runtime.Position, _currentCommand, _settings.sightDistance,
                 ready, canSeePlayer,
-                canSeePlayer && _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers));
+                canSeePlayer && _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers),
+                strongest, heardPosition);
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Shinzui.Domain.ValueObjects.Enemy;
 
 namespace Shinzui.Application.DTOs.Enemy
 {
@@ -15,6 +16,9 @@ namespace Shinzui.Application.DTOs.Enemy
         /// <param name="canReceiveCommand">行動可能か</param>
         /// <param name="canSeePlayer">敵がプレイヤーを視認しているか</param>
         /// <param name="isVisibleToPlayer">プレイヤーが敵を視認しているか</param>
+        /// <param name="awareness">知覚による警戒段階</param>
+        /// <param name="heardNoiseGain">最も強く聞こえた音の増分</param>
+        /// <param name="heardPosition">その音源位置</param>
         public EnemyReport(
             int id,
             Vector3 position,
@@ -22,8 +26,13 @@ namespace Shinzui.Application.DTOs.Enemy
             float chaseDistance,
             bool canReceiveCommand,
             bool canSeePlayer = false,
-            bool isVisibleToPlayer = false)
+            bool isVisibleToPlayer = false,
+            EnemyAwarenessLevel awareness = EnemyAwarenessLevel.Unaware,
+            float heardNoiseGain = 0f, Vector3 heardPosition = default)
         {
+            Awareness = awareness;
+            HeardNoiseGain = heardNoiseGain;
+            HeardPosition = heardPosition;
             Id = id;
             Position = position;
             CurrentCommand = currentCommand;
@@ -33,6 +42,9 @@ namespace Shinzui.Application.DTOs.Enemy
             IsVisibleToPlayer = isVisibleToPlayer;
         }
 
+        public EnemyAwarenessLevel Awareness { get; }
+        public float HeardNoiseGain { get; }
+        public Vector3 HeardPosition { get; }
         public int Id { get; }
         public Vector3 Position { get; }
         public EnemyCommand CurrentCommand { get; }

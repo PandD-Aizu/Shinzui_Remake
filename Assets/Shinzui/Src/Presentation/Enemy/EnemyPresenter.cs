@@ -4,6 +4,7 @@ using Shinzui.Application.Interfaces;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.UseCases;
 using Shinzui.Application.UseCases.Enemy;
+using Shinzui.Application.UseCases.Flashlight;
 using Shinzui.View;
 using UnityEngine;
 using VContainer.Unity;
@@ -24,6 +25,9 @@ namespace Shinzui.Presentation
         private readonly IEnemyRuntime[] _runtimes;
         private readonly EnemyDirectorSettings _settings;
         private readonly PlayerMoveUseCase _playerMove;
+        private readonly FlashlightUseCase _flashlight;
+        private readonly NoiseEventHub _noiseHub;
+        private readonly EnemyBrainSettings _brainSettings;
         private readonly PlayerView _playerView;
         private readonly PlayerDeathView _deathView;
         private Vector3 _previousPlayerPosition;
@@ -34,6 +38,20 @@ namespace Shinzui.Presentation
         private readonly Dictionary<EnemyView, EnemyController> _controllersByView = new();
         private EnemyReport[] _enemyReports = Array.Empty<EnemyReport>();
 
+        /// <summary>敵の知覚と統括AIをプレイヤー状態へ接続</summary>
+        /// <param name="playerTracker">プレイヤーの位置</param>
+        /// <param name="playerDeathUseCase">死亡判定</param>
+        /// <param name="enemyDirectorUseCase">統括AI</param>
+        /// <param name="enemyMoveUseCaseFactory">移動状態の生成</param>
+        /// <param name="enemyViews">敵の表示</param>
+        /// <param name="runtimes">物理と経路探索</param>
+        /// <param name="settings">統括設定</param>
+        /// <param name="playerMove">姿勢と移動状態</param>
+        /// <param name="playerView">プレイヤー表示</param>
+        /// <param name="deathView">捕獲演出</param>
+        /// <param name="flashlight">光の状態</param>
+        /// <param name="noiseHub">フレーム内の音</param>
+        /// <param name="brainSettings">知覚設定</param>
         public EnemyPresenter(
             IPlayerTracker playerTracker,
             PlayerDeathUseCase playerDeathUseCase,
@@ -44,7 +62,7 @@ namespace Shinzui.Presentation
             EnemyDirectorSettings settings,
             PlayerMoveUseCase playerMove,
             PlayerView playerView,
-            PlayerDeathView deathView)
+            PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
@@ -56,8 +74,12 @@ namespace Shinzui.Presentation
             _playerMove = playerMove;
             _playerView = playerView;
             _deathView = deathView;
+            _flashlight = flashlight;
+            _noiseHub = noiseHub;
+            _brainSettings = brainSettings;
         }
 
+        /// <summary>各敵に独立した知覚状態を作成</summary>
         public void Initialize()
         {
             _controllers.Clear();
@@ -78,6 +100,7 @@ namespace Shinzui.Presentation
                     _enemyMoveUseCaseFactory(),
                     _playerDeathUseCase,
                     _settings,
+                    _brainSettings,
                     CapturePlayer);
                 controller.Initialize();
 
@@ -93,9 +116,14 @@ namespace Shinzui.Presentation
             _enemyReports = new EnemyReport[_controllers.Count];
         }
 
+        /// <summary>知覚を更新して移動と接触判定を駆動</summary>
         public void Tick()
         {
-            if (_cinematicPaused || _playerDeathUseCase.IsDead.CurrentValue) return;
+            if (_cinematicPaused || _playerDeathUseCase.IsDead.CurrentValue)
+            {
+                _noiseHub.Drain();
+                return;
+            }
 
             float deltaTime = Time.deltaTime;
             if (deltaTime <= 0f) return;
@@ -151,6 +179,7 @@ namespace Shinzui.Presentation
         {
             _cinematicPaused = paused;
             _hasPreviousPosition = false;
+            _noiseHub.Drain();
 
             // 演出側が動かす敵を含め、前の経路と速度設定を解除
             foreach (var runtime in _runtimes)
@@ -175,10 +204,22 @@ namespace Shinzui.Presentation
 
             EnsureReportCapacity();
 
+            // ワープを速度と足音に含めず、同じノイズ一覧を全敵へ渡す
+            Vector3 position = _playerTracker.PlayerPosition;
+            Vector3 movement = position - _previousPlayerPosition;
+            Vector3 velocity = _hasPreviousPosition && movement.sqrMagnitude < 4f ? movement / deltaTime : Vector3.zero;
+            float footstepRadius = GetFootstepNoiseRadius(deltaTime);
+            if (footstepRadius > 0f) _noiseHub.Emit(new NoiseEvent(NoiseKind.Footstep, position, footstepRadius));
+            IReadOnlyList<NoiseEvent> noises = _noiseHub.Drain();
+
             for (int i = 0; i < _controllers.Count; i++)
             {
+                bool illuminatesEnemy = _playerView.MainCamera != null && Vector3.Angle(_playerView.CameraForward,
+                    _controllers[i].StrobeTargetPosition - _playerView.CameraPosition) <= 30f;
+                var signature = new PlayerSignature(_playerMove.IsCrouching, _playerMove.IsRunning,
+                    velocity.sqrMagnitude > .0001f, _flashlight.IsOn.CurrentValue, illuminatesEnemy);
                 _enemyReports[i] = _controllers[i].CreateReport(deltaTime, _playerTracker.PlayerPosition,
-                    _playerMove.CurrentHeight.CurrentValue, _playerView.MainCamera, _playerView.transform);
+                    _playerMove.CurrentHeight.CurrentValue, _playerView.MainCamera, _playerView.transform, velocity, signature, noises);
             }
 
             var tunnelBounds = _playerTracker.CurrentTunnelBounds;
@@ -187,12 +228,14 @@ namespace Shinzui.Presentation
                 _enemyReports,
                 tunnelBounds.HasValue,
                 tunnelBounds.HasValue ? tunnelBounds.Value.start : Vector3.zero,
-                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero,
-                GetFootstepNoiseRadius(deltaTime));
+                tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero);
 
             return _enemyDirectorUseCase.DecideCommands(worldState, deltaTime);
         }
 
+        /// <summary>移動距離と足音間隔からノイズ半径を決定</summary>
+        /// <param name="deltaTime">経過秒数</param>
+        /// <returns>足音が発生しない場合は0</returns>
         private float GetFootstepNoiseRadius(float deltaTime)
         {
             Vector3 position = _playerTracker.PlayerPosition;

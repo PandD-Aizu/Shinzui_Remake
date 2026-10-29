@@ -47,34 +47,63 @@ namespace Shinzui.Infrastructure.Services
             if (NavMesh.SamplePosition(Position, out NavMeshHit hit, 3f, Filter)) _agent.Warp(hit.position);
         }
 
+        /// <summary>視覚サンプルから可視状態を取得</summary>
+        /// <param name="playerPosition">対象の位置</param>
+        /// <param name="targetHeight">対象の高さ</param>
+        /// <returns>対象の一部が見えているか</returns>
         public bool CanSee(Vector3 playerPosition, float targetHeight)
+            => SampleSight(playerPosition, targetHeight, Vector3.zero).VisibleRatio > 0f;
+
+        /// <summary>視野内の頭、胴、足の遮蔽を調べる</summary>
+        /// <param name="playerPosition">対象の位置</param>
+        /// <param name="playerHeight">対象の高さ</param>
+        /// <param name="playerVelocity">対象の速度</param>
+        /// <returns>不可視時は座標を含まない視覚サンプル</returns>
+        public SightSample SampleSight(Vector3 playerPosition, float playerHeight, Vector3 playerVelocity)
         {
-            if (!IsReady || _player == null) return false;
+            if (!IsReady || _player == null) return default;
             Vector3 offset = playerPosition - Position;
-            float distance = Mathf.Max(.1f, _settings.sightDistance);
-            if (offset.sqrMagnitude > distance * distance) return false;
+            float distance = offset.magnitude;
             offset.y = 0f;
             Vector3 forward = _body.forward;
             forward.y = 0f;
-            float halfFov = Mathf.Clamp(_settings.fieldOfView, 1f, 360f) * .5f;
-            if (offset.sqrMagnitude > .001f && Vector3.Angle(forward, offset) > halfFov) return false;
-            return HasClearContact(playerPosition, targetHeight);
+            float angle = offset.sqrMagnitude > .001f ? Vector3.Angle(forward, offset) : 0f;
+            bool inRange = distance <= EnemyDirectorSettings.Positive(_settings.sightDistance, 16f);
+            if (!inRange || angle > Mathf.Clamp(_settings.fieldOfView, 1f, 360f) * .5f)
+                return new SightSample(inRange, distance, angle, 0f, default, default);
+
+            // 姿勢に合わせて三点を下げ、部分遮蔽を割合として返す
+            int visible = 0;
+            float height = Mathf.Max(.1f, playerHeight);
+            if (HasLineTo(playerPosition + Vector3.up * height * .9f)) visible++;
+            if (HasLineTo(playerPosition + Vector3.up * height * .5f)) visible++;
+            if (HasLineTo(playerPosition + Vector3.up * height * .1f)) visible++;
+            return new SightSample(true, distance, angle, visible / 3f, playerPosition, playerVelocity);
         }
 
+        /// <summary>従来の胴体への接触判定を維持</summary>
+        /// <param name="playerPosition">対象の位置</param>
+        /// <param name="targetHeight">対象の高さ</param>
+        /// <returns>胴体への遮蔽がないか</returns>
         public bool HasClearContact(Vector3 playerPosition, float targetHeight)
+            => IsReady && _player != null && HasLineTo(playerPosition + Vector3.up * Mathf.Max(.1f, targetHeight * .5f));
+
+        /// <summary>自身とプレイヤーを除外して刺激への遮蔽を確認</summary>
+        /// <param name="position">刺激の位置</param>
+        /// <returns>遮蔽がないか</returns>
+        public bool HasLineTo(Vector3 position)
         {
-            if (!IsReady || _player == null) return false;
+            if (!IsReady) return false;
             Vector3 origin = Position + Vector3.up * Mathf.Max(.1f, _settings.eyeHeight);
-            Vector3 target = playerPosition + Vector3.up * Mathf.Max(.1f, targetHeight * .5f);
-            Vector3 offset = target - origin;
+            Vector3 offset = position - origin;
             int count = Physics.RaycastNonAlloc(origin, offset.normalized, _hits, offset.magnitude,
                 _settings.sightBlockingLayers, QueryTriggerInteraction.Ignore);
-            if (count == _hits.Length) return false; // Saturation must never turn a wall transparent.
+            if (count == _hits.Length) return false;
             for (int i = 0; i < count; i++)
             {
                 Transform hit = _hits[i].transform;
                 if (hit == _body || hit.IsChildOf(_body) || _body.IsChildOf(hit)) continue;
-                if (hit == _player || hit.IsChildOf(_player)) continue;
+                if (_player != null && (hit == _player || hit.IsChildOf(_player))) continue;
                 return false;
             }
             return true;

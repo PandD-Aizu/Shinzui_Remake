@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using R3;
 using Shinzui.Application.Interfaces;
+using Shinzui.Application.Interfaces.Enemy;
+using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.UseCases.Flashlight;
 using Shinzui.Application.UseCases.Inventory;
 using Shinzui.Presentation.Inventory;
@@ -22,8 +24,18 @@ namespace Shinzui.Presentation.Flashlight
         private readonly InventoryUseCase _inventoryUseCase;
         private readonly InteractionMessageView _messageView;
 
+        private readonly INoiseEventSink _noiseSink;
         private IDisposable _disposable;
 
+        /// <summary>ライト操作とストロボの視覚、聴覚効果を接続</summary>
+        /// <param name="useCase">ライト状態</param>
+        /// <param name="view">ライト表示</param>
+        /// <param name="inputService">操作入力</param>
+        /// <param name="strobeGaugeView">充電表示</param>
+        /// <param name="enemyPresenter">敵への効果適用</param>
+        /// <param name="inventoryUseCase">電池消費</param>
+        /// <param name="messageView">メッセージ表示</param>
+        /// <param name="noiseSink">音の発行先</param>
         public FlashlightPresenter(
             FlashlightUseCase useCase,
             FlashlightView view,
@@ -31,7 +43,7 @@ namespace Shinzui.Presentation.Flashlight
             StrobeGaugeView strobeGaugeView,
             EnemyPresenter enemyPresenter,
             InventoryUseCase inventoryUseCase,
-            InteractionMessageView messageView)
+            InteractionMessageView messageView, INoiseEventSink noiseSink)
         {
             _useCase = useCase;
             _view = view;
@@ -40,6 +52,7 @@ namespace Shinzui.Presentation.Flashlight
             _enemyPresenter = enemyPresenter;
             _inventoryUseCase =  inventoryUseCase;
             _messageView = messageView;
+            _noiseSink = noiseSink;
         }
 
         private bool _wasAttackHeld;
@@ -115,6 +128,7 @@ namespace Shinzui.Presentation.Flashlight
                 StrobeReleaseResult result = _useCase.Release();
                 if (result.Fired)
                 {
+                    _noiseSink.Emit(new NoiseEvent(NoiseKind.Strobe, _view.StrobeOrigin, 8f));
                     ApplyStrobeToEnemies(result.Charge);
                     _inventoryUseCase.UseItemAsync(idx);
                 }
