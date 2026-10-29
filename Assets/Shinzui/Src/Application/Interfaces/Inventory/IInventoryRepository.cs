@@ -28,6 +28,7 @@ namespace Shinzui.Application.Interfaces.Inventory
     public class InventorySaveData
     {
         public InventorySlotSaveData[] Slots;
+        public int EquippedSlotIndex = -1;
     }
 
     [System.Serializable]

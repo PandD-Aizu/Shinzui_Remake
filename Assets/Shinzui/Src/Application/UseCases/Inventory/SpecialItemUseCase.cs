@@ -96,20 +96,23 @@ namespace Shinzui.Application.UseCases.Inventory
 
         private Task SaveAsync()
         {
-            var heldItem = _specialItem.HeldItem.CurrentValue;
-            return _repository.SaveSpecialItemAsync(new SpecialItemSaveData
-            {
-                ItemId = heldItem?.Id ?? ""
-            });
+            return _repository.SaveSpecialItemAsync(CreateSaveData());
         }
 
-        // SpecialItemの反映
-        public Task SetSpecialItemData(SpecialItemSaveData data)
+        /// <summary>現在の特殊アイテムを保存用データへ変換する</summary>
+        /// <returns>保持中の特殊アイテムID</returns>
+        public SpecialItemSaveData CreateSaveData() => new SpecialItemSaveData
         {
-            return _repository.SaveSpecialItemAsync(new SpecialItemSaveData
-            {
-                ItemId = data?.ItemId ?? ""
-            });
+            ItemId = _specialItem.HeldItem.CurrentValue?.Id ?? ""
+        };
+
+        /// <summary>特殊アイテムを復元して効果と表示へ反映する</summary>
+        /// <param name="data">復元対象の特殊アイテム</param>
+        /// <returns>復元完了タスク</returns>
+        public async Task SetSpecialItemData(SpecialItemSaveData data)
+        {
+            await _repository.SaveSpecialItemAsync(data ?? new SpecialItemSaveData { ItemId = "" });
+            await LoadAsync();
         }
 
         /// <summary>

@@ -185,9 +185,14 @@ namespace Shinzui.Temp.BotamochiStealth
             }
         }
 
-        // 選択肢が1個しか無いときはEとかでも決定できるようにしてる
+        /// <summary>数字キーまたは単一選択肢の決定入力を取得する</summary>
+        /// <param name="count">選択肢の数</param>
+        /// <returns>選択番号、未選択の場合は-1</returns>
         private int ReadChoiceIndex(int count)
         {
+            // ポーズメニューの操作で会話の選択肢を確定しない
+            if (Time.timeScale <= 0f) return -1;
+
             var kb = Keyboard.current;
             if (kb != null)
             {
@@ -233,8 +238,13 @@ namespace Shinzui.Temp.BotamochiStealth
             return IsAdvanceKeyPressed();
         }
 
+        /// <summary>ポーズ中を除いて会話の進行入力を取得する</summary>
+        /// <returns>会話を進める入力があったか</returns>
         private static bool IsAdvanceKeyPressed()
         {
+            // 時間停止中は会話を開始・進行させない
+            if (Time.timeScale <= 0f) return false;
+
             if (Keyboard.current != null)
             {
                 if (Keyboard.current.eKey.wasPressedThisFrame ||

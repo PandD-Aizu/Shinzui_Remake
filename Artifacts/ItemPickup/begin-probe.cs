@@ -1,0 +1,18 @@
+if (!UnityEngine.Application.isPlaying) return "Play mode required";
+var target=UnityEngine.GameObject.Find("PickupProbeStone").GetComponent<Shinzui.View.Interaction.InteractableComponent>();
+var camera=UnityEngine.Camera.main;
+target.transform.position += camera.transform.position + camera.transform.forward*.35f - target.PickupPosition;
+UnityEngine.Physics.SyncTransforms();
+var view=UnityEngine.Object.FindFirstObjectByType<Shinzui.View.Interaction.PlayerInteractionView>();
+view.SendMessage("Update");
+var scope=UnityEngine.Object.FindFirstObjectByType<Shinzui.DI.PlayerLifetimeScope>();
+var ticks=(System.Collections.Generic.IEnumerable<VContainer.Unity.ITickable>)scope.Container.Resolve(typeof(System.Collections.Generic.IEnumerable<VContainer.Unity.ITickable>));
+var presenter=ticks.OfType<Shinzui.Presentation.Interaction.InteractionPresenter>().Single();
+var keyboard=(UnityEngine.InputSystem.Keyboard)UnityEngine.InputSystem.InputSystem.devices.FirstOrDefault(d=>d.name=="PickupProbeKeyboard") ?? UnityEngine.InputSystem.InputSystem.AddDevice<UnityEngine.InputSystem.Keyboard>("PickupProbeKeyboard");
+UnityEngine.InputSystem.InputSystem.QueueStateEvent(keyboard,new UnityEngine.InputSystem.LowLevel.KeyboardState());
+typeof(UnityEngine.InputSystem.InputSystem).GetMethod("Update", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, new[]{typeof(UnityEngine.InputSystem.LowLevel.InputUpdateType)}, null).Invoke(null,new object[]{UnityEngine.InputSystem.LowLevel.InputUpdateType.Dynamic});
+presenter.Tick();
+UnityEngine.InputSystem.InputSystem.QueueStateEvent(keyboard,new UnityEngine.InputSystem.LowLevel.KeyboardState(UnityEngine.InputSystem.Key.E));
+typeof(UnityEngine.InputSystem.InputSystem).GetMethod("Update", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, null, new[]{typeof(UnityEngine.InputSystem.LowLevel.InputUpdateType)}, null).Invoke(null,new object[]{UnityEngine.InputSystem.LowLevel.InputUpdateType.Dynamic});
+presenter.Tick();
+return new {frame=UnityEngine.Time.frameCount, active=view.IsPickupActive, key=keyboard.eKey.isPressed, pressed=((Shinzui.Application.Interfaces.IInputService)scope.Container.Resolve(typeof(Shinzui.Application.Interfaces.IInputService))).ItemUsePressed, valid=view.CanContinuePickup(target), current=view.CurrentInteractable==null ? "none":view.CurrentInteractable.name};

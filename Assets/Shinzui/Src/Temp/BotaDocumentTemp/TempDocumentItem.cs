@@ -8,6 +8,7 @@ namespace Shinzui.Temp
     /// </summary>
     public class TempDocumentItem : InteractableComponent
     {
+        public override bool RequiresHold => true;
         [Header("Document Config")]
         [SerializeField] private string documentId = "document_001"; // 重複収集防止用ID
         [SerializeField] private string documentTitle = "### 初期メッセージ(要変更😊) ###";

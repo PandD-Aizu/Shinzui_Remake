@@ -237,10 +237,16 @@ namespace Shinzui.Application.UseCases.Inventory
         /// <summary>
         /// セーブ処理
         /// </summary>
-        private async Task SaveAsync()
+        /// <returns>メモリ上の持ち物更新の完了タスク</returns>
+        private Task SaveAsync() => _repository.SaveInventoryAsync(CreateSaveData());
+
+        /// <summary>現在の持ち物と装備スロットを保存用データへ変換する</summary>
+        /// <returns>現在のインベントリのスナップショット</returns>
+        public InventorySaveData CreateSaveData()
         {
-            var saveData = new InventorySaveData
+            return new InventorySaveData
             {
+                EquippedSlotIndex = _equippedSlotIndex.Value,
                 Slots = Enumerable.Range(0, Capacity)
                     .Select(i => _inventory.GetSlot(i).CurrentValue)
                     .Select((stack, i) => new InventorySlotSaveData
@@ -252,8 +258,6 @@ namespace Shinzui.Application.UseCases.Inventory
                     .Where(x => !string.IsNullOrEmpty(x.ItemId))
                     .ToArray()
             };
-            
-            await _repository.SaveInventoryAsync(saveData);
         }
 
         /// <summary>
@@ -262,17 +266,23 @@ namespace Shinzui.Application.UseCases.Inventory
         public async Task LoadAsync()
         {
             var saveData = await _repository.LoadInventoryAsync();
-            await SetInventoryData(saveData);
+            await SetInventoryData(saveData ?? new InventorySaveData { Slots = System.Array.Empty<InventorySlotSaveData>() });
         }
 
         /// <summary>
         /// InventorySaveDataの内容をインベントリに反映する
         /// </summary>
+        /// <param name="data">復元する持ち物と装備</param>
+        /// <returns>復元完了タスク</returns>
         public async Task SetInventoryData(InventorySaveData data)
         {
-            if (data == null || data.Slots == null) return;
+            // 復元前にスロット範囲を検証する
+            if (data?.Slots == null) throw new System.IO.InvalidDataException("持ち物データが存在しない");
+            if (data.Slots.Any(slot => slot.SlotIndex < 0 || slot.SlotIndex >= Capacity))
+                throw new System.IO.InvalidDataException("持ち物のスロット番号が範囲外");
 
             // 一度クリア
+            UnequipItem();
             for (int i = 0; i < Capacity; i++)
             {
                 _inventory.SetSlotForce(i, null);
@@ -286,6 +296,10 @@ namespace Shinzui.Application.UseCases.Inventory
                     _inventory.SetSlotForce(slotData.SlotIndex, new ItemStack(item, slotData.Quantity));
                 }
             }
+
+            // 装備と作業中の持ち物を同期する
+            EquipItem(data.EquippedSlotIndex);
+            await SaveAsync();
         }
         
         /// <summary>

@@ -11,11 +11,13 @@ namespace Shinzui.View
     public sealed class PlayerCameraMotionExtension : CinemachineExtension
     {
         [Header("Step Motion")]
-        [SerializeField] private float walkFrequency = 1.65f;
-        [SerializeField] private float runFrequency = 2.25f;
+        [SerializeField] private float walkFrequency = 0.9f;
+        [SerializeField] private float runFrequency = 1.35f;
+        [SerializeField] private float walkReferenceSpeed = 1.45f;
+        [SerializeField] private float runReferenceSpeed = 3.8f;
         [SerializeField] private float walkHorizontalAmplitude = 0.009f;
         [SerializeField] private float walkVerticalAmplitude = 0.014f;
-        [SerializeField] private float runAmplitudeMultiplier = 1.15f;
+        [SerializeField] private float runAmplitudeMultiplier = 1.5f;
         [SerializeField] private float motionBlendSpeed = 8.0f;
 
         [Header("Inertia")]
@@ -47,6 +49,8 @@ namespace Shinzui.View
         [SerializeField, Min(.1f)] private float tremorBlendSpeed = 6f;
 
         private Transform _player;
+        private PlayerBodyView _body;
+        private PlayerView _playerView;
         private Vector3 _localVelocity;
         private Vector3 _previousLocalVelocity;
         private Vector3 _localAcceleration;
@@ -81,6 +85,8 @@ namespace Shinzui.View
         public void Configure(Transform player)
         {
             _player = player;
+            _body = player.GetComponentInChildren<PlayerBodyView>();
+            _playerView = player.GetComponent<PlayerView>();
             ResetMotion();
         }
 
@@ -155,6 +161,12 @@ namespace Shinzui.View
                 return;
             }
 
+            // 基準視点へ取得姿勢の移動量だけ加え、照準の回転と追従先は維持
+            // 前フレームに確定した骨格を参照し、カメラ移動をしゃがみ判定へ逆流させない
+            if (_body == null) _body = _player.GetComponentInChildren<PlayerBodyView>();
+            if (_body != null && _playerView != null && !_playerView.IsCinematicControlled)
+                state.PositionCorrection += _body.PickupEyeOffset;
+
             if (deltaTime < 0.0f)
             {
                 ResetMotion();
@@ -163,17 +175,19 @@ namespace Shinzui.View
 
             float dt = Mathf.Max(0.0f, deltaTime);
             float targetMotionWeight = _isGrounded
-                ? Mathf.InverseLerp(0.15f, 2.0f, _horizontalSpeed)
+                ? Mathf.InverseLerp(0.15f, 1.2f, _horizontalSpeed)
                 : 0.0f;
             _motionWeight = Mathf.MoveTowards(
                 _motionWeight,
                 targetMotionWeight,
                 motionBlendSpeed * dt);
 
-            float frequency = _isRunning ? runFrequency : walkFrequency;
-            float strideSpeedScale = Mathf.Lerp(0.65f, 1.15f, Mathf.Clamp01(_horizontalSpeed / 4.0f));
+            // 全身モデルと同じ歩調で揺らし、足の運びと視点の上下を一致させる
+            float frequency = _horizontalSpeed < walkReferenceSpeed
+                ? Mathf.Lerp(walkFrequency * 0.72f, walkFrequency, Mathf.InverseLerp(0.4f, walkReferenceSpeed, _horizontalSpeed))
+                : Mathf.Lerp(walkFrequency, runFrequency, Mathf.InverseLerp(walkReferenceSpeed, runReferenceSpeed, _horizontalSpeed));
             _stepPhase = Mathf.Repeat(
-                _stepPhase + dt * frequency * strideSpeedScale * Mathf.PI * 2.0f,
+                _stepPhase + dt * frequency * Mathf.PI * 2.0f,
                 Mathf.PI * 2.0f);
 
             float amplitudeMultiplier = _isRunning ? runAmplitudeMultiplier : 1.0f;

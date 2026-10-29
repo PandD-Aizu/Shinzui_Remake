@@ -215,8 +215,8 @@ namespace Shinzui.Presentation
         private bool IsInteractionTargetActive()
         {
             return _interactionView != null &&
-                   _interactionView.CurrentInteractable != null &&
-                   _interactionView.CurrentInteractable.CanInteract;
+                   (_interactionView.IsPickupActive || (_interactionView.CurrentInteractable != null &&
+                   _interactionView.CurrentInteractable.CanInteract));
         }
 
         public void Dispose()

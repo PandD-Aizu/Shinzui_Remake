@@ -15,7 +15,19 @@ namespace Shinzui.View.Settings
         {
             public string categoryId;
             public GameObject panel;
+            public GameObject descriptionPanel;
+            public GameObject selectedIndicator;
         }
+
+        [Serializable]
+        private sealed class SliderValueBinding
+        {
+            public Slider slider;
+            public TMPro.TMP_Text label;
+            [NonSerialized] public UnityEngine.Events.UnityAction<float> listener;
+        }
+
+        [SerializeField] private List<SliderValueBinding> sliderValues = new();
 
         [Header("Category Navigation")]
         [SerializeField] private bool generateCategoryTabs = true;
@@ -69,6 +81,37 @@ namespace Shinzui.View.Settings
 
 
 
+        /// <summary>
+        /// スライダーの数値表示を接続する
+        /// </summary>
+        private void Awake()
+        {
+            // 設定値の変更と数値ラベルを同期する
+            foreach (var binding in sliderValues)
+            {
+                if (binding.slider == null || binding.label == null) continue;
+                binding.listener = value => binding.label.text = value.ToString("0.##");
+                binding.slider.onValueChanged.AddListener(binding.listener);
+                binding.listener(binding.slider.value);
+            }
+        }
+
+        /// <summary>
+        /// 数値表示の購読を解除する
+        /// </summary>
+        private void OnDestroy()
+        {
+            foreach (var binding in sliderValues)
+            {
+                if (binding.slider != null && binding.listener != null)
+                    binding.slider.onValueChanged.RemoveListener(binding.listener);
+            }
+        }
+
+        /// <summary>
+        /// カテゴリーに対応する設定と説明を表示する
+        /// </summary>
+        /// <param name="categoryId">表示するカテゴリーの識別子</param>
         public void ShowCategoryPanel(string categoryId)
         {
             if (string.IsNullOrWhiteSpace(categoryId))
@@ -94,12 +137,25 @@ namespace Shinzui.View.Settings
                 found |= isTarget;
             }
 
+            // 説明欄とタブの選択表示を設定一覧に合わせる
+            foreach (var binding in categoryPanels)
+            {
+                if (binding == null) continue;
+                bool selected = string.Equals(binding.categoryId, categoryId, StringComparison.OrdinalIgnoreCase);
+                if (binding.descriptionPanel != null) binding.descriptionPanel.SetActive(selected);
+                if (binding.selectedIndicator != null) binding.selectedIndicator.SetActive(selected);
+            }
+
             if (!found)
             {
                 Debug.LogWarning($"[Settings] Category panel '{categoryId}' was not found.");
             }
         }
 
+        /// <summary>
+        /// カテゴリーとパネルの対応を初期化する
+        /// </summary>
+        /// <returns>初期化が完了した場合はtrue</returns>
         private bool EnsureCategoryPanelsInitialized()
         {
             if (_categoryPanelsInitialized)
