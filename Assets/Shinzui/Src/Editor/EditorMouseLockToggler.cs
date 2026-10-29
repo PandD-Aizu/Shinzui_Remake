@@ -29,9 +29,12 @@ namespace Shinzui.Editor
     {
         private bool? lastAltState = null;
 
+        /// <summary>メニュー画面以外でAltキーによるカーソルロックを切り替える</summary>
         private void Update()
         {
-            if (SceneManager.GetActiveScene().name == "Title") return;
+            // マウス操作が必要なメニュー画面ではカーソルをロックしない
+            var sceneName = SceneManager.GetActiveScene().name;
+            if (sceneName == "Title" || sceneName == "SaveSelect") return;
             
             var keyboard = Keyboard.current;
             if (keyboard != null)

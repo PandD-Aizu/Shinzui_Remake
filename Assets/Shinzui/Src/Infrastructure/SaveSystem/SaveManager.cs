@@ -1,157 +1,79 @@
-using UnityEngine;
 using System.Threading.Tasks;
-using Shinzui.Application.Interfaces.Inventory;
+using Shinzui.Application.Title;
 using Shinzui.Application.UseCases.Inventory;
 
 namespace Shinzui.Infrastructure.SaveSystem
 {
-    /// <summary>
-    /// ゲームのセーブ & ロード処理を行う
-    /// </summary>
+    /// <summary>持ち物の取得、ファイル保存、ゲームへの復元を管理する</summary>
     public class SaveManager
     {
-        private readonly IInventoryRepository _inventoryRepository;
-        private readonly ISpecialItemRepository _specialItemRepository;
         private readonly InventoryUseCase _inventoryUseCase;
         private readonly SpecialItemUseCase _specialItemUseCase;
-    
-        private const string SaveKey = "shinzui_savedata_";
-        private const int SaveDataSlotNum = 3;
+        private readonly SaveFileStore _store;
+        public int SaveSlotNum => SaveFileStore.SlotCount;
+        public int CurrentSlot { get; private set; }
 
-        /*private const GameSaveData emptyData = new GameSaveData(
-            new InventorySaveData(),
-            new SpecialItemSaveData());*/
-        
-        public int SaveSlotNum => SaveDataSlotNum;
-
-        public SaveManager(
-            IInventoryRepository inventoryRepository,
-            ISpecialItemRepository specialItemRepository,
-            InventoryUseCase inventoryUseCase,
-            SpecialItemUseCase specialItemUseCase)
+        /// <summary>保存処理の依存を設定する</summary>
+        /// <param name="inventoryUseCase">持ち物の操作</param>
+        /// <param name="specialItemUseCase">特殊アイテムの操作</param>
+        /// <param name="store">保存ファイルの操作</param>
+        public SaveManager(InventoryUseCase inventoryUseCase, SpecialItemUseCase specialItemUseCase, SaveFileStore store)
         {
-            _inventoryRepository = inventoryRepository;
-            _specialItemRepository = specialItemRepository;
             _inventoryUseCase = inventoryUseCase;
             _specialItemUseCase = specialItemUseCase;
+            _store = store;
+            CurrentSlot = GameStartRequest.Slot ?? 0;
         }
 
-        /// <summary>
-        /// セーブスロットを指定してセーブ
-        /// </summary>
-        /// <param name="idx">セーブスロットのインデックス</param>
-        public async void Save(int idx)
+        /// <summary>現在の持ち物を指定スロットに保存する</summary>
+        /// <param name="idx">保存スロット番号</param>
+        /// <returns>保存完了タスク</returns>
+        public Task Save(int idx)
         {
-            GameSaveData data = await CreateGameSaveDataAsync();
-            await SaveGameDataAsync(idx, data);
+            _store.Save(idx, new GameSaveData
+            {
+                InventorySaveData = _inventoryUseCase.CreateSaveData(),
+                SpecialItemSaveData = _specialItemUseCase.CreateSaveData()
+            });
+            CurrentSlot = idx;
+            return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// セーブスロットを指定してロード
-        /// </summary>
-        /// <param name="idx">セーブスロットのインデックス</param>
-        /// <returns>ロードしたゲームデータ</returns>
+        /// <summary>指定スロットの持ち物をゲームへ復元する</summary>
+        /// <param name="idx">保存スロット番号</param>
+        /// <returns>復元した保存データ</returns>
         public async Task<GameSaveData> Load(int idx)
         {
-            GameSaveData data = await LoadGameDataAsync(idx);
-            await _inventoryUseCase.SetInventoryData(data.InventorySaveData);
-            await _specialItemUseCase.SetSpecialItemData(data.SpecialItemSaveData);
+            var data = _store.Load(idx);
+            await Apply(data);
+            CurrentSlot = idx;
             return data;
         }
 
-        /// <summary>
-        /// セーブデータを削除する
-        /// </summary>
-        /// <param name="idx">セーブスロットのインデックス</param>
+        /// <summary>指定スロットのファイルを削除する</summary>
+        /// <param name="idx">保存スロット番号</param>
+        /// <returns>削除完了タスク</returns>
         public Task DeleteSaveData(int idx)
         {
-            if (idx >= SaveDataSlotNum || idx < 0)
-            {
-                Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
-                return Task.CompletedTask;
-            }
-            
-            if (!PlayerPrefs.HasKey(SaveKey + idx))
-            {
-                Debug.Log("SaveManager Load: " + SaveKey + idx + " not found");
-            }
-            
-            PlayerPrefs.DeleteKey(SaveKey + idx);
-            PlayerPrefs.Save();
+            _store.Delete(idx);
             return Task.CompletedTask;
         }
-    
-        /// <summary>
-        /// セーブデータをjsonファイルに変換しPlayerPrefsに保存する
-        /// </summary>
-        /// <param name="idx">セーブスロットのインデックス</param>
-        /// <param name="data">セーブデータ</param>
-        /// <returns></returns>
-        private Task SaveGameDataAsync(int idx, GameSaveData data)
+
+        /// <summary>新規開始または選択スロットの初期状態を反映する</summary>
+        /// <returns>初期化完了タスク</returns>
+        public async Task InitializeAsync()
         {
-            if (idx >= SaveDataSlotNum || idx < 0)
-            {
-                Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
-                return Task.CompletedTask;
-            }
-            
-            try
-            {
-                string json = JsonUtility.ToJson(data);
-                Debug.Log($"SaveManager Save: key={SaveKey + idx}, data={json}");
-                PlayerPrefs.SetString(SaveKey + idx, json);
-                PlayerPrefs.Save();
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[SaveManager] セーブに失敗しました: {ex.Message}");
-            }
-            return Task.CompletedTask;
-        
+            if (GameStartRequest.Slot.HasValue) await Load(GameStartRequest.Slot.Value);
+            else await Apply(new GameSaveData());
         }
 
-        /// <summary>
-        /// ロードするゲームデータをjsonからGameSaveDataに変換する
-        /// </summary>
-        /// <param name="idx">セーブスロットのインデックス</param>
-        /// <returns>指定したセーブスロットのゲームデータ</returns>
-        private Task<GameSaveData> LoadGameDataAsync(int idx)
+        /// <summary>通常アイテムと特殊アイテムを順に復元する</summary>
+        /// <param name="data">復元する保存データ</param>
+        /// <returns>反映完了タスク</returns>
+        private async Task Apply(GameSaveData data)
         {
-            if (idx >= SaveDataSlotNum || idx < 0)
-            {
-                Debug.LogError($"[SaveManager] セーブスロットの指定が範囲外です");
-                return Task.FromResult<GameSaveData>(null);
-            }
-
-            try
-            {
-                // セーブデータの読み込み
-                // セーブデータがない場合は@以降の設定で初期化する
-                string json = PlayerPrefs.GetString(SaveKey + idx, @"{""InventorySaveData"":{""Slots"":[{""SlotIndex"":0,""ItemId"":""stone"",""Quantity"":2}]},""SpecialItemSaveData"":{""ItemId"":""special_speed_boots""}}");
-                Debug.Log($"SaveManager Load: key={SaveKey + idx}, data={json}");
-                var data = JsonUtility.FromJson<GameSaveData>(json);
-                return Task.FromResult(data);
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[SaveManager] ロードに失敗しました: {ex.Message}");
-                return Task.FromResult<GameSaveData>(null);
-            }
-        }
-
-        /// <summary>
-        /// セーブデータに含めたい情報を取得し、まとめてGameSaveDataに変換する
-        /// </summary>
-        /// <returns>作成したゲームデータ</returns>
-        private async Task<GameSaveData> CreateGameSaveDataAsync()
-        {
-            GameSaveData data = new GameSaveData();
-            
-            data.InventorySaveData = await _inventoryRepository.LoadInventoryAsync();
-            data.SpecialItemSaveData = await _specialItemRepository.LoadSpecialItemAsync();
-            
-            return data;
+            await _inventoryUseCase.SetInventoryData(data.InventorySaveData);
+            await _specialItemUseCase.SetSpecialItemData(data.SpecialItemSaveData);
         }
     }
-
 }

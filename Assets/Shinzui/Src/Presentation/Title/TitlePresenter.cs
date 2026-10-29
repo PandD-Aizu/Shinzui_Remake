@@ -31,6 +31,7 @@ namespace Shinzui.Presentation.Title
         private float _loadElapsed;
         private float _creditsElapsed;
         private float _closeStartAlpha;
+        private string _destination;
 
         public TitlePresenter(ButtonController view, CreditScreenView creditView, OptionWindowView optionView,
             SettingsUseCase settings, CreditPlayback credits, TitleScreenOptions options, ITitleNavigation navigation)
@@ -51,6 +52,7 @@ namespace Shinzui.Presentation.Title
             _creditsGroup = _view.CreditsPanel.GetComponent<CanvasGroup>();
             if (_creditsGroup == null) _creditsGroup = _view.CreditsPanel.AddComponent<CanvasGroup>();
             _view.StartGameRequested += StartGame;
+            _view.ContinueGameRequested += ContinueGame;
             _view.CreditsRequested += OpenCredits;
             _view.OpenOptionsRequested += OpenOptions;
             _view.CloseOptionsRequested += CloseOptions;
@@ -78,7 +80,7 @@ namespace Shinzui.Presentation.Title
                 _loadElapsed += deltaTime;
                 var alpha = Progress(_loadElapsed, _view.FadeDuration);
                 SetScreenAlpha(alpha);
-                if (alpha >= 1f) LoadScene(true, _options.GameSceneAddress);
+                if (alpha >= 1f) LoadScene(true, _destination);
             }
             if (!_showingCredits) return;
 
@@ -98,9 +100,26 @@ namespace Shinzui.Presentation.Title
             if (finished) FinishCredits(false);
         }
 
+        /// <summary>保存データを読み込まずゲーム開始へ進む</summary>
         private void StartGame()
         {
             if (_disposed || _loading || _showingCredits || _view.OptionPanel.activeSelf) return;
+            GameStartRequest.NewGame();
+            BeginLoading(_options.GameSceneAddress);
+        }
+
+        /// <summary>セーブ選択画面への遷移を開始する</summary>
+        private void ContinueGame()
+        {
+            if (_disposed || _loading || _showingCredits || _view.OptionPanel.activeSelf) return;
+            BeginLoading("SaveSelect");
+        }
+
+        /// <summary>指定シーンへのフェードを開始する</summary>
+        /// <param name="destination">遷移先のAddressablesアドレス</param>
+        private void BeginLoading(string destination)
+        {
+            _destination = destination;
             _loading = true;
             _loadStarted = false;
             _loadElapsed = 0f;
@@ -148,6 +167,10 @@ namespace Shinzui.Presentation.Title
             _view.TitlePanel.SetActive(true);
         }
 
+        /// <summary>
+        /// オプションのカテゴリーと選択色を切り替える
+        /// </summary>
+        /// <param name="index">表示するカテゴリーの番号</param>
         private void SelectOption(int index)
         {
             if (_disposed || index < 0 || index >= CategoryIds.Length) return;
@@ -155,7 +178,7 @@ namespace Shinzui.Presentation.Title
             for (var i = 0; i < CategoryIds.Length; i++)
             {
                 var label = _view.GetOptionLabel(i);
-                if (label != null) label.color = i == index ? Color.red : Color.white;
+                if (label != null) label.color = i == index ? Color.white : new Color(0.55f, 0.58f, 0.60f);
             }
         }
 
@@ -250,6 +273,7 @@ namespace Shinzui.Presentation.Title
             _disposed = true;
             _credits.Stop();
             _view.StartGameRequested -= StartGame;
+            _view.ContinueGameRequested -= ContinueGame;
             _view.CreditsRequested -= OpenCredits;
             _view.OpenOptionsRequested -= OpenOptions;
             _view.CloseOptionsRequested -= CloseOptions;

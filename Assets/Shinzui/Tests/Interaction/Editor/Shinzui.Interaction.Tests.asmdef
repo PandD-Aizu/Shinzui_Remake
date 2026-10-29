@@ -1,0 +1,7 @@
+{
+  "name": "Shinzui.Interaction.Tests",
+  "references": ["ApplicationLayer", "ViewLayer", "Unity.ugui"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false
+}

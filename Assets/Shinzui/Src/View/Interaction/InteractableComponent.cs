@@ -18,6 +18,38 @@ namespace Shinzui.View.Interaction
 
         private bool _canInteract = true;
 
+        [Header("Pickup")]
+        [SerializeField] private bool holdToPickup;
+        [SerializeField, Min(.05f)] private float pickupDuration = 1f;
+        [SerializeField] private Transform pickupGrip;
+        private Collider _pickupCollider;
+
+        public virtual bool RequiresHold => holdToPickup;
+        public float PickupDuration => pickupDuration;
+        public Transform PickupGrip => pickupGrip;
+
+        /// <summary>明示した掴み位置、または対象のコライダー中心</summary>
+        public Vector3 PickupPosition
+        {
+            get
+            {
+                if (pickupGrip != null) return pickupGrip.position;
+                if (_pickupCollider == null) _pickupCollider = GetComponentInChildren<Collider>();
+                return _pickupCollider != null ? _pickupCollider.bounds.center : transform.position;
+            }
+        }
+
+        /// <summary>明示した掴み位置、または視点に近いコライダー表面を返す</summary>
+        /// <param name="origin">手を伸ばす側の視点</param>
+        /// <returns>指先が触れる位置</returns>
+        public Vector3 GetPickupContact(Vector3 origin)
+        {
+            Vector3 center = PickupPosition;
+            if (pickupGrip != null || _pickupCollider == null) return center;
+            if (_pickupCollider is MeshCollider mesh && !mesh.convex) return mesh.bounds.ClosestPoint(origin);
+            return _pickupCollider.ClosestPoint(origin);
+        }
+
         public virtual string DisplayName => displayName;
         public virtual string InteractableId => interactableId;
         public bool IsOneTime => isOneTime;

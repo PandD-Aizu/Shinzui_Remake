@@ -248,10 +248,17 @@ namespace Shinzui.Presentation.Inventory
             }
         }
 
+        /// <summary>開始方法に応じて持ち物を初期化する</summary>
         private async void LoadInitialData()
         {
-            //await _useCase.LoadAsync();
-            await _saveManager.Load(0);
+            try
+            {
+                await _saveManager.InitializeAsync();
+            }
+            catch (Exception exception)
+            {
+                UnityEngine.Debug.LogException(exception);
+            }
         }
 
         private void SelectSlot(int index)

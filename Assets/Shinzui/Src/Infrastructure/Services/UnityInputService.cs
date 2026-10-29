@@ -18,13 +18,16 @@ namespace Shinzui.Infrastructure.Services
 
         private bool _isBlocked;
 
-        public Vector2 MoveInput => !_isBlocked && _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
-        public bool SprintPressed => !_isBlocked && _sprintAction != null && _sprintAction.IsPressed();
+        // 時間停止中はメニュー操作をゲーム入力へ伝えない
+        private bool IsBlocked => _isBlocked || Time.timeScale <= 0f;
+
+        public Vector2 MoveInput => !IsBlocked && _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
+        public bool SprintPressed => !IsBlocked && _sprintAction != null && _sprintAction.IsPressed();
         public bool CrouchPressed
         {
             get
             {
-                if (_isBlocked) return false;
+                if (IsBlocked) return false;
                 bool keyboardCtrl = Keyboard.current != null && (
                     Keyboard.current.leftCtrlKey.isPressed ||
                     Keyboard.current.rightCtrlKey.isPressed ||
@@ -40,6 +43,7 @@ namespace Shinzui.Infrastructure.Services
             get
             {
                 // UI等によるTabキーの消費や動的InputActionの不具合を回避するため、直接デバイス入力をフォールバックとしてチェック
+                if (Time.timeScale <= 0f) return false;
                 bool keyboardTab = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
                 bool gamepadSelect = Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame;
                 bool actionPressed = _inventoryToggleAction != null && (_inventoryToggleAction.triggered || _inventoryToggleAction.WasPressedThisFrame());
@@ -51,7 +55,7 @@ namespace Shinzui.Infrastructure.Services
         {
             get
             {
-                if (_isBlocked) return false;
+                if (IsBlocked) return false;
                 bool keyboardE = Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame;
                 bool gamepadSouth = Gamepad.current != null && Gamepad.current.buttonSouth.wasPressedThisFrame;
                 bool actionPressed = _itemUseAction != null && (_itemUseAction.triggered || _itemUseAction.WasPressedThisFrame());
@@ -59,11 +63,17 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        /// <summary>入力ブロックを考慮した取得ボタンの保持状態</summary>
+        public bool ItemUseHeld => !IsBlocked && (
+            (Keyboard.current != null && Keyboard.current.eKey.isPressed) ||
+            (Gamepad.current != null && Gamepad.current.buttonSouth.isPressed) ||
+            (_itemUseAction != null && _itemUseAction.IsPressed()));
+
         public bool QuickItemModifierHeld
         {
             get
             {
-                if (_isBlocked) return false;
+                if (IsBlocked) return false;
                 return Keyboard.current != null &&
                        (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed);
             }
@@ -73,7 +83,7 @@ namespace Shinzui.Infrastructure.Services
         {
             get
             {
-                if (_isBlocked || Mouse.current == null) return 0;
+                if (IsBlocked || Mouse.current == null) return 0;
 
                 float scrollY = Mouse.current.scroll.ReadValue().y;
                 if (scrollY > 0f) return 1;
@@ -86,7 +96,7 @@ namespace Shinzui.Infrastructure.Services
         {
             get
             {
-                if (_isBlocked) return false;
+                if (IsBlocked) return false;
                 bool keyboardF = Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
                 bool gamepadNorth = Gamepad.current != null && Gamepad.current.buttonNorth.wasPressedThisFrame;
                 bool actionPressed = _flashlightToggleAction != null && (_flashlightToggleAction.triggered || _flashlightToggleAction.WasPressedThisFrame());
@@ -98,7 +108,7 @@ namespace Shinzui.Infrastructure.Services
         {
             get
             {
-                if (_isBlocked) return false;
+                if (IsBlocked) return false;
                 bool mouseLeft = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
                 bool gamepadTrigger = Gamepad.current != null && Gamepad.current.rightTrigger.wasPressedThisFrame;
                 bool actionPressed = _attackAction != null && (_attackAction.triggered || _attackAction.WasPressedThisFrame());
@@ -110,7 +120,7 @@ namespace Shinzui.Infrastructure.Services
         {
             get
             {
-                if (_isBlocked) return false;
+                if (IsBlocked) return false;
                 bool mouseLeft = Mouse.current != null && Mouse.current.leftButton.isPressed;
                 bool gamepadTrigger = Gamepad.current != null && Gamepad.current.rightTrigger.isPressed;
                 bool actionPressed = _attackAction != null && _attackAction.IsPressed();

@@ -7,6 +7,7 @@ namespace Shinzui.Temp
     /// </summary>
     public class TempEscapeKeyItem : InteractableComponent
     {
+        public override bool RequiresHold => true;
         public override string DisplayName => TempMessages.EscapeKey.Prompt;
         // アイテムIDにしておけばInteractionUseCaseがインベントリに入れてくれる
         public override string InteractableId => TempEscapeKey.ItemId;

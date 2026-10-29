@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Shinzui.Application.Interfaces;
 using UnityEngine;
@@ -5,19 +6,11 @@ using UnityEngine.UI;
 using VContainer;
 using TMPro;
 
-public enum SaveMode
-{
-    None,
-    Save,
-    Load,
-    Delete
-}
+public enum SaveMode { None, Save, Load, Delete }
 
 namespace Shinzui.Infrastructure.SaveSystem
 {
-    /// <summary>
-    /// Save & LoadのUI制御と実行
-    /// </summary>
+    /// <summary>セーブポイントの確認画面と保存操作を制御する</summary>
     public class SaveController : MonoBehaviour
     {
         [SerializeField] private GameObject saveSlotSelectPanel;
@@ -30,116 +23,110 @@ namespace Shinzui.Infrastructure.SaveSystem
         [SerializeField] private Button noButton;
         [SerializeField] private TextMeshProUGUI saveText;
         [SerializeField] private TextMeshProUGUI checkText;
-        //[SerializeField] private List<Button> saveSlots;
-        
+        [SerializeField] private Button[] slotButtons;
         private SaveMode _saveMode;
         private SaveManager _saveManager;
         private IInputService _inputService;
-        
+        private bool _busy;
+        private int _selectedSlot;
+
+        /// <summary>依存とボタン操作を登録する</summary>
+        /// <param name="saveManager">保存処理</param>
+        /// <param name="inputService">ゲーム入力</param>
         [Inject]
-        public void Construct(
-            SaveManager saveManager,
-            IInputService inputService)
+        public void Construct(SaveManager saveManager, IInputService inputService)
         {
             _saveManager = saveManager;
             _inputService = inputService;
-            
             saveSlotSelectPanel.SetActive(false);
             saveCheckPanel.SetActive(false);
-            
-            _saveMode = SaveMode.None;
-            
-            // セーブ、ロード、削除の登録(現在は仮でスロットを0に固定)
-            saveButton.onClick
-                .AddListener( () => SetSaveMode(SaveMode.Save));
-            loadButton.onClick
-                .AddListener( () => SetSaveMode(SaveMode.Load));
-            deleteButton.onClick
-                .AddListener( () => SetSaveMode(SaveMode.Delete));
-            
-            // 決定、キャンセルの登録
-            yesButton.onClick
-                .AddListener( () => YesButton());
-            noButton.onClick
-                .AddListener(() => NoButton());
-            
-            // バックボタンを押すとセーブ画面を閉じる
-            backButton.onClick
-                .AddListener(() => ChangeSavePanelActive(false));
-            
-            // テキストの初期化
-            saveText.text = "古びたノートだ";
-            checkText.color = Color.red;
-            checkText.text = "本当に？";
+            saveButton.onClick.AddListener(() => SetSaveMode(SaveMode.Save));
+            loadButton.onClick.AddListener(() => SetSaveMode(SaveMode.Load));
+            deleteButton.onClick.AddListener(() => SetSaveMode(SaveMode.Delete));
+            yesButton.onClick.AddListener(YesButton);
+            noButton.onClick.AddListener(() => ChangeCheckPanelActive(false));
+            backButton.onClick.AddListener(() => ChangeSavePanelActive(false));
+            if (slotButtons != null)
+            {
+                for (var i = 0; i < slotButtons.Length; i++)
+                {
+                    var slot = i;
+                    slotButtons[i].onClick.AddListener(() => SelectSlot(slot));
+                }
+            }
         }
 
+        /// <summary>保存画面の表示とゲーム入力を切り替える</summary>
+        /// <param name="active">表示するか</param>
         public void ChangeSavePanelActive(bool active)
         {
             saveSlotSelectPanel.SetActive(active);
+            saveCheckPanel.SetActive(false);
+            SelectSlot(_saveManager.CurrentSlot);
             _inputService.SetBlocked(active);
         }
 
-        private void ChangeCheckPanelActive(bool active)
+        /// <summary>保存操作の対象スロットを選択する</summary>
+        /// <param name="slot">保存スロット番号</param>
+        private void SelectSlot(int slot)
         {
-            saveCheckPanel.SetActive(active);
-            saveSlotSelectPanel.SetActive(!active);
-            _saveMode = !active ? SaveMode.None : _saveMode;
+            _selectedSlot = slot;
+            saveText.text = $"古びたノートだ\nスロット {slot + 1}";
         }
 
+        /// <summary>確認画面と操作画面を切り替える</summary>
+        /// <param name="active">確認画面を表示するか</param>
+        private void ChangeCheckPanelActive(bool active)
+        {
+            if (_busy) return;
+            saveCheckPanel.SetActive(active);
+            saveSlotSelectPanel.SetActive(!active);
+            if (!active) _saveMode = SaveMode.None;
+        }
+
+        /// <summary>確認する操作を設定する</summary>
+        /// <param name="mode">保存、ロード、削除</param>
         private void SetSaveMode(SaveMode mode)
         {
             _saveMode = mode;
+            checkText.color = new Color(0.82f, 0.13f, 0.12f);
+            checkText.text = $"スロット {_selectedSlot + 1}\n本当に？";
             ChangeCheckPanelActive(true);
         }
-        
-        private void Save(int index)
-        {
-            if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
-            _saveManager.Save(index);
-            checkText.text = "持ち物を記録した";
-        }
 
-        private void Load(int index)
-        {
-            if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
-            _saveManager.Load(index);
-            checkText.text = "持ち物を思い出した";
-        }
-
-        private void Delete(int index)
-        {
-            if(_saveManager == null) Debug.LogWarning("SaveManager is null!");
-            _saveManager.DeleteSaveData(index);
-            checkText.text = "記録を消した";
-        }
-
+        /// <summary>処理完了を待って結果を表示する</summary>
         private async void YesButton()
         {
-            checkText.color = Color.white;
-            switch (_saveMode)
+            if (_busy) return;
+            _busy = true;
+            yesButton.interactable = noButton.interactable = false;
+            try
             {
-                case SaveMode.Save:
-                    Save(0);
-                    break;
-                case SaveMode.Load:
-                    Load(0);
-                    break;
-                case SaveMode.Delete:
-                    Delete(0);
-                    break;
-                default:
-                    break;
+                var slot = _selectedSlot;
+                switch (_saveMode)
+                {
+                    case SaveMode.Save: await _saveManager.Save(slot); break;
+                    case SaveMode.Load: await _saveManager.Load(slot); break;
+                    case SaveMode.Delete: await _saveManager.DeleteSaveData(slot); break;
+                }
+                checkText.color = new Color(0.88f, 0.86f, 0.82f);
+                checkText.text = _saveMode == SaveMode.Save ? "持ち物を記録した" :
+                    _saveMode == SaveMode.Load ? "持ち物を思い出した" : "記録を消した";
+                await Task.Delay(1500);
+                if (this == null) return;
+                _busy = false;
+                ChangeCheckPanelActive(false);
             }
-
-            await Task.Delay(2000);
-            ChangeCheckPanelActive(false);
-            checkText.color = Color.red;
-            checkText.text = "本当に？";
-        }
-
-        private void NoButton()
-        {
-            ChangeCheckPanelActive(false);
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"保存操作に失敗: {exception.Message}");
+                if (this != null) checkText.text = "処理に失敗した\n保存データを確認してください";
+            }
+            finally
+            {
+                _busy = false;
+                if (this != null) yesButton.interactable = noButton.interactable = true;
+            }
         }
     }
 }

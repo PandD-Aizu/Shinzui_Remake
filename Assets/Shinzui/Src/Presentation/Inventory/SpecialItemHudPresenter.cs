@@ -37,7 +37,6 @@ namespace Shinzui.Presentation.Inventory
                 .AddTo(ref builder);
 
             _disposable = builder.Build();
-            _ = _useCase.LoadAsync();
         }
 
         public void Dispose()
