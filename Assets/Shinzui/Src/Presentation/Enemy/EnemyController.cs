@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Shinzui.Application.UseCases.Enemy;
+using Shinzui.Application.AI.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases;
@@ -8,7 +9,7 @@ using UnityEngine;
 
 namespace Shinzui.Presentation
 {
-    /// <summary>Binds director commands to the runtime adapter and preserves strobe/death behavior.</summary>
+    /// <summary>Brainの判断を移動へ反映し、ストロボと接触死亡を維持</summary>
     internal sealed class EnemyController
     {
         private readonly EnemyView _view;
@@ -19,7 +20,9 @@ namespace Shinzui.Presentation
         private readonly EnemyDirectorSettings _settings;
         private readonly System.Func<EnemyView, bool> _capture;
         private readonly EnemyBrainSettings _brainSettings;
-        private readonly EnemyPerception _perception;
+        private readonly EnemyBrain _brain;
+        private EnemyBrainInput _input;
+        private bool _visibleToPlayer;
         private float _wanderTimer;
         private float _wanderInterval;
         private float _wanderRadius;
@@ -27,7 +30,7 @@ namespace Shinzui.Presentation
         private float _strobeRemaining;
         private float _strobeMultiplier = 1f;
         private bool _strobeStops;
-        private EnemyCommand _currentCommand = EnemyCommand.Idle;
+        private EnemyIntent _currentIntent;
 
         /// <summary>敵一体の知覚と移動を初期化</summary>
         /// <param name="id">敵の識別子</param>
@@ -49,7 +52,7 @@ namespace Shinzui.Presentation
             _death = death;
             _settings = settings;
             _brainSettings = brainSettings;
-            _perception = new EnemyPerception(brainSettings);
+            _brain = new EnemyBrain(brainSettings, settings, id + 1);
             _capture = capture;
         }
 
@@ -82,11 +85,10 @@ namespace Shinzui.Presentation
             if (_strobeRemaining <= 0f) { _strobeStops = false; _strobeMultiplier = 1f; }
             bool ready = _runtime.IsReady && !_strobeStops;
             SightSample sight = ready ? _runtime.SampleSight(playerPosition, playerHeight, playerVelocity) : default;
-            bool canSeePlayer = sight.VisibleRatio > 0f;
             // 聴覚は遮蔽を反映し、最も強い刺激だけを調査対象にする
             float strongest = 0f;
             float totalNoiseGain = 0f;
-            Vector3 heardPosition = default;
+            NoiseEvent heardNoise = default;
             if (ready)
             {
                 for (int i = 0; i < noises.Count; i++)
@@ -98,36 +100,40 @@ namespace Shinzui.Presentation
                     totalNoiseGain += gain;
                     if (gain <= strongest) continue;
                     strongest = gain;
-                    heardPosition = noise.Position;
+                    heardNoise = noise;
                 }
             }
-            _perception.Update(sight, signature, _settings.sightDistance, _settings.fieldOfView, totalNoiseGain, deltaTime);
-
-            // 演出対象となる索敵中の敵だけプレイヤー側の視線を確認
-            return _perception.CreateReport(Id, _runtime.Position, _currentCommand, _settings.sightDistance,
-                ready, canSeePlayer,
-                canSeePlayer && _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers),
-                strongest, heardPosition);
+            // Brainへは視覚サンプルと聞こえた音だけを渡す
+            _input = new EnemyBrainInput(_runtime.Position, sight, signature, totalNoiseGain, heardNoise,
+                _runtime.IsReady, _strobeStops);
+            _visibleToPlayer = _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers);
+            return CurrentReport();
         }
 
+        /// <summary>行動決定後の状態を演出へ渡す</summary>
+        /// <returns>最新のBrain報告</returns>
+        public EnemyReport CurrentReport()
+            => _brain.CreateReport(Id, _runtime.Position, _runtime.IsReady && !_strobeStops, _visibleToPlayer);
+
         /// <summary>
-        /// 接近による死亡判定と統括AIの移動命令を処理
+        /// 接近による死亡判定とBrainの移動意図を処理
         /// </summary>
         /// <param name="deltaTime">フレーム経過時間</param>
         /// <param name="player">プレイヤーの位置情報</param>
         /// <param name="playerHeight">プレイヤーの現在の高さ</param>
-        /// <param name="command">統括AIの命令</param>
-        public void Tick(float deltaTime, IPlayerTracker player, float playerHeight, EnemyCommand command)
+        /// <param name="directive">統括AIのヒント</param>
+        public void Tick(float deltaTime, IPlayerTracker player, float playerHeight, DirectorDirective directive)
         {
             if (player == null || _view == null || !_runtime.IsAvailable) return;
-            bool changed = command.Type != _currentCommand.Type;
-            _currentCommand = command;
-            float speed = command.Type == EnemyCommandType.ChasePlayer ? 1f : Mathf.Clamp(_settings.patrolSpeedMultiplier, .1f, 1f);
-            _runtime.SetSpeed(speed * _strobeMultiplier, _strobeStops || command.Type == EnemyCommandType.Idle);
+            EnemyIntent intent = _brain.Tick(_input, directive, deltaTime);
+            bool changed = intent.Type != _currentIntent.Type;
+            _currentIntent = intent;
+            bool stopped = intent.Type == EnemyIntentType.Idle || intent.Type == EnemyIntentType.LookAround;
+            _runtime.SetSpeed(intent.SpeedMultiplier * _strobeMultiplier, _strobeStops || stopped);
             // 追跡命令を見た目へ反映し、腕をプレイヤーの上半身へ向ける
             if (_humanMotion != null)
-                _humanMotion.SetChasePose(command.Type == EnemyCommandType.ChasePlayer && !_strobeStops && _runtime.IsReady,
-                    player.PlayerPosition + Vector3.up * playerHeight * .35f);
+                _humanMotion.SetChasePose(intent.Type == EnemyIntentType.Chase && !_strobeStops && _runtime.IsReady,
+                    intent.Target + Vector3.up * playerHeight * .35f);
             if (_strobeStops || !_runtime.IsReady) return;
 
             // 移動用の原点ではなく体の中心から接近距離を測定
@@ -140,13 +146,13 @@ namespace Shinzui.Presentation
                 if (killed) return;
             }
 
-            switch (command.Type)
+            switch (intent.Type)
             {
-                case EnemyCommandType.Idle:
+                case EnemyIntentType.Idle:
                     _movement.Stop();
                     _runtime.Stop();
                     break;
-                case EnemyCommandType.Wander:
+                case EnemyIntentType.Wander:
                     _movement.StartWandering();
                     _wanderTimer -= deltaTime;
                     if (changed || _wanderTimer <= 0f)
@@ -155,11 +161,17 @@ namespace Shinzui.Presentation
                         _wanderTimer = Mathf.Max(.1f, _wanderInterval);
                     }
                     break;
-                default:
+                case EnemyIntentType.LookAround:
+                    _movement.Stop();
+                    _runtime.Stop();
+                    _runtime.FaceTowards(intent.Target);
+                    break;
+                case EnemyIntentType.MoveTo:
+                case EnemyIntentType.Chase:
                     _movement.StartChasing();
-                    Vector3 target = command.TargetPosition;
+                    Vector3 target = intent.Target;
                     var bounds = player.CurrentTunnelBounds;
-                    if (command.Type == EnemyCommandType.ChasePlayer && bounds.HasValue)
+                    if (intent.Type == EnemyIntentType.Chase && bounds.HasValue)
                     {
                         Vector3 dummy = target;
                         float length = Mathf.Abs(bounds.Value.end.z - bounds.Value.start.z);

@@ -127,16 +127,20 @@ namespace Shinzui.Presentation
 
             float deltaTime = Time.deltaTime;
             if (deltaTime <= 0f) return;
-            EnemyCommand[] commands = DecideCommands(deltaTime);
+            DirectorDirective[] directives = DecideDirectives(deltaTime);
 
             foreach (EnemyController controller in _controllers)
             {
-                EnemyCommand command = controller.Id >= 0 && controller.Id < commands.Length
-                    ? commands[controller.Id]
-                    : EnemyCommand.Wander;
-                controller.Tick(deltaTime, _playerTracker, _playerMove.CurrentHeight.CurrentValue, command);
+                DirectorDirective directive = controller.Id >= 0 && controller.Id < directives.Length
+                    ? directives[controller.Id]
+                    : default;
+                controller.Tick(deltaTime, _playerTracker, _playerMove.CurrentHeight.CurrentValue, directive);
+                _enemyReports[controller.Id] = controller.CurrentReport();
                 if (_playerDeathUseCase.IsDead.CurrentValue) break;
             }
+
+            // 同じフレームに確定した発見を演出へ反映する
+            _enemyDirectorUseCase.ObserveReports(_enemyReports);
         }
 
         /// <summary>死亡回避を判定し、人型の捕獲だけ専用演出を予約</summary>
@@ -191,15 +195,15 @@ namespace Shinzui.Presentation
         }
 
         /// <summary>
-        /// 統括AIに現在の世界状態を渡してEnemyごとの命令を決定する
+        /// 知覚を採取し、前回のBrain報告から統括AIのヒントを決定
         /// </summary>
         /// <param name="deltaTime">フレーム経過時間</param>
-        /// <returns>EnemyのIdに対応する命令配列</returns>
-        private EnemyCommand[] DecideCommands(float deltaTime)
+        /// <returns>EnemyのIdに対応する指示配列</returns>
+        private DirectorDirective[] DecideDirectives(float deltaTime)
         {
             if (_enemyDirectorUseCase == null || _playerTracker == null)
             {
-                return Array.Empty<EnemyCommand>();
+                return Array.Empty<DirectorDirective>();
             }
 
             EnsureReportCapacity();
@@ -230,7 +234,7 @@ namespace Shinzui.Presentation
                 tunnelBounds.HasValue ? tunnelBounds.Value.start : Vector3.zero,
                 tunnelBounds.HasValue ? tunnelBounds.Value.end : Vector3.zero);
 
-            return _enemyDirectorUseCase.DecideCommands(worldState, deltaTime);
+            return _enemyDirectorUseCase.DecideDirectives(worldState, deltaTime);
         }
 
         /// <summary>移動距離と足音間隔からノイズ半径を決定</summary>

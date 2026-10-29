@@ -25,6 +25,9 @@ namespace Shinzui.Application.Interfaces
         bool MoveTo(Vector3 targetPosition);
         void Wander(float radius);
         void Stop();
+        /// <summary>停止したまま目標の方向へ向く</summary>
+        /// <param name="position">注視する位置</param>
+        void FaceTowards(Vector3 position);
         void SetSpeed(float multiplier, bool stopped);
         void WarpZ(float z);
     }

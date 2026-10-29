@@ -154,6 +154,17 @@ namespace Shinzui.Infrastructure.Services
             _hasTarget = false;
         }
 
+        /// <summary>水平方向だけを変え、見回し中の移動を発生させない</summary>
+        /// <param name="position">注視する位置</param>
+        public void FaceTowards(Vector3 position)
+        {
+            if (!IsReady) return;
+            Vector3 direction = position - Position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude <= .001f) return;
+            _body.rotation = Quaternion.LookRotation(direction);
+        }
+
         public void SetSpeed(float multiplier, bool stopped)
         {
             if (!IsAvailable) return;

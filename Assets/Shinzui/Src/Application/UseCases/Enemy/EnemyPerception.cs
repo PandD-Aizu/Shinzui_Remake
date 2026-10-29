@@ -40,20 +40,7 @@ namespace Shinzui.Application.UseCases.Enemy
             _suspicion.Tick(deltaTime, gain > 0f || noiseGain > 0f);
         }
 
-        /// <summary>Domainの状態をApplicationの報告へまとめる</summary>
-        /// <param name="id">敵の識別子</param>
-        /// <param name="position">敵の位置</param>
-        /// <param name="command">現在の命令</param>
-        /// <param name="distance">索敵距離</param>
-        /// <param name="ready">行動可能か</param>
-        /// <param name="visible">対象が見えているか</param>
-        /// <param name="visibleToPlayer">プレイヤーから見えるか</param>
-        /// <param name="noiseGain">最大の音刺激</param>
-        /// <param name="heardPosition">音源位置</param>
-        /// <returns>知覚状態を含む報告</returns>
-        public EnemyReport CreateReport(int id, Vector3 position, EnemyCommand command, float distance,
-            bool ready, bool visible, bool visibleToPlayer, float noiseGain, Vector3 heardPosition)
-            => new(id, position, command, distance, ready, visible, visibleToPlayer, _suspicion.Level, noiseGain, heardPosition);
+        public Shinzui.Domain.ValueObjects.Enemy.EnemyAwarenessLevel Level => _suspicion.Level;
 
         /// <summary>距離、視野、姿勢、光から毎秒の視覚刺激を計算</summary>
         /// <param name="sight">視覚サンプル</param>

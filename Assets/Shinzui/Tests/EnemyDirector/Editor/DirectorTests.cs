@@ -1,197 +1,149 @@
-using System;
-using System.Linq;
 using NUnit.Framework;
-using Shinzui.Domain.ValueObjects.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases.Enemy;
+using Shinzui.Domain.ValueObjects.Enemy;
 using UnityEngine;
 
 namespace Shinzui.Tests.EnemyDirector
 {
+    /// <summary>統括AIのヒントと観測だけを検証</summary>
     public sealed class DirectorTests
     {
         private EnemyDirectorSettings _settings;
         private EnemyDirectorUseCase _director;
         private SoundSpy _sound;
+
+        /// <summary>各テストで統括状態を独立させる</summary>
         [SetUp] public void SetUp()
         {
             _settings = new EnemyDirectorSettings();
             _sound = new SoundSpy();
             _director = new EnemyDirectorUseCase(_sound, _settings);
         }
+        /// <summary>通知を解放</summary>
         [TearDown] public void TearDown() => _director.Dispose();
-        private static EnemyReport Report(int id = 0, bool visible = false, bool active = true, float z = 5f,
-            EnemyCommand command = default, bool visibleToPlayer = true, float noiseGain = 0f, Vector3 heardPosition = default)
-            => new(id, new Vector3(0, 0, z), command, 16f, active, visible, visibleToPlayer,
-                visible ? EnemyAwarenessLevel.Engaged : EnemyAwarenessLevel.Unaware, noiseGain, heardPosition);
-        private EnemyCommand[] Step(float dt, Vector3 player, params EnemyReport[] reports)
-            => _director.DecideCommands(new EnemyWorldState(player, reports, false, default, default), dt);
 
-        [Test] public void ProximityAloneNeverStartsChase()
+        /// <summary>敵の観測状態を作成</summary>
+        /// <param name="id">識別子</param>
+        /// <param name="awareness">警戒段階</param>
+        /// <param name="visible">プレイヤーに見えるか</param>
+        /// <param name="active">動作可能か</param>
+        /// <returns>報告</returns>
+        private static EnemyReport Report(int id = 0, EnemyAwarenessLevel awareness = EnemyAwarenessLevel.Unaware,
+            bool visible = true, bool active = true)
+            => new(id, Vector3.forward * (id + 5f), default, active, visible, awareness);
+
+        /// <summary>統括時間を進める</summary>
+        /// <param name="dt">経過秒数</param>
+        /// <param name="position">プレイヤーの位置</param>
+        /// <param name="reports">敵の報告</param>
+        /// <returns>指示</returns>
+        private DirectorDirective[] Step(float dt, Vector3 position, params EnemyReport[] reports)
+            => _director.DecideDirectives(new EnemyWorldState(position, reports, false, default, default), dt);
+
+        /// <summary>近いだけでは発見も直接追跡命令も生まれない</summary>
+        [Test] public void ProximityOnlyProducesHints()
         {
-            for (int i = 0; i < 100; i++)
-                Assert.That(Step(.5f, Vector3.zero, Report())[0].Type, Is.Not.EqualTo(EnemyCommandType.ChasePlayer));
+            for (int i = 0; i < 30; i++)
+            {
+                var type = Step(.5f, Vector3.zero, Report())[0].Type;
+                Assert.That(type == DirectorDirectiveType.None || type == DirectorDirectiveType.HintArea, Is.True);
+            }
             Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
-            Assert.That(_sound.OneShots, Is.Zero);
+            Assert.That(_sound.Count, Is.Zero);
         }
-        /// <summary>視認だけでは追跡せず疑いゲージの確定を待つ</summary>
-        [Test] public void SightRequiresEngagedAwareness()
+
+        /// <summary>ヒントは曖昧な領域で、更新間隔までは移動に追従しない</summary>
+        [Test] public void HintIsImpreciseAndHeld()
         {
-            var suspicious = new EnemyReport(0, Vector3.forward * 5f, default, 16f, true, true, true,
-                EnemyAwarenessLevel.Suspicious);
-            Assert.That(Step(1f, Vector3.zero, suspicious)[0].Type, Is.Not.EqualTo(EnemyCommandType.ChasePlayer));
-            Assert.That(Step(.1f, Vector3.zero, Report(visible: true))[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
-        }
-        [Test] public void LostSightSearchesLastKnownPositionNotMovingPlayer()
-        {
-            Vector3 seen = new(2, 0, 3);
-            Step(.5f, seen, Report(visible: true));
-            var command = Step(.5f, new Vector3(80, 0, 70), Report())[0];
-            Assert.That(command.Type, Is.EqualTo(EnemyCommandType.InvestigatePosition));
-            Assert.That(command.TargetPosition, Is.EqualTo(seen));
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Search));
-            Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
-        }
-        [Test] public void SearchExpiresAndRecoverySuppressesHints()
-        {
-            _settings.searchDuration = 1f;
-            Step(.5f, Vector3.zero, Report(visible: true));
-            Step(.5f, Vector3.zero, Report());
-            var result = Step(.5f, Vector3.zero, Report())[0];
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
-            Assert.That(result.Type, Is.EqualTo(EnemyCommandType.Retreat));
-            for (int i = 0; i < 10; i++)
-                Assert.That(Step(.5f, Vector3.zero, Report())[0].Type, Is.EqualTo(EnemyCommandType.Retreat));
-        }
-        [Test] public void RecoveryStillAllowsGenuineVisualDetection()
-        {
-            _settings.buildUpDuration = .5f;
             _settings.ambientDuration = .5f;
-            Step(.5f, Vector3.zero, Report());
-            Step(.5f, Vector3.zero, Report());
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
-            Assert.That(Step(.5f, Vector3.zero, Report(visible: true))[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
+            Vector3 player = new(1, 0, 1);
+            var hint = Step(.5f, player, Report())[0];
+            Assert.That(hint.Type, Is.EqualTo(DirectorDirectiveType.HintArea));
+            Assert.That(hint.Position, Is.Not.EqualTo(player));
+            Assert.That(hint.Radius, Is.GreaterThan(0f));
+            Assert.That(Step(.1f, Vector3.one * 100f, Report())[0].Position, Is.EqualTo(hint.Position));
         }
-        [Test] public void PressureDoesNotMakeEnemyForgetVisiblePlayer()
+
+        /// <summary>ヒント対象は一体で報告順が変わっても主役を維持</summary>
+        [Test] public void HintHasSingleStableOwner()
         {
-            _settings.chasePressurePerSecond = 2f;
-            for (int i = 0; i < 8; i++)
-                Assert.That(Step(.5f, Vector3.zero, Report(visible: true))[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
-            Assert.That(_director.Pressure, Is.EqualTo(1f));
-            Step(.5f, Vector3.zero, Report());
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
+            _settings.ambientDuration = .1f;
+            Step(.1f, Vector3.zero, Report(0), Report(1));
+            var directives = Step(.1f, Vector3.zero, Report(1), Report(0));
+            Assert.That(directives[0].Type, Is.EqualTo(DirectorDirectiveType.None));
+            Assert.That(directives[1].Type, Is.EqualTo(DirectorDirectiveType.HintArea));
         }
-        [Test] public void OnlyOneHunterAndOwnershipRemainsStable()
+
+        /// <summary>見えない追跡者では発見演出が発生せず、視認後に一度だけ鳴る</summary>
+        [Test] public void DiscoveryRequiresSeeingEngagedEnemy()
         {
-            Step(.5f, Vector3.zero, Report(10, true, z: 5), Report(42, true, z: 7));
-            var commands = Step(.5f, Vector3.zero, Report(42, true, z: 2), Report(10, true, z: 5));
-            Assert.That(commands.Count(c => c.Type == EnemyCommandType.ChasePlayer), Is.EqualTo(1));
-            Assert.That(_director.FocusEnemyId, Is.EqualTo(10));
-            Assert.That(commands[1].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
+            Step(.5f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged, visible: false), Report(1));
+            Assert.That(_director.IsPlayerFound.CurrentValue, Is.True);
+            Assert.That(_sound.Count, Is.Zero);
+            Step(.5f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged));
+            Step(6f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged, visible: false));
+            Step(.5f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged));
+            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.True);
+            Assert.That(_sound.Count, Is.EqualTo(1));
         }
-        [Test] public void InactiveEnemyCannotDetectOrOwnChase()
+
+        /// <summary>敵が消えた場合に発見状態を残さない</summary>
+        [Test] public void RemovedAndInactiveEnemiesDoNotRemainFound()
         {
-            var commands = Step(.5f, Vector3.zero, Report(0, true, false, 1), Report(1, true));
-            Assert.That(commands[0].Type, Is.EqualTo(EnemyCommandType.Idle));
-            Assert.That(_director.FocusEnemyId, Is.EqualTo(1));
-        }
-        [Test] public void RemovedHunterDoesNotLeaveStalePlayerFoundState()
-        {
-            Step(.5f, Vector3.zero, Report(visible: true));
+            Step(.5f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged));
+            Step(.5f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged, active: false));
+            Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
             Assert.That(Step(.5f, Vector3.zero), Is.Empty);
             Assert.That(_director.FocusEnemyId, Is.EqualTo(-1));
-            Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
         }
-        [Test] public void SoundInvestigatesOnlyWithinAudibleRadius()
+
+        /// <summary>Pressure上限でも追跡はBrainに任せ、喪失後だけ休息へ移る</summary>
+        [Test] public void PressureDoesNotOverrideEngagement()
         {
-            Vector3 impact = new(4, 0, 2);
-            var reports = new[] { Report(0, z: 3f, noiseGain: .4f, heardPosition: impact), Report(1, z: 30f) };
-            var commands = _director.DecideCommands(new EnemyWorldState(Vector3.zero, reports, false, default, default), .5f);
-            Assert.That(commands[0].Type, Is.EqualTo(EnemyCommandType.InvestigatePosition));
-            Assert.That(commands[0].TargetPosition, Is.EqualTo(impact));
-            Assert.That(commands[1].Type, Is.EqualTo(EnemyCommandType.Wander));
-            Assert.That(_director.IsPlayerFound.CurrentValue, Is.False);
-        }
-        [Test] public void ContinuousNoiseDoesNotResetSearchBudget()
-        {
-            _settings.searchDuration = 2f;
-            var world = new EnemyWorldState(Vector3.zero, new[] { Report(noiseGain: .3f) }, false, default, default);
-            for (int i = 0; i < 4; i++) _director.DecideCommands(world, .5f);
+            _settings.chasePressurePerSecond = 2f;
+            var directives = Step(1f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged));
+            Assert.That(_director.Pressure, Is.EqualTo(1f));
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Hunt));
+            Assert.That(directives[0].Type, Is.EqualTo(DirectorDirectiveType.None));
+            Step(.1f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Alerted));
             Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
         }
-        [Test] public void HintsAreImpreciseAndHeldBetweenUpdates()
-        {
-            _settings.ambientDuration = .5f;
-            Vector3 position = new(1, 0, 1);
-            Vector3 hint = Step(.5f, position, Report())[0].TargetPosition;
-            Assert.That(hint, Is.Not.EqualTo(position));
-            Assert.That(Step(.5f, new Vector3(100, 0, 100), Report())[0].TargetPosition, Is.EqualTo(hint));
-        }
-        [Test] public void PausedTimeDoesNotAdvancePacingOrDiscoverPlayer()
-        {
-            Step(0f, Vector3.zero, Report(visible: true));
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Ambient));
-            Assert.That(_sound.OneShots, Is.Zero);
-        }
-        [Test] public void DiscoverySoundIsNotRepeatedDuringFlickeringSight()
-        {
-            Step(.5f, Vector3.zero, Report(visible: true));
-            Step(.1f, Vector3.zero, Report());
-            Step(.5f, Vector3.zero, Report(visible: true));
-            Assert.That(_sound.OneShots, Is.EqualTo(1));
-        }
-        /// <summary>視界外の敵は追跡を開始しても演出を発生させない</summary>
-        [Test] public void UnseenHunterDoesNotTriggerFeedback()
-        {
-            var commands = Step(.5f, Vector3.zero, Report(visible: true, visibleToPlayer: false));
 
-            Assert.That(commands[0].Type, Is.EqualTo(EnemyCommandType.ChasePlayer));
-            Assert.That(_director.IsPlayerFound.CurrentValue, Is.True);
-            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.False);
-            Assert.That(_sound.OneShots, Is.Zero);
-        }
-
-        /// <summary>追跡中に初めて敵を視認した時だけ演出を開始</summary>
-        [Test] public void SeeingHunterLaterTriggersFeedbackOnce()
+        /// <summary>捜索を観測するだけで音源やプレイヤーの位置を命令しない</summary>
+        [Test] public void SearchIsObservedWithoutDirectingMovement()
         {
-            Step(.5f, Vector3.zero, Report(visible: true, visibleToPlayer: false));
-            Step(.5f, Vector3.zero, Report(visible: true));
-            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.True);
-            Assert.That(_sound.OneShots, Is.EqualTo(1));
-
-            // 視線を外して戻しても同じ追跡で叫び直さない
-            Step(6f, Vector3.zero, Report(visible: true, visibleToPlayer: false));
-            Step(.5f, Vector3.zero, Report(visible: true));
-            Assert.That(_sound.OneShots, Is.EqualTo(1));
-
+            var result = Step(.5f, Vector3.one * 100f, Report(awareness: EnemyAwarenessLevel.Alerted));
+            Assert.That(result[0].Type, Is.EqualTo(DirectorDirectiveType.None));
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Search));
             Step(.5f, Vector3.zero, Report());
-            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.False);
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Recovery));
         }
 
-        /// <summary>別の敵が見えていても視界外の追跡者の演出は開始しない</summary>
-        [Test] public void VisibleNonObserverDoesNotRevealHiddenHunter()
+        /// <summary>停止時間では統括状態と通知を進めない</summary>
+        [Test] public void PausedTimeDoesNotDiscoverPlayer()
         {
-            Step(.5f, Vector3.zero, Report(0, visible: true, visibleToPlayer: false), Report(1));
-
-            Assert.That(_director.IsEncounterRecognized.CurrentValue, Is.False);
-            Assert.That(_sound.OneShots, Is.Zero);
+            Step(0f, Vector3.zero, Report(awareness: EnemyAwarenessLevel.Engaged));
+            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.Ambient));
+            Assert.That(_sound.Count, Is.Zero);
         }
 
-        [Test] public void InvalidDurationsUseFiniteDefaults()
+        /// <summary>無効な設定値でもヒントは有限値になる</summary>
+        [Test] public void InvalidSettingsUseDefaults()
         {
             _settings.ambientDuration = float.NaN;
             _settings.hintCellSize = float.PositiveInfinity;
-            for (int i = 0; i < 26; i++) Step(.5f, Vector3.zero, Report());
-            var command = Step(.5f, Vector3.zero, Report())[0];
-            Assert.That(_director.Phase, Is.EqualTo(EnemyDirectorPhase.BuildUp));
-            Assert.That(float.IsNaN(command.TargetPosition.x), Is.False);
+            var hint = Step(12f, Vector3.zero, Report())[0];
+            Assert.That(hint.Type, Is.EqualTo(DirectorDirectiveType.HintArea));
+            Assert.That(float.IsNaN(hint.Position.x) || float.IsInfinity(hint.Position.x), Is.False);
         }
 
         private sealed class SoundSpy : IEnemyEncounterFeedback
         {
-            public int OneShots;
-            public void OnPlayerFound() => OneShots++;
+            public int Count;
+            /// <summary>演出回数を記録</summary>
+            public void OnPlayerFound() => Count++;
         }
     }
 }

@@ -1,30 +1,24 @@
 using System;
-using Shinzui.Domain.ValueObjects.Enemy;
 using R3;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.Interfaces;
+using Shinzui.Domain.ValueObjects.Enemy;
 using UnityEngine;
 
 namespace Shinzui.Application.UseCases.Enemy
 {
-    /// <summary>
-    /// Paces encounters without granting enemies omniscience. Only confirmed sight permits chase;
-    /// sound and director hints permit investigation. Commands are in the same order as reports.
-    /// </summary>
+    /// <summary>遭遇のペースとぼかしたヒントを管理し、追跡判断は各Brainへ任せる</summary>
     public sealed class EnemyDirectorUseCase : IDisposable
     {
         private readonly IEnemyEncounterFeedback _feedback;
         private readonly EnemyDirectorSettings _settings;
         private readonly ReactiveProperty<bool> _isPlayerFound = new(false);
         private readonly ReactiveProperty<bool> _isEncounterRecognized = new(false);
-        private EnemyCommand[] _commands = Array.Empty<EnemyCommand>();
+        private DirectorDirective[] _directives = Array.Empty<DirectorDirective>();
         private float _phaseTime;
         private float _hintTime;
-        private float _searchTime;
-        private Vector3 _lastKnownPosition;
-        private Vector3 _investigationTarget;
-        private bool _hasClue;
         private int _hintSequence;
+        private Vector3 _hintPosition;
         private float _discoveryCooldown;
 
         public ReadOnlyReactiveProperty<bool> IsPlayerFound => _isPlayerFound;
@@ -33,228 +27,127 @@ namespace Shinzui.Application.UseCases.Enemy
         public float Pressure { get; private set; }
         public int FocusEnemyId { get; private set; } = -1;
 
+        /// <summary>演出通知と統括設定を保持</summary>
+        /// <param name="feedback">発見演出</param>
+        /// <param name="settings">統括設定</param>
         public EnemyDirectorUseCase(IEnemyEncounterFeedback feedback, EnemyDirectorSettings settings)
-        {
-            _feedback = feedback;
-            _settings = settings ?? new EnemyDirectorSettings();
-        }
+        { _feedback = feedback; _settings = settings ?? new EnemyDirectorSettings(); }
 
-        /// <summary>敵の索敵から行動を決定し、プレイヤーの視認に応じて演出を通知</summary>
-        /// <param name="world">プレイヤーと各敵の状態</param>
-        /// <param name="deltaTime">フレーム経過時間</param>
-        /// <returns>報告順に対応する敵への命令</returns>
-        public EnemyCommand[] DecideCommands(EnemyWorldState world, float deltaTime)
+        /// <summary>観測状態をもとに主役だけへ曖昧なヒントを渡す</summary>
+        /// <param name="world">全知の世界状態</param>
+        /// <param name="deltaTime">経過秒数</param>
+        /// <returns>報告順に対応する指示</returns>
+        public DirectorDirective[] DecideDirectives(EnemyWorldState world, float deltaTime)
         {
             ReadOnlySpan<EnemyReport> reports = world.EnemyReports.Span;
-            if (_commands.Length != reports.Length) _commands = new EnemyCommand[reports.Length];
-            if (float.IsNaN(deltaTime) || float.IsInfinity(deltaTime) || deltaTime <= 0f) return _commands;
+            if (_directives.Length != reports.Length) _directives = new DirectorDirective[reports.Length];
+            Array.Clear(_directives, 0, _directives.Length);
+            if (deltaTime <= 0f || float.IsNaN(deltaTime) || float.IsInfinity(deltaTime)) return _directives;
             _phaseTime += deltaTime;
             _hintTime -= deltaTime;
             _discoveryCooldown -= deltaTime;
+            ObserveReports(world.EnemyReports);
 
+            // 継続中の主役を優先し、いなければ最寄りの行動可能な敵を選ぶ
             int focused = -1;
-            int visible = -1;
-            int heard = -1;
-            float nearestVisible = float.MaxValue;
-            float strongestHeard = 0f;
+            int nearestIndex = -1;
             float nearest = float.MaxValue;
-            bool recognized = false;
             for (int i = 0; i < reports.Length; i++)
             {
                 EnemyReport report = reports[i];
-                _commands[i] = report.CanReceiveCommand ? EnemyCommand.Wander : EnemyCommand.Idle;
-                if (!report.CanReceiveCommand) continue;
+                if (!report.CanReceiveCommand || report.IsBackstage) continue;
                 float distance = Vector3.Distance(report.Position, world.PlayerPosition);
-                nearest = Mathf.Min(nearest, distance);
-                // 発見が確定した敵をプレイヤー自身が視認した場合だけ演出を許可
-                if (report.CanSeePlayer && report.Awareness == EnemyAwarenessLevel.Engaged && report.IsVisibleToPlayer)
-                    recognized = true;
+                if (distance < nearest) { nearest = distance; nearestIndex = i; }
                 if (report.Id == FocusEnemyId) focused = i;
-                if (report.CanSeePlayer && report.Awareness == EnemyAwarenessLevel.Engaged && distance < nearestVisible)
-                {
-                    visible = i;
-                    nearestVisible = distance;
-                }
-                if (report.HeardNoiseGain > strongestHeard)
-                {
-                    heard = i;
-                    strongestHeard = report.HeardNoiseGain;
-                }
             }
+            if (focused < 0) focused = nearestIndex;
+            FocusEnemyId = focused >= 0 ? reports[focused].Id : -1;
 
-            // Keep a confirmed observer selected to prevent frame-by-frame ownership oscillation.
-            if (focused >= 0 && reports[focused].CanSeePlayer &&
-                reports[focused].Awareness == EnemyAwarenessLevel.Engaged) visible = focused;
-            bool found = visible >= 0;
-            // 一度認知した追跡中は視線を外しても演出を繰り返さない
-            recognized = found && (recognized || _isEncounterRecognized.CurrentValue);
-            if (recognized && !_isEncounterRecognized.CurrentValue && _discoveryCooldown <= 0f)
-            {
-                _feedback?.OnPlayerFound();
-                _discoveryCooldown = 5f;
-            }
-            _isPlayerFound.Value = found;
-            _isEncounterRecognized.Value = recognized;
-            float pressureRate = found ? Positive(_settings.chasePressurePerSecond, .075f)
+            // Phase 3のMenace移行までは既存のPressureを維持する
+            float rate = _isPlayerFound.CurrentValue ? Positive(_settings.chasePressurePerSecond, .075f)
                 : Phase != EnemyDirectorPhase.Recovery && nearest < Positive(_settings.pressureDistance, 18f)
                     ? Positive(_settings.proximityPressurePerSecond, .025f)
                     : -Positive(_settings.pressureDecayPerSecond, .06f);
-            Pressure = Mathf.Clamp01(Pressure + pressureRate * deltaTime);
-
-            if (found)
-            {
-                FocusEnemyId = reports[visible].Id;
-                _lastKnownPosition = world.PlayerPosition;
-                _hasClue = true;
-                _searchTime = 0f;
-                SetPhase(EnemyDirectorPhase.Hunt);
-                _commands[visible] = EnemyCommand.ChasePlayer(_lastKnownPosition);
-                KeepOthersAway(world, reports, visible);
-                return _commands;
-            }
-
-            if (focused < 0 && FocusEnemyId >= 0)
-            {
-                FocusEnemyId = -1;
-                _hasClue = false;
-                if (Phase == EnemyDirectorPhase.Hunt || Phase == EnemyDirectorPhase.Search) BeginRecovery();
-            }
-            if (Phase == EnemyDirectorPhase.Hunt)
-            {
-                SetPhase(EnemyDirectorPhase.Search);
-                _searchTime = 0f;
-                _hintTime = 0f;
-            }
-            // After a sustained encounter, relief starts only once visual contact is broken.
-            if (Pressure >= 1f && Phase != EnemyDirectorPhase.Recovery) BeginRecovery();
-
+            Pressure = Mathf.Clamp01(Pressure + rate * deltaTime);
+            if (_isPlayerFound.CurrentValue) return _directives;
+            if (Pressure >= 1f && Phase != EnemyDirectorPhase.Recovery) SetPhase(EnemyDirectorPhase.Recovery);
             if (Phase == EnemyDirectorPhase.Recovery)
             {
-                KeepOthersAway(world, reports, -1);
                 if (_phaseTime >= Positive(_settings.recoveryDuration, 18f) && Pressure <= .35f)
                     SetPhase(EnemyDirectorPhase.Ambient);
-                return _commands;
+                return _directives;
             }
+            if (Phase == EnemyDirectorPhase.Search) return _directives;
+            if (Phase == EnemyDirectorPhase.Ambient && _phaseTime >= Positive(_settings.ambientDuration, 12f))
+                SetPhase(EnemyDirectorPhase.BuildUp);
+            if (Phase != EnemyDirectorPhase.BuildUp) return _directives;
+            if (_phaseTime >= Positive(_settings.buildUpDuration, 35f))
+            { SetPhase(EnemyDirectorPhase.Recovery); return _directives; }
 
-            if (heard >= 0 && Phase != EnemyDirectorPhase.Search)
+            // プレイヤー位置はセルとオフセットに変換し、同一座標のヒントを渡さない
+            if (focused >= 0)
             {
-                FocusEnemyId = reports[heard].Id;
-                focused = heard;
-                _lastKnownPosition = reports[heard].HeardPosition; // 音源の位置だけを手掛かりにする
-                _hasClue = true;
-                _searchTime = 0f;
-                _hintTime = 0f;
-                SetPhase(EnemyDirectorPhase.Search);
-            }
-            if (Phase == EnemyDirectorPhase.Search && focused >= 0 && _hasClue)
-            {
-                if (heard == focused)
-                {
-                    _lastKnownPosition = reports[heard].HeardPosition;
-                    _investigationTarget = _lastKnownPosition;
-                    _hintTime = Positive(_settings.searchPointInterval, 3f);
-                }
-                _searchTime += deltaTime;
-                if (_searchTime >= Positive(_settings.searchDuration, 14f))
-                {
-                    BeginRecovery();
-                    KeepOthersAway(world, reports, -1);
-                    return _commands;
-                }
+                float cell = Positive(_settings.hintCellSize, 12f);
                 if (_hintTime <= 0f)
                 {
-                    int step = (int)(_searchTime / Positive(_settings.searchPointInterval, 3f));
-                    float angle = step * 2.399963f;
-                    float radius = step == 0 ? 0f : Mathf.Min(step * 2f, Positive(_settings.searchRadius, 7f));
-                    _investigationTarget = _lastKnownPosition + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
-                    _hintTime = Positive(_settings.searchPointInterval, 3f);
+                    Vector3 p = world.PlayerPosition;
+                    float angle = ++_hintSequence * 2.399963f;
+                    _hintPosition = new Vector3(Mathf.Floor(p.x / cell) * cell + cell * .5f, p.y,
+                        Mathf.Floor(p.z / cell) * cell + cell * .5f)
+                        + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * cell * .5f;
+                    if ((_hintPosition - p).sqrMagnitude < .01f) _hintPosition += Vector3.right * cell * .25f;
+                    _hintTime = Positive(_settings.hintInterval, 8f);
                 }
-                _commands[focused] = EnemyCommand.InvestigatePosition(_investigationTarget);
-                KeepOthersAway(world, reports, focused);
-                return _commands;
+                _directives[focused] = new DirectorDirective(DirectorDirectiveType.HintArea, _hintPosition, cell * .5f);
             }
-
-            if (Phase == EnemyDirectorPhase.Ambient && _phaseTime >= Positive(_settings.ambientDuration, 12f))
-            {
-                SetPhase(EnemyDirectorPhase.BuildUp);
-                _hintTime = 0f;
-            }
-            if (Phase == EnemyDirectorPhase.BuildUp)
-            {
-                if (_phaseTime >= Positive(_settings.buildUpDuration, 35f))
-                {
-                    BeginRecovery();
-                    KeepOthersAway(world, reports, -1);
-                    return _commands;
-                }
-                if (focused < 0)
-                {
-                    float best = float.MaxValue;
-                    for (int i = 0; i < reports.Length; i++)
-                    {
-                        float distance = (reports[i].Position - world.PlayerPosition).sqrMagnitude;
-                        if (!reports[i].CanReceiveCommand || distance >= best) continue;
-                        focused = i;
-                        best = distance;
-                    }
-                    if (focused >= 0) FocusEnemyId = reports[focused].Id;
-                }
-                if (focused >= 0)
-                {
-                    if (_hintTime <= 0f)
-                    {
-                        float cell = Positive(_settings.hintCellSize, 12f);
-                        Vector3 p = world.PlayerPosition;
-                        float angle = ++_hintSequence * 2.399963f;
-                        _investigationTarget = new Vector3(Mathf.Floor(p.x / cell) * cell + cell * .5f, p.y,
-                            Mathf.Floor(p.z / cell) * cell + cell * .5f)
-                            + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * cell * .5f;
-                        _hintTime = Positive(_settings.hintInterval, 8f);
-                    }
-                    _commands[focused] = EnemyCommand.InvestigatePosition(_investigationTarget);
-                    KeepOthersAway(world, reports, focused);
-                }
-            }
-            return _commands;
+            return _directives;
         }
 
-        private void KeepOthersAway(EnemyWorldState world, ReadOnlySpan<EnemyReport> reports, int activeIndex)
+        /// <summary>同じフレームのBrain結果から発見演出を更新</summary>
+        /// <param name="reports">敵自身が決めた警戒状態</param>
+        public void ObserveReports(ReadOnlyMemory<EnemyReport> reports)
         {
-            float distance = Positive(_settings.retreatDistance, 18f);
-            for (int i = 0; i < reports.Length; i++)
+            bool found = false;
+            bool recognized = false;
+            bool searching = false;
+            foreach (EnemyReport report in reports.Span)
             {
-                if (i == activeIndex || !reports[i].CanReceiveCommand) continue;
-                Vector3 away = reports[i].Position - world.PlayerPosition;
-                away.y = 0f;
-                if (away.sqrMagnitude >= distance * distance) continue;
-                if (away.sqrMagnitude < .01f) away = (i % 2 == 0) ? Vector3.forward : Vector3.back;
-                // Hold this target until reached; do not continually steer using hidden player movement.
-                _commands[i] = reports[i].CurrentCommand.Type == EnemyCommandType.Retreat
-                    ? reports[i].CurrentCommand
-                    : EnemyCommand.Retreat(reports[i].Position + away.normalized * distance);
+                if (!report.CanReceiveCommand || report.IsBackstage) continue;
+                searching |= report.Awareness == EnemyAwarenessLevel.Alerted;
+                if (!report.IsEngaged) continue;
+                found = true;
+                recognized |= report.IsVisibleToPlayer;
             }
+            recognized = found && (recognized || _isEncounterRecognized.CurrentValue);
+            if (recognized && !_isEncounterRecognized.CurrentValue && _discoveryCooldown <= 0f)
+            { _feedback?.OnPlayerFound(); _discoveryCooldown = 5f; }
+            _isPlayerFound.Value = found;
+            _isEncounterRecognized.Value = recognized;
+
+            // HuntとSearchは命令せず観測し、休息中の音はヒント再開の理由にしない
+            if (found) SetPhase(EnemyDirectorPhase.Hunt);
+            else if (searching && Phase != EnemyDirectorPhase.Recovery) SetPhase(EnemyDirectorPhase.Search);
+            else if (Phase == EnemyDirectorPhase.Hunt || Phase == EnemyDirectorPhase.Search)
+                SetPhase(EnemyDirectorPhase.Recovery);
         }
 
-        private void BeginRecovery()
-        {
-            SetPhase(EnemyDirectorPhase.Recovery);
-            FocusEnemyId = -1;
-            _hasClue = false;
-        }
-
+        /// <summary>フェーズが変わった時だけ経過時間を初期化</summary>
+        /// <param name="phase">移行先</param>
         private void SetPhase(EnemyDirectorPhase phase)
         {
             if (Phase == phase) return;
             Phase = phase;
             _phaseTime = 0f;
+            _hintTime = 0f;
         }
 
+        /// <summary>設定値を正規化</summary>
+        /// <param name="value">設定値</param>
+        /// <param name="fallback">既定値</param>
+        /// <returns>有効な正値</returns>
         private static float Positive(float value, float fallback) => EnemyDirectorSettings.Positive(value, fallback);
-        /// <summary>発見状態と演出用の認知状態を解放</summary>
-        public void Dispose()
-        {
-            _isPlayerFound.Dispose();
-            _isEncounterRecognized.Dispose();
-        }
+
+        /// <summary>発見状態と演出状態を解放</summary>
+        public void Dispose() { _isPlayerFound.Dispose(); _isEncounterRecognized.Dispose(); }
     }
 }

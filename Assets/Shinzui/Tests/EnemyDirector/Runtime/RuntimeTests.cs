@@ -97,6 +97,18 @@ namespace Shinzui.Tests.EnemyDirector
             _runtime.Stop();
             Assert.That(_runtime.MoveTo(Vector3.forward), Is.False);
         }
+        /// <summary>見回しは位置を変えず水平方向だけを更新</summary>
+        [Test] public void FaceTowardsRotatesWithoutMoving()
+        {
+            Vector3 original = _runtime.Position;
+            _runtime.Stop();
+            _runtime.SetSpeed(1f, true);
+            _runtime.FaceTowards(original + new Vector3(5f, 3f, 0f));
+            Assert.That(_runtime.Position, Is.EqualTo(original));
+            Assert.That(Vector3.Angle(_enemy.transform.forward, Vector3.right), Is.LessThan(.1f));
+            Assert.That(_agent.isStopped, Is.True);
+        }
+
         [Test] public void UnreachableTargetDoesNotKeepPreviousPath()
         {
             Assert.That(_runtime.MoveTo(new Vector3(0, 0, 8)), Is.True);
