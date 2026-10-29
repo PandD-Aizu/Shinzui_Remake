@@ -1261,6 +1261,91 @@ MonoBehaviour:
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: c72846b6b2e89c543b2fba68734f27f1, type: 2}
+--- !u!1001 &414038185
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1304817757003762462, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_Name
+      value: StageIntroEvent
+      objectReference: {fileID: 0}
+    - target: {fileID: 1304817757003762462, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1742512547597255118, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: gameplayHud
+      value: 
+      objectReference: {fileID: 761664892}
+    - target: {fileID: 1889245674188874893, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.00224
+      objectReference: {fileID: 0}
+    - target: {fileID: 1889245674188874893, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1889245674188874893, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 16.86
+      objectReference: {fileID: 0}
+    - target: {fileID: 1991890237263544465, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2930105707457713863, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6732980496004998542, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f68b8f950a023ad499aba4e775baaf7c, type: 3}
 --- !u!1 &467162262
 GameObject:
   m_ObjectHideFlags: 0
@@ -1619,6 +1704,8 @@ MonoBehaviour:
   mapRoot: {fileID: 1923252013}
   overviewCamera: {fileID: 0}
   showDebugGeometry: 0
+  ceilingShadowDistance: 15
+  maxCeilingShadowLights: 8
 --- !u!114 &570344940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4634,6 +4721,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BlackHoleEnemy
       objectReference: {fileID: 0}
+    - target: {fileID: 8119663525459182946, guid: 4469a4d8157f02d429b62883fddee0f9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8682758635763917597, guid: 4469a4d8157f02d429b62883fddee0f9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -6151,3 +6242,4 @@ SceneRoots:
   - {fileID: 1977063035}
   - {fileID: 1809100754}
   - {fileID: 1604969973}
+  - {fileID: 414038185}

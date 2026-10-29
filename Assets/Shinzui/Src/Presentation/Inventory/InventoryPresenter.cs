@@ -4,6 +4,7 @@ using Shinzui.Application.Interfaces;
 using Shinzui.Application.UseCases.Inventory;
 using Shinzui.View.Inventory;
 using VContainer.Unity;
+using Shinzui.Infrastructure.SaveSystem;
 
 namespace Shinzui.Presentation.Inventory
 {
@@ -12,6 +13,7 @@ namespace Shinzui.Presentation.Inventory
         private readonly InventoryUseCase _useCase;
         private readonly InventoryView _view;
         private readonly IInputService _inputService;
+        private readonly SaveManager _saveManager;
 
         private readonly ReactiveProperty<int> _selectedSlotIndex = new(-1);
         private IDisposable _disposable;
@@ -19,11 +21,13 @@ namespace Shinzui.Presentation.Inventory
         public InventoryPresenter(
             InventoryUseCase useCase,
             InventoryView view,
-            IInputService inputService)
+            IInputService inputService,
+            SaveManager saveManager)
         {
             _useCase = useCase;
             _view = view;
             _inputService = inputService;
+            _saveManager = saveManager;
         }
 
         public void Initialize()
@@ -246,7 +250,8 @@ namespace Shinzui.Presentation.Inventory
 
         private async void LoadInitialData()
         {
-            await _useCase.LoadAsync();
+            //await _useCase.LoadAsync();
+            await _saveManager.Load(0);
         }
 
         private void SelectSlot(int index)

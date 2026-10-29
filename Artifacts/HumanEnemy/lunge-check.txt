@@ -1,0 +1,3 @@
+Approach 14.05332
+Lunging 16.48926
+Failed 16.94121

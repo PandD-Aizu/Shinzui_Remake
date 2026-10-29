@@ -1,0 +1,15 @@
+{
+  "phase": "Complete",
+  "sameEnemyChasing": true,
+  "director": "Hunt",
+  "registeredEnemies": 3,
+  "bones": 21,
+  "clips": [
+    "Idle",
+    "Walk"
+  ],
+  "material": "HumanEnemySkin",
+  "texture": true,
+  "stamina": 100.0,
+  "collisionRestored": true
+}

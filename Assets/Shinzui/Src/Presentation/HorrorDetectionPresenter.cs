@@ -34,13 +34,14 @@ namespace Shinzui.Presentation
             _view = view;
         }
 
+        /// <summary>画面演出を初期化し、プレイヤーが認知した追跡を監視</summary>
         public void Initialize()
         {
             // 初期化時に一度エフェクトをクリア
             _view.UpdateEffect(0f);
 
-            // 敵全体の発見ステータスを監視
-            _enemyDirectorUseCase.IsPlayerFound
+            // プレイヤー自身が敵を視認した追跡だけ演出へ反映
+            _enemyDirectorUseCase.IsEncounterRecognized
                 .Subscribe(found =>
                 {
                     if (found && !_isPlayerFound)

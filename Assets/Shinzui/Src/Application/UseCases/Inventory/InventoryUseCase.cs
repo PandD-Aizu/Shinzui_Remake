@@ -262,7 +262,15 @@ namespace Shinzui.Application.UseCases.Inventory
         public async Task LoadAsync()
         {
             var saveData = await _repository.LoadInventoryAsync();
-            if (saveData == null || saveData.Slots == null) return;
+            await SetInventoryData(saveData);
+        }
+
+        /// <summary>
+        /// InventorySaveDataの内容をインベントリに反映する
+        /// </summary>
+        public async Task SetInventoryData(InventorySaveData data)
+        {
+            if (data == null || data.Slots == null) return;
 
             // 一度クリア
             for (int i = 0; i < Capacity; i++)
@@ -270,7 +278,7 @@ namespace Shinzui.Application.UseCases.Inventory
                 _inventory.SetSlotForce(i, null);
             }
 
-            foreach (var slotData in saveData.Slots)
+            foreach (var slotData in data.Slots)
             {
                 var item = await _catalog.GetItemAsync(slotData.ItemId);
                 if (item != null)

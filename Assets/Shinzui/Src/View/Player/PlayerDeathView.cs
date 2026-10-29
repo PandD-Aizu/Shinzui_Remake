@@ -24,6 +24,17 @@ namespace Shinzui.View
         [SerializeField] private UnityEvent onGameOverShown;
 
         private bool _isSequencePlaying;
+        private EnemyView _captureEnemy;
+        private PlayerView _capturePlayer;
+
+        /// <summary>死亡確定時に再生する人型の捕獲演出を予約または解除</summary>
+        /// <param name="enemy">捕獲した敵、解除時はnull</param>
+        /// <param name="player">捕獲されたプレイヤー</param>
+        public void PrepareHumanCapture(EnemyView enemy, PlayerView player)
+        {
+            _captureEnemy = enemy;
+            _capturePlayer = player;
+        }
 
         private void Awake()
         {
@@ -58,9 +69,22 @@ namespace Shinzui.View
         private async UniTaskVoid DeathSequenceAsync()
         {
             _isSequencePlaying = true;
-            onJumpscareRequested?.Invoke();
+            bool playedHumanCapture = false;
+            // 人型に捕まった場合は振り返りと顔アップを終えてからゲームオーバーへ進む
+            if (_captureEnemy != null)
+            {
+                var capture = _captureEnemy.GetComponent<HumanEnemyCaptureView>();
+                if (capture == null) capture = _captureEnemy.gameObject.AddComponent<HumanEnemyCaptureView>();
+                if (capture.Begin(_capturePlayer))
+                {
+                    playedHumanCapture = true;
+                    await UniTask.WaitUntil(() => capture == null || !capture.IsPlaying,
+                        cancellationToken: this.GetCancellationTokenOnDestroy());
+                }
+            }
+            if (!playedHumanCapture) onJumpscareRequested?.Invoke();
 
-            if (jumpscareDelay > 0f)
+            if (!playedHumanCapture && jumpscareDelay > 0f)
             {
                 await UniTask.Delay(
                     TimeSpan.FromSeconds(jumpscareDelay),
