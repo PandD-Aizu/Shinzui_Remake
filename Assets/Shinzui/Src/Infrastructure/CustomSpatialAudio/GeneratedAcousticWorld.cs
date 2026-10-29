@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Shinzui.Application.CustomSpatialAudio;
 using Shinzui.Application.DTOs.Tunnel;
 
@@ -28,7 +29,12 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
             var cells = new List<PortalAcousticRoom>();
             var d = map.Dimensions;
             foreach (var node in map.Tunnels)
-                AddBox(cells, node.PositionX, node.PositionY, node.PositionZ, d.TunnelWidth, d.TunnelHeight, d.TunnelLength);
+            {
+                if (node.Slope == 0)
+                    AddPassage(cells, node.PositionX, node.PositionY, node.PositionZ, node.DirX, node.DirZ, d.TunnelWidth, d.TunnelHeight, node.Length);
+                else
+                    AddSlopedPassage(cells, node, d.TunnelWidth, d.TunnelHeight, d.CorridorWidth);
+            }
             foreach (var c in map.NormalCorridors)
                 AddPassage(cells, c.CenterX, c.CenterY, c.CenterZ, c.DirX, c.DirZ, d.CorridorWidth, d.TunnelHeight, c.Length);
             foreach (var r in map.SmallRooms)
@@ -41,6 +47,15 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
             }
             foreach (var w in map.WarpCorridors)
                 AddPassage(cells, w.CenterX, w.CenterY, w.CenterZ, w.DirX, w.DirZ, d.CorridorWidth, d.TunnelHeight, w.Length);
+
+            // 下階の天井から上階の床までを落下口の断面で接続する
+            foreach (var opening in map.DropOpenings)
+            {
+                float bottom = opening.LowerFloorY + d.TunnelHeight;
+                if (opening.UpperFloorY > bottom)
+                    AddBox(cells, opening.CenterX, bottom, opening.CenterZ, opening.Size,
+                        opening.UpperFloorY - bottom, opening.Size);
+            }
 
             // Independently calculated endpoints can straddle a millimetre rounding boundary.
             rooms = WeldFaces(cells);
@@ -110,6 +125,9 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
         static AcousticPathTap Scale(AcousticPathTap p, float gain) => new AcousticPathTap(p.DelaySeconds, p.DistanceMetres,
             new AcousticBandValues(p.Amplitude.Low * gain, p.Amplitude.Mid * gain, p.Amplitude.High * gain), p.Direction, p.Pan);
 
+        /// <summary>
+        /// 共有面の開口面積から壁の開口率を更新してグラフを構築する
+        /// </summary>
         void RebuildGraph()
         {
             var adjusted = new PortalAcousticRoom[rooms.Length];
@@ -121,12 +139,17 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
                 {
                     if (p.RoomAId != i && p.RoomBId != i) continue;
                     var other = rooms[p.RoomAId == i ? p.RoomBId : p.RoomAId].Bounds;
-                    int face = p.Centre.X == box.Min.X ? 0 : p.Centre.X == box.Max.X ? 1 :
-                        p.Centre.Z == box.Min.Z ? 4 : 5;
-                    float sharedWidth = face < 2 ? Overlap(box.Min.Z, box.Max.Z, other.Min.Z, other.Max.Z) :
-                        Overlap(box.Min.X, box.Max.X, other.Min.X, other.Max.X);
-                    float faceWidth = face < 2 ? box.Max.Z - box.Min.Z : box.Max.X - box.Min.X;
-                    openings[face] += p.OpeningFraction * sharedWidth / faceWidth;
+                    int face = box.Min.X == other.Max.X ? 0 : box.Max.X == other.Min.X ? 1 :
+                        box.Min.Y == other.Max.Y ? 2 : box.Max.Y == other.Min.Y ? 3 :
+                        box.Min.Z == other.Max.Z ? 4 : 5;
+                    float sharedX = Overlap(box.Min.X, box.Max.X, other.Min.X, other.Max.X);
+                    float sharedY = Overlap(box.Min.Y, box.Max.Y, other.Min.Y, other.Max.Y);
+                    float sharedZ = Overlap(box.Min.Z, box.Max.Z, other.Min.Z, other.Max.Z);
+                    float width = box.Max.X - box.Min.X, height = box.Max.Y - box.Min.Y,
+                        length = box.Max.Z - box.Min.Z;
+                    float sharedArea = face < 2 ? sharedY * sharedZ : face < 4 ? sharedX * sharedZ : sharedX * sharedY;
+                    float faceArea = face < 2 ? height * length : face < 4 ? width * length : width * height;
+                    openings[face] += p.OpeningFraction * sharedArea / faceArea;
                 }
                 var walls = new AcousticWall[6];
                 for (int f = 0; f < 6; f++) walls[f] = new AcousticWall(Concrete.Absorption, Math.Min(1, openings[f]));
@@ -146,6 +169,45 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
             AddBox(cells, x, y, z, alongX ? length : width, height, alongX ? width : length);
         }
 
+        /// <summary>
+        /// 傾斜路を床と天井の内側に収まる最大64個の直方体へ分割する
+        /// </summary>
+        /// <param name="cells">追加先の音響セル</param>
+        /// <param name="node">水平方位と中心床高と物理長を持つトンネル</param>
+        /// <param name="width">水平断面の幅</param>
+        /// <param name="height">床から天井までの鉛直高さ</param>
+        /// <param name="corridorWidth">下階の側面口の幅</param>
+        static void AddSlopedPassage(List<PortalAcousticRoom> cells, TunnelNodeDto node, float width, float height, float corridorWidth)
+        {
+            float length = node.Length / (float)Math.Sqrt(1 + node.Slope * node.Slope);
+            var entrance = node.EntranceMarkers?.SingleOrDefault(marker => marker.IsOpen);
+            float sign = node.SlopeExitSign != 0 ? node.SlopeExitSign : Math.Sign(node.Slope);
+            float startZ = entrance == null ? 0 : entrance.LocalPosZ + sign * (corridorWidth * .5f + .4f);
+            float baselineFloor = entrance == null ? 0 : node.PositionY + node.Slope * entrance.LocalPosZ;
+            float highFloor = node.PositionY + node.Slope * sign * length * .5f;
+            float actualAbsSlope = entrance == null ? Math.Abs(node.Slope) :
+                (highFloor - baselineFloor) / (length * .5f - sign * startZ);
+            float rise = Math.Abs(actualAbsSlope) * length;
+            int count = Math.Min(64, Math.Max(1, (int)Math.Ceiling(Math.Max(length / 4f, rise / Math.Min(.5f, height * .125f)))));
+
+            // 側面口を含む下端側を平坦に保ち、入口情報がない場合は従来の直線傾斜を使う
+            // 床の高い側と天井の低い側を採用して隣接する階へのはみ出しを防ぐ
+            for (int i = 0; i < count; i++)
+            {
+                float start = -length / 2 + length * i / count;
+                float end = -length / 2 + length * (i + 1) / count;
+                float floorStart = entrance == null ? node.PositionY + node.Slope * start :
+                    baselineFloor + actualAbsSlope * Math.Max(0, sign * (start - startZ));
+                float floorEnd = entrance == null ? node.PositionY + node.Slope * end :
+                    baselineFloor + actualAbsSlope * Math.Max(0, sign * (end - startZ));
+                float bottom = Math.Max(floorStart, floorEnd);
+                float top = Math.Min(floorStart, floorEnd) + height;
+                AddPassage(cells, node.PositionX + node.DirX * (start + end) / 2, bottom,
+                    node.PositionZ + node.DirZ * (start + end) / 2, node.DirX, node.DirZ,
+                    width, top - bottom, end - start);
+            }
+        }
+
         static void AddBox(List<PortalAcousticRoom> cells, float x, float y, float z, float width, float height, float length)
         {
             int nx = Math.Max(1, (int)Math.Ceiling(width / 75f)), nz = Math.Max(1, (int)Math.Ceiling(length / 75f));
@@ -158,9 +220,26 @@ namespace Shinzui.Infrastructure.CustomSpatialAudio
             }
         }
 
+        /// <summary>
+        /// 正の面積を持つ共有面の中心を取得する
+        /// </summary>
+        /// <param name="a">一方の音響セル</param>
+        /// <param name="b">他方の音響セル</param>
+        /// <param name="centre">共有面の中心</param>
+        /// <returns>共有面が存在するか</returns>
         static bool TrySharedFace(RectangularAcousticRoom a, RectangularAcousticRoom b, out AcousticVector3 centre)
         {
             centre = default;
+            if ((a.Max.Y == b.Min.Y || b.Max.Y == a.Min.Y) &&
+                Overlap(a.Min.X, a.Max.X, b.Min.X, b.Max.X) > .01f &&
+                Overlap(a.Min.Z, a.Max.Z, b.Min.Z, b.Max.Z) > .01f)
+            {
+                centre = new AcousticVector3((Math.Max(a.Min.X, b.Min.X) + Math.Min(a.Max.X, b.Max.X)) / 2,
+                    a.Max.Y == b.Min.Y ? a.Max.Y : a.Min.Y,
+                    (Math.Max(a.Min.Z, b.Min.Z) + Math.Min(a.Max.Z, b.Max.Z)) / 2);
+                return true;
+            }
+
             float y0 = Math.Max(a.Min.Y, b.Min.Y), y1 = Math.Min(a.Max.Y, b.Max.Y);
             if (y1 <= y0) return false;
             if ((a.Max.X == b.Min.X || b.Max.X == a.Min.X) && Overlap(a.Min.Z, a.Max.Z, b.Min.Z, b.Max.Z) > .01f)

@@ -228,7 +228,21 @@ namespace Shinzui.View
         /// </summary>
         public event System.Action<Vector3> Warped;
 
+        /// <summary>
+        /// 向きを変えず指定量だけワープする
+        /// </summary>
+        /// <param name="offset">現在位置からの移動量</param>
         public void Warp(Vector3 offset)
+        {
+            Warp(offset, Vector3.zero);
+        }
+
+        /// <summary>
+        /// 指定方向へ本体と視線を揃えてワープする
+        /// </summary>
+        /// <param name="offset">現在位置からの移動量</param>
+        /// <param name="exitForward">ワープ先で向く水平方向、ゼロなら現在の向きを維持</param>
+        public void Warp(Vector3 offset, Vector3 exitForward)
         {
             if (characterController != null)
             {
@@ -249,9 +263,39 @@ namespace Shinzui.View
 
             // Cinemachineの追従遅れによる一瞬の空の映り込みを防ぐため、ワープを通知する
             CinemachineCore.OnTargetObjectWarped(transform, offset);
+            if (exitForward.sqrMagnitude > 0.0001f) AlignWarpDirection(exitForward);
             _rotationVelocity = 0.0f;
             _cameraMotion?.ResetMotion();
             Warped?.Invoke(offset);
+        }
+
+        /// <summary>
+        /// 見上げ角を保ち、カメラ制御の内部状態も出口方向へ更新する
+        /// </summary>
+        /// <param name="exitForward">出口へ向かう方向</param>
+        private void AlignWarpDirection(Vector3 exitForward)
+        {
+            Vector3 forward = Vector3.ProjectOnPlane(exitForward, Vector3.up).normalized;
+            if (forward.sqrMagnitude < 0.0001f) return;
+            Vector3 current = Vector3.ProjectOnPlane(CameraForward, Vector3.up);
+            if (current.sqrMagnitude < 0.0001f) current = transform.forward;
+            Quaternion yaw = Quaternion.AngleAxis(Vector3.SignedAngle(current, forward, Vector3.up), Vector3.up);
+            Quaternion cameraRotation = yaw * (mainCamera != null ? mainCamera.transform.rotation : transform.rotation);
+            Quaternion targetRotation = cameraTarget != null ? yaw * cameraTarget.rotation : cameraRotation;
+
+            // 親子関係にかかわらず本体とカメラへ回転を一度だけ適用する
+            transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+            if (cameraTarget != null && cameraTarget != transform) cameraTarget.rotation = targetRotation;
+            if (mainCamera != null) mainCamera.transform.rotation = cameraRotation;
+
+            // Pan/Tiltの古い角度で次フレームに視線が戻ることを防ぐ
+            foreach (CinemachineCamera camera in FindObjectsByType<CinemachineCamera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                Transform follow = camera.Follow;
+                if (follow == null || (follow != transform && !follow.IsChildOf(transform) && follow != cameraTarget)) continue;
+                Vector3 position = mainCamera != null ? mainCamera.transform.position : follow.position;
+                camera.ForceCameraPosition(position, cameraRotation);
+            }
         }
 
         /// <summary>
