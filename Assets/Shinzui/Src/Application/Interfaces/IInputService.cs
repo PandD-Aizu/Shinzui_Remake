@@ -18,6 +18,9 @@ namespace Shinzui.Application.Interfaces
         /// </summary>
         bool ItemUsePressed { get; }
 
+        /// <summary>取得ボタンを押し続けているか</summary>
+        bool ItemUseHeld { get; }
+
         /// <summary>
         /// クイックアイテム切り替え修飾キー（Ctrlなど）が押されているか
         /// </summary>

@@ -137,6 +137,29 @@ namespace Shinzui.Tests.Title
             Assert.That(_navigation.LastAddress, Is.EqualTo("game-address"));
         }
 
+        /// <summary>つづきからはフェード後にセーブ選択へ一度だけ遷移する</summary>
+        [Test]
+        public void ContinueLoadsSaveSelectOnce()
+        {
+            Build();
+            var presenter = _container.Resolve<TitlePresenter>();
+            _view.ContinueGame();
+            _view.ContinueGame();
+            presenter.Tick(1f);
+            Assert.That(_navigation.Loads, Is.EqualTo(1));
+            Assert.That(_navigation.LastAddress, Is.EqualTo("SaveSelect"));
+        }
+
+        /// <summary>はじめからは以前のロード要求を解除する</summary>
+        [Test]
+        public void NewGameClearsSelectedSave()
+        {
+            Build();
+            GameStartRequest.Continue(2);
+            _view.StartGame();
+            Assert.That(GameStartRequest.Slot, Is.Null);
+        }
+
         [Test]
         public void FailedLoadRestoresMenuAndAllowsRetry()
         {

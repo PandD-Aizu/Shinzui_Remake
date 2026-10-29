@@ -1,0 +1,14 @@
+{
+  "bones": 52,
+  "unweighted": 0,
+  "meshes": {
+    "BodyMesh": {
+      "vertices": 12830,
+      "faces": 25060
+    },
+    "HeadMesh": {
+      "vertices": 13578,
+      "faces": 22123
+    }
+  }
+}

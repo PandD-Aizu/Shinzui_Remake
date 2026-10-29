@@ -63,6 +63,8 @@ namespace Shinzui.View.Flashlight
         private float _strobeFactor;                      // 現在のストロボ発光係数
 
         public Camera TargetCamera => targetCamera != null ? targetCamera : Camera.main;
+        /// <summary>腕と指の追従に使う懐中電灯の発光基準</summary>
+        public Transform HeldLightTransform => flashlightLight != null ? flashlightLight.transform : null;
         public Vector3 StrobeOrigin => TargetCamera != null ? TargetCamera.transform.position : transform.position;
         public Vector3 StrobeDirection => TargetCamera != null ? TargetCamera.transform.forward : transform.forward;
         public float StrobeRange => strobeRange;
