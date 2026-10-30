@@ -10,6 +10,12 @@ Shader "Shinzui/SpiderWeb"
         _NoiseScale ("Fiber Noise Scale", Range(1, 80)) = 24
         _NoiseStrength ("Fiber Noise Strength", Range(0, 1)) = 0.18
         [HideInInspector] _AlphaClip ("Legacy Alpha Clip", Range(0, 1)) = 0.08
+        [HideInInspector] _BurnOrigin ("Burn Origin (Object)", Vector) = (0, 0, 0, 0)
+        [HideInInspector] _BurnRadius ("Burn Front Radius", Float) = -1
+        _BurnCharWidth ("Burn Ember Trail Width", Range(0.005, 0.5)) = 0.07
+        _BurnPreheatWidth ("Burn Preheat Width", Range(0.005, 0.5)) = 0.12
+        _BurnJitter ("Burn Front Irregularity", Range(0, 0.5)) = 0.09
+        [HDR] _BurnGlowColor ("Burn Ember Color (nits)", Color) = (900, 220, 30, 1)
     }
 
     SubShader
@@ -64,6 +70,7 @@ Shader "Shinzui/SpiderWeb"
                 float2 uv : TEXCOORD2;
                 half fogFactor : TEXCOORD3;
                 half3 tangentWS : TEXCOORD4;
+                float3 positionOS : TEXCOORD5;
                 half4 color : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -78,6 +85,12 @@ Shader "Shinzui/SpiderWeb"
                 half _NoiseScale;
                 half _NoiseStrength;
                 half _AlphaClip;
+                float4 _BurnOrigin;
+                float _BurnRadius;
+                float _BurnCharWidth;
+                float _BurnPreheatWidth;
+                float _BurnJitter;
+                float4 _BurnGlowColor;
             CBUFFER_END
 
             /// <summary>座標に応じた乱数を求める</summary>
@@ -147,6 +160,44 @@ Shader "Shinzui/SpiderWeb"
                 return (scattering + reflected) * light.color;
             }
 
+            /// <summary>
+            /// 燃焼前線の揺らぎを求める
+            /// SpiderWeb.BurnJitterと同じ式で、C#側の火の粉の発生位置と一致させる
+            /// </summary>
+            /// <param name="p">オブジェクト空間の座標</param>
+            /// <returns>-1から1の揺らぎ</returns>
+            float BurnJitter(float3 p)
+            {
+                return sin(p.x * 7.3 + sin(p.y * 5.1) * 1.7) * sin(p.y * 6.7 + sin(p.x * 4.3) * 1.3);
+            }
+
+            /// <summary>
+            /// 燃焼前線との位置関係から、焼失・赤熱・予熱の度合いを求める
+            /// </summary>
+            /// <param name="positionOS">オブジェクト空間の座標</param>
+            /// <param name="consumed">焼失した割合</param>
+            /// <param name="preheat">前線の手前で熱に焼けた割合</param>
+            /// <returns>赤熱の強さ</returns>
+            half EvaluateBurn(float3 positionOS, out half consumed, out half preheat)
+            {
+                consumed = 0;
+                preheat = 0;
+                if (_BurnRadius < -0.5)
+                {
+                    return 0;
+                }
+
+                /* 前線を通過した距離。正なら燃え終わった側 */
+                float distanceFromOrigin = distance(positionOS, _BurnOrigin.xyz) + BurnJitter(positionOS) * _BurnJitter;
+                float behind = _BurnRadius - distanceFromOrigin;
+
+                /* 糸は前線で一瞬赤く光り、縮れながら短い距離で消える */
+                consumed = (half)saturate(behind / _BurnCharWidth);
+                preheat = (half)saturate(1.0 + behind / _BurnPreheatWidth);
+                half trail = (half)(behind >= 0.0 ? 1.0 - consumed : pow(preheat, 4.0));
+                return trail * trail;
+            }
+
             /// <summary>頂点を画面座標へ変換する</summary>
             /// <param name="input">評価に用いる入力値</param>
             /// <returns>変換または評価した値</returns>
@@ -163,6 +214,7 @@ Shader "Shinzui/SpiderWeb"
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.tangentWS = TransformObjectToWorldDir(input.tangentOS.xyz, false);
                 output.uv = input.uv;
+                output.positionOS = input.positionOS.xyz;
                 output.color = input.color;
                 output.fogFactor = 0;
                 return output;
@@ -186,8 +238,13 @@ Shader "Shinzui/SpiderWeb"
                 half3 viewDirectionWS = SafeNormalize(GetWorldSpaceViewDir(input.positionWS));
 
                 half fiber = FiberVariation(input.uv, input.color.r);
-                half alpha = saturate(_BaseColor.a * input.color.a * fiber * ThreadCoverage(input.uv.x));
-                half3 albedo = _BaseColor.rgb * input.color.rgb;
+                half coverage = saturate(_BaseColor.a * input.color.a * fiber * ThreadCoverage(input.uv.x));
+                half consumed;
+                half preheat;
+                half ember = EvaluateBurn(input.positionOS, consumed, preheat);
+                half alpha = coverage * (1.0h - consumed);
+                /* 前線の手前では糸が熱で茶色く焦げる */
+                half3 albedo = _BaseColor.rgb * input.color.rgb * lerp(1.0h, half3(0.35h, 0.18h, 0.08h), preheat);
                 uint meshRenderingLayers = GetMeshRenderingLayerMask();
 
                 half3 color = 0;
@@ -199,8 +256,14 @@ Shader "Shinzui/SpiderWeb"
                 }
 
                 /* 空の被覆領域に霧を描かないよう合成後にアルファを掛ける */
+                /* 赤熱は物理輝度で加算し、温度の高い前線ほど黄色く細かく明滅させる */
+                half flicker = (half)(0.7 + 0.3 * sin(_Time.y * 41.0 + input.positionOS.x * 53.0 + input.positionOS.y * 37.0));
+                half3 emberColor = _BurnGlowColor.rgb * lerp(half3(0.55h, 0.25h, 0.12h), half3(1.0h, 1.25h, 1.6h), ember * ember);
+                half3 emission = emberColor * ember * flicker * coverage;
+
+                color = color * alpha + emission;
                 color = ShinzuiFog(color * GetCurrentExposureMultiplier(), input.positionCS, input.positionWS);
-                return half4(color * alpha, alpha);
+                return half4(color, alpha);
             }
             ENDHLSL
         }

@@ -54,6 +54,9 @@ namespace Shinzui.Application.Interfaces
         /// 攻撃・投擲入力（左クリック等）が押し続けられているか
         /// </summary>
         bool AttackHeld { get; }
+
+        /// <summary>ストロボ構え入力（右クリック等）が押し続けられているか</summary>
+        bool StrobeReadyHeld { get; }
         bool HoldBreathHeld { get; }
         bool HidingExitPressed { get; }
         void SetHiding(bool hiding);

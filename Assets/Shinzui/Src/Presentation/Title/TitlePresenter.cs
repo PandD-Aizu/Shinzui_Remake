@@ -206,11 +206,17 @@ namespace Shinzui.Presentation.Title
             _credits.Begin();
         }
 
+        /// <summary>クレジットをスキップするか現在の設定画面から一段戻る</summary>
         private void Skip()
         {
             if (_disposed || _loading) return;
             if (_showingCredits && !_closingCredits && _options.AllowSkip) FinishCredits(true);
-            else if (_view.OptionPanel.activeSelf) CloseOptions();
+            else if (_view.OptionPanel.activeSelf)
+            {
+                // 詳細画面を開いている間は編集を確定せずカテゴリーへ戻る
+                if (_optionView.IsGraphicsOpen) _optionView.CloseGraphics();
+                else CloseOptions();
+            }
         }
 
         private void FinishCredits(bool skipped)

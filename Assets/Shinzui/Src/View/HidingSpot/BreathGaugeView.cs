@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Shinzui.View
 {
-    /// <summary>隠れている間だけ表示する呼吸ゲージ</summary>
+    /// <summary>隠れている間だけ表示する息止め用のスタミナゲージ</summary>
     public sealed class BreathGaugeView : MonoBehaviour
     {
         private UnityEngine.UI.Image _fill;
@@ -34,8 +34,8 @@ namespace Shinzui.View
             text.text = "Hold RMB / LT: Hold breath     E / A: Exit"; text.alignment = TextAnchor.MiddleCenter; text.fontSize = 15;
             text.raycastTarget = false;
         }
-        /// <summary>残量と息止め状態を反映</summary>
-        /// <param name="ratio">残量</param>
+        /// <summary>スタミナ残量と息止め状態を反映</summary>
+        /// <param name="ratio">スタミナの残量割合</param>
         /// <param name="holding">息止め中か</param>
         public void Show(float ratio, bool holding)
         { _fill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(ratio), 1); _fill.color = holding ? Color.cyan : Color.white; }

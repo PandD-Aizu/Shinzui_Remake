@@ -58,7 +58,7 @@ namespace Shinzui.Editor.HdrpMigration
             var graphics = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")[0]);
             var shaders = graphics.FindProperty("m_AlwaysIncludedShaders");
             int added = 0;
-            foreach (string name in new[] { "Custom/PortalShader", "Custom/PortalMask", "Custom/PortalProjection", "Shinzui/SpiderWeb", "HDRP/Unlit" })
+            foreach (string name in new[] { "Custom/PortalShader", "Custom/PortalMask", "Custom/PortalProjection", "Shinzui/SpiderWeb", "Shinzui/BurnParticle", "HDRP/Unlit" })
             {
                 Shader shader = Shader.Find(name);
                 if (shader == null) { Debug.LogWarning($"HDRP runtime shader missing: {name}"); continue; }

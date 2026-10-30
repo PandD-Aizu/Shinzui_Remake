@@ -316,6 +316,49 @@ namespace Shinzui.Presentation.GenerateTunnel
                     mapDto.Dimensions.CorridorWidth, unchecked(mapDto.Seed ^ (room.RoomNumber * 397)));
             }
 
+            // 大きいトンネル本体だけにごみ袋の群を配置する
+            foreach (var tunnel in mapDto.Tunnels)
+            {
+                _mapView.CreateGarbageBagGroups(tunnelRoots[tunnel.Id],
+                    _mapView.ResolveCarPlacementWidth(mapDto.Dimensions.TunnelWidth), tunnel.Length,
+                    mapDto.Dimensions.CorridorWidth, unchecked(mapDto.Seed ^ (tunnel.Id * 397)));
+            }
+
+            // 接続口と中央の通行帯を空けて大小のトンネルへドラム缶を配置する
+            foreach (var tunnel in mapDto.Tunnels)
+            {
+                var openings = new List<float>();
+                if (tunnel.EntranceMarkers != null)
+                    foreach (var marker in tunnel.EntranceMarkers)
+                        if (marker.IsActive) openings.Add(marker.LocalPosZ);
+                // 大型看板は大きいトンネル本体だけに配置する
+                _mapView.CreateRoadSigns(tunnelRoots[tunnel.Id],
+                    _mapView.ResolveCarPlacementWidth(mapDto.Dimensions.TunnelWidth), tunnel.Length,
+                    mapDto.Dimensions.CorridorWidth, unchecked(mapDto.Seed ^ (tunnel.Id * 397)),
+                    openings.ToArray(), mapDto.Dimensions.CorridorWidth);
+                _mapView.CreateDrums(tunnelRoots[tunnel.Id],
+                    _mapView.ResolveCarPlacementWidth(mapDto.Dimensions.TunnelWidth), tunnel.Length,
+                    mapDto.Dimensions.CorridorWidth, unchecked(mapDto.Seed ^ (tunnel.Id * 397)),
+                    openings.ToArray(), mapDto.Dimensions.CorridorWidth);
+            }
+            for (int i = 0; i < mapDto.NormalCorridors.Count; i++)
+            {
+                _mapView.CreateDrums(corridorRoots[i], mapDto.Dimensions.CorridorWidth,
+                    mapDto.NormalCorridors[i].Length, 1.5f, unchecked(mapDto.Seed ^ (i * 613)),
+                    null, mapDto.Dimensions.CorridorWidth);
+            }
+            foreach (var room in mapDto.SmallRooms)
+            {
+                foreach (string name in new[] { "Corridor Before Room", "Corridor After Room" })
+                    _mapView.CreateDrums(roomRoots[room.RoomNumber].Find(name), mapDto.Dimensions.CorridorWidth,
+                        room.PassageLength, 1.5f, unchecked(mapDto.Seed ^ (room.RoomNumber * 877)),
+                        null, mapDto.Dimensions.CorridorWidth);
+            }
+            for (int i = 0; i < mapDto.WarpCorridors.Count; i++)
+                _mapView.CreateDrums(createdWarpInfos[i].transform, mapDto.Dimensions.CorridorWidth,
+                    mapDto.WarpCorridors[i].Length, 1.5f, unchecked(mapDto.Seed ^ (i * 991)),
+                    null, mapDto.Dimensions.CorridorWidth);
+
             // 8. カメラフレーミング
             if (mapDto.Bounds != null)
             {

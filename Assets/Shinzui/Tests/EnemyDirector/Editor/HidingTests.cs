@@ -4,6 +4,7 @@ using Shinzui.Application.AI.Enemy;
 using Shinzui.Application.DTOs.Enemy;
 using Shinzui.Application.UseCases.Enemy;
 using Shinzui.Application.UseCases.Player;
+using Shinzui.Domain.Entities;
 using Shinzui.Domain.ValueObjects.Enemy;
 using Shinzui.Domain.ValueObjects.Player;
 using UnityEngine;
@@ -27,33 +28,43 @@ namespace Shinzui.Tests.EnemyDirector
         /// <returns>知覚入力</returns>
         private static EnemyBrainInput Sense(int witness = 0, int presence = 0)
             => new(Vector3.forward, default, default, hidingSense: new HidingSense(witness, presence));
-        /// <summary>枯渇は一回だけ通知し、二秒は保持しても回復する</summary>
-        [Test] public void BreathExhaustsOnceAndRecoversAtHalfSpeed()
+        /// <summary>スタミナを持つ初期状態のプレイヤーを作成</summary>
+        /// <returns>プレイヤー</returns>
+        private static PlayerEntity Player() => new(new PlayerSpeedStatus(), new PlayerCrouchStatus(), new PlayerStamina());
+        /// <summary>息止めはスタミナを消費し、使い切ると二割回復するまで止められない</summary>
+        [Test] public void BreathHoldConsumesStaminaAndWaitsForRecovery()
         {
-            var breath = new BreathGauge();
-            Assert.That(breath.Tick(true, 3f), Is.False);
-            Assert.That(breath.Tick(true, 1f), Is.True);
-            Assert.That(breath.IsHolding, Is.False);
-            Assert.That(breath.Tick(true, 1f), Is.False);
-            Assert.That(breath.Remaining, Is.EqualTo(.5f));
-            breath.Tick(true, 1f);
-            Assert.That(breath.Remaining, Is.EqualTo(1f));
-            breath.Tick(true, .1f);
-            Assert.That(breath.IsHolding, Is.True);
-            Assert.That(breath.Remaining, Is.EqualTo(.9f).Within(.001f));
+            var player = Player();
+            var hiding = new PlayerHidingUseCase(Spots(), new NoiseEventHub(), player);
+            hiding.Enter(1, false);
+            hiding.Tick(true, .1f);
+            player.UpdateStamina(1f);
+            Assert.That(hiding.IsHoldingBreath, Is.True);
+            Assert.That(player.CurrentStamina.Value, Is.EqualTo(75f));
+            player.UpdateStamina(3f);
+            hiding.Tick(true, .1f);
+            Assert.That(hiding.IsHoldingBreath, Is.False);
+            player.UpdateStamina(1f);
+            hiding.Tick(true, .1f);
+            Assert.That(hiding.IsHoldingBreath, Is.False);
+            player.UpdateStamina(1f);
+            hiding.Tick(true, .1f);
+            Assert.That(hiding.IsHoldingBreath, Is.True);
         }
-        /// <summary>走る入室、枯渇、退出だけが音になり停止時間は呼吸を消費しない</summary>
+        /// <summary>走る入室、スタミナ切れ、退出だけが音になり停止時間はスタミナを消費しない</summary>
         [Test] public void HidingLifecycleEmitsOnlyRequiredNoises()
         {
             var hub = new NoiseEventHub();
-            var hiding = new PlayerHidingUseCase(Spots(), hub);
+            var player = Player();
+            var hiding = new PlayerHidingUseCase(Spots(), hub, player);
             Assert.That(hiding.Enter(9, true), Is.False);
             Assert.That(hiding.Enter(1, false), Is.True);
             Assert.That(hub.Drain(), Is.Empty);
             Assert.That(hiding.IsEntering, Is.True);
             hiding.Tick(true, 0f);
-            Assert.That(hiding.Breath.Remaining, Is.EqualTo(4f));
-            hiding.Tick(true, 4f);
+            player.UpdateStamina(0f);
+            Assert.That(player.CurrentStamina.Value, Is.EqualTo(100f));
+            for (int i = 0; i < 5; i++) { hiding.Tick(true, 1f); player.UpdateStamina(1f); }
             Assert.That(hiding.IsEntering, Is.False);
             Assert.That(hub.Drain()[0].Kind, Is.EqualTo(NoiseKind.Breath));
             hiding.Tick(true, .1f);
@@ -127,7 +138,7 @@ namespace Shinzui.Tests.EnemyDirector
             brain.Blackboard.Unlocked = EnemyBehaviorFlags.CheckHidingSpots;
             Assert.That(brain.Tick(Sense(witness: 1), default, .1f).Type, Is.EqualTo(EnemyIntentType.Wander));
             Assert.That(brain.Blackboard.WitnessedHidingSpotId, Is.Zero);
-            Assert.That(new PlayerHidingUseCase(spots, new NoiseEventHub()).Enter(1, false), Is.False);
+            Assert.That(new PlayerHidingUseCase(spots, new NoiseEventHub(), Player()).Enter(1, false), Is.False);
         }
     }
 }

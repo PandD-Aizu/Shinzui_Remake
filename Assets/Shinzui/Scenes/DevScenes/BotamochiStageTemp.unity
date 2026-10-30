@@ -7071,7 +7071,7 @@ MonoBehaviour:
   fireAlarmEndMargin: 12
   fireAlarmMouthMargin: 4
   spiderWebTemplate: {fileID: 4811854858651217045, guid: 0f88d6edce2d3a147a9c50e07dbc0388, type: 3}
-  fireAlarmPrefab: {fileID: 0}
+  fireAlarmPrefab: {fileID: 6078408356651363201, guid: f4d43d3fe1a384a469fb1cfabc347e07, type: 3}
   hidingLockerCount: 4
   hidingLockerMinSpacing: 25
   hidingLockerPrefab: {fileID: 0}

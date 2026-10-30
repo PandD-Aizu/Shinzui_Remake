@@ -20,6 +20,7 @@ namespace Shinzui.Domain.Entities
         public ReactiveProperty<float> CurrentStamina { get; }
         public ReadOnlyReactiveProperty<float> StaminaRatio { get; }
         public ReactiveProperty<bool> IsExhausted { get; } = new (false);
+        public bool IsHoldingBreath { get; private set; }
         public SpecialItemModifiers SpecialItemModifiers => _specialItemModifiers;
 
         public PlayerEntity(
@@ -69,6 +70,15 @@ namespace Shinzui.Domain.Entities
             _staminaProtectionRemaining = Mathf.Max(0f, duration);
         }
 
+        /// <summary>息止めの状態を設定し、疲労中は息を止められない</summary>
+        /// <param name="holding">息止め入力</param>
+        /// <returns>実際に息を止めているか</returns>
+        public bool SetHoldingBreath(bool holding)
+        {
+            IsHoldingBreath = holding && !IsExhausted.Value;
+            return IsHoldingBreath;
+        }
+
         /// <summary>
         /// 移動状態に基づいてスタミナを更新する
         /// </summary>
@@ -83,6 +93,11 @@ namespace Shinzui.Domain.Entities
             if (MovementState.Value == PlayerMovementState.Running)
             {
                 staminaChange = -PlayerStamina.StaminaDecreaseRate * consumptionTime;
+            }
+            else if (IsHoldingBreath)
+            {
+                // 息止め中は走行と同じくスタミナを消費する
+                staminaChange = -PlayerStamina.BreathHoldDecreaseRate * consumptionTime;
             }
             else
             {
@@ -103,6 +118,7 @@ namespace Shinzui.Domain.Entities
             if (newStamina <= PlayerStamina.MinStamina)
             {
                 IsExhausted.Value = true;
+                IsHoldingBreath = false;
             }
             else if (IsExhausted.Value && newStamina >= PlayerStamina.MaxStamina * 0.2f)
             {

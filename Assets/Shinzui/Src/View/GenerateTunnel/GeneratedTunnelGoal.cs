@@ -1,16 +1,14 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Shinzui.View.GenerateTunnel
 {
     /// <summary>
-    /// プレイヤーがゴールへ触れたときにステージ選択へ遷移する
+    /// プレイヤーが開錠済みゴールへ触れたときに結果画面を開く
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(BoxCollider))]
     public sealed class GeneratedTunnelGoal : MonoBehaviour
     {
-        private const string DestinationScene = "StageSelect";
         public bool IsTransitioning { get; private set; }
         public bool IsUnlocked { get; private set; }
 
@@ -31,15 +29,9 @@ namespace Shinzui.View.GenerateTunnel
             PlayerView player = other.GetComponentInParent<PlayerView>();
             if (!IsUnlocked || IsTransitioning || player == null || player.gameObject.scene != gameObject.scene) return;
 
-            // 遷移先の登録漏れでは操作不能にせず、原因を通知する
-            if (!UnityEngine.Application.CanStreamedLevelBeLoaded(DestinationScene))
-            {
-                Debug.LogError("[GeneratedTunnelGoal] StageSelect must be enabled in the scene list.", this);
-                return;
-            }
-
-            IsTransitioning = true;
-            SceneManager.LoadSceneAsync(DestinationScene, LoadSceneMode.Single);
+            // プレイヤーと同じスコープの結果画面へ接続する
+            var result = player.GetComponent<StageResultTrigger>();
+            if (result != null) IsTransitioning = result.TryComplete();
         }
 
         /// <summary>

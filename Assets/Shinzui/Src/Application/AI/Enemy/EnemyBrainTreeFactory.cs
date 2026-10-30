@@ -45,6 +45,7 @@ namespace Shinzui.Application.AI.Enemy
                     new BtAction("Backtrack", brain.Backtrack), () => brain.Blackboard.Unlocked),
                 new BtGate(EnemyBehaviorFlags.LingerAfterSearch,
                     new BtAction("Linger", brain.Linger), () => brain.Blackboard.Unlocked),
+                new BtAction("CeilingAmbush", brain.Ambush),
                 new BtAction("FollowHint", brain.FollowHint, brain.ResetHint),
                 new BtAction("Wander", brain.Wander));
         }

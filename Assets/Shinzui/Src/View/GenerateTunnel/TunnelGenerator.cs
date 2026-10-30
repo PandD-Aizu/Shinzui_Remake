@@ -33,6 +33,8 @@ namespace Shinzui.View.GenerateTunnel
         [Header("Generation")]
         [Min(5)] [SerializeField] private int tunnelCount = 8;
         [SerializeField] private int seed = 2777;
+        [Tooltip("Pick a new random seed on every play. Disable to reproduce the inspector seed.")]
+        [SerializeField] private bool randomizeSeedOnPlay = true;
         [Min(1)] [SerializeField] private int placementAttemptsPerTunnel = 80;
 
         [Header("Upper Floor")]
@@ -186,6 +188,19 @@ namespace Shinzui.View.GenerateTunnel
         /// <summary>
         /// Inspectorでも断面の縦横倍率を揃える
         /// </summary>
+        /// <summary>
+        /// 有効時はプレイ開始ごとにシードをランダムに差し替える
+        /// </summary>
+        private void Awake()
+        {
+            // インスペクターのシードを使う設定なら何もしない
+            if (!randomizeSeedOnPlay) return;
+
+            // 再現できるように使用シードをログへ残す
+            seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            Debug.Log($"[TunnelGenerator] Randomized seed: {seed}");
+        }
+
         private void OnValidate()
         {
             basicTunnelModelScale.z = basicTunnelModelScale.y;

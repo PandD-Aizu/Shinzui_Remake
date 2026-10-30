@@ -1,11 +1,22 @@
-namespace Shinzui.Domain.Settings
+﻿namespace Shinzui.Domain.Settings
 {
+    /// <summary>実行環境に応じて使用するアップスケーラー</summary>
+    public enum UpscalerType
+    {
+        None,
+        Dlss,
+        Fsr2
+    }
+
     /// <summary>
     /// グラフィックスおよび描画品質に関する設定データを保持するドメインモデル
     /// </summary>
     [System.Serializable]
     public class GraphicsSettings
     {
+        /// <summary>描画品質プリセット</summary>
+        public GraphicsPreset Preset { get; set; } = GraphicsPreset.High;
+
         // --- 基本・画面設定 ---
         
         /// <summary>【PC専用】FPSやGPU情報等の表示有無</summary>
@@ -39,6 +50,18 @@ namespace Shinzui.Domain.Settings
         public bool EnableVSync { get; set; } = true;
 
         // --- アップスケーリング・レンダリング ---
+
+        /// <summary>対応GPUでDLSS Super Resolutionを有効にする</summary>
+        public bool EnableDlss { get; set; } = false;
+
+        /// <summary>DLSS品質 (0: Quality, 1: Balanced, 2: Performance)</summary>
+        public int DlssQuality { get; set; } = 0;
+
+        /// <summary>対応環境でFSR 2を有効にする</summary>
+        public bool EnableFsr2 { get; set; } = false;
+
+        /// <summary>FSR 2品質 (0: Quality, 1: Balanced, 2: Performance)</summary>
+        public int Fsr2Quality { get; set; } = 0;
 
         /// <summary>FidelityFX Super Resolution (FSR) 1.0 モード (0: OFF, 1: Performance, 2: Balanced, 3: Quality, 4: UltraQuality)</summary>
         public int FsrMode { get; set; } = 0;
@@ -95,7 +118,7 @@ namespace Shinzui.Domain.Settings
         // --- 影設定 ---
 
         /// <summary>メインシャドウの品質 (0: OFF, 1: 低, 2: 中, 3: 高)</summary>
-        public int ShadowQuality { get; set; } = 2;
+        public int ShadowQuality { get; set; } = 3;
 
         /// <summary>コンタクトシャドウ（接地部の微細な影）の有効化</summary>
         public bool EnableContactShadow { get; set; } = true;

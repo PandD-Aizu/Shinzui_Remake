@@ -57,7 +57,7 @@ namespace Shinzui.Presentation
         public void Tick()
         {
             // インベントリが開いておらず、石が装備されていて、左クリック入力があった場合
-            if (!_inventoryUseCase.IsOpen.CurrentValue && _isStoneEquipped && _inputService.AttackPressed)
+            if (!_inventoryUseCase.IsOpen.CurrentValue && _isStoneEquipped && !_inputService.StrobeReadyHeld && _inputService.AttackPressed)
             {
                 // 石を投げる
                 _view.ThrowRock();

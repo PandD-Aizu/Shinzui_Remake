@@ -513,6 +513,8 @@ MonoBehaviour:
   - {fileID: -668016040853284748}
   - {fileID: -5144033621997003945}
   - {fileID: 2835284818540372325}
+  - {fileID: 7461203917702615001}
+  - {fileID: 7461203917702615002}
 --- !u!114 &1844907309553361587
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -686,13 +688,69 @@ MonoBehaviour:
     m_Value: 64
   m_VolumetricFogBudget:
     m_OverrideState: 0
-    m_Value: 0.25
+    m_Value: 0.33
   m_ResolutionDepthRatio:
     m_OverrideState: 0
-    m_Value: 0.5
+    m_Value: 0.666
   directionalLightsOnly:
     m_OverrideState: 0
     m_Value: 0
   volumetricLightingDensityCutoff:
     m_OverrideState: 0
     m_Value: 0
+--- !u!114 &7461203917702615001
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5151e3afc2f7443ab2d19b66bb1f4ec5, type: 3}
+  m_Name: PixelationVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.PixelationVolume
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0.1
+--- !u!114 &7461203917702615002
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce5974aa8fb6deb4a9f5cd0a926833a4, type: 3}
+  m_Name: ScanlineVolume
+  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Scanline.ScanlineVolume
+  active: 1
+  speed:
+    m_OverrideState: 1
+    m_Value: 0.39
+  barSize:
+    m_OverrideState: 1
+    m_Value: 0.001
+  strength:
+    m_OverrideState: 1
+    m_Value: 10
+  frequency:
+    m_OverrideState: 1
+    m_Value: 100
+  curvature:
+    m_OverrideState: 1
+    m_Value: 0.15
+  fineLines:
+    m_OverrideState: 1
+    m_Value: 1
+  fineLinesScale:
+    m_OverrideState: 1
+    m_Value: 480
+  vignette:
+    m_OverrideState: 1
+    m_Value: 0.3
+  flicker:
+    m_OverrideState: 1
+    m_Value: 0.5

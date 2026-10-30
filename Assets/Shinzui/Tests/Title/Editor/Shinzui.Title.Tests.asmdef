@@ -3,5 +3,7 @@
     "references": ["ApplicationLayer", "DomainLayer", "InfrastructureLayer", "ViewLayer", "PresentationLayer", "DILayer", "VContainer", "Unity.TextMeshPro", "UnityEngine.UI", "R3.Unity"],
     "includePlatforms": ["Editor"],
     "optionalUnityReferences": ["TestAssemblies"],
+    "overrideReferences": true,
+    "precompiledReferences": ["R3.dll"],
     "autoReferenced": false
 }

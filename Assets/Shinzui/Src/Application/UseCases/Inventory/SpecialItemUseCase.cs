@@ -21,6 +21,9 @@ namespace Shinzui.Application.UseCases.Inventory
 
         public ReadOnlyReactiveProperty<SpecialItemSlotDto> SlotDto => _slotDto;
 
+        /// <summary>身代わりの消費が成功したときだけ通知する</summary>
+        public event System.Action DeathPreventionConsumed;
+
         public SpecialItemUseCase(
             SpecialItemEntity specialItem,
             IItemCatalog catalog,
@@ -77,6 +80,7 @@ namespace Shinzui.Application.UseCases.Inventory
         /// 死亡確定の直前に呼ぶ
         /// 防止できた場合は特殊アイテムを消費してtrueを返す
         /// </summary>
+        /// <returns>身代わりを消費して死亡を防いだ場合はtrue</returns>
         public bool TryConsumeDeathPrevention()
         {
             if (!_specialItem.TryConsumeDeathPrevention(out _))
@@ -84,6 +88,10 @@ namespace Shinzui.Application.UseCases.Inventory
                 return false;
             }
 
+            // 消費が成功した時点で結果集計へ通知する
+            DeathPreventionConsumed?.Invoke();
+
+            // 消費後の所持状態を保存する
             _ = SaveAsync();
             return true;
         }

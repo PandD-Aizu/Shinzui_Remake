@@ -42,5 +42,22 @@ namespace Shinzui.Application.Interfaces
         /// <param name="position">到達先</param>
         /// <returns>経路がない場合はfloat.MaxValue</returns>
         float PathDistanceTo(Vector3 position);
+        /// <summary>天井への登り、張り付き、落下のいずれかの最中か</summary>
+        bool IsOnCeiling { get; }
+        /// <summary>登り終えて天井に張り付いているか</summary>
+        bool IsClinging { get; }
+        /// <summary>真上に十分高い天井がある場合だけAgentを止めて登り始める</summary>
+        /// <param name="minHeight">床から天井までの最低高さ</param>
+        /// <returns>登り始めたか</returns>
+        bool TryClimbCeiling(float minHeight);
+        /// <summary>天井に沿って目標の真上へ這い寄る</summary>
+        /// <param name="toward">向きと移動の目標</param>
+        /// <param name="speed">移動速度、0なら向きだけ変える</param>
+        /// <param name="maxDistance">登った地点から離れられる水平距離</param>
+        /// <param name="deltaTime">経過秒数</param>
+        void CreepOnCeiling(Vector3 toward, float speed, float maxDistance, float deltaTime);
+        /// <summary>目標へ少し飛びかかりながら床へ落下し、着地後にAgentを戻す</summary>
+        /// <param name="toward">飛びかかる目標</param>
+        void DropFromCeiling(Vector3 toward);
     }
 }

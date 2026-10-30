@@ -4,6 +4,7 @@ using R3;
 using Shinzui.Application.DTOs.Inventory;
 using Shinzui.Application.Interfaces.Inventory;
 using Shinzui.Domain.Entities;
+using Shinzui.Domain.Entities.Flashlight;
 using Shinzui.Domain.Entities.Inventory;
 using Shinzui.Domain.ValueObjects.Inventory;
 
@@ -16,6 +17,7 @@ namespace Shinzui.Application.UseCases.Inventory
         private readonly IInventoryRepository _repository;
         private readonly PlayerEntity _playerEntity;
         private readonly IPenlightPlacementService _penlightPlacement;
+        private readonly FlashlightEntity _flashlight;
 
         private readonly ReactiveProperty<InventorySlotDto>[] _slotDtos;
         public ReadOnlyReactiveProperty<InventorySlotDto> GetSlotDto(int index) => _slotDtos[index];
@@ -39,13 +41,15 @@ namespace Shinzui.Application.UseCases.Inventory
             IItemCatalog catalog,
             IInventoryRepository repository,
             PlayerEntity playerEntity,
-            IPenlightPlacementService penlightPlacement = null)
+            IPenlightPlacementService penlightPlacement = null,
+            FlashlightEntity flashlight = null)
         {
             _inventory = inventory;
             _catalog = catalog;
             _repository = repository;
             _playerEntity = playerEntity;
             _penlightPlacement = penlightPlacement;
+            _flashlight = flashlight;
 
             // 装備アイテムIDのストリームを構築
             EquippedItemId = _equippedSlotIndex
@@ -211,10 +215,20 @@ namespace Shinzui.Application.UseCases.Inventory
             var slot = _inventory.GetSlot(slotIndex).CurrentValue;
             if (slot == null || !slot.Item.IsConsumable) return false;
 
+            // 乾電池は懐中電灯の電池残量が満タンなら使わない
+            bool isBattery = slot.Item.Id == "FlashlightBattery";
+            if (isBattery && (_flashlight == null || _flashlight.StrobeEnergy.CurrentValue >= 1f)) return false;
+
             // 使用したため個数を1減らす
             bool success = _inventory.TryRemoveItem(slotIndex, 1);
             if (success)
             {
+                // 乾電池を交換してストロボの電池残量を満タンにする
+                if (isBattery)
+                {
+                    _flashlight.TryRefillStrobeEnergy();
+                }
+
                 // ぼたもちを食べた時だけ全回復し、5秒間の消費停止を付与する
                 if (slot.Item.Id == "potion_botamochi")
                 {
@@ -311,6 +325,22 @@ namespace Shinzui.Application.UseCases.Inventory
             await SaveAsync();
         }
         
+        /// <summary>
+        /// インベントリ内にあるアイテムの合計個数を数える
+        /// </summary>
+        /// <param name="itemId">数えるアイテムID</param>
+        /// <returns>全スロットの合計個数</returns>
+        public int CountItem(string itemId)
+        {
+            int count = 0;
+            foreach (var slot in _slotDtos)
+            {
+                if (slot.CurrentValue is { HasItem: true } dto && dto.ItemId == itemId) count += dto.Quantity;
+            }
+
+            return count;
+        }
+
         /// <summary>
         /// インベントリ内のアイテムの情報取得
         /// </summary>

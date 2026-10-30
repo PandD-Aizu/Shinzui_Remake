@@ -25,6 +25,7 @@ namespace Shinzui.Application.UseCases.Flashlight
         private const float MaxChargeTime = 0.8f;      // 0.8秒でフルチャージ
         private const float DecaySpeed = 1.8f;         // ストロボ減衰速度
         private const float MinChargeThreshold = 0.15f; // 15%以上のチャージで発光可能
+        private const float MaxStrobeCost = 1f / 3f;    // フルチャージ1回で消費する電池残量
 
         private float _currentPushTime = 0f;
 
@@ -32,6 +33,17 @@ namespace Shinzui.Application.UseCases.Flashlight
         public ReadOnlyReactiveProperty<bool> IsOn => _flashlightEntity.IsOn;
         public ReadOnlyReactiveProperty<float> StrobeCharge => _flashlightEntity.StrobeCharge;
         public ReadOnlyReactiveProperty<float> StrobeIntensity => _flashlightEntity.StrobeIntensity;
+        public ReadOnlyReactiveProperty<float> StrobeEnergy => _flashlightEntity.StrobeEnergy;
+
+        /// <summary>最低限のチャージで発光できるだけの電池残量があるか</summary>
+        public bool CanStrobe => _flashlightEntity.StrobeEnergy.CurrentValue >= MinChargeThreshold * MaxStrobeCost;
+
+        /// <summary>
+        /// チャージ量に対する電池残量の消費量を求める
+        /// </summary>
+        /// <param name="charge">チャージ量</param>
+        /// <returns>発光時に減る電池残量</returns>
+        public float GetStrobeCost(float charge) => charge * MaxStrobeCost;
 
         public FlashlightUseCase(
             FlashlightEntity flashlightEntity,
@@ -56,8 +68,20 @@ namespace Shinzui.Application.UseCases.Flashlight
         public void Charge(float deltaTime)
         {
             _currentPushTime += deltaTime;
-            float charge = UnityEngine.Mathf.Clamp01(_currentPushTime / MaxChargeTime);
+
+            // 電池残量で賄える分までしか溜められない
+            float maxCharge = UnityEngine.Mathf.Clamp01(_flashlightEntity.StrobeEnergy.CurrentValue / MaxStrobeCost);
+            float charge = UnityEngine.Mathf.Min(_currentPushTime / MaxChargeTime, maxCharge);
             _flashlightEntity.SetStrobeCharge(charge);
+        }
+
+        /// <summary>
+        /// 発光せずにストロボの溜めを破棄する
+        /// </summary>
+        public void CancelCharge()
+        {
+            _currentPushTime = 0f;
+            _flashlightEntity.SetStrobeCharge(0f);
         }
 
         /// <summary>隠れる時は光とストロボの溜めを解除</summary>
@@ -84,6 +108,7 @@ namespace Shinzui.Application.UseCases.Flashlight
                 {
                     // チャージ量に応じた強さでストロボ発光
                     _flashlightEntity.SetStrobeIntensity(charge);
+                    _flashlightEntity.SetStrobeEnergy(_flashlightEntity.StrobeEnergy.CurrentValue - GetStrobeCost(charge));
                     fired = true;
                     
                     // 発光時の演出SE

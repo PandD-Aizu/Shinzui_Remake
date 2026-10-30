@@ -22,15 +22,6 @@ namespace Shinzui.Infrastructure.Rendering
         public static float LastIntensity { get; private set; }
 #endif
 
-        /// <summary>入力用のHDRバッファを確保する</summary>
-        /// <param name="renderContext">描画コンテキスト</param>
-        /// <param name="cmd">コマンドバッファ</param>
-        protected override void Setup(ScriptableRenderContext renderContext, CommandBuffer cmd)
-        {
-            input = RTHandles.Alloc(Vector2.one, slices: TextureXR.slices, dimension: TextureXR.dimension,
-                colorFormat: GraphicsFormat.R16G16B16A16_SFloat, useDynamicScale: true, name: "HorrorDetectionInput");
-        }
-
         /// <summary>主画面だけへノイズを適用する</summary>
         /// <param name="ctx">HDRPの描画状態</param>
         protected override void Execute(CustomPassContext ctx)
@@ -46,12 +37,27 @@ namespace Shinzui.Infrastructure.Rendering
             LastIntensity = intensity;
 #endif
             if (intensity <= 0) return;
+
+            // DLSS適用後の出力解像度で確保し、内部描画解像度による切り抜きを防ぐ
+            int width = camera.pixelWidth;
+            int height = camera.pixelHeight;
+            if (input == null || input.rt.width != width || input.rt.height != height)
+            {
+                input?.Release();
+                input = RTHandles.Alloc(width, height, slices: TextureXR.slices, dimension: TextureXR.dimension,
+                    colorFormat: GraphicsFormat.R16G16B16A16_SFloat, name: "HorrorDetectionInput");
+            }
+
             /* 他のカメラの更新から値を隔離して描画コマンドへ渡す */
             ctx.propertyBlock.SetFloat("_HorrorNoiseIntensity", intensity);
-            CustomPassUtils.Copy(ctx, ctx.cameraColorBuffer, input);
+            Vector2Int sourceSize = ctx.cameraColorBuffer.GetScaledSize(ctx.cameraColorBuffer.rtHandleProperties.currentViewportSize);
+            CustomPassUtils.Copy(ctx, ctx.cameraColorBuffer, input,
+                new Vector4((float)width / sourceSize.x, (float)height / sourceSize.y, 0f, 0f),
+                new Vector4(1f, 1f, 0f, 0f));
             ctx.propertyBlock.SetTexture("_HorrorInput", input.rt);
-            ctx.propertyBlock.SetVector("_HorrorInputScale", input.rtHandleProperties.rtHandleScale);
+            ctx.propertyBlock.SetVector("_HorrorInputScale", Vector4.one);
             CoreUtils.SetRenderTarget(ctx.cmd, ctx.cameraColorBuffer, ClearFlag.None);
+            ctx.cmd.SetViewport(new Rect(0, 0, width, height));
             CoreUtils.DrawFullScreen(ctx.cmd, material, ctx.propertyBlock, shaderPassId: 0);
 #if UNITY_EDITOR
             LastDrawFrame = Time.frameCount;

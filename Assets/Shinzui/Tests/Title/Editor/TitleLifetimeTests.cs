@@ -278,11 +278,19 @@ namespace Shinzui.Tests.Title
                 settings.Audio.SystemVolume = 0.37f;
                 settings.Camera.MouseNormalSensitivity = 74f;
                 settings.Graphics.BrightnessValue = 0.61f;
+                settings.Graphics.EnableDlss = true;
+                settings.Graphics.DlssQuality = 2;
+                settings.Graphics.EnableFsr2 = true;
+                settings.Graphics.Fsr2Quality = 1;
                 repository.Save(settings);
                 var reloaded = repository.Load();
                 Assert.That(reloaded.Audio.SystemVolume, Is.EqualTo(0.37f));
                 Assert.That(reloaded.Camera.MouseNormalSensitivity, Is.EqualTo(74f));
                 Assert.That(reloaded.Graphics.BrightnessValue, Is.EqualTo(0.61f));
+                Assert.That(reloaded.Graphics.EnableDlss, Is.True);
+                Assert.That(reloaded.Graphics.DlssQuality, Is.EqualTo(2));
+                Assert.That(reloaded.Graphics.EnableFsr2, Is.True);
+                Assert.That(reloaded.Graphics.Fsr2Quality, Is.EqualTo(1));
             }
             finally { if (File.Exists(path)) File.Delete(path); }
         }
@@ -298,8 +306,73 @@ namespace Shinzui.Tests.Title
                 var settings = new FileSettingsRepository(path).Load();
                 Assert.That(settings.Audio.SystemVolume, Is.EqualTo(new GameSettings().Audio.SystemVolume));
                 Assert.That(settings.Camera, Is.Not.Null);
+                Assert.That(settings.Graphics.EnableDlss, Is.False);
+                Assert.That(settings.Graphics.DlssQuality, Is.Zero);
+                Assert.That(settings.Graphics.EnableFsr2, Is.False);
+                Assert.That(settings.Graphics.Fsr2Quality, Is.Zero);
             }
             finally { if (File.Exists(path)) File.Delete(path); }
+        }
+
+        /// <summary>
+        /// DLSSの編集値が保存と再編集で維持され、初期化でオフに戻ることを確認する
+        /// </summary>
+        /// <param name="quality">保存対象のDLSS品質</param>
+        [TestCase(0), TestCase(1), TestCase(2)]
+        public void DlssSurvivesEditingAndResetsToOff(int quality)
+        {
+            using var settings = new SettingsUseCase(_store, new SettingsApplier());
+
+            // オンにした設定を確定し、クローン経由の再編集でも維持する
+            settings.BeginEdit();
+            settings.EnableDlss.Value = true;
+            settings.DlssQuality.Value = quality;
+            settings.SaveAndApply();
+            settings.BeginEdit();
+            Assert.That(settings.EnableDlss.Value, Is.True);
+            Assert.That(_store.Value.Graphics.EnableDlss, Is.True);
+            Assert.That(settings.DlssQuality.Value, Is.EqualTo(quality));
+            Assert.That(_store.Value.Graphics.DlssQuality, Is.EqualTo(quality));
+
+            // 初期値への復帰と保存を確認する
+            settings.ResetToDefault();
+            Assert.That(settings.EnableDlss.Value, Is.False);
+            Assert.That(settings.DlssQuality.Value, Is.Zero);
+            settings.SaveAndApply();
+            Assert.That(_store.Value.Graphics.EnableDlss, Is.False);
+        }
+
+        /// <summary>方式を切り替えてもそれぞれの保存値を維持する</summary>
+        /// <param name="quality">FSRの品質</param>
+        [TestCase(0), TestCase(1), TestCase(2)]
+        public void FsrSettingsRemainIndependentOfDlss(int quality)
+        {
+            var applier = new SettingsApplier { Supported = UpscalerType.Fsr2 };
+            using var settings = new SettingsUseCase(_store, applier);
+            settings.BeginEdit();
+            settings.UpscalingEnabled.Value = true;
+            settings.UpscalingQuality.Value = quality;
+            settings.SaveAndApply();
+            settings.BeginEdit();
+            Assert.That(settings.EnableFsr2.Value, Is.True);
+            Assert.That(settings.Fsr2Quality.Value, Is.EqualTo(quality));
+            Assert.That(_store.Value.Graphics.Fsr2Quality, Is.EqualTo(quality));
+
+            // DLSS側の編集がFSR設定に影響しないことを確認する
+            applier.Supported = UpscalerType.Dlss;
+            Assert.That(settings.UpscalingEnabled.Value, Is.False);
+            settings.UpscalingQuality.Value = 2;
+            applier.Supported = UpscalerType.Fsr2;
+            Assert.That(settings.UpscalingEnabled.Value, Is.True);
+            Assert.That(settings.UpscalingQuality.Value, Is.EqualTo(quality));
+            applier.Supported = UpscalerType.None;
+            Assert.That(settings.SupportedUpscaler, Is.EqualTo(UpscalerType.None));
+
+            // 初期化で両方式をオフに戻す
+            settings.ResetToDefault();
+            settings.SaveAndApply();
+            Assert.That(_store.Value.Graphics.EnableFsr2, Is.False);
+            Assert.That(_store.Value.Graphics.Fsr2Quality, Is.Zero);
         }
 
         private GameObject Child(string name)
@@ -347,6 +420,19 @@ namespace Shinzui.Tests.Title
 
         private sealed class SettingsApplier : ISettingsApplier
         {
+            public UpscalerType Supported = UpscalerType.Dlss;
+
+            /// <summary>スタブ環境ではレイトレーシングを無効にする</summary>
+            /// <returns>非対応を示す偽</returns>
+            public bool IsRayTracingSupported() => false;
+
+            /// <summary>スタブ環境の解像度一覧を返す</summary>
+            /// <returns>固定の解像度一覧</returns>
+            public System.Collections.Generic.IReadOnlyList<string> GetAvailableResolutions() => new[] { "1920x1080" };
+
+            /// <summary>テストで指定した対応方式を返す</summary>
+            /// <returns>テスト対象の方式</returns>
+            public UpscalerType GetSupportedUpscaler() => Supported;
             public void ApplyAudio(Shinzui.Domain.Settings.AudioSettings audio) { }
             public void ApplyGraphics(GraphicsSettings graphics) { }
             public void ApplyCamera(CameraSettings camera) { }

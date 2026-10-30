@@ -27,6 +27,7 @@ namespace Shinzui.Presentation.Interaction
         private bool _requireRelease;
         private readonly ItemPickupUseCase _pickup = new();
         private InteractableComponent _pickupTarget;
+        private bool _isPress;
         private IPickupInterruption _interruption;
         private bool _interruptionStarted;
         private PlayerBodyView _body;
@@ -84,8 +85,8 @@ namespace Shinzui.Presentation.Interaction
 
             if (_pickup.IsActive)
             {
-                bool valid = _interactionView.CanContinuePickup(_pickupTarget);
-                _pickup.Tick(Time.deltaTime, held, valid);
+                bool valid = CanContinue();
+                _pickup.Tick(Time.deltaTime, held || _isPress, valid);
 
                 // 指定進捗の演出は一操作につき一度だけ開始
                 if (_pickup.State == ItemPickupState.Reaching && !_interruptionStarted && _interruption != null
@@ -105,7 +106,7 @@ namespace Shinzui.Presentation.Interaction
                 }
 
                 // 演出が対象を消す場合も確定前に再検証
-                if (_pickup.State == ItemPickupState.Reaching && !_interactionView.CanContinuePickup(_pickupTarget)) _pickup.Cancel();
+                if (_pickup.State == ItemPickupState.Reaching && !CanContinue()) _pickup.Cancel();
                 if (_pickup.TryCommit()) _ = HandleInteractAsync(_pickupTarget, true);
                 if (_pickup.State == ItemPickupState.Returning || !_pickup.IsActive) EndInterruption(_pickup.Succeeded);
                 UpdatePickupPose();
@@ -117,10 +118,13 @@ namespace Shinzui.Presentation.Interaction
             {
                 var target = _interactionView.CurrentInteractable;
                 if (target == null || !target.CanInteract) return;
-                if (target.RequiresHold)
+                // 押下動作は手が届く場合のみ再生し、届かなければ従来通り即時に実行する
+                bool press = !target.RequiresHold && target.PlaysPressAnimation && _interactionView.CanContinuePickup(target);
+                if (target.RequiresHold || press)
                 {
-                    if (!held || !_interactionView.CanContinuePickup(target)) return;
+                    if (!press && (!held || !_interactionView.CanContinuePickup(target))) return;
                     _pickupTarget = target;
+                    _isPress = press;
                     // 手首の向きは開始時に決め、見回しによる急な捻りを防ぐ
                     _pickupRotation = target.GetPickupRotation(target.PickupPosition - _playerView.CameraPosition);
                     _interruption = target.GetComponent<IPickupInterruption>();
@@ -141,17 +145,28 @@ namespace Shinzui.Presentation.Interaction
             {
                 _pickupPosition = _pickupTarget.GetPickupContact(_playerView.CameraPosition);
             }
-            float grip = _pickup.Succeeded ? .45f
+            // 押下動作は掌を開いたまま当て、長押しゲージを表示しない
+            float grip = _isPress ? 0f
+                : _pickup.Succeeded ? .45f
                 : Mathf.SmoothStep(0f, .45f, Mathf.InverseLerp(.65f, 1f, _pickup.Progress));
             if (_body != null) _body.SetPickupPose(_pickupPosition, _pickupRotation, _pickup.Progress, grip);
             _interactionView.SetPickupProgress(_pickup.IsActive, _pickup.Progress,
-                _pickup.State == ItemPickupState.Reaching || _pickup.State == ItemPickupState.Waiting
-                || _pickup.State == ItemPickupState.Committing, _pickup.Succeeded, _pickupTarget);
+                !_isPress && (_pickup.State == ItemPickupState.Reaching || _pickup.State == ItemPickupState.Waiting
+                || _pickup.State == ItemPickupState.Committing), !_isPress && _pickup.Succeeded, _pickupTarget);
             if (!_pickup.IsActive)
             {
                 _pickupTarget = null;
+                _isPress = false;
                 _interruption = null;
             }
+        }
+
+        /// <summary>開始時の対象へ操作を継続できるか判定</summary>
+        /// <returns>押下動作は対象が有効な間、取得は距離と視野も満たす間</returns>
+        private bool CanContinue()
+        {
+            if (_isPress) return _pickupTarget != null && _pickupTarget.isActiveAndEnabled && _pickupTarget.CanInteract;
+            return _interactionView.CanContinuePickup(_pickupTarget);
         }
 
         /// <summary>演出の所有する音やカメラ等を解放</summary>
@@ -179,7 +194,7 @@ namespace Shinzui.Presentation.Interaction
                 if (success && target != null)
                 {
                     if (pickup) target.CanInteract = false;
-                    target.ExecuteInteractEffect();
+                    target.ExecuteInteractEffect(_playerView);
                 }
             }
             catch (Exception exception)

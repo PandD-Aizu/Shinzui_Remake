@@ -15,6 +15,7 @@ namespace Shinzui.Infrastructure.Services
         private readonly InputAction _itemUseAction;
         private readonly InputAction _flashlightToggleAction;
         private readonly InputAction _attackAction;
+        private readonly InputAction _strobeReadyAction;
 
         private bool _isBlocked;
         private bool _isHiding;
@@ -150,6 +151,9 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        /// <summary>入力ブロックを考慮したストロボ構えの保持状態</summary>
+        public bool StrobeReadyHeld => !IsBlocked && _strobeReadyAction.IsPressed();
+
         public UnityInputService()
         {
             // 動的にInputActionAssetを作成
@@ -209,6 +213,11 @@ namespace Shinzui.Infrastructure.Services
             _attackAction = playerMap.AddAction("Attack", type: InputActionType.Button);
             _attackAction.AddBinding("<Mouse>/leftButton");
             _attackAction.AddBinding("<Gamepad>/rightTrigger");
+
+            // StrobeReadyアクション (Button) の作成とバインディング
+            _strobeReadyAction = playerMap.AddAction("StrobeReady", type: InputActionType.Button);
+            _strobeReadyAction.AddBinding("<Mouse>/rightButton");
+            _strobeReadyAction.AddBinding("<Gamepad>/leftShoulder");
 
             // インプット制御を有効化
             _actionAsset.Enable();
