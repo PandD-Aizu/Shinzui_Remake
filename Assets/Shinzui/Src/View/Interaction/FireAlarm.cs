@@ -1,6 +1,8 @@
 using FMOD.Studio;
 using FMODUnity;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
 
 namespace Shinzui.View.Interaction
 {
@@ -45,7 +47,7 @@ namespace Shinzui.View.Interaction
         private float _nextNoiseTime;
         /// <summary>手置きと動的生成の報知器の鳴動を通知</summary>
         public static event System.Action<FireAlarm, Vector3> Rang;
-        private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
+        private static readonly int EmissionColor = Shader.PropertyToID("_EmissiveColor");
 
         public bool IsAlarmActive { get; private set; }
         public override bool RequiresHold => false;
@@ -82,6 +84,10 @@ namespace Shinzui.View.Interaction
             alarmLight.type = LightType.Point;
             alarmLight.color = Color.red;
             alarmLight.range = lightRange;
+            /* 旧点光源の強度はカンデラとして保持しHDRPデータを初期化する */
+            var data = HdrpLightUtility.SetIntensity(alarmLight, lightIntensity, LightUnit.Candela);
+            data.affectsVolumetric = true;
+            data.volumetricDimmer = .5f;
             _lampProperties = new MaterialPropertyBlock();
             CanInteract = false;
             SetLight(0f);
@@ -183,6 +189,7 @@ namespace Shinzui.View.Interaction
             if (lampMaterialIndex >= 0) lampRenderer.GetPropertyBlock(_lampProperties, lampMaterialIndex);
             else lampRenderer.GetPropertyBlock(_lampProperties);
             _lampProperties.SetColor(EmissionColor, Color.red * (brightness * lightIntensity));
+            _lampProperties.SetColor("emissiveFactor", Color.red * (brightness * lightIntensity));
             if (lampMaterialIndex >= 0) lampRenderer.SetPropertyBlock(_lampProperties, lampMaterialIndex);
             else lampRenderer.SetPropertyBlock(_lampProperties);
         }

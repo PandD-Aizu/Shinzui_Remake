@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.View
 {
@@ -69,16 +70,11 @@ namespace Shinzui.View
                     float opacity = material.HasProperty("_Opacity") ? material.GetFloat("_Opacity") : 1f;
                     _fadeMaterials.Add((material, color, opacity));
 
-                    // URPの不透明マテリアルをアルファブレンドへ切り替える
-                    if (!material.HasProperty("_Surface")) continue;
-                    material.SetFloat("_Surface", 1f);
-                    material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                    material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                    material.SetFloat("_ZWrite", 0f);
-                    material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-                    material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                    material.SetOverrideTag("RenderType", "Transparent");
-                    material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                    /* HDRPの表面設定を検証して透明フェードへ切り替える */
+                    if (!material.HasProperty("_SurfaceType")) continue;
+                    HDMaterial.SetSurfaceType(material, true);
+                    material.SetFloat("_BlendMode", 0f);
+                    HDMaterial.ValidateMaterial(material);
                     material.SetShaderPassEnabled("ShadowCaster", false);
                 }
             }

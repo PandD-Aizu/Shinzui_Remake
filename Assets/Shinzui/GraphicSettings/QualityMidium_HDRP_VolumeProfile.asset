@@ -192,6 +192,87 @@ MonoBehaviour:
     m_Value:
       serializedVersion: 0
       m_Bits: 1
+--- !u!114 &-1826029049484872414
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9008a067f4d626c4d8bc4bc48f04bb89, type: 3}
+  m_Name: ScreenSpaceAmbientOcclusion
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Runtime::UnityEngine.Rendering.HighDefinition.ScreenSpaceAmbientOcclusion
+  active: 1
+  quality:
+    m_OverrideState: 1
+    m_Value: 1
+  rayTracing:
+    m_OverrideState: 1
+    m_Value: 0
+  intensity:
+    m_OverrideState: 1
+    m_Value: 3
+  directLightingStrength:
+    m_OverrideState: 1
+    m_Value: 0.25
+  radius:
+    m_OverrideState: 1
+    m_Value: 0.25
+  spatialBilateralAggressiveness:
+    m_OverrideState: 1
+    m_Value: 0.15
+  temporalAccumulation:
+    m_OverrideState: 1
+    m_Value: 1
+  ghostingReduction:
+    m_OverrideState: 1
+    m_Value: 0.5
+  blurSharpness:
+    m_OverrideState: 1
+    m_Value: 0.1
+  layerMask:
+    m_OverrideState: 1
+    m_Value:
+      serializedVersion: 2
+      m_Bits: 4294967295
+  specularOcclusion:
+    m_OverrideState: 1
+    m_Value: 0.5
+  occluderMotionRejection:
+    m_OverrideState: 1
+    m_Value: 1
+  receiverMotionRejection:
+    m_OverrideState: 1
+    m_Value: 1
+  m_StepCount:
+    m_OverrideState: 1
+    m_Value: 6
+  m_FullResolution:
+    m_OverrideState: 1
+    m_Value: 0
+  m_MaximumRadiusInPixels:
+    m_OverrideState: 1
+    m_Value: 40
+  m_BilateralUpsample:
+    m_OverrideState: 1
+    m_Value: 1
+  m_DirectionCount:
+    m_OverrideState: 1
+    m_Value: 2
+  m_RayLength:
+    m_OverrideState: 1
+    m_Value: 50
+  m_SampleCount:
+    m_OverrideState: 1
+    m_Value: 1
+  m_Denoise:
+    m_OverrideState: 1
+    m_Value: 1
+  m_DenoiserRadius:
+    m_OverrideState: 1
+    m_Value: 1
 --- !u!114 &-1315740888605301053
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -468,6 +549,7 @@ MonoBehaviour:
   - {fileID: 7513472882294338255}
   - {fileID: 4253514296765938565}
   - {fileID: 8139327722932669171}
+  - {fileID: -1826029049484872414}
 --- !u!114 &2034848576746236020
 MonoBehaviour:
   m_ObjectHideFlags: 3

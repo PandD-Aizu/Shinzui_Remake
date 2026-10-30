@@ -69,8 +69,12 @@ namespace Shinzui.Editor
             Material tube = GetMaterial("FluorescentTube");
             tube.SetColor("_BaseColor", new Color(0.93f, 0.97f, 0.91f));
             tube.SetFloat("_Smoothness", 0.65f);
-            tube.SetColor("_EmissionColor", new Color(0.94f, 0.97f, 1.0f) * 4.0f);
-            tube.EnableKeyword("_EMISSION");
+            tube.SetColor("_EmissiveColor", new Color(0.94f, 0.97f, 1.0f) * 300.0f);
+            tube.SetFloat("_UseEmissiveIntensity", 0);
+            HDMaterial.ValidateMaterial(body);
+            HDMaterial.ValidateMaterial(tube);
+            EditorUtility.SetDirty(body);
+            EditorUtility.SetDirty(tube);
             tube.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
 
             // 同一プレハブを更新して既存の配置と寸法を維持する
@@ -108,30 +112,16 @@ namespace Shinzui.Editor
                 light.renderMode = LightRenderMode.Auto;
 
                 // 多数の器具でシャドウアトラスを圧迫しないよう低解像度の影を共有する
-                HDAdditionalLightData data = HdrpLightUtility.SetIntensity(light, 1.4f, LightUnit.Candela);
+                HDAdditionalLightData data = HdrpLightUtility.SetIntensity(light, 3000f, LightUnit.Lumen);
                 data.SetShadowResolution(512);
 
                 // 近接する二光源を中央の一光源へまとめ、総光量を保ちつつ影計算を半減する
                 Transform second = root.transform.Find("Fluorescent Illumination End");
                 if (second != null) Object.DestroyImmediate(second.gameObject);
 
-                // 近傍の天井への弱い反射光を補い、器具だけが黒い天井に浮くのを防ぐ
+                /* 天井の間接光はHDRPへ任せ旧補助光源だけを削除する */
                 Transform bounceTransform = root.transform.Find("Ceiling Bounce");
-                if (bounceTransform == null)
-                {
-                    bounceTransform = new GameObject("Ceiling Bounce").transform;
-                    bounceTransform.SetParent(root.transform, false);
-                }
-
-                bounceTransform.localPosition = new Vector3(0, -0.5f, 0);
-                Light bounce = bounceTransform.GetComponent<Light>();
-                if (bounce == null) bounce = bounceTransform.gameObject.AddComponent<Light>();
-                bounce.type = LightType.Point;
-                bounce.lightmapBakeType = LightmapBakeType.Realtime;
-                bounce.color = new Color(0.92f, 0.95f, 1.0f);
-                HdrpLightUtility.SetIntensity(bounce, 0.025f, LightUnit.Candela);
-                bounce.range = 2.2f;
-                bounce.shadows = LightShadows.None;
+                if (bounceTransform != null) Object.DestroyImmediate(bounceTransform.gameObject);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally

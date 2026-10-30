@@ -277,6 +277,9 @@ MonoBehaviour:
   playerDeathDistance: 1.2
   deathAttemptCooldown: 1
   agentOverride: {fileID: 6716722997384299243}
+  activeBehaviorPath: 
+  unlockedBehaviors: 
+  observedTactics: 
 --- !u!111 &1528385537935438515
 Animation:
   m_ObjectHideFlags: 0
@@ -294,6 +297,20 @@ Animation:
   m_AnimatePhysics: 0
   m_UpdateMode: 0
   m_CullingType: 0
+--- !u!114 &8154639207186540321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8119663525459182946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f9b673c6fa14252b8261d917c449095, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ViewLayer::Shinzui.View.BlackMistLightEffect
+  blackoutRadius: 8
+  flashlightRadius: 12
 --- !u!1 &8318501669513427158
 GameObject:
   m_ObjectHideFlags: 0
@@ -418,17 +435,3 @@ Transform:
   - {fileID: 7138650125448384326}
   m_Father: {fileID: 8682758635763917597}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8154639207186540321
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8119663525459182946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7f9b673c6fa14252b8261d917c449095, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: ViewLayer::Shinzui.View.BlackMistLightEffect
-  blackoutRadius: 8
-  flashlightRadius: 12

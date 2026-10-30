@@ -153,11 +153,13 @@ MonoBehaviour:
   corruptionDuration: 4
   fallDuration: 0.9
   approachDuration: 6.5
-  standUpTimeout: 8
+  rushDuration: 0.28
   riseDuration: 1.5
+  lungeDuration: 0.2
   escapeGrace: 2.5
-  approachSpeed: 0.65
   stoppingDistance: 1.5
+  cameraShake: 2.5
+  impactBlur: 0.65
   screamFile: EventEnemy/MonstrousScream.mp3
   screamVolume: 0.8
   screamPan: -1

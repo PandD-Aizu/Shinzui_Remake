@@ -50,6 +50,9 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 1
   interactMessage: "\u3044\u3057\u3092\u5165\u624B\u3057\u305F"
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!1 &7114261937260403701
 GameObject:
   m_ObjectHideFlags: 0

@@ -110,6 +110,9 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 1
   interactMessage: hi
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!65 &6957351230797351442
 BoxCollider:
   m_ObjectHideFlags: 0

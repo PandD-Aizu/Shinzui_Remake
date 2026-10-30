@@ -52,7 +52,7 @@ namespace Shinzui.Editor
             if (material == null)
             {
                 material = new Material(Shader.Find("HDRP/Lit"));
-                material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Texture0.jpg"));
+                material.SetTexture("_BaseColorMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Texture0.jpg"));
                 material.SetColor("_BaseColor", new Color(.8f, .8f, .8f));
                 material.SetFloat("_Smoothness", .32f);
                 AssetDatabase.CreateAsset(material, Folder + "/HumanEnemySkin.mat");

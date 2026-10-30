@@ -314,8 +314,8 @@ namespace Shinzui.Temp
             // 暗いと見つからないので光らせる
             Material material = go.GetComponent<Renderer>().material;
             material.color = KeyColor;
-            material.EnableKeyword("_EMISSION");
-            material.SetColor("_EmissionColor", KeyColor * 2.0f);
+            material.SetFloat("_UseEmissiveIntensity", 0f);
+            material.SetColor("_EmissiveColor", KeyColor * 2.0f);
 
             // 小さくて狙いにくいので判定だけ大きくする。ぶつからないようにトリガーにしておく
             var box = go.GetComponent<BoxCollider>();

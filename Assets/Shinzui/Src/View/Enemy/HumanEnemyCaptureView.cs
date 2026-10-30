@@ -2,6 +2,8 @@ using System.IO;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
 
 namespace Shinzui.View
 {
@@ -150,7 +152,7 @@ namespace Shinzui.View
                 _faceLight = new GameObject("Capture Face Light", typeof(Light)).GetComponent<Light>();
                 _faceLight.type = LightType.Point;
                 _faceLight.range = 2f;
-                _faceLight.intensity = .12f;
+                HdrpLightUtility.SetIntensity(_faceLight, 20f, LightUnit.Lumen);
                 _faceLight.shadows = LightShadows.None;
                 _faceLight.transform.position = _cameraPosition + _camera.transform.up * .15f;
                 PlaySound("MonstrousScream.mp3", false);

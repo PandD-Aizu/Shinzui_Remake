@@ -53,7 +53,7 @@ namespace Shinzui.Editor
                 material = new Material(Shader.Find("HDRP/Lit"));
                 AssetDatabase.CreateAsset(material, Folder + "/Protagonist.mat");
             }
-            material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Protagonist_BaseColor.png"));
+            material.SetTexture("_BaseColorMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Protagonist_BaseColor.png"));
             material.SetFloat("_Smoothness", .22f);
             material.SetFloat("_Metallic", 0f);
             EditorUtility.SetDirty(material);

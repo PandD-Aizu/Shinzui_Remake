@@ -1,6 +1,7 @@
 using System.Collections;
 using Unity.Cinemachine;
 using Shinzui.Infrastructure.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -166,7 +167,7 @@ namespace Shinzui.View.LoopTunnel
             var light = lightObject.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = new Color(0.75f, 0.86f, 1.0f);
-            light.intensity = 2.0f;
+            HdrpLightUtility.SetIntensity(light, 600f, LightUnit.Lumen);
             light.range = tunnelLength;
             light.shadows = LightShadows.None;
         }

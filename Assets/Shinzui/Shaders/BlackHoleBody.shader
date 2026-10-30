@@ -13,35 +13,20 @@ Shader "Shinzui/BlackHoleBody"
 
     SubShader
     {
-        // Keep visible body pixels in the opaque scene copy used by the eye lens
-        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "AlphaTest" "RenderType" = "TransparentCutout" }
+        /* 屈折前に影付きの身体を描き色ピラミッドへ含める */
+        Tags { "RenderPipeline" = "HDRenderPipeline" "Queue" = "Transparent-250" "RenderType" = "TransparentCutout" }
 
-        Pass
-        {
-            Name "LightReactiveBody"
-            Tags { "LightMode" = "UniversalForwardOnly" }
-            Cull Back
-            ZWrite On
-
-            HLSLPROGRAM
-            #pragma target 3.5
-            #pragma vertex Vert
-            #pragma fragment Frag
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
-            #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
-            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
-            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
-            #pragma multi_compile_fragment _ _LIGHT_COOKIES
-            #pragma multi_compile _ _LIGHT_LAYERS
-            #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
+        HLSLINCLUDE
+            #pragma target 4.5
             #pragma multi_compile_instancing
             #pragma instancing_options renderinglayer
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Fog.hlsl"
+            #pragma multi_compile_fragment PUNCTUAL_SHADOW_LOW PUNCTUAL_SHADOW_MEDIUM PUNCTUAL_SHADOW_HIGH
+            #pragma multi_compile_fragment DIRECTIONAL_SHADOW_LOW DIRECTIONAL_SHADOW_MEDIUM DIRECTIONAL_SHADOW_HIGH
+            #pragma multi_compile_fragment AREA_SHADOW_MEDIUM AREA_SHADOW_HIGH
 
-            // Sample shadows at the body instead of the opaque background depth
             #define _SURFACE_TYPE_TRANSPARENT 1
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "HdrpObjectCommon.hlsl"
+            #include "HdrpObjectLighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
@@ -67,12 +52,9 @@ Shader "Shinzui/BlackHoleBody"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
-
-            /// <summary>
-            /// Transform body vertices and carry lighting coordinates
-            /// </summary>
-            /// <param name="input">Object space vertex</param>
-            /// <returns>Clip position and world space lighting data</returns>
+            /// <summary>頂点を画面座標へ変換する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             Varyings Vert(Attributes input)
             {
                 Varyings output = (Varyings)0;
@@ -83,91 +65,46 @@ Shader "Shinzui/BlackHoleBody"
                 output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
 
-                // Small continuous waves loosen the silhouette without moving the eyes
-                float wave = sin(output.positionWS.y * 9.0 + output.positionWS.x * 5.0 + _Time.y * 1.1);
-                wave *= cos(output.positionWS.z * 7.0 - output.positionWS.y * 4.0 - _Time.y * 0.8);
+                float3 absolutePositionWS = GetAbsolutePositionWS(output.positionWS);
+                float wave = sin(absolutePositionWS.y * 9.0 + absolutePositionWS.x * 5.0 + _Time.y * 1.1);
+                wave *= cos(absolutePositionWS.z * 7.0 - absolutePositionWS.y * 4.0 - _Time.y * 0.8);
                 output.positionWS += output.normalWS * (_EdgeSway * wave);
                 output.positionCS = TransformWorldToHClip(output.positionWS);
-                output.fog = ComputeFogFactor(output.positionCS.z);
+                output.fog = 0;
                 return output;
             }
-
-            /// <summary>
-            /// Evaluate illumination within the light range, cone and shadow
-            /// </summary>
-            /// <param name="light">URP light at the fragment</param>
-            /// <param name="meshLayers">Body rendering layers</param>
-            /// <returns>Incident light color</returns>
-            half3 IncidentLight(Light light, uint meshLayers)
-            {
-                #if defined(_LIGHT_LAYERS)
-                    if (!IsMatchingLightLayer(light.layerMask, meshLayers)) return 0;
-                #endif
-
-                return light.color * (light.distanceAttenuation * light.shadowAttenuation);
-            }
-
-            /// <summary>
-            /// Remove illuminated body coverage while retaining the unlit silhouette
-            /// </summary>
-            /// <param name="input">Interpolated body fragment</param>
-            /// <returns>Visible body color after lighting and fog</returns>
+            /// <summary>画素の色と被覆率を評価する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                half3 normalWS = NormalizeNormalPerPixel(input.normalWS);
-                uint meshLayers = GetMeshRenderingLayer();
-                half4 shadowMask = unity_ProbesOcclusion;
+                half3 normalWS = normalize(input.normalWS);
+                half3 illumination = 0;
+                half3 diffuse = 0;
+                /* 法線によらない入射光で消失を判定する */
+                for (uint i = 0; i < _DirectionalLightCount + _PunctualLightCount; i++)
+                {
+                    ShinzuiLight light = ShinzuiGetLight(i, input.positionWS, normalWS, input.positionCS.xy);
+                    /* 100ルクスを基準に旧消失しきい値へ正規化する */
+                    illumination += light.color * 0.01;
+                    diffuse += light.color * saturate(dot(normalWS, light.direction));
+                }
 
-                // Ambient light shades the body; local and directional lights dissolve it
-                InputData inputData = (InputData)0;
-                inputData.positionWS = input.positionWS;
-                inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-                Light mainLight = GetMainLight(TransformWorldToShadowCoord(input.positionWS),
-                    input.positionWS, shadowMask);
-                half3 incident = IncidentLight(mainLight, meshLayers);
-                half3 illumination = incident;
-                half3 diffuse = incident * saturate(dot(normalWS, mainLight.direction));
-
-                // Per-pixel evaluation keeps narrow flashlight cones accurate at every quality
-                #if defined(_ADDITIONAL_LIGHTS) || defined(_ADDITIONAL_LIGHTS_VERTEX) || USE_CLUSTER_LIGHT_LOOP
-                    #if USE_CLUSTER_LIGHT_LOOP
-                        [loop] for (uint lightIndex = 0;
-                            lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS);
-                            ++lightIndex)
-                        {
-                            CLUSTER_LIGHT_LOOP_SUBTRACTIVE_LIGHT_CHECK
-                            Light light = GetAdditionalLight(lightIndex, input.positionWS, shadowMask);
-                            incident = IncidentLight(light, meshLayers);
-                            illumination += incident;
-                            diffuse += incident * saturate(dot(normalWS, light.direction));
-                        }
-                    #endif
-
-                    uint lightCount = GetAdditionalLightsCount();
-                    LIGHT_LOOP_BEGIN(lightCount)
-                        Light light = GetAdditionalLight(lightIndex, input.positionWS, shadowMask);
-                        incident = IncidentLight(light, meshLayers);
-                        illumination += incident;
-                        diffuse += incident * saturate(dot(normalWS, light.direction));
-                    LIGHT_LOOP_END
-                #endif
-
-                // Ignore surface orientation for dissolving so inner folds cannot fill the hole
                 float brightness = max(illumination.r, max(illumination.g, illumination.b));
                 float darkness = 1.0 - smoothstep(_LightFadeStart,
                     max(_LightFadeEnd, _LightFadeStart + 0.001), brightness);
                 float opacity = _BaseColor.a * darkness;
 
-                // Feather grazing edges with slow drifting variation rather than a hard outline
                 half3 viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
                 half facing = saturate(dot(normalWS, viewDirectionWS));
-                float edgeWave = 0.5 + 0.5 * sin(input.positionWS.y * 16.0 +
-                    sin(input.positionWS.x * 11.0 - _Time.y) + _Time.y * 1.3);
+                float3 absolutePositionWS = GetAbsolutePositionWS(input.positionWS);
+                float edgeWave = 0.5 + 0.5 * sin(absolutePositionWS.y * 16.0 +
+                    sin(absolutePositionWS.x * 11.0 - _Time.y) + _Time.y * 1.3);
                 opacity *= smoothstep(0.02, _EdgeSoftness * lerp(0.7, 1.3, edgeWave), facing);
 
-                // Dither only the transition to preserve depth and the existing scene refraction
+                /* 境界の被覆率をディザで表し深度への書込みを維持する */
                 const float thresholds[16] = {
                     0.5, 8.5, 2.5, 10.5, 12.5, 4.5, 14.5, 6.5,
                     3.5, 11.5, 1.5, 9.5, 15.5, 7.5, 13.5, 5.5
@@ -175,16 +112,25 @@ Shader "Shinzui/BlackHoleBody"
                 uint2 pixel = (uint2)input.positionCS.xy & 3u;
                 clip(opacity - thresholds[pixel.y * 4u + pixel.x] / 16.0);
 
-                half3 color = MixFog(_BaseColor.rgb * (SampleSH(normalWS) + diffuse), input.fog);
+                half3 color = ShinzuiFog(_BaseColor.rgb * diffuse * GetCurrentExposureMultiplier(), input.positionCS, input.positionWS);
 
-                // A faint white glow reveals the unlit body and fades with its coverage
-                // Keep the supernatural glow visible through the stage's dense black fog
                 half rim = 1.0h - facing;
                 half glowShape = 0.55h + 0.45h * rim * rim;
                 color += _DarkGlowColor.rgb * (_DarkGlowIntensity * darkness * glowShape);
 
                 return half4(color, 1);
             }
+        ENDHLSL
+        Pass
+        {
+            Name "LightReactiveBody"
+            Tags { "LightMode" = "ForwardOnly" }
+            Cull Back
+            ZWrite On
+            ZTest LEqual
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment Frag
             ENDHLSL
         }
     }

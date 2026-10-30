@@ -54,6 +54,11 @@ MonoBehaviour:
   fireAlarmMouthMargin: 4
   spiderWebTemplate: {fileID: 4811854858651217045, guid: 0f88d6edce2d3a147a9c50e07dbc0388, type: 3}
   fireAlarmPrefab: {fileID: 0}
+  hidingLockerCount: 4
+  hidingLockerMinSpacing: 25
+  hidingLockerPrefab: {fileID: 0}
+  carCount: 4
+  carMinSpacing: 15
   fireAlarmHeight: 1.4
   tunnelCount: 8
   seed: 2777
@@ -95,6 +100,8 @@ MonoBehaviour:
   warpCorridorModelEuler: {x: 0, y: 0, z: 0}
   useModelBoundsForLayout: 1
   configureBasicTunnelExitParts: 1
+  smallRoomRackCount: 2
+  smallRoomRackPrefab: {fileID: 0}
 --- !u!114 &110807049658699876
 MonoBehaviour:
   m_ObjectHideFlags: 0
