@@ -122,7 +122,7 @@ namespace Shinzui.View.GenerateTunnel
             }
 
             ApplyTunnelPassageMaterial(root.gameObject);
-            CreateCeilingLights(root, horizontalLength, height, renderedSlope, floorOffset, rampStartZ, (int)sign);
+            CreateCeilingLights(root, horizontalLength, height, renderedSlope, floorOffset, rampStartZ, (int)sign, mainTunnel: true);
         }
 
         /// <summary>

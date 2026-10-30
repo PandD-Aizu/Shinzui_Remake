@@ -20,6 +20,10 @@ namespace Shinzui.View.Flashlight
         [SerializeField] private bool useRealisticBeam;
         [SerializeField] private LightShadows beamShadows = LightShadows.Soft;
         [SerializeField, Min(1f)] private float beamFocusDistance = 8f;
+        [SerializeField, Range(0f, 20f)] private float beamDownwardAngle = 8f;
+#if UNITY_EDITOR
+        private bool _lookDevForceLight;
+#endif
         [SerializeField, Min(0.1f)] private float nearWallDistance = 2f;
         [SerializeField, Range(0.02f, 1f)] private float nearWallIntensity = 0.12f;
         [SerializeField] private LayerMask beamObstructionMask = ~0;
@@ -171,6 +175,8 @@ namespace Shinzui.View.Flashlight
                 }
             }
 
+            /* 手持ちモデルと一人称の腕が自分の光源を遮らないようにする */
+            foreach (Renderer renderer in GetSelfShadowRenderers()) renderer.shadowCastingMode = ShadowCastingMode.Off;
             _baseVolumetricScattering = scattering;
             EnsureBaseValuesCached();
             
@@ -212,12 +218,7 @@ namespace Shinzui.View.Flashlight
             if (flashlightLight != null && (flashlightLight.enabled || flashlightModel != null) && targetCamera != null)
             {
                 // 左端の発光位置から画面中央の注視点へ照射する
-                Quaternion targetRotation = targetCamera.transform.rotation;
-                if (useRealisticBeam)
-                {
-                    Vector3 focus = targetCamera.transform.position + targetCamera.transform.forward * beamFocusDistance;
-                    targetRotation = Quaternion.LookRotation(focus - flashlightLight.transform.position, targetCamera.transform.up);
-                }
+                Quaternion targetRotation = GetBeamRotation();
 
                 // キャッシュされている回転とターゲットカメラの回転の角度差を計算
                 float angleDiff = Quaternion.Angle(_currentFollowRotation, targetRotation);
@@ -269,12 +270,47 @@ namespace Shinzui.View.Flashlight
             }
         }
 
+        /// <summary>視線より少し下の注視点へ発光位置から照射する</summary>
+        /// <returns>手振れを含まないライトの向き</returns>
+        private Quaternion GetBeamRotation()
+        {
+            if (!useRealisticBeam) return targetCamera.transform.rotation;
+            Vector3 direction = targetCamera.transform.rotation * Quaternion.Euler(beamDownwardAngle, 0f, 0f) * Vector3.forward;
+            Vector3 focus = targetCamera.transform.position + direction * beamFocusDistance;
+            return Quaternion.LookRotation(focus - flashlightLight.transform.position, targetCamera.transform.up);
+        }
+
+        /// <summary>自分の光源を遮ってはいけない手持ちモデルと一人称の体を列挙する</summary>
+        /// <returns>影を落とさない描画部品</returns>
+        public System.Collections.Generic.IEnumerable<Renderer> GetSelfShadowRenderers()
+        {
+            if (flashlightModel != null)
+                foreach (Renderer renderer in flashlightModel.GetComponentsInChildren<Renderer>(true)) yield return renderer;
+            PlayerView player = GetComponentInParent<PlayerView>();
+            if (player != null)
+                foreach (SkinnedMeshRenderer renderer in player.GetComponentsInChildren<SkinnedMeshRenderer>(true)) yield return renderer;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>再生中の見た目確認だけに電池状態を無視した点灯を設定する</summary>
+        /// <param name="enabled">強制点灯するか</param>
+        public void SetLookDevLightOverride(bool enabled)
+        {
+            _lookDevForceLight = enabled;
+            SetLightActive(enabled);
+            ApplyBeamIntensity();
+        }
+#endif
+
         /// <summary>
         /// ライトのアクティブ状態を切り替える
         /// </summary>
         /// <param name="active">点灯する場合はtrue</param>
         public void SetLightActive(bool active)
         {
+#if UNITY_EDITOR
+            active |= _lookDevForceLight;
+#endif
             if (flashlightLight != null)
             {
                 flashlightLight.enabled = active;
@@ -284,7 +320,7 @@ namespace Shinzui.View.Flashlight
                 if (active && targetCamera != null)
                 {
                     // 点灯開始時に向きをカメラに同期させてワープを防ぐ
-                    _currentFollowRotation = targetCamera.transform.rotation;
+                    _currentFollowRotation = GetBeamRotation();
                     flashlightLight.transform.rotation = _currentFollowRotation;
                 }
 

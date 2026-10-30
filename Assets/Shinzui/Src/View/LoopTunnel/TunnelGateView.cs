@@ -23,9 +23,8 @@ namespace Shinzui.View
         [Tooltip("ニアクリップ面のオフセット量。")]
         [SerializeField] private float nearClipOffset = 0.04f;
 
-        [Header("Portal Exposure")]
-        [Tooltip("ポータル像の追加露出補正（EV値）。周囲と同じ明るさには0を指定。再帰描画では補正が重なるため、通常は変更しません。")]
-        [SerializeField, Range(-2.0f, 4.0f)] private float portalExposureEV = 0.0f;
+        /* 既存シーンの互換性のためフィールドは保持し補正値は描画に使わない */
+        [SerializeField, HideInInspector] private float portalExposureEV = 0.0f;
 
         [Header("Debug / Adjustments")]
         [Tooltip("ニアクリップの動的調整を適用して、ポータル手前の余計な壁をクリップするかどうか。")]
@@ -38,6 +37,7 @@ namespace Shinzui.View
         private Collider _collider;
         private Camera _mainCamera;
         private Camera _portalCamera;
+        private readonly List<Camera> _recursionCameras = new();
         private MeshRenderer _portalRenderer;
         private MeshRenderer _portalMaskRenderer;
         private RenderTexture _portalRT;
@@ -70,7 +70,7 @@ namespace Shinzui.View
         public Collider Collider => _collider;
         public MeshRenderer PortalRenderer => _portalRenderer;
         public RenderTexture PortalRT => _portalRT;
-        public float PortalExposureMultiplier => Mathf.Pow(2.0f, portalExposureEV);
+        public float PortalExposureMultiplier => 1f;
 
         private void Awake()
         {
@@ -166,10 +166,10 @@ namespace Shinzui.View
         {
             if (_portalRenderer != null && _portalRenderer.sharedMaterial != null)
             {
-                if (!Mathf.Approximately(_lastAppliedExposureEV, portalExposureEV))
+                if (!Mathf.Approximately(_lastAppliedExposureEV, 0f))
                 {
                     _portalRenderer.sharedMaterial.SetFloat(PortalExposureMultiplierId, PortalExposureMultiplier);
-                    _lastAppliedExposureEV = portalExposureEV;
+                    _lastAppliedExposureEV = 0f;
                 }
             }
         }
@@ -207,15 +207,15 @@ namespace Shinzui.View
 
             // ポータルカメラ自身のレンダリング開始時：
             // HDRPによる自動的な射影行列の再計算を上書きし、フェイルセーフな斜め射影ニアクリップ面を適用する
-            if (camera == _portalCamera)
+            if (camera == _portalCamera || _recursionCameras.Contains(camera))
             {
                 if (useDynamicNearClip)
                 {
-                    SetObliqueNearClipPlane(_portalCamera, targetGate.transform);
+                    SetObliqueNearClipPlane(camera, targetGate.transform);
                 }
                 else
                 {
-                    RestoreDefaultProjection(_portalCamera);
+                    RestoreDefaultProjection(camera);
                 }
                 return;
             }
@@ -317,6 +317,9 @@ namespace Shinzui.View
         {
             ReleasePortalTextures();
 
+            foreach (Camera camera in _recursionCameras)
+                if (camera != null) Destroy(camera.gameObject);
+            _recursionCameras.Clear();
             if (_portalCamera != null)
             {
                 Destroy(_portalCamera.gameObject);
@@ -386,6 +389,7 @@ namespace Shinzui.View
             _portalRenderer.sharedMaterial = CreatePortalMaterial();
             _portalRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _portalRenderer.receiveShadows = false;
+            _portalRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
         }
 
         private void BuildPortalMaskQuad(Mesh sharedMesh)
@@ -409,6 +413,7 @@ namespace Shinzui.View
             _portalMaskRenderer.sharedMaterial = CreatePortalMaskMaterial();
             _portalMaskRenderer.shadowCastingMode = ShadowCastingMode.Off;
             _portalMaskRenderer.receiveShadows = false;
+            _portalMaskRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
         }
 
         /// <summary>
@@ -571,7 +576,7 @@ namespace Shinzui.View
             portalCamera.ResetProjectionMatrix();
             if (_mainCamera != null)
             {
-                portalCamera.projectionMatrix = _mainCamera.projectionMatrix;
+                portalCamera.projectionMatrix = _mainCamera.nonJitteredProjectionMatrix;
             }
         }
 
@@ -591,6 +596,7 @@ namespace Shinzui.View
             target.enabled = false; // 再帰描画中は自動レンダリングさせない
             target.targetTexture = rt;
             target.farClipPlane = Mathf.Max(source.farClipPlane, 150f);
+            target.projectionMatrix = source.nonJitteredProjectionMatrix;
 
             // 背景はスカイボックスではなく黒の単色でクリアする
             target.clearFlags = CameraClearFlags.SolidColor;
@@ -603,8 +609,10 @@ namespace Shinzui.View
                 target.cullingMask = target.cullingMask & ~(1 << playerLayer);
             }
 
-            // ポータル側のVolume判定位置と黒背景を維持する
-            var targetData = HdrpCameraUtility.CopyForPortal(source, target, target.transform);
+            /* カメラに追従するVolumeを含め主視点と同じブレンド結果を使用する */
+            var sourceData = HdrpCameraUtility.GetOrAdd(source);
+            var targetData = HdrpCameraUtility.CopyForPortal(source, target,
+                sourceData.volumeAnchorOverride != null ? sourceData.volumeAnchorOverride : source.transform);
             targetData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
             targetData.backgroundColorHDR = Color.black;
         }
@@ -632,7 +640,7 @@ namespace Shinzui.View
             // 初回描画前に別のポータルから見えた場合の白い面を防ぐ
             mat.SetTexture("_MainTex", Texture2D.blackTexture);
             mat.SetFloat(PortalExposureMultiplierId, PortalExposureMultiplier);
-            _lastAppliedExposureEV = portalExposureEV;
+            _lastAppliedExposureEV = 0f;
             return mat;
         }
 
@@ -726,6 +734,8 @@ namespace Shinzui.View
 
         private void ReleaseRecursionRenderTextures()
         {
+            foreach (Camera camera in _recursionCameras)
+                if (camera != null) camera.targetTexture = null;
             if (_recursionRTs != null)
             {
                 for (int i = 0; i < _recursionRTs.Length; i++)
@@ -811,6 +821,23 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>再帰段ごとに独立した照明履歴を持つカメラを再利用する</summary>
+        /// <param name="level">ゼロ始まりの再帰段</param>
+        /// <returns>描画先カメラ</returns>
+        private Camera GetRecursionCamera(int level)
+        {
+            if (level == 0) return _portalCamera;
+            while (_recursionCameras.Count < level)
+            {
+                var holder = new GameObject($"Portal Recursion Camera {_recursionCameras.Count + 1}");
+                holder.transform.SetParent(transform, false);
+                Camera camera = holder.AddComponent<Camera>();
+                camera.enabled = false;
+                _recursionCameras.Add(camera);
+            }
+            return _recursionCameras[level - 1];
+        }
+
         /// <summary>
         /// ポータル内の再帰像を奥から描画し、最前面を表示用テクスチャへ直接出力する
         /// </summary>
@@ -852,21 +879,23 @@ namespace Shinzui.View
             for (int i = depth - 1; i >= 0; i--)
             {
                 int currentLevel = i + 1;
+                Camera renderCamera = GetRecursionCamera(i);
+                CopyCameraSettings(_mainCamera, renderCamera);
                 // 再帰レベルに応じてカメラ位置を奥にシフトし、正しいドロステ効果を生成
-                MatchPortalCameraTransformForDepth(_portalCamera.transform, transform, targetGate.transform, currentLevel);
+                MatchPortalCameraTransformForDepth(renderCamera.transform, transform, targetGate.transform, currentLevel);
 
                 if (useDynamicNearClip)
                 {
-                    SetObliqueNearClipPlane(_portalCamera, targetGate.transform);
+                    SetObliqueNearClipPlane(renderCamera, targetGate.transform);
                 }
                 else
                 {
-                    RestoreDefaultProjection(_portalCamera);
+                    RestoreDefaultProjection(renderCamera);
                 }
 
-                _portalCamera.cullingMatrix = portalCrop * _portalCamera.projectionMatrix
-                    * _portalCamera.worldToCameraMatrix;
-                _portalCamera.targetTexture = i == 0 ? _portalRT : _recursionRTs[i - 1];
+                renderCamera.cullingMatrix = portalCrop * renderCamera.projectionMatrix
+                    * renderCamera.worldToCameraMatrix;
+                renderCamera.targetTexture = i == 0 ? _portalRT : _recursionRTs[i - 1];
 
                 if (i < depth - 1)
                 {
@@ -918,8 +947,8 @@ namespace Shinzui.View
                     }
 
                     // 最深部から同期描画し次の再帰段へ渡す
-                    var request = new RenderPipeline.StandardRequest { destination = _portalCamera.targetTexture };
-                    RenderPipeline.SubmitRenderRequest(_portalCamera, request);
+                    var request = new RenderPipeline.StandardRequest { destination = renderCamera.targetTexture };
+                    RenderPipeline.SubmitRenderRequest(renderCamera, request);
                 }
                 finally
                 {

@@ -62,7 +62,8 @@ namespace Shinzui.Infrastructure.Lighting
             light.shadowNormalBias = 0.12f;
 
             /* HDRPの逆二乗減衰と距離窓と床面の余弦を使って軸上照度を合わせる */
-            float targetLux = fluorescent ? 35f : 30f;
+            /* 露出と懐中電灯を変えず常設光だけを約0.86段持ち上げる */
+            float targetLux = fluorescent ? 1.45f : 1.1f;
             float cosine = Mathf.Max(0.2f, Vector3.Dot(normal, (light.transform.position - point).normalized));
             float window = DistanceWindow(distance, light.range);
             float candela = targetLux * distance * distance / (window * cosine);
@@ -79,7 +80,7 @@ namespace Shinzui.Infrastructure.Lighting
             light.cookie = null;
             float lumens = LightUnitUtils.ConvertIntensity(light, light.intensity, LightUnit.Candela, LightUnit.Lumen);
             float midpoint = EvaluateFloorLux(candela, distance, spacing * 0.5f, light.range, light.spotAngle, light.innerSpotAngle);
-            return $"{(fluorescent ? "fluorescent" : "LED")}, {measurement}, height={height:F2}m, range={light.range:F2}m, outer/inner={light.spotAngle:F1}/{light.innerSpotAngle:F1}deg, intensity={candela:F0}cd (~{lumens:F0}lm), floor target={targetLux:F0}lux, ideal two-light midpoint={midpoint * 2f:F1}lux (no shadows/cookie/fog)";
+            return $"{(fluorescent ? "fluorescent" : "LED")}, {measurement}, height={height:F2}m, range={light.range:F2}m, outer/inner={light.spotAngle:F1}/{light.innerSpotAngle:F1}deg, intensity={candela:F0}cd (~{lumens:F0}lm), floor target={targetLux:F2}lux, ideal two-light midpoint={midpoint * 2f:F1}lux (no shadows/cookie/fog)";
         }
 
         /// <summary>HDRPと同じ距離範囲の滑らかな減衰窓を求める</summary>
@@ -177,22 +178,62 @@ namespace Shinzui.Infrastructure.Lighting
             return !float.IsPositiveInfinity(nearest);
         }
 
+        /// <summary>中心光と広い周辺光を持つ線形配光を評価する</summary>
+        /// <param name="radius">クッキーの中心から外周までを1とする距離</param>
+        /// <returns>中心光度に対する倍率</returns>
+        public static float FlashlightCookie(float radius)
+        {
+            float core = 0.75f * Mathf.Exp(-Mathf.Pow(radius / 0.32f, 2.4f));
+            float spill = 0.25f * Mathf.Exp(-radius * radius * 0.8f);
+            float edge = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.78f, 1f, radius));
+            return Mathf.Clamp01((core + spill) * edge);
+        }
+
+        /// <summary>HDRPの角度減衰とクッキーを立体角で積分して中心光度を求める</summary>
+        /// <param name="withCookie">共通の配光クッキーを使うか</param>
+        /// <returns>3000lmを出射する中心光度</returns>
+        public static float FlashlightCandela(bool withCookie)
+        {
+            const int samples = 256;
+            float outer = 35f * Mathf.Deg2Rad;
+            float innerCos = Mathf.Cos(30f * Mathf.Deg2Rad);
+            float outerCos = Mathf.Cos(outer);
+            float solidAngle = 0f;
+            for (int i = 0; i < samples; i++)
+            {
+                float angle = (i + 0.5f) * outer / samples;
+                float attenuation = Mathf.Clamp01((Mathf.Cos(angle) - outerCos) / (innerCos - outerCos));
+                float cookie = withCookie ? FlashlightCookie(Mathf.Tan(angle) / Mathf.Tan(outer)) : 1f;
+                solidAngle += cookie * attenuation * attenuation * 2f * Mathf.PI * Mathf.Sin(angle) * outer / samples;
+            }
+            return 3000f / solidAngle;
+        }
+
         /// <summary>懐中電灯を主光源として配光と強度を設定する</summary>
         /// <param name="light">設定対象</param>
         /// <param name="cookie">中心光と周辺光を持つクッキー</param>
         public static void ConfigureFlashlight(UnityEngine.Light light, Texture cookie)
         {
             light.type = LightType.Spot;
-            light.range = 24f;
-            light.spotAngle = 48f;
-            light.innerSpotAngle = 30f;
+            light.range = 35f;
+            light.spotAngle = 70f;
+            light.innerSpotAngle = 60f;
+            light.enableSpotReflector = true;
             light.color = Color.white;
             light.useColorTemperature = true;
             light.colorTemperature = 5000f;
             light.cookie = cookie;
             light.shadows = LightShadows.Soft;
             light.shadowStrength = 1f;
-            var data = HdrpLightUtility.SetIntensity(light, 650f, LightUnit.Lumen);
+            /* クッキーと角度減衰を含む配光の積分で実際の出射光束を3000lmへ揃える */
+            float candela = FlashlightCandela(cookie != null);
+            var data = HdrpLightUtility.SetIntensity(light, candela, LightUnit.Candela);
+            data.lightDimmer = 1f;
+            data.affectDiffuse = true;
+            data.SetShadowNearPlane(0.35f);
+            light.shadowNearPlane = 0.35f;
+            int playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer >= 0) light.cullingMask &= ~(1 << playerLayer);
             data.useContactShadow.useOverride = true;
             data.useContactShadow.@override = true;
             data.affectsVolumetric = true;

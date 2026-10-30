@@ -13,7 +13,6 @@ namespace Shinzui.View.GenerateTunnel
         private readonly List<(Renderer renderer, int slot, Color color)> emission = new();
         private MaterialPropertyBlock block;
         private float phase;
-        private float started;
 
         /// <summary>Unityオブジェクトをメインスレッドの初期化時に用意する</summary>
         private void Awake()
@@ -34,7 +33,7 @@ namespace Shinzui.View.GenerateTunnel
             volumetric = new float[data.Length];
             for (int i = 0; i < data.Length; i++) volumetric[i] = data[i].volumetricDimmer;
             phase = (seed & 65535) * 0.001f;
-            started = Time.time;
+            enabled = !dead;
             foreach (Renderer renderer in GetComponentsInChildren<Renderer>(true))
             {
                 Material[] materials = renderer.sharedMaterials;
@@ -52,7 +51,7 @@ namespace Shinzui.View.GenerateTunnel
         private void Update()
         {
             if (data == null) return;
-            float t = Time.time - started + phase;
+            float t = Time.time + phase;
             float window = Mathf.Repeat(t, 7.3f);
             float gain = window < 0.45f && Mathf.Sin(t * 71f) > 0f ? 0.08f : 1f;
             Apply(gain);

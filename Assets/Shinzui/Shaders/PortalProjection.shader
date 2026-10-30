@@ -72,7 +72,8 @@ Shader "Custom/PortalProjection"
             {
                 float2 uv = input.screenPos.xy / input.screenPos.w;
                 half4 color = _MainTex.Sample(sampler_MainTex, uv);
-                color.rgb *= _PortalExposureMultiplier;
+                /* RTは倍率1のシーンリニアであり再帰カメラでも倍率1を維持する */
+                color.rgb *= GetCurrentExposureMultiplier();
                 return color;
             }
             ENDHLSL

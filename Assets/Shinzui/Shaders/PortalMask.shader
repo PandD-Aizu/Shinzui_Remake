@@ -21,9 +21,10 @@ Shader "Custom/PortalMask"
 
             Stencil
             {
-                Ref 64
+                /* ユーザーマスク64とHDRP 17.5のTAA除外2を同時に書く */
+                Ref 66
                 ReadMask 64
-                WriteMask 64
+                WriteMask 66
                 Comp Always
                 Pass Replace
             }

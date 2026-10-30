@@ -30,7 +30,7 @@ namespace Shinzui.Editor.LookDev
             cookie = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Shinzui/Art/Flashlight/FlashlightBeam.asset");
             HdrpVerificationAssets.VisitAssets(TuneRoot);
             AssetDatabase.SaveAssets();
-            Debug.Log($"Tunnel lighting summary: fixtures={fixtures}, flashlights={flashlights}, generators={generators}, cookies=1, skipped={skipped}, bounce lights removed={bounceRemoved}; LED target=30lux, fluorescent target=35lux, measured range/beam, spacing=12m; flashlight=650lm/5000K/48deg/24m");
+            Debug.Log($"Tunnel lighting summary: fixtures={fixtures}, flashlights={flashlights}, generators={generators}, cookies=1, skipped={skipped}, bounce lights removed={bounceRemoved}; LED target=1.1lux, fluorescent target=1.45lux, measured range/beam; main tunnels=SaveStage fluorescent/crown centreline/5m nominal/dead 0%/flicker 0%; side passages=LED/12m; flashlight=3000 emitted lm after cookie/5000K/70deg/35m");
         }
 
         /// <summary>既知の役割に限定してライトと生成設定を変更する</summary>
@@ -61,10 +61,13 @@ namespace Shinzui.Editor.LookDev
             {
                 var serialized = new SerializedObject(generator);
                 serialized.FindProperty("ceilingLightSpacing").floatValue = 12f;
+                serialized.FindProperty("mainTunnelLightSpacing").floatValue = 5f;
+                serialized.FindProperty("deadFixtureFraction").floatValue = 0f;
+                serialized.FindProperty("flickerFixtureFraction").floatValue = 0f;
                 changed |= serialized.ApplyModifiedPropertiesWithoutUndo();
                 Record(generator);
                 generators++;
-                Debug.Log($"Tunnel spacing=12m: {path} / {HdrpVerificationAssets.Hierarchy(generator.transform)}; dead/flicker fractions retained");
+                Debug.Log($"Tunnel main spacing=5m (SaveStage): {path} / {HdrpVerificationAssets.Hierarchy(generator.transform)}; fluorescent/crown centreline, side LED spacing=12m, dead=0%, flicker=0%, main loop spacing fitted to an integer fixture count");
             }
             foreach (FlashlightView view in root.GetComponentsInChildren<FlashlightView>(true))
             {
@@ -79,15 +82,33 @@ namespace Shinzui.Editor.LookDev
                 TunnelLookLighting.ConfigureFlashlight(light, cookie);
                 serialized.FindProperty("beamShadows").intValue = (int)LightShadows.Soft;
                 serialized.FindProperty("useRealisticBeam").boolValue = true;
+                serialized.FindProperty("beamDownwardAngle").floatValue = 8f;
+                serialized.FindProperty("beamFocusDistance").floatValue = 8f;
+                var obstruction = serialized.FindProperty("beamObstructionMask");
+                int playerLayer = LayerMask.NameToLayer("Player");
+                if (playerLayer >= 0) obstruction.intValue &= ~(1 << playerLayer);
                 serialized.FindProperty("scattering").floatValue = 0.65f;
                 serialized.FindProperty("enableVolumetric").boolValue = true;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
+                foreach (Renderer renderer in view.GetSelfShadowRenderers())
+                {
+                    renderer.shadowCastingMode = ShadowCastingMode.Off;
+                    Record(renderer);
+                }
+                /* 旧補助光は点灯系に接続せず独立した照明としても無効のまま保持する */
+                foreach (Light legacy in view.GetComponentsInChildren<Light>(true))
+                {
+                    if (legacy == light || legacy.name != "Area Light") continue;
+                    legacy.enabled = false;
+                    Record(legacy);
+                    Debug.Log($"Legacy flashlight fill disabled: {path} / {HdrpVerificationAssets.Hierarchy(legacy.transform)}");
+                }
                 Record(view);
                 Record(light);
                 Record(light.GetComponent<HDAdditionalLightData>());
                 changed = true;
                 flashlights++;
-                Debug.Log($"Tunnel flashlight tuned: {path} / {HdrpVerificationAssets.Hierarchy(light.transform)}");
+                Debug.Log($"Tunnel flashlight tuned: {path} / {HdrpVerificationAssets.Hierarchy(light.transform)}, peak={light.intensity:F0}cd, emitted flux=3000lm after cookie/angular falloff, outer/inner=70/60deg, range=35m, aim=8deg down, shadow near=0.35m");
             }
             foreach (Light light in root.GetComponentsInChildren<Light>(true))
             {
@@ -140,15 +161,17 @@ namespace Shinzui.Editor.LookDev
                 int tier = name.Contains("Low") ? 0 : name.Contains("Midium") ? 1 : 2;
                 var exposure = Ensure<Exposure>(profile);
                 exposure.mode.Override(ExposureMode.AutomaticHistogram);
-                exposure.limitMin.Override(-0.5f);
-                exposure.limitMax.Override(3.5f);
-                exposure.compensation.Override(-0.5f);
+                exposure.limitMin.Override(3f);
+                exposure.limitMax.Override(4f);
+                exposure.compensation.Override(0f);
                 exposure.histogramPercentages.Override(new Vector2(40f, 85f));
                 exposure.histogramUseCurveRemapping.Override(false);
                 exposure.adaptationMode.Override(AdaptationMode.Progressive);
                 exposure.adaptationSpeedDarkToLight.Override(3f);
                 exposure.adaptationSpeedLightToDark.Override(1f);
                 Ensure<Tonemapping>(profile).mode.Override(TonemappingMode.ACES);
+                /* ポータル面には仮想空間の速度を持たせずカメラ回転による二重のぶれを避ける */
+                Ensure<MotionBlur>(profile).cameraMotionBlur.Override(false);
                 var balance = Ensure<WhiteBalance>(profile);
                 balance.temperature.Override(-6f);
                 balance.tint.Override(0f);
@@ -223,12 +246,12 @@ namespace Shinzui.Editor.LookDev
                 foreach (VolumeComponent component in profile.components) if (component != null) EditorUtility.SetDirty(component);
                 EditorUtility.SetDirty(profile);
                 profiles++;
-                Debug.Log($"Tunnel look profile: {path}, EV=-0.5..3.5, compensation=-0.5, histogram=40..85, temperature=-6, contrast=8, saturation=-12, fog MFP=120m, tier={tier}");
+                Debug.Log($"Tunnel look profile: {path}, EV=3..4, compensation=0, histogram=40..85, temperature=-6, contrast=8, saturation=-12, fog MFP=120m, tier={tier}");
             }
-            /* 8%反射の路面が35luxを受ける基準をトーンマッピング前の値で報告する */
-            float floorLuminance = 35f * 0.08f / Mathf.PI;
-            float exposedFloor = floorLuminance * ColorUtils.ConvertEV100ToExposure(3.5f);
-            Debug.Log($"Tunnel exposure reference: 35lux, 8% diffuse floor -> {floorLuminance:F3}cd/m2, at EV3.5 -> linear {exposedFloor:F3}, {Mathf.Log(exposedFloor / 0.18f, 2f):F2} stops relative to 18% grey before ACES; histogram/actual albedo change the result");
+            /* 8%反射の路面が1.45luxを受ける基準をトーンマッピング前の値で報告する */
+            float floorLuminance = 1.45f * 0.08f / Mathf.PI;
+            float exposedFloor = floorLuminance * ColorUtils.ConvertEV100ToExposure(3f);
+            Debug.Log($"Tunnel exposure reference: 1.45lux, 8% diffuse floor -> {floorLuminance:F3}cd/m2, at EV3 -> linear {exposedFloor:F3}, {Mathf.Log(exposedFloor / 0.18f, 2f):F2} stops relative to 18% grey before ACES; histogram/actual albedo change the result");
             ConfigurePipelines();
             AssetDatabase.SaveAssets();
             Debug.Log($"Tunnel look profile summary: updated={profiles}, missing={missing}; dynamic profile preserves quality feature overrides, ground moisture generated at puddles");

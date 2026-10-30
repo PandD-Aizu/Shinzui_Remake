@@ -79,12 +79,14 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private GameObject warpCorridorModel;
 
         [Header("Ceiling Lights")]
-        [Tooltip("天井中央に配置する蛍光灯の間隔（m）")]
+        [Tooltip("側道のLED照明の間隔（m）")]
         [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 12.0f;
+        [Tooltip("大型トンネル中央の蛍光灯の間隔（m） ループ内では周期に合わせて補正")]
+        [Min(1.5f)] [SerializeField] private float mainTunnelLightSpacing = 5.0f;
 
         [Header("Tunnel Look")]
-        [SerializeField, Range(0f, 1f)] private float deadFixtureFraction = 0.1f;
-        [SerializeField, Range(0f, 1f)] private float flickerFixtureFraction = 0.05f;
+        [SerializeField, Range(0f, 1f)] private float deadFixtureFraction = 0f;
+        [SerializeField, Range(0f, 1f)] private float flickerFixtureFraction = 0f;
         [SerializeField, Range(0f, 0.5f)] private float decalDensity = 0.08f;
         [SerializeField, Range(0, 256)] private int maxTunnelDecals = 96;
         [SerializeField, Range(5f, 80f)] private float decalFadeDistance = 35f;
@@ -161,6 +163,8 @@ namespace Shinzui.View.GenerateTunnel
         public GameObject SmallRoomModel => smallRoomModel;
         public GameObject WarpCorridorModel => warpCorridorModel;
         public float CeilingLightSpacing => Mathf.Max(1.5f, ceilingLightSpacing);
+        /// <summary>SaveStageと同じ中央配置の基準間隔を取得する</summary>
+        public float MainTunnelLightSpacing => Mathf.Max(1.5f, mainTunnelLightSpacing);
         public Vector3 BasicTunnelModelScale
         {
             get

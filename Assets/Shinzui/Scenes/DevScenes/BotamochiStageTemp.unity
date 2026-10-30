@@ -3426,10 +3426,10 @@ Light:
   serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1196.5908
-  m_Range: 24
-  m_SpotAngle: 48
-  m_InnerSpotAngle: 30
+  m_Intensity: 10757
+  m_Range: 35
+  m_SpotAngle: 70
+  m_InnerSpotAngle: 60
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 2
@@ -3438,7 +3438,7 @@ Light:
     m_Strength: 1
     m_Bias: 0.05
     m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_NearPlane: 0.35
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -3463,7 +3463,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967231
   m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
@@ -3477,7 +3477,7 @@ Light:
   m_ForceVisible: 0
   m_ShapeRadius: 0
   m_ShadowAngle: 0
-  m_LightUnit: 0
+  m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
 --- !u!114 &775528542
@@ -3506,7 +3506,7 @@ MonoBehaviour:
   m_IncludeForRayTracing: 1
   m_Initialized: 1
   m_LastLightType: 0
-  m_LastSpotAngle: 48
+  m_LastSpotAngle: 70
 --- !u!114 &775528543
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3590,7 +3590,7 @@ MonoBehaviour:
   m_EvsmBlurPasses: 0
   m_LightlayersMask: 1
   m_LinkShadowLayers: 1
-  m_ShadowNearPlane: 0.1
+  m_ShadowNearPlane: 0.35
   m_BlockerSampleCount: 24
   m_FilterSampleCount: 16
   m_MinFilterSize: 0.1
@@ -5341,11 +5341,12 @@ MonoBehaviour:
   useRealisticBeam: 1
   beamShadows: 2
   beamFocusDistance: 8
+  beamDownwardAngle: 8
   nearWallDistance: 2
   nearWallIntensity: 0.12
   beamObstructionMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967231
   minSpeed: 2
   maxSpeed: 45
   maxAngle: 30
@@ -7107,8 +7108,9 @@ MonoBehaviour:
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
   ceilingLightSpacing: 12
-  deadFixtureFraction: 0.1
-  flickerFixtureFraction: 0.05
+  mainTunnelLightSpacing: 5
+  deadFixtureFraction: 0
+  flickerFixtureFraction: 0
   decalDensity: 0.08
   maxTunnelDecals: 96
   decalFadeDistance: 35

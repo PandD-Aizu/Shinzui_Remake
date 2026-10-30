@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Shinzui.Infrastructure.Lighting;
+using Shinzui.View.LoopTunnel;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
 
@@ -89,6 +90,7 @@ namespace Shinzui.View.GenerateTunnel
                 _generatedMeshes.Add(mesh);
                 _lookSplits++;
             }
+            ApplyLookLoopTiling(model);
             AuditLookRoad(model);
             return true;
         }
@@ -179,6 +181,70 @@ namespace Shinzui.View.GenerateTunnel
             _lookSections.Add((root, length, height, root.GetComponentsInChildren<Collider>(false)));
         }
 
+        /// <summary>区間内で相互に接続された平行移動ループの両端を求める</summary>
+        /// <param name="section">生成区間</param>
+        /// <param name="minimum">入口のローカルZ</param>
+        /// <param name="maximum">出口のローカルZ</param>
+        /// <returns>水平な平行移動ループならtrue</returns>
+        private static bool TryGetLookLoop(Transform section, out float minimum, out float maximum)
+        {
+            minimum = maximum = 0f;
+            foreach (TunnelGateView gate in section.GetComponentsInChildren<TunnelGateView>(false))
+            {
+                if (gate.TargetGate == null || !gate.TargetGate.transform.IsChildOf(section)) continue;
+                Vector3 a = section.InverseTransformPoint(gate.transform.position);
+                Vector3 b = section.InverseTransformPoint(gate.TargetGate.transform.position);
+                if (Mathf.Abs(a.x - b.x) > 0.05f || Mathf.Abs(a.y - b.y) > 0.05f || Mathf.Abs(a.z - b.z) < 4f) continue;
+                minimum = Mathf.Min(a.z, b.z);
+                maximum = Mathf.Max(a.z, b.z);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>ワールド投影の模様がポータル移動後も同じ位相になる周期へ微調整する</summary>
+        /// <param name="model">材質を割り当てた区間</param>
+        private void ApplyLookLoopTiling(GameObject model)
+        {
+            if (!TryGetLookLoop(model.transform, out float min, out float max)) return;
+            Vector3 offset = model.transform.TransformVector(Vector3.forward * (max - min));
+            if (Mathf.Abs(offset.y) > 0.05f || Mathf.Min(Mathf.Abs(offset.x), Mathf.Abs(offset.z)) > 0.05f)
+            {
+                Debug.LogWarning($"Tunnel loop world tiling skipped (non-axis-aligned): {model.name}, offset={offset}");
+                return;
+            }
+            float period = offset.magnitude;
+            float scale = Mathf.Max(1f, Mathf.Round(period * 0.4f)) / period;
+            var block = new MaterialPropertyBlock();
+            foreach (MeshRenderer renderer in model.GetComponentsInChildren<MeshRenderer>(false))
+            {
+                if (!_lookRenderers.Contains(renderer)) continue;
+                renderer.GetPropertyBlock(block);
+                block.SetFloat("_TexWorldScale", scale);
+                renderer.SetPropertyBlock(block);
+            }
+            Debug.Log($"Tunnel loop texture period: {model.name}, length={period:F2}m, world UV scale={scale:F5}, repeats={period * scale:F0}");
+        }
+
+        /// <summary>境界近傍の器具を一周期先へ複製して光の減衰を連続させる</summary>
+        /// <param name="fixture">周期内の元器具</param>
+        /// <param name="section">元区間</param>
+        /// <param name="index">周期内の器具番号</param>
+        /// <param name="offset">一周期のワールド移動量</param>
+        private void CreateLookFixtureImage(GameObject fixture, Transform section, int index, Vector3 offset)
+        {
+            GameObject image = Instantiate(fixture, fixture.transform.parent, true);
+            image.name = fixture.name + " Periodic Image";
+            image.transform.position = fixture.transform.position + offset;
+            ConfigureLookFixtureFault(image, section, index);
+            foreach (Light light in image.GetComponentsInChildren<Light>(true))
+            {
+                if (TunnelLookLighting.IsCeilingBounce(light)) continue;
+                _ceilingLights.Add((light, LightShadows.Soft, 1f));
+                light.shadows = LightShadows.None;
+            }
+        }
+
         /// <summary>配置順序と区間座標から安定した局所シードを得る</summary>
         /// <param name="root">区間</param>
         /// <param name="salt">用途別の識別子</param>
@@ -201,7 +267,8 @@ namespace Shinzui.View.GenerateTunnel
         /// <param name="fixture">生成した器具</param>
         /// <param name="section">区間</param>
         /// <param name="index">器具番号</param>
-        private void ConfigureLookFixture(GameObject fixture, Transform section, int index)
+        /// <param name="spacing">ループ周期に合わせた設置間隔</param>
+        private void ConfigureLookFixture(GameObject fixture, Transform section, int index, float spacing)
         {
             RemoveLookBounceLights(fixture);
             Collider[] surfaces = section.GetComponentsInChildren<Collider>(false);
@@ -210,15 +277,24 @@ namespace Shinzui.View.GenerateTunnel
             foreach (Light light in fixture.GetComponentsInChildren<Light>(true))
             {
                 if (TunnelLookLighting.IsCeilingBounce(light)) continue;
-                string calibration = TunnelLookLighting.ConfigureFixture(light, surfaces, meshes, fluorescent,
-                    _generator != null ? _generator.CeilingLightSpacing : 12f);
+                /* SaveStageの既存配光は12mの光学基準で校正されているため配置間隔とは分離する */
+                string calibration = TunnelLookLighting.ConfigureFixture(light, surfaces, meshes, fluorescent, fluorescent ? 12f : spacing);
                 if (index == 0 || calibration.Contains("UNMEASURED"))
                     Debug.Log($"Tunnel runtime fixture: {section.name} / {fixture.name} / {light.name}, {calibration}");
             }
+            ConfigureLookFixtureFault(fixture, section, index);
+        }
+
+        /// <summary>周期内の器具番号から同じ故障状態と点滅位相を再現する</summary>
+        /// <param name="fixture">器具本体または周期鏡像</param>
+        /// <param name="section">元の区間</param>
+        /// <param name="index">周期内の器具番号</param>
+        private void ConfigureLookFixtureFault(GameObject fixture, Transform section, int index)
+        {
             int seed = LookSeed(section, index + 3719);
             double roll = new System.Random(seed).NextDouble();
-            float dead = _generator != null ? _generator.DeadFixtureFraction : 0.1f;
-            float flicker = _generator != null ? _generator.FlickerFixtureFraction : 0.05f;
+            float dead = _generator != null ? _generator.DeadFixtureFraction : 0f;
+            float flicker = _generator != null ? _generator.FlickerFixtureFraction : 0f;
             if (roll >= dead + flicker) return;
             bool isDead = roll < dead;
             if (!fixture.TryGetComponent(out TunnelFixtureFlicker condition)) condition = fixture.AddComponent<TunnelFixtureFlicker>();
@@ -313,6 +389,16 @@ namespace Shinzui.View.GenerateTunnel
                         origin = centerFloor.point + Vector3.up * (kind == 2 ? 0.45f : height);
                         Vector3 side = section.root.right * (random.NextDouble() < 0.5 ? -1f : 1f);
                         if (!RaycastStructure(section.surfaces, origin, side, 25f, out hit) || Mathf.Abs(hit.normal.y) > 0.8f) { missed++; continue; }
+                    }
+                    /* 局所霧の半幅3mとデカールの半幅を含む余白を両端で確保する */
+                    if (TryGetLookLoop(section.root, out float loopMin, out float loopMax))
+                    {
+                        float hitZ = section.root.InverseTransformPoint(hit.point).z;
+                        if (Mathf.Abs(hitZ - loopMin) < 4.5f || Mathf.Abs(hitZ - loopMax) < 4.5f)
+                        {
+                            missed++;
+                            continue;
+                        }
                     }
                     var decalObject = new GameObject("Tunnel " + materials[kind].name + " " + ordinal);
                     decalObject.layer = hit.collider.gameObject.layer;

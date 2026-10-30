@@ -13,6 +13,8 @@ Shader "Custom/PortalShader"
         {
             Name "Unlit"
             Tags { "LightMode" = "ForwardOnly" }
+            /* HDRP 17.5の透過描画後のTAA除外ビット */
+            Stencil { Ref 2 WriteMask 2 Comp Always Pass Replace }
             HLSLPROGRAM
             #pragma target 4.5
             #pragma vertex vert
@@ -52,6 +54,8 @@ Shader "Custom/PortalShader"
             {
                 float2 uv = input.screenPos.xy / input.screenPos.w;
                 half4 col = _BaseMap.Sample(sampler_BaseMap, uv);
+                /* メインカメラの前露出空間へ合わせてから共通のトーンマップへ渡す */
+                col.rgb *= GetCurrentExposureMultiplier();
                 return col;
             }
             ENDHLSL

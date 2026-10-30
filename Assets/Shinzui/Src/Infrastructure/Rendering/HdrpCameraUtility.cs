@@ -68,12 +68,16 @@ namespace Shinzui.Infrastructure.Rendering
             data.volumeAnchorOverride = volumeAnchor;
             data.xrRendering = false;
             data.allowDynamicResolution = false;
+            data.antialiasing = HDAdditionalCameraData.AntialiasingMode.None;
+            data.hasPersistentHistory = true;
 
-            // 再帰合成中は露出と画面演出を重ねずメインカメラで一度だけ適用する
+            /* ExposureControlを切るとHDRPの露出テクスチャは倍率1になる
+               RTはシーンリニアとして保持し合成シェーダーで描画先の露出を一度だけ掛ける */
             SetFrameSetting(data, FrameSettingsField.Postprocess, false);
             SetFrameSetting(data, FrameSettingsField.CustomPostProcess, false);
             SetFrameSetting(data, FrameSettingsField.ExposureControl, false);
-            // 同じカメラを複数の再帰段で使うため霧の履歴を混ぜない
+            SetFrameSetting(data, FrameSettingsField.MotionBlur, false);
+            /* ポータル越しの移動で霧の履歴を引きずらない */
             SetFrameSetting(data, FrameSettingsField.ReprojectionForVolumetrics, false);
             return data;
         }

@@ -374,6 +374,7 @@ namespace Shinzui.View.LoopTunnel
             target.enabled = false;
             target.targetTexture = renderTexture;
             target.stereoTargetEye = StereoTargetEyeMask.None;
+            target.projectionMatrix = source.nonJitteredProjectionMatrix;
             target.farClipPlane = Mathf.Max(source.farClipPlane, tunnelLength * 2.5f);
             
             // 連続したトンネルのVolume判定をメイン視点へ固定する

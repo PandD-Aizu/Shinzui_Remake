@@ -90,8 +90,9 @@ MonoBehaviour:
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
   ceilingLightSpacing: 12
-  deadFixtureFraction: 0.1
-  flickerFixtureFraction: 0.05
+  mainTunnelLightSpacing: 5
+  deadFixtureFraction: 0
+  flickerFixtureFraction: 0
   decalDensity: 0.08
   maxTunnelDecals: 96
   decalFadeDistance: 35
