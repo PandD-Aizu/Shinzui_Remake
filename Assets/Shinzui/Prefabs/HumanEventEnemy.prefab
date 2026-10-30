@@ -96,6 +96,9 @@ MonoBehaviour:
   playerDeathDistance: 1.05
   deathAttemptCooldown: 1
   agentOverride: {fileID: 4859576641903710010}
+  activeBehaviorPath: 
+  unlockedBehaviors: 
+  observedTactics: 
 --- !u!114 &1459246644140979304
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -108,6 +111,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b35643cf515adf7469bf01d85c9c038c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.HumanEnemyLocomotion
+  screamIntervalMin: 8
+  screamIntervalMax: 12
+  screamVolume: 0.65
   animator: {fileID: 2152941133420486548}
   agent: {fileID: 4859576641903710010}
   leftLeg:

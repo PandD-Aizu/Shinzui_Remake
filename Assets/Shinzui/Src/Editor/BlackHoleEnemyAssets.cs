@@ -3,10 +3,12 @@ using System.Linq;
 using Shinzui.View;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Shinzui.Infrastructure.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
@@ -131,6 +133,9 @@ namespace Shinzui.Editor
             }
         }
 
+        /// <summary>
+        /// ブラックホールの周辺歪みをプレハブへ追加する
+        /// </summary>
         [MenuItem("Shinzui/Enemies/Black Hole/Enable Surrounding Distortion")]
         public static void EnableSurroundingDistortion()
         {
@@ -145,16 +150,7 @@ namespace Shinzui.Editor
             }
             finally { PrefabUtility.UnloadPrefabContents(root); }
 
-            // All three gameplay quality levels must provide a current opaque scene copy.
-            foreach (string name in new[] { "QualityLow", "QualityMidium", "QualityHigh" })
-            {
-                var pipeline = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>("Assets/Shinzui/GraphicSettings/" + name + ".asset");
-                if (pipeline && !pipeline.supportsCameraOpaqueTexture)
-                {
-                    pipeline.supportsCameraOpaqueTexture = true;
-                    EditorUtility.SetDirty(pipeline);
-                }
-            }
+            // HDRPの色ピラミッドを使う歪みシェーダーへの移植はPhase 2で行う
             AssetDatabase.SaveAssets();
         }
 
@@ -295,6 +291,9 @@ namespace Shinzui.Editor
             return clip;
         }
 
+        /// <summary>
+        /// 敵の見た目を確認するプレビューシーンを作成する
+        /// </summary>
         private static void BuildPreview()
         {
             var previous = SceneManager.GetActiveScene();
@@ -319,11 +318,11 @@ namespace Shinzui.Editor
                 camera.fieldOfView = 39;
                 camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = new Color(0.012f, 0.019f, 0.028f);
-                camera.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+                HdrpCameraUtility.SetPostProcessing(camera, false);
                 var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
                 floor.name = "Preview Floor";
                 floor.transform.localScale = Vector3.one * 2f;
-                floor.GetComponent<MeshRenderer>().sharedMaterial = MaterialAsset("PreviewFloor", Shader.Find("Universal Render Pipeline/Lit"), new Color(0.065f, 0.08f, 0.10f));
+                floor.GetComponent<MeshRenderer>().sharedMaterial = MaterialAsset("PreviewFloor", Shader.Find("HDRP/Lit"), new Color(0.065f, 0.08f, 0.10f));
                 PreviewLight("Cold Rim", new Vector3(-2, 3, -1), new Color(0.22f, 0.66f, 1f), 5f);
                 PreviewLight("Soft Key", new Vector3(2, 4, 3), new Color(0.8f, 0.86f, 1f), 3f);
                 EditorSceneManager.SaveScene(scene, PreviewPath);
@@ -335,13 +334,20 @@ namespace Shinzui.Editor
             }
         }
 
+        /// <summary>
+        /// プレビュー用の点光源を物理単位で初期化する
+        /// </summary>
+        /// <param name="name">生成物の名前</param>
+        /// <param name="position">光源の位置</param>
+        /// <param name="color">表示色</param>
+        /// <param name="intensity">物理単位の光源強度</param>
         private static void PreviewLight(string name, Vector3 position, Color color, float intensity)
         {
             var light = new GameObject(name, typeof(Light)).GetComponent<Light>();
             light.type = LightType.Point;
             light.transform.position = position;
             light.color = color;
-            light.intensity = intensity;
+            HdrpLightUtility.SetIntensity(light, intensity, LightUnit.Candela);
             light.range = 8f;
         }
 

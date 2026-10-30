@@ -48,6 +48,12 @@ namespace Shinzui.Presentation
         private readonly System.Func<int, bool> _openLocker;
         private bool _hidDuringSearch;
         private readonly IHidingSpotRegistry _hidingSpots;
+        private bool _wasOnCeiling;
+        private bool _dropping;
+        private bool _dropEngages;
+        private bool _dropPending;
+        private float _ambushTime;
+        private float _ceilingPose;
 
         /// <summary>敵一体の知覚と移動を初期化</summary>
         /// <param name="id">敵の識別子</param>
@@ -84,6 +90,7 @@ namespace Shinzui.Presentation
             _brainSettings = brainSettings;
             _tactics = tactics;
             _brain = new EnemyBrain(brainSettings, settings, id + 1, tactics, points, hidingSpots);
+            _brain.IsCunning = _humanMotion != null;
             _hiding = hiding; _hidingPresenter = hidingPresenter; _openLocker = openLocker; _hidingSpots = hidingSpots;
             _brain.SearchTimedOut += OnSearchExpired;
             _capture = capture;
@@ -91,6 +98,7 @@ namespace Shinzui.Presentation
         }
 
         public int Id { get; }
+        public EnemyIntentType ResultIntent { get; private set; }
         public Vector3 StrobeTargetPosition => _runtime.Position + Vector3.up;
 
         public void Initialize()
@@ -191,8 +199,27 @@ namespace Shinzui.Presentation
         /// <param name="directive">統括AIのヒント</param>
         public void Tick(float deltaTime, IPlayerTracker player, float playerHeight, DirectorDirective directive)
         {
-            if (player == null || _view == null || (!_runtime.IsAvailable && !_runtime.IsBackstage)) return;
+            if (player == null || _view == null || (!_runtime.IsAvailable && !_runtime.IsBackstage && !_runtime.IsOnCeiling)) return;
+
+            // 天井の待ち伏せ中はBrainを止め、着地した時点で追跡か巡回へ戻す
+            if (_runtime.IsOnCeiling)
+            {
+                _wasOnCeiling = true;
+                TickCeilingAmbush(deltaTime, player, playerHeight);
+                return;
+            }
+            if (_wasOnCeiling)
+            {
+                _wasOnCeiling = _dropping = false;
+                _ceilingPose = 0f;
+                _humanMotion?.SetIntroPose(0f);
+                _brain.FinishAmbush(_dropEngages, player.PlayerPosition);
+                _pathTimer = 0f;
+            }
             EnemyIntent intent = _brain.Tick(_input, directive, deltaTime);
+
+            // 舞台裏などの早期終了も含めて集計用の行動意図を更新する
+            ResultIntent = intent.Type;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _debugTimer -= deltaTime;
             if (_debugTimer <= 0f)
@@ -259,6 +286,18 @@ namespace Shinzui.Presentation
 
             switch (intent.Type)
             {
+                case EnemyIntentType.CeilingAmbush:
+                    // 見られていない大きいトンネルでだけ天井へ登る
+                    _movement.Stop();
+                    if (_humanMotion == null || IsVisibleAt(_runtime.Position)
+                        || !_runtime.TryClimbCeiling(_humanMotion.MinCeilingHeight))
+                    {
+                        _brain.CancelAmbush();
+                        return;
+                    }
+                    _ambushTime = 0f;
+                    _dropping = _dropEngages = _dropPending = false;
+                    return;
                 case EnemyIntentType.OpenHidingSpot:
                     _runtime.Stop();
                     _brain.FinishHidingInspection();
@@ -325,7 +364,10 @@ namespace Shinzui.Presentation
         /// <param name="source">命中時の光源位置</param>
         public void ApplyStrobeEffect(bool stopMovement, float speedMultiplier, float duration, Vector3 source)
         {
-            if (!_runtime.IsAvailable || duration <= 0f) return;
+            if ((!_runtime.IsAvailable && !_runtime.IsOnCeiling) || duration <= 0f) return;
+
+            // 天井で照らされたら落ちてきて、着地後に効果を受ける
+            if (_runtime.IsOnCeiling) _dropPending = true;
             _tactics?.Record(PlayerTacticKind.StrobeHitEnemy);
             duration = _brain.StrobeDuration(duration, stopMovement);
             if (_brain.HasBehavior(EnemyBehaviorFlags.StrobeResistance))
@@ -338,6 +380,61 @@ namespace Shinzui.Presentation
             _strobeMultiplier = Mathf.Min(_strobeMultiplier, Mathf.Clamp01(speedMultiplier));
             _strobeRemaining = Mathf.Max(_strobeRemaining, duration);
             _runtime.SetSpeed(_strobeStops ? 0f : _strobeMultiplier, _strobeStops);
+        }
+
+        /// <summary>
+        /// 天井を這って待ち、プレイヤーが真下付近へ来たら落下して飛びかかる
+        /// </summary>
+        /// <param name="deltaTime">フレーム経過時間</param>
+        /// <param name="player">プレイヤーの位置情報</param>
+        /// <param name="playerHeight">プレイヤーの現在の高さ</param>
+        private void TickCeilingAmbush(float deltaTime, IPlayerTracker player, float playerHeight)
+        {
+            // 待ち伏せ中は声を潜め、落下に合わせて四つん這いから起き上がる
+            _humanMotion.TickVoice(deltaTime, false);
+            _humanMotion.SetChasePose(false, default);
+            _ceilingPose = Mathf.MoveTowards(_ceilingPose, _dropping ? 0f : 1f, deltaTime * (_dropping ? 4f : 1.5f));
+            _humanMotion.SetIntroPose(_ceilingPose, _playerCamera);
+            if (_dropping || !_runtime.IsClinging) return;
+            _ambushTime += deltaTime;
+
+            // 水平距離と天井からの視線でプレイヤーの接近を判定
+            Vector3 offset = player.PlayerPosition - _runtime.Position;
+            offset.y = 0f;
+            float horizontal = offset.magnitude;
+            bool sees = !(_hiding?.IsHidden ?? false)
+                && _runtime.HasLineTo(player.PlayerPosition + Vector3.up * playerHeight * .5f);
+
+            // 真下付近まで来たか照らされたら落下して追跡する
+            if (_dropPending || (sees && horizontal <= _humanMotion.AmbushDropRadius))
+            {
+                DropFromCeiling(player.PlayerPosition, true);
+                return;
+            }
+
+            // 長く空振りした時は見られていない間に静かに降りる
+            if (_ambushTime >= _humanMotion.AmbushGiveUpTime && !_visibleToPlayer && horizontal > 20f)
+            {
+                DropFromCeiling(_runtime.Position, false);
+                return;
+            }
+
+            // 見えている相手の真上へゆっくり這い寄る
+            if (sees)
+                _runtime.CreepOnCeiling(player.PlayerPosition, horizontal <= 25f ? _humanMotion.CeilingCreepSpeed : 0f,
+                    _humanMotion.CeilingCreepRange, deltaTime);
+        }
+
+        /// <summary>天井からの落下を開始</summary>
+        /// <param name="target">飛びかかる先</param>
+        /// <param name="engage">着地後に追跡するか</param>
+        private void DropFromCeiling(Vector3 target, bool engage)
+        {
+            _dropping = true;
+            _dropEngages = engage;
+            _dropPending = false;
+            _runtime.DropFromCeiling(target);
+            if (engage) _feedback?.OnEnemyEmerge(_runtime.Position);
         }
 
         public void Dispose()

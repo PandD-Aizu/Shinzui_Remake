@@ -74,7 +74,7 @@ namespace Shinzui.View
                     if (renderer.GetComponentInParent<EnemyView>() != null) continue;
                     foreach (var material in renderer.sharedMaterials)
                     {
-                        if (material == null || !material.IsKeywordEnabled("_EMISSION")) continue;
+                        if (GetEmission(material).maxColorComponent <= 0f) continue;
                         fixtures.Add(renderer);
                         break;
                     }
@@ -115,19 +115,31 @@ namespace Shinzui.View
                     Color color = Color.black;
                     foreach (var material in renderer.sharedMaterials)
                     {
-                        if (material == null || !material.IsKeywordEnabled("_EMISSION") ||
-                            !material.HasProperty("_EmissionColor")) continue;
-                        color = material.GetColor("_EmissionColor");
+                        Color candidate = GetEmission(material);
+                        if (candidate.maxColorComponent <= 0f) continue;
+                        color = candidate;
                         break;
                     }
-                    if (original.HasColor("_EmissionColor")) color = original.GetColor("_EmissionColor");
+                    if (original.HasColor("_EmissiveColor")) color = original.GetColor("_EmissiveColor");
+                    if (original.HasColor("emissiveFactor")) color = original.GetColor("emissiveFactor");
                     state = (original, working, color, Time.time);
                     SuppressedEmission.Add(renderer, state);
                 }
 
-                state.working.SetColor("_EmissionColor", state.color * GetBlackoutGain(Time.time - state.started));
+                state.working.SetColor("_EmissiveColor", state.color * GetBlackoutGain(Time.time - state.started));
+                state.working.SetColor("emissiveFactor", state.color * GetBlackoutGain(Time.time - state.started));
                 renderer.SetPropertyBlock(state.working);
             }
+        }
+
+        /// <summary>HDRP LitとglTFastの発光色を取得する</summary>
+        /// <param name="material">対象材質</param>
+        /// <returns>発光色または黒</returns>
+        private static Color GetEmission(Material material)
+        {
+            if (material == null) return Color.black;
+            string property = material.HasProperty("emissiveFactor") ? "emissiveFactor" : "_EmissiveColor";
+            return material.HasProperty(property) ? material.GetColor(property) : Color.black;
         }
 
         /// <summary>消灯開始からの経過時間に応じた点滅と減衰を求める</summary>

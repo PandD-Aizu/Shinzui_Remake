@@ -109,7 +109,8 @@ namespace Shinzui.View
         /// <summary>
         /// プレイヤーの現在の移動速度を取得します。
         /// </summary>
-        public Vector3 CurrentVelocity => characterController != null ? characterController.velocity : Vector3.zero;
+        public Vector3 CurrentVelocity => IsEnteringHiding ? _entryVelocity
+            : characterController != null ? characterController.velocity : Vector3.zero;
 
         /// <summary>コライダーと視点の基準姿勢を初期化</summary>
         private void Awake()

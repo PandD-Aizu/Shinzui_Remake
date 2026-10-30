@@ -7,33 +7,37 @@ Shader "Custom/PortalProjection"
     }
     SubShader
     {
-        Tags 
-        { 
-            "RenderType"="Opaque" 
-            "Queue"="Geometry" 
-            "RenderPipeline"="UniversalPipeline"
+        Tags
+        {
+            "RenderType"="Opaque"
+            "Queue"="Transparent-99"
+            "RenderPipeline"="HDRenderPipeline"
         }
 
         Pass
         {
             Name "PortalProjectionPass"
-            
+            Tags { "LightMode" = "ForwardOnly" }
+
             Cull Off
             ZWrite Off
             ZTest LEqual
 
             Stencil
             {
-                Ref 1
+                Ref 64
+                ReadMask 64
+                WriteMask 64
                 Comp Equal
                 Pass Keep
             }
 
             HLSLPROGRAM
+            #pragma target 4.5
             #pragma vertex vert
             #pragma fragment frag
-            
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            #include "HdrpObjectCommon.hlsl"
 
             struct Attributes
             {
@@ -50,6 +54,9 @@ Shader "Custom/PortalProjection"
             SamplerState sampler_MainTex;
             float _PortalExposureMultiplier;
 
+            /// <summary>頂点を画面座標へ変換する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             Varyings vert(Attributes input)
             {
                 Varyings output;
@@ -58,11 +65,15 @@ Shader "Custom/PortalProjection"
                 return output;
             }
 
+            /// <summary>画素の色を評価する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             half4 frag(Varyings input) : SV_Target
             {
                 float2 uv = input.screenPos.xy / input.screenPos.w;
                 half4 color = _MainTex.Sample(sampler_MainTex, uv);
-                color.rgb *= _PortalExposureMultiplier;
+                /* RTは倍率1のシーンリニアであり再帰カメラでも倍率1を維持する */
+                color.rgb *= GetCurrentExposureMultiplier();
                 return color;
             }
             ENDHLSL

@@ -74,6 +74,7 @@ namespace Shinzui.Application.AI.Enemy
             _input = input;
             Blackboard.IsBackstage = input.IsBackstage;
             _time += deltaTime;
+            _ambushCooldown -= deltaTime;
             Blackboard.Directive = directive;
 
             // 停止中の物理サンプルを捨て、知覚の記憶だけを減衰する
@@ -100,7 +101,12 @@ namespace Shinzui.Application.AI.Enemy
                 if (_perception.Level == EnemyAwarenessLevel.Engaged) _confirmed = true;
             }
             else if (_time - Blackboard.LastSeenTime >= Positive(_settings.chaseGraceTime, 1.5f))
+            {
+                // 先回りできる個体は逃げた先の予測地点から捜索する
+                if (_confirmed && IsCunning)
+                    Blackboard.InvestigateTarget = PredictedPosition(Positive(_settings.chaseGraceTime, 1.5f) * 2f);
                 _confirmed = false;
+            }
 
             // 見えていない時だけ音源を優先し、音で追跡状態を作らない
             if (noise > 0f && sight.VisibleRatio <= 0f)
@@ -194,7 +200,7 @@ namespace Shinzui.Application.AI.Enemy
             if (!_confirmed) return BtStatus.Failure;
             _searching = false;
             _investigating = false;
-            _intent = new EnemyIntent(EnemyIntentType.Chase, Blackboard.LastSeenPosition);
+            _intent = new EnemyIntent(EnemyIntentType.Chase, IsCunning ? InterceptTarget() : Blackboard.LastSeenPosition);
             return BtStatus.Running;
         }
 

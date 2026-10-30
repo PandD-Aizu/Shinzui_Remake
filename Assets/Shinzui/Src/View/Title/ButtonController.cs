@@ -71,6 +71,14 @@ namespace Shinzui.Src.Title
         public void AlignLanguageOption() => OptionSelected?.Invoke(5);
         public void AlignAccessibilityOption() => OptionSelected?.Invoke(6);
 
+        /// <summary>タイトル画面の操作中はカーソルの表示を維持する</summary>
+        private void LateUpdate()
+        {
+            // ゲーム画面から引き継いだロックや非表示を解除する
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         private void Update()
         {
             if (Keyboard.current?.escapeKey.wasPressedThisFrame == true)

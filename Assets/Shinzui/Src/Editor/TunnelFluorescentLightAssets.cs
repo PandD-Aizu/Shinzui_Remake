@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.Editor
 {
@@ -67,8 +69,12 @@ namespace Shinzui.Editor
             Material tube = GetMaterial("FluorescentTube");
             tube.SetColor("_BaseColor", new Color(0.93f, 0.97f, 0.91f));
             tube.SetFloat("_Smoothness", 0.65f);
-            tube.SetColor("_EmissionColor", new Color(0.94f, 0.97f, 1.0f) * 4.0f);
-            tube.EnableKeyword("_EMISSION");
+            tube.SetColor("_EmissiveColor", new Color(0.94f, 0.97f, 1.0f) * 300.0f);
+            tube.SetFloat("_UseEmissiveIntensity", 0);
+            HDMaterial.ValidateMaterial(body);
+            HDMaterial.ValidateMaterial(tube);
+            EditorUtility.SetDirty(body);
+            EditorUtility.SetDirty(tube);
             tube.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
 
             // 同一プレハブを更新して既存の配置と寸法を維持する
@@ -95,7 +101,6 @@ namespace Shinzui.Editor
                 light.color = Color.white;
                 light.useColorTemperature = true;
                 light.colorTemperature = 4600;
-                light.intensity = 1.4f;
                 light.range = 22;
                 light.spotAngle = 170;
                 light.innerSpotAngle = 135;
@@ -107,34 +112,19 @@ namespace Shinzui.Editor
                 light.renderMode = LightRenderMode.Auto;
 
                 // 多数の器具でシャドウアトラスを圧迫しないよう低解像度の影を共有する
-                UniversalAdditionalLightData data = light.GetComponent<UniversalAdditionalLightData>();
-                if (data == null) data = light.gameObject.AddComponent<UniversalAdditionalLightData>();
-                data.usePipelineSettings = false;
-                var settings = new SerializedObject(data);
-                settings.FindProperty("m_AdditionalLightsShadowResolutionTier").intValue = 0;
-                settings.ApplyModifiedPropertiesWithoutUndo();
+                TunnelLookLighting.ConfigureFixture(light, fluorescent: true);
 
                 // 近接する二光源を中央の一光源へまとめ、総光量を保ちつつ影計算を半減する
                 Transform second = root.transform.Find("Fluorescent Illumination End");
                 if (second != null) Object.DestroyImmediate(second.gameObject);
 
-                // 近傍の天井への弱い反射光を補い、器具だけが黒い天井に浮くのを防ぐ
-                Transform bounceTransform = root.transform.Find("Ceiling Bounce");
-                if (bounceTransform == null)
+                /* 天井の間接光はHDRPへ任せ旧補助光源だけを削除する */
+                foreach (Light helper in root.GetComponentsInChildren<Light>(true))
                 {
-                    bounceTransform = new GameObject("Ceiling Bounce").transform;
-                    bounceTransform.SetParent(root.transform, false);
+                    if (!TunnelLookLighting.IsCeilingBounce(helper)) continue;
+                    if (helper.TryGetComponent(out HDAdditionalLightData additional)) Object.DestroyImmediate(additional);
+                    Object.DestroyImmediate(helper);
                 }
-
-                bounceTransform.localPosition = new Vector3(0, -0.5f, 0);
-                Light bounce = bounceTransform.GetComponent<Light>();
-                if (bounce == null) bounce = bounceTransform.gameObject.AddComponent<Light>();
-                bounce.type = LightType.Point;
-                bounce.lightmapBakeType = LightmapBakeType.Realtime;
-                bounce.color = new Color(0.92f, 0.95f, 1.0f);
-                bounce.intensity = 0.025f;
-                bounce.range = 2.2f;
-                bounce.shadows = LightShadows.None;
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally
@@ -160,7 +150,7 @@ namespace Shinzui.Editor
         }
 
         /// <summary>
-        /// 再生成時も参照を維持するURP Litマテリアルを取得する
+        /// 再生成時も参照を維持するHDRP Litマテリアルを取得する
         /// </summary>
         /// <param name="name">材質の名前</param>
         /// <returns>保存済みまたは新規のマテリアル</returns>
@@ -170,7 +160,7 @@ namespace Shinzui.Editor
             Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = name };
+                material = new Material(Shader.Find("HDRP/Lit")) { name = name };
                 AssetDatabase.CreateAsset(material, path);
             }
 

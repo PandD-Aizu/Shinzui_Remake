@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Shinzui.Domain.Settings
 {
@@ -33,8 +33,10 @@ namespace Shinzui.Domain.Settings
         /// <summary>
         /// 設定オブジェクトのディープコピーを作成する
         /// </summary>
+        /// <returns>各設定を複製した独立したモデル</returns>
         public GameSettings Clone()
         {
+            // 全設定を別インスタンスへ転記する
             return new GameSettings
             {
                 Controls = new ControlsSettings
@@ -69,6 +71,7 @@ namespace Shinzui.Domain.Settings
                 },
                 Graphics = new GraphicsSettings
                 {
+                    Preset = Graphics.Preset,
                     ShowPerformanceMetrics = Graphics.ShowPerformanceMetrics,
                     DisplayAreaRatio = Graphics.DisplayAreaRatio,
                     BrightnessValue = Graphics.BrightnessValue,
@@ -80,6 +83,10 @@ namespace Shinzui.Domain.Settings
                     FrameRateLimit = Graphics.FrameRateLimit,
                     EnableVSync = Graphics.EnableVSync,
                     FsrMode = Graphics.FsrMode,
+                    EnableDlss = Graphics.EnableDlss,
+                    DlssQuality = Graphics.DlssQuality,
+                    EnableFsr2 = Graphics.EnableFsr2,
+                    Fsr2Quality = Graphics.Fsr2Quality,
                     RenderingPath = Graphics.RenderingPath,
                     ImageQualityScale = Graphics.ImageQualityScale,
                     EnableFidelityFxCas = Graphics.EnableFidelityFxCas,

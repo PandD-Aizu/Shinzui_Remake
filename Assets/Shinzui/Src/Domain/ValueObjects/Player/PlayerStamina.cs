@@ -7,6 +7,7 @@ namespace Shinzui.Domain.ValueObjects.Player
         public float MinStamina { get; init; } = 0.0f;
         public float StaminaIncreaseRate { get; init; } = 10.0f;
         public float StaminaDecreaseRate { get; init; } = 15.0f;
+        public float BreathHoldDecreaseRate { get; init; } = 25.0f;
         
         public PlayerStamina() { }
 

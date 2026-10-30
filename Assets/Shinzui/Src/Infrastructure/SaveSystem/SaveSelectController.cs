@@ -46,6 +46,14 @@ namespace Shinzui.Infrastructure.SaveSystem
             RefreshSlots();
         }
 
+        /// <summary>セーブ選択画面の操作中はカーソルの表示を維持する</summary>
+        private void LateUpdate()
+        {
+            // 他の入力処理によるカーソルのロックや非表示を解除する
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         /// <summary>保存済みと空きの状態を更新する</summary>
         private void RefreshSlots()
         {

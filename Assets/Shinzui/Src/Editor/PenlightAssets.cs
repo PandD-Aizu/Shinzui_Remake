@@ -2,6 +2,9 @@ using Shinzui.Infrastructure.ItemSpawn;
 using Shinzui.View.Interaction;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
+using Shinzui.Infrastructure.Lighting;
 
 namespace Shinzui.Editor
 {
@@ -16,14 +19,15 @@ namespace Shinzui.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(folder + "PenlightRed.mat");
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                material = new Material(Shader.Find("HDRP/Lit"));
                 AssetDatabase.CreateAsset(material, folder + "PenlightRed.mat");
             }
 
-            // 蛍光灯の発光強度4と光源強度1.4より控えめにする
+            /* 小型ケミカルライトの発光をHDRPのニト値で設定する */
             material.SetColor("_BaseColor", new Color(.7f, .005f, .005f));
-            material.SetColor("_EmissionColor", new Color(1.2f, .005f, .005f));
-            material.EnableKeyword("_EMISSION");
+            material.SetColor("_EmissiveColor", new Color(1.2f, .005f, .005f));
+            material.SetFloat("_UseEmissiveIntensity", 0);
+            HDMaterial.ValidateMaterial(material);
             material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             EditorUtility.SetDirty(material);
 
@@ -46,7 +50,7 @@ namespace Shinzui.Editor
             lamp.transform.localPosition = new Vector3(0, .07f, 0);
             lamp.type = LightType.Point;
             lamp.color = Color.red;
-            lamp.intensity = .18f;
+            HdrpLightUtility.SetIntensity(lamp, 8f, LightUnit.Lumen);
             lamp.range = 2f;
             lamp.shadows = LightShadows.Soft;
             lamp.shadowBias = .01f;

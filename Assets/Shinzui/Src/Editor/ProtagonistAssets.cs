@@ -46,14 +46,14 @@ namespace Shinzui.Editor
             importer.humanDescription = description;
             importer.SaveAndReimport();
 
-            // 元モデルのテクスチャをURP用共通マテリアルへ接続
+            // 元モデルのテクスチャをHDRP用共通マテリアルへ接続
             var material = AssetDatabase.LoadAssetAtPath<Material>(Folder + "/Protagonist.mat");
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                material = new Material(Shader.Find("HDRP/Lit"));
                 AssetDatabase.CreateAsset(material, Folder + "/Protagonist.mat");
             }
-            material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Protagonist_BaseColor.png"));
+            material.SetTexture("_BaseColorMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Protagonist_BaseColor.png"));
             material.SetFloat("_Smoothness", .22f);
             material.SetFloat("_Metallic", 0f);
             EditorUtility.SetDirty(material);

@@ -2,12 +2,13 @@ using System;
 using System.IO;
 using TMPro;
 using Unity.Cinemachine;
+using Shinzui.Infrastructure.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.View
 {
@@ -71,8 +72,10 @@ namespace Shinzui.View
         private float _approachLength;
         private Volume _impactVolume;
         private VolumeProfile _impactProfile;
-        private UniversalAdditionalCameraData _cameraData;
-        private bool _postProcessing;
+        private HDAdditionalCameraData _cameraData;
+        private bool _customRenderingSettings;
+        private FrameSettings _frameSettings;
+        private FrameSettingsOverrideMask _frameSettingsMask;
         private LayerMask _volumeMask;
         public IntroPhase Phase { get; private set; }
         public event Action<bool> ControlChanged;
@@ -246,17 +249,20 @@ namespace Shinzui.View
         /// <summary>演出専用の一時Volumeを用意し、通常のポスト処理から独立させる</summary>
         private void PrepareImpact()
         {
-            _cameraData = _player.MainCamera.GetUniversalAdditionalCameraData();
-            _postProcessing = _cameraData.renderPostProcessing;
+            _cameraData = HdrpCameraUtility.GetOrAdd(_player.MainCamera);
+            _customRenderingSettings = _cameraData.customRenderingSettings;
+            _frameSettings = _cameraData.renderingPathCustomFrameSettings;
+            _frameSettingsMask = _cameraData.renderingPathCustomFrameSettingsOverrideMask;
             _volumeMask = _cameraData.volumeLayerMask;
-            _cameraData.renderPostProcessing = true;
+            HdrpCameraUtility.SetPostProcessing(_player.MainCamera, true);
             _cameraData.volumeLayerMask |= 1 << gameObject.layer;
 
             _impactProfile = ScriptableObject.CreateInstance<VolumeProfile>();
             var blur = _impactProfile.Add<MotionBlur>(true);
-            blur.mode.Override(MotionBlurMode.CameraAndObjects);
+            blur.cameraMotionBlur.Override(true);
             blur.intensity.Override(impactBlur);
-            blur.clamp.Override(.08f);
+            blur.specialCameraClampMode.Override(CameraClampMode.FullCameraMotionVector);
+            blur.cameraVelocityClamp.Override(.08f);
             _impactVolume = gameObject.AddComponent<Volume>();
             _impactVolume.isGlobal = true;
             _impactVolume.priority = 100f;
@@ -297,7 +303,9 @@ namespace Shinzui.View
             _impactProfile = null;
             if (_cameraData != null)
             {
-                _cameraData.renderPostProcessing = _postProcessing;
+                _cameraData.customRenderingSettings = _customRenderingSettings;
+                _cameraData.renderingPathCustomFrameSettings = _frameSettings;
+                _cameraData.renderingPathCustomFrameSettingsOverrideMask = _frameSettingsMask;
                 _cameraData.volumeLayerMask = _volumeMask;
             }
         }

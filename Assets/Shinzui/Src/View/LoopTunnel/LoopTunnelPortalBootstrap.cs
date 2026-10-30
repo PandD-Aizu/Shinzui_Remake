@@ -1,15 +1,16 @@
 using System.Collections;
-using System.Reflection;
 using Unity.Cinemachine;
+using Shinzui.Infrastructure.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Shinzui.View.LoopTunnel
 {
-    [DefaultExecutionOrder(-100)]
+    [DefaultExecutionOrder(10000)]
     public sealed class LoopTunnelPortalBootstrap : MonoBehaviour
     {
         private const string TargetSceneName = "LoopTunnelTest";
@@ -82,18 +83,6 @@ namespace Shinzui.View.LoopTunnel
         private RenderTexture _warpFrameTexture;
         private Coroutine _hideWarpFrameCoroutine;
 
-        private void OnEnable()
-        {
-            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-            RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
-        }
-
-        private void OnDisable()
-        {
-            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-            RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
-        }
-
         private void Awake()
         {
             _halfLength = tunnelLength * 0.5f;
@@ -112,26 +101,21 @@ namespace Shinzui.View.LoopTunnel
             }
         }
 
+        /// <summary>
+        /// カメラ追従後にワープを処理しポータルをメイン描画の前に更新する
+        /// </summary>
         private void LateUpdate()
         {
             _mainCamera = Camera.main;
+            if (_mainCamera == null || !(GraphicsSettings.currentRenderPipeline is HDRenderPipelineAsset)) return;
 
-            if (_mainCamera == null)
-            {
-                return;
-            }
-
+            // HDRPのカリング開始前に視点と露出関連設定を確定する
+            WrapPlayerIfNeeded();
             EnsureRenderTextures();
-            
-            if (_frontPortalRenderer != null && _frontPortalCamera != null)
-            {
-                _frontPortalCamera.enabled = _frontPortalRenderer.isVisible;
-            }
-            if (_backPortalRenderer != null && _backPortalCamera != null)
-            {
-                _backPortalCamera.enabled = _backPortalRenderer.isVisible;
-            }
-
+            if (_frontPortalRenderer != null && _frontPortalRenderer.isVisible && _frontPortalCamera != null)
+                RenderPortal(_frontPortalCamera, _frontPortal, _backPortal);
+            if (_backPortalRenderer != null && _backPortalRenderer.isVisible && _backPortalCamera != null)
+                RenderPortal(_backPortalCamera, _backPortal, _frontPortal);
         }
 
         private void OnDestroy()
@@ -183,7 +167,7 @@ namespace Shinzui.View.LoopTunnel
             var light = lightObject.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = new Color(0.75f, 0.86f, 1.0f);
-            light.intensity = 2.0f;
+            HdrpLightUtility.SetIntensity(light, 600f, LightUnit.Lumen);
             light.range = tunnelLength;
             light.shadows = LightShadows.None;
         }
@@ -233,12 +217,17 @@ namespace Shinzui.View.LoopTunnel
             _backPortalCamera = CreatePortalCamera("Back Portal Camera");
         }
 
+        /// <summary>
+        /// 手動描画専用のポータルカメラを生成する
+        /// </summary>
+        /// <param name="name">カメラ名</param>
+        /// <returns>生成したカメラ</returns>
         private Camera CreatePortalCamera(string name)
         {
             var cameraObject = new GameObject(name);
             cameraObject.transform.SetParent(transform, false);
             var camera = cameraObject.AddComponent<Camera>();
-            camera.enabled = true;
+            camera.enabled = false;
             camera.depth = -100;
             camera.clearFlags = CameraClearFlags.Skybox;
             camera.useOcclusionCulling = false;
@@ -276,28 +265,22 @@ namespace Shinzui.View.LoopTunnel
             _warpFrameImage.color = Color.white;
         }
 
-        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        /// <summary>
+        /// ポータル面を隠して単独のHDRP描画要求を実行する
+        /// </summary>
+        /// <param name="camera">ポータルカメラ</param>
+        /// <param name="sourcePortal">入口</param>
+        /// <param name="destinationPortal">出口</param>
+        private void RenderPortal(Camera camera, Transform sourcePortal, Transform destinationPortal)
         {
-            if (_mainCamera == null)
+            // HDRPでは全カメラのカリングが先行するため隠蔽状態を要求ごとに復元する
+            PreparePortal(camera, sourcePortal, destinationPortal, _frontPortalRenderer, _backPortalRenderer);
+            try
             {
-                return;
+                RenderPipeline.SubmitRenderRequest(camera,
+                    new RenderPipeline.StandardRequest { destination = camera.targetTexture });
             }
-
-            WrapPlayerIfNeeded();
-
-            if (camera == _frontPortalCamera)
-            {
-                PreparePortal(_frontPortalCamera, _frontPortal, _backPortal, _frontPortalRenderer, _backPortalRenderer);
-            }
-            else if (camera == _backPortalCamera)
-            {
-                PreparePortal(_backPortalCamera, _backPortal, _frontPortal, _frontPortalRenderer, _backPortalRenderer);
-            }
-        }
-
-        private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
-        {
-            if (camera == _frontPortalCamera || camera == _backPortalCamera)
+            finally
             {
                 RestorePortalRenderers(_frontPortalRenderer, _backPortalRenderer);
             }
@@ -388,49 +371,16 @@ namespace Shinzui.View.LoopTunnel
             int hiddenLayer = LayerMask.NameToLayer("PortalHidden");
             if (hiddenLayer >= 0) target.cullingMask &= ~(1 << hiddenLayer);
 
-            target.enabled = true;
+            target.enabled = false;
             target.targetTexture = renderTexture;
             target.stereoTargetEye = StereoTargetEyeMask.None;
+            target.projectionMatrix = source.nonJitteredProjectionMatrix;
             target.farClipPlane = Mathf.Max(source.farClipPlane, tunnelLength * 2.5f);
             
-            var sourceData = source.GetComponent<UniversalAdditionalCameraData>();
-            var targetData = target.GetComponent<UniversalAdditionalCameraData>();
-            if (sourceData != null)
-            {
-                if (targetData == null)
-                {
-                    targetData = target.gameObject.AddComponent<UniversalAdditionalCameraData>();
-                }
-                // Composite scene-linear portal color; apply post processing once on the main camera.
-                targetData.renderPostProcessing = false;
-                targetData.renderShadows = sourceData.renderShadows;
-                targetData.antialiasing = sourceData.antialiasing;
-                targetData.antialiasingQuality = sourceData.antialiasingQuality;
-                targetData.volumeLayerMask = sourceData.volumeLayerMask;
-                targetData.volumeTrigger = sourceData.volumeTrigger != null ? sourceData.volumeTrigger : source.transform;
-                
-                int index = GetRendererIndex(sourceData);
-                if (index >= 0)
-                {
-                    targetData.SetRenderer(index);
-                }
-            }
-        }
-
-        private static FieldInfo _rendererIndexField;
-
-        private static int GetRendererIndex(UniversalAdditionalCameraData data)
-        {
-            if (_rendererIndexField == null)
-            {
-                _rendererIndexField = typeof(UniversalAdditionalCameraData).GetField("m_RendererIndex", BindingFlags.NonPublic | BindingFlags.Instance);
-            }
-
-            if (_rendererIndexField != null)
-            {
-                return (int)_rendererIndexField.GetValue(data);
-            }
-            return -1;
+            // 連続したトンネルのVolume判定をメイン視点へ固定する
+            var sourceData = HdrpCameraUtility.GetOrAdd(source);
+            HdrpCameraUtility.CopyForPortal(source, target,
+                sourceData.volumeAnchorOverride != null ? sourceData.volumeAnchorOverride : source.transform);
         }
 
         private void WrapPlayerIfNeeded()
@@ -581,9 +531,16 @@ namespace Shinzui.View.LoopTunnel
             Destroy(texture);
         }
 
+        /// <summary>
+        /// 指定色のHDRPマテリアルを生成する
+        /// </summary>
+        /// <param name="name">生成物の名前</param>
+        /// <param name="color">表示色</param>
+        /// <param name="smoothness">表面の滑らかさ</param>
+        /// <returns>生成したマテリアル</returns>
         private static Material CreateMaterial(string name, Color color, float smoothness)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var shader = Shader.Find("HDRP/Lit");
             if (shader == null)
             {
                 shader = Shader.Find("Standard");
@@ -598,12 +555,17 @@ namespace Shinzui.View.LoopTunnel
             return material;
         }
 
+        /// <summary>
+        /// ポータル表示用のマテリアルを生成する
+        /// </summary>
+        /// <param name="name">生成物の名前</param>
+        /// <returns>生成したマテリアル</returns>
         private static Material CreatePortalMaterial(string name)
         {
             var shader = Shader.Find("Custom/PortalShader");
             if (shader == null)
             {
-                shader = Shader.Find("Universal Render Pipeline/Unlit");
+                shader = Shader.Find("HDRP/Unlit");
             }
             if (shader == null)
             {

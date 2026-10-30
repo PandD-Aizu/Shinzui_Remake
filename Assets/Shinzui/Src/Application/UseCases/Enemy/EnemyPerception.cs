@@ -44,6 +44,9 @@ namespace Shinzui.Application.UseCases.Enemy
         /// <summary>再出現後の警戒を開始</summary>
         public void BeginSearch() => _suspicion.ResetToAlerted();
 
+        /// <summary>待ち伏せから飛びかかった直後に追跡段階へ移す</summary>
+        public void ForceEngage() => _suspicion.ForceEngage();
+
         public Shinzui.Domain.ValueObjects.Enemy.EnemyAwarenessLevel Level => _suspicion.Level;
 
         /// <summary>距離、視野、姿勢、光から毎秒の視覚刺激を計算</summary>

@@ -24,6 +24,15 @@ namespace Shinzui.Infrastructure.Services
         private float _recoverRemaining;
         private Vector3 _lastTarget;
         private bool _hasTarget;
+        private enum CeilingState { None, Climbing, Clinging, Dropping }
+        private CeilingState _ceiling;
+        private float _ceilingProgress;
+        private float _fallSpeed;
+        private Vector3 _floorPoint;
+        private Vector3 _ceilingPoint;
+        private Vector3 _anchor;
+        private Vector3 _dropTarget;
+        private Quaternion _uprightRotation;
 
         public UnityEnemyRuntime(NavMeshAgent agent, Transform body, Transform player,
             Func<bool> isEnabled, EnemyDirectorSettings settings)
@@ -44,6 +53,11 @@ namespace Shinzui.Infrastructure.Services
         {
             _repathRemaining -= deltaTime;
             _recoverRemaining -= deltaTime;
+            if (_ceiling != CeilingState.None)
+            {
+                TickCeiling(deltaTime);
+                return;
+            }
             // Generated maps bake later than scene initialization. Recover only once a surface exists.
             if (!IsAvailable || _agent.isOnNavMesh || _recoverRemaining > 0f) return;
             _recoverRemaining = 1f;
@@ -96,8 +110,9 @@ namespace Shinzui.Infrastructure.Services
         /// <returns>遮蔽がないか</returns>
         public bool HasLineTo(Vector3 position)
         {
-            if (!IsReady) return false;
-            Vector3 origin = Position + Vector3.up * Mathf.Max(.1f, _settings.eyeHeight);
+            if (!IsReady && _ceiling != CeilingState.Clinging) return false;
+            Vector3 origin = _ceiling == CeilingState.Clinging ? Position + Vector3.down * .4f
+                : Position + Vector3.up * Mathf.Max(.1f, _settings.eyeHeight);
             Vector3 offset = position - origin;
             int count = Physics.RaycastNonAlloc(origin, offset.normalized, _hits, offset.magnitude,
                 _settings.sightBlockingLayers, QueryTriggerInteraction.Ignore);
@@ -224,6 +239,137 @@ namespace Shinzui.Infrastructure.Services
             float length = 0f;
             for (int i = 1; i < count; i++) length += Vector3.Distance(_corners[i - 1], _corners[i]);
             return length;
+        }
+
+        public bool IsOnCeiling => _ceiling != CeilingState.None;
+        public bool IsClinging => _ceiling == CeilingState.Clinging;
+
+        /// <summary>真上に十分高い天井がある場合だけAgentを止めて登り始める</summary>
+        /// <param name="minHeight">床から天井までの最低高さ</param>
+        /// <returns>登り始めたか</returns>
+        public bool TryClimbCeiling(float minHeight)
+        {
+            if (!IsReady || _ceiling != CeilingState.None
+                || !TryCastSurface(Position + Vector3.up * .5f, Vector3.up, 20f, out RaycastHit hit)
+                || hit.point.y - Position.y < minHeight) return false;
+
+            // Agentを外して床と天井の位置を記録する
+            Stop();
+            _agent.enabled = false;
+            _floorPoint = Position;
+            _ceilingPoint = _anchor = hit.point;
+            _uprightRotation = _body.rotation;
+            _ceilingProgress = 0f;
+            _ceiling = CeilingState.Climbing;
+            return true;
+        }
+
+        /// <summary>天井に沿って目標の真上へ這い寄る</summary>
+        /// <param name="toward">向きと移動の目標</param>
+        /// <param name="speed">移動速度、0なら向きだけ変える</param>
+        /// <param name="maxDistance">登った地点から離れられる水平距離</param>
+        /// <param name="deltaTime">経過秒数</param>
+        public void CreepOnCeiling(Vector3 toward, float speed, float maxDistance, float deltaTime)
+        {
+            if (_ceiling != CeilingState.Clinging) return;
+            Vector3 offset = toward - Position;
+            offset.y = 0f;
+            if (offset.sqrMagnitude < .01f) return;
+
+            // 逆さまのまま目標へ頭を向ける
+            _body.rotation = Quaternion.RotateTowards(_body.rotation,
+                Quaternion.LookRotation(offset, Vector3.down), 90f * deltaTime);
+            if (speed <= 0f) return;
+
+            // 移動先にも同じ高さの天井と歩ける床がある場合だけ進む
+            Vector3 next = Position + Vector3.ClampMagnitude(offset, speed * deltaTime);
+            Vector3 fromAnchor = next - _anchor;
+            fromAnchor.y = 0f;
+            if (fromAnchor.magnitude > maxDistance
+                || !TryCastSurface(new Vector3(next.x, _floorPoint.y + .5f, next.z), Vector3.up, 20f, out RaycastHit ceiling)
+                || Mathf.Abs(ceiling.point.y - Position.y) > .5f
+                || !NavMesh.SamplePosition(new Vector3(next.x, _floorPoint.y, next.z), out NavMeshHit floor, .5f, Filter)) return;
+            _body.position = _ceilingPoint = ceiling.point;
+            _floorPoint = floor.position;
+        }
+
+        /// <summary>目標へ少し飛びかかりながら床へ落下し、着地後にAgentを戻す</summary>
+        /// <param name="toward">飛びかかる目標</param>
+        public void DropFromCeiling(Vector3 toward)
+        {
+            if (_ceiling == CeilingState.None || _ceiling == CeilingState.Dropping) return;
+            Vector3 offset = toward - Position;
+            offset.y = 0f;
+            Vector3 target = Position + Vector3.ClampMagnitude(offset, 1.5f);
+            target.y = _floorPoint.y;
+            _dropTarget = NavMesh.SamplePosition(target, out NavMeshHit hit, 1f, Filter) ? hit.position : _floorPoint;
+            if (offset.sqrMagnitude > .01f) _uprightRotation = Quaternion.LookRotation(offset);
+            _fallSpeed = 0f;
+            _ceiling = CeilingState.Dropping;
+        }
+
+        /// <summary>登りと落下の位置と姿勢を進める</summary>
+        /// <param name="deltaTime">経過秒数</param>
+        private void TickCeiling(float deltaTime)
+        {
+            if (_body == null) return;
+            Quaternion flipped = Quaternion.LookRotation(_uprightRotation * Vector3.forward, Vector3.down);
+            switch (_ceiling)
+            {
+                case CeilingState.Climbing:
+                    // 跳び上がりながら半回転し、天井へ手足を付ける
+                    _ceilingProgress = Mathf.Min(1f, _ceilingProgress + deltaTime / .9f);
+                    float t = Mathf.SmoothStep(0f, 1f, _ceilingProgress);
+                    _body.position = Vector3.Lerp(_floorPoint, _ceilingPoint, t);
+                    _body.rotation = Quaternion.Slerp(_uprightRotation, flipped, t);
+                    if (_ceilingProgress >= 1f) _ceiling = CeilingState.Clinging;
+                    break;
+                case CeilingState.Dropping:
+                    // 重力で加速しながら起き上がり、飛びかかる先へ寄る
+                    _fallSpeed += 9.81f * deltaTime;
+                    Vector3 position = Vector3.MoveTowards(_body.position, new Vector3(_dropTarget.x, _body.position.y, _dropTarget.z), 3f * deltaTime);
+                    position.y = Mathf.Max(_dropTarget.y, position.y - _fallSpeed * deltaTime);
+                    _body.position = position;
+                    _body.rotation = Quaternion.RotateTowards(_body.rotation, _uprightRotation, 540f * deltaTime);
+                    if (position.y <= _dropTarget.y + .001f) Land();
+                    break;
+            }
+        }
+
+        /// <summary>着地点へAgentを戻して通常移動を再開</summary>
+        private void Land()
+        {
+            _body.position = _dropTarget;
+            _body.rotation = _uprightRotation;
+            _agent.enabled = true;
+            if (_agent.isOnNavMesh) _agent.Warp(_dropTarget);
+            _ceiling = CeilingState.None;
+            _hasTarget = false;
+            _repathRemaining = 0f;
+        }
+
+        /// <summary>自身とプレイヤーを除外して最初に当たる面を探す</summary>
+        /// <param name="origin">開始位置</param>
+        /// <param name="direction">方向</param>
+        /// <param name="distance">最大距離</param>
+        /// <param name="surface">最も近い面</param>
+        /// <returns>面が見つかったか</returns>
+        private bool TryCastSurface(Vector3 origin, Vector3 direction, float distance, out RaycastHit surface)
+        {
+            surface = default;
+            float nearest = float.MaxValue;
+            int count = Physics.RaycastNonAlloc(origin, direction, _hits, distance,
+                _settings.sightBlockingLayers, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                Transform hit = _hits[i].transform;
+                if (hit == _body || hit.IsChildOf(_body) || _body.IsChildOf(hit)) continue;
+                if (_player != null && (hit == _player || hit.IsChildOf(_player))) continue;
+                if (_hits[i].distance >= nearest) continue;
+                nearest = _hits[i].distance;
+                surface = _hits[i];
+            }
+            return nearest < float.MaxValue;
         }
 
         public void WarpZ(float z)

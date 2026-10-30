@@ -1,6 +1,8 @@
 using FMOD.Studio;
 using FMODUnity;
 using UnityEngine;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
 
 namespace Shinzui.View.Interaction
 {
@@ -16,11 +18,14 @@ namespace Shinzui.View.Interaction
             public Transform lightOrigin;
             public Renderer lampRenderer;
             public int lampMaterialIndex;
+            public MeshFilter pressButton;
         }
 
         [Header("Models")]
         [SerializeField] private ModelVariant[] modelVariants;
         [SerializeField] private int lampMaterialIndex = -1;
+        [Tooltip("押しボタン表面から掌の接触位置までの距離")]
+        [SerializeField, Min(0f)] private float pressSurfaceOffset = .015f;
 
         [Header("Detection")]
         [SerializeField, Min(0.1f)] private float detectionRadius = 5f;
@@ -45,10 +50,11 @@ namespace Shinzui.View.Interaction
         private float _nextNoiseTime;
         /// <summary>手置きと動的生成の報知器の鳴動を通知</summary>
         public static event System.Action<FireAlarm, Vector3> Rang;
-        private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
+        private static readonly int EmissionColor = Shader.PropertyToID("_EmissiveColor");
 
         public bool IsAlarmActive { get; private set; }
         public override bool RequiresHold => false;
+        public override bool PlaysPressAnimation => true;
         public override string DisplayName => "[E] 警報を止める";
         public override string InteractableId => "fire_alarm";
         public override string InteractMessage => "火災報知器の警報を止めた";
@@ -68,6 +74,7 @@ namespace Shinzui.View.Interaction
                 lampRenderer = variant.lampRenderer;
                 lampMaterialIndex = variant.lampMaterialIndex;
                 if (alarmLight != null) alarmLight.transform.position = lightOrigin.position;
+                CreatePressPoint(variant.pressButton);
             }
 
             // 既存モデルにも発光位置の指定だけでライトを追加できる
@@ -82,9 +89,31 @@ namespace Shinzui.View.Interaction
             alarmLight.type = LightType.Point;
             alarmLight.color = Color.red;
             alarmLight.range = lightRange;
+            /* 旧点光源の強度はカンデラとして保持しHDRPデータを初期化する */
+            var data = HdrpLightUtility.SetIntensity(alarmLight, lightIntensity, LightUnit.Candela);
+            data.affectsVolumetric = true;
+            data.volumetricDimmer = .5f;
             _lampProperties = new MaterialPropertyBlock();
             CanInteract = false;
             SetLight(0f);
+        }
+
+        /// <summary>押しボタンの表面に掌を合わせる位置を作成</summary>
+        /// <param name="button">選択した外観の押しボタン</param>
+        private void CreatePressPoint(MeshFilter button)
+        {
+            if (button == null || button.sharedMesh == null) return;
+
+            // ボタン前面の中心から少し手前を掌の接触位置とする
+            Bounds bounds = button.sharedMesh.bounds;
+            Vector3 face = button.transform.TransformPoint(bounds.center + Vector3.forward * bounds.extents.z);
+            var point = new GameObject("Press Point").transform;
+            point.SetParent(transform, false);
+            point.localPosition = transform.InverseTransformPoint(face) + Vector3.forward * pressSurfaceOffset;
+
+            // 指先を上、手の甲を壁の外側へ向けて掌でボタンを押す
+            point.localRotation = Quaternion.LookRotation(Vector3.up, Vector3.forward);
+            SetPickupGrip(point);
         }
 
         /// <summary>接近と再作動待ち時間を監視し、作動中の音と点滅を更新</summary>
@@ -183,6 +212,7 @@ namespace Shinzui.View.Interaction
             if (lampMaterialIndex >= 0) lampRenderer.GetPropertyBlock(_lampProperties, lampMaterialIndex);
             else lampRenderer.GetPropertyBlock(_lampProperties);
             _lampProperties.SetColor(EmissionColor, Color.red * (brightness * lightIntensity));
+            _lampProperties.SetColor("emissiveFactor", Color.red * (brightness * lightIntensity));
             if (lampMaterialIndex >= 0) lampRenderer.SetPropertyBlock(_lampProperties, lampMaterialIndex);
             else lampRenderer.SetPropertyBlock(_lampProperties);
         }

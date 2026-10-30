@@ -17,29 +17,28 @@ Shader "Shinzui/BlackHoleEye"
         _SpiralTightness ("Spiral Winding", Range(2, 20)) = 9
         _Phase ("Eye Phase", Float) = 0
         _SceneRefraction ("Environment Ring", Range(0, 1)) = 0.9
-        // Legacy material value retained for existing assets
         [HideInInspector] _LensStrength ("Legacy Lens", Float) = 0
     }
 
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Transparent" "RenderType" = "Transparent" }
+        Tags { "RenderPipeline" = "HDRenderPipeline" "Queue" = "Transparent" "RenderType" = "Transparent" }
         Pass
         {
             Name "BlackHoleEye"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "ForwardOnly" }
             Cull Back
             ZWrite Off
             ZTest LEqual
             Blend One OneMinusSrcAlpha
 
             HLSLPROGRAM
-            #pragma target 3.5
+            #pragma target 4.5
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_instancing
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+            #include "HdrpObjectCommon.hlsl"
+
 
             CBUFFER_START(UnityPerMaterial)
                 float _Opacity;
@@ -65,12 +64,9 @@ Shader "Shinzui/BlackHoleEye"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
-
-            /// <summary>
-            /// Project the eye surface and preserve its local coordinates
-            /// </summary>
-            /// <param name="input">Eye mesh vertex</param>
-            /// <returns>Projected vertex and texture coordinates</returns>
+            /// <summary>頂点を画面座標へ変換する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             Varyings Vert(Attributes input)
             {
                 Varyings output;
@@ -81,23 +77,17 @@ Shader "Shinzui/BlackHoleEye"
                 output.uv = input.uv;
                 return output;
             }
-
-            /// <summary>
-            /// Project a point on the eye plane into the opaque scene texture
-            /// </summary>
-            /// <param name="planePoint">Point in normalized eye coordinates</param>
-            /// <returns>Screen texture coordinates</returns>
+            /// <summary>眼球平面から画面UVへ投影する</summary>
+            /// <param name="planePoint">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             float2 EyeToScreenUV(float2 planePoint)
             {
                 float4 projected = ComputeScreenPos(TransformObjectToHClip(float3(planePoint * 0.5, 0)));
                 return projected.xy / max(projected.w, 0.0001);
             }
-
-            /// <summary>
-            /// Draw a black horizon surrounded by lensed scenery and fine photon arcs
-            /// </summary>
-            /// <param name="input">Interpolated eye surface</param>
-            /// <returns>Premultiplied horizon and refracted light</returns>
+            /// <summary>画素の色と被覆率を評価する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
@@ -107,7 +97,6 @@ Shader "Shinzui/BlackHoleEye"
                 float t = _Time.y;
                 float drift = t * _DeformationSpeed * 0.35 + _Phase;
 
-                // Keep the central horizon circular independently of the outer eye contour
                 p -= _PupilOffset.xy;
                 p += _Deformation * float2(sin(drift), cos(drift * 0.7));
                 float angle = atan2(p.y, p.x);
@@ -117,7 +106,6 @@ Shader "Shinzui/BlackHoleEye"
                 float outside = smoothstep(horizon - aa, horizon + aa, r);
                 float edge = 1.0 - smoothstep(0.80, 0.97, length(original));
 
-                // A broad oval rim encloses the scenery falling into the circular horizon
                 float2 lensPoint = float2(p.x + p.y * _EyeShape.z, p.y) / max(_EyeShape.xy, float2(0.2, 0.2));
                 lensPoint.y *= 1.0 + 0.10 * lensPoint.x * lensPoint.x;
                 float lensRadius = length(lensPoint);
@@ -127,7 +115,6 @@ Shader "Shinzui/BlackHoleEye"
                 float outerArc = exp(-pow((lensRadius - rimRadius) / max(rimWidth, lensAA), 4.0));
                 float annulus = (1.0 - smoothstep(0.92, 1.12, lensRadius)) * outside;
 
-                // Sample progressively farther surroundings and wind them around the horizon
                 float2 direction = p / r;
                 float outerRadius = r / max(lensRadius, 0.001);
                 float infall = saturate((outerRadius - r) / max(outerRadius - horizon, 0.05));
@@ -139,13 +126,12 @@ Shader "Shinzui/BlackHoleEye"
                 float2 woundDirection = float2(direction.x * cosine - direction.y * sine,
                     direction.x * sine + direction.y * cosine);
                 float2 samplePoint = original - p + woundDirection * (r + bend);
-                float2 margin = _CameraOpaqueTexture_TexelSize.xy * 0.5;
+                float2 margin = _ScreenSize.zw * 0.5;
                 half3 environment = 0;
-                float hasScene = _CameraOpaqueTexture_TexelSize.z > 16.0 ? 1.0 : 0.0;
+                float hasScene = _ScreenSize.x > 16.0 ? 1.0 : 0.0;
                 if (hasScene > 0.0)
-                    environment = SampleSceneColor(clamp(EyeToScreenUV(samplePoint), margin, 1.0 - margin));
+                    environment = SampleCameraColor(clamp(EyeToScreenUV(samplePoint), margin, 1.0 - margin));
 
-                // Narrow irregular arcs and subdued infalling filaments replace the painted iris
                 float logRadius = log(max(r / horizon, 0.001));
                 float orbit = angle - t * _SwirlSpeed * 0.12 + _Phase;
                 float flow = logRadius * _SpiralTightness + t * _InfallSpeed;
@@ -158,12 +144,10 @@ Shader "Shinzui/BlackHoleEye"
                 half3 emission = _RingColor.rgb * (ring * (0.45 + 0.55 * beaming) + halo * 0.025);
                 emission += _DiskColor.rgb * annulus * filament * 0.025;
 
-                // Give the outer oval a continuous rim with subtle environmental variation
                 float arcDetail = 0.92 + 0.05 * sin(orbit * 19.0 + flow) + 0.03 * sin(orbit * 37.0 - flow);
                 half3 arcLight = (environment * 0.85 + _RingColor.rgb * _Intensity * 0.38)
                     * outerArc * (0.38 + 0.62 * beaming) * arcDetail;
 
-                // Keep the compressed scenery visible throughout the eye instead of a dark gap
                 float lensAlpha = annulus * _SceneRefraction * hasScene;
                 float alpha = saturate(1.0 - outside + lensAlpha + ring * 0.65 + outerArc * 0.8) * edge;
                 half3 color = environment * lensAlpha * (1.0 - 0.2 * infall) + emission * _Intensity + arcLight;

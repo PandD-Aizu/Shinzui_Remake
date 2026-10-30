@@ -1,5 +1,6 @@
 using System;
 using Shinzui.Application.UseCases;
+using Shinzui.Presentation.Settings;
 using Shinzui.Infrastructure.Repositories;
 using Shinzui.Infrastructure.Services;
 using Shinzui.Infrastructure.Title;
@@ -13,6 +14,7 @@ namespace Shinzui.DI
     {
         private PauseMenuView _view;
         private SettingsUseCase _settings;
+        private GraphicsOptionsBinder _graphicsBinder;
 
         /// <summary>ポーズ画面を生成して各操作を接続する</summary>
         private void Start()
@@ -46,6 +48,14 @@ namespace Shinzui.DI
                 _settings.MouseNormalSensitivity.Value, _settings.Brightness.Value };
             for (int i = 0; i < values.Length; i++) _view.Sliders[i].SetValueWithoutNotify(values[i]);
             _view.CenterDot.SetIsOnWithoutNotify(_settings.ShowCenterDot.Value);
+
+            // グラフィック画面も同じ編集セッションへ接続する
+            if (_graphicsBinder == null)
+            {
+                _graphicsBinder = new GraphicsOptionsBinder(_settings, _view.Graphics);
+                _view.GraphicsOpened += _graphicsBinder.Refresh;
+            }
+            else _graphicsBinder.Refresh();
         }
 
         /// <summary>オプションの編集結果を保存する</summary>
@@ -74,6 +84,9 @@ namespace Shinzui.DI
         /// <summary>シーン破棄時に設定の購読を解放する</summary>
         private void OnDestroy()
         {
+            // 画面の購読を設定本体より先に解放する
+            if (_view != null && _graphicsBinder != null) _view.GraphicsOpened -= _graphicsBinder.Refresh;
+            _graphicsBinder?.Dispose();
             _settings?.Dispose();
         }
     }

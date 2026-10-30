@@ -52,6 +52,29 @@ MonoBehaviour:
   flashlight: {fileID: 0}
   gripWristOffset: {x: -0.02, y: -0.065, z: -0.22}
   gripStrength: 1
+  walkingArmSwing: 0.15
+  runningArmSwing: 0.23
+  idleArmSway: 0.008
+  pickupForwardLean: 40
+  pickupSideLean: 12
+  pickupTotalForwardLean: 75
+  pickupLeanSmoothTime: 0.1
+  walkReferenceSpeed: 1.45
+  runReferenceSpeed: 3.8
+  walkStepsPerSecond: 1.8
+  runStepsPerSecond: 2.7
+  maxFootReach: 0.3
+  crouchLeanAngle: 38
+  crouchFootForward: 0.12
+  crouchFootSpread: 0.05
+  crouchFootStagger: 0.06
+  crouchHeelRaise: 22
+  calmTremorAngle: 0.12
+  chasedTremorAngle: 1.3
+  tremorFrequency: 9
+  chasedLeanAngle: 7
+  chasedShoulderRaise: 6
+  fearBlendSpeed: 2.5
 --- !u!1001 &8556087280158757637
 PrefabInstance:
   m_ObjectHideFlags: 0

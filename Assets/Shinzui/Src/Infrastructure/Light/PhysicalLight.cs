@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.Infrastructure.Lighting
 {
-    [RequireComponent(typeof(UnityEngine.Light))]
+    [RequireComponent(typeof(UnityEngine.Light), typeof(HDAdditionalLightData))]
     [DisallowMultipleComponent]
     [ExecuteAlways]
     [AddComponentMenu("Rendering/Physical Light (HDRP Mode)")]
@@ -156,12 +158,17 @@ namespace Shinzui.Infrastructure.Lighting
             MarkLightStateKnown(actual);
         }
 
+        /// <summary>
+        /// 保存済みの物理強度をHDRPライトへ反映する
+        /// </summary>
         public void UpdateIntensityFromPhysical()
         {
             EnsureLight();
             if (m_Light == null) return;
             m_Unit = GetValidUnitForCurrentLight(m_Unit);
             SanitizePhysicalIntensity();
+            // HDRPの単位表示とネイティブ強度を同期する
+            m_Light.lightUnit = GetHdrpUnit();
             m_Light.intensity = GetActualIntensity();
             MarkLightStateKnown(m_Light.intensity);
         }
@@ -171,135 +178,49 @@ namespace Shinzui.Infrastructure.Lighting
             return GetUnitIntensity() * Mathf.Max(0.0f, m_IntensityMultiplier);
         }
 
+        /// <summary>
+        /// 保存済みの物理強度をHDRPのネイティブ単位へ変換する
+        /// </summary>
+        /// <returns>カンデラ、ニトまたはルクスで表した強度</returns>
         private float GetUnitIntensity()
         {
             if (m_Light == null) return 0f;
 
-            switch (m_Light.type)
-            {
-                case LightType.Directional:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        return EV100ToLightIntensity(m_PhysicalIntensity);
-                    }
-                    else
-                    {
-                        return m_PhysicalIntensity;
-                    }
-
-                case LightType.Point:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        return EV100ToLightIntensity(m_PhysicalIntensity);
-                    }
-                    if (m_Unit == LightUnit.Lumen)
-                    {
-                        return m_PhysicalIntensity / (4.0f * Mathf.PI);
-                    }
-                    else
-                    {
-                        return m_PhysicalIntensity;
-                    }
-
-                case LightType.Spot:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        return EV100ToLightIntensity(m_PhysicalIntensity);
-                    }
-                    if (m_Unit == LightUnit.Lumen)
-                    {
-                        float omega = GetSpotSolidAngle();
-                        return (omega > 0.0001f) ? (m_PhysicalIntensity / omega) : 0f;
-                    }
-                    else
-                    {
-                        return m_PhysicalIntensity;
-                    }
-                
-                case LightType.Rectangle:
-                case LightType.Disc:
-                    // Areaライト（Lumen, Nits, EV100）
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        return EV100ToLightIntensity(m_PhysicalIntensity);
-                    }
-                    else
-                    {
-                        return m_PhysicalIntensity;
-                    }
-            }
-
-            return m_PhysicalIntensity;
+            // 面積やスポット形状を含むUnity共通の単位変換を使用する
+            return LightUnitUtils.ConvertIntensity(m_Light, m_PhysicalIntensity, GetHdrpUnit(),
+                LightUnitUtils.GetNativeLightUnit(m_Light.type));
         }
 
+        /// <summary>
+        /// HDRPのネイティブ強度から保存用の物理強度を復元する
+        /// </summary>
+        /// <param name="actualIntensity">ネイティブ単位の強度</param>
         private void SetPhysicalFromActual(float actualIntensity)
         {
             EnsureLight();
             if (m_Light == null) return;
 
+            // 倍率を除去してから選択単位へ戻す
             float unitIntensity = actualIntensity / Mathf.Max(0.0001f, m_IntensityMultiplier);
-
-            switch (m_Light.type)
-            {
-                case LightType.Directional:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        m_PhysicalIntensity = LightIntensityToEV100(unitIntensity);
-                    }
-                    else
-                    {
-                        m_PhysicalIntensity = unitIntensity;
-                    }
-                    break;
-
-                case LightType.Point:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        m_PhysicalIntensity = LightIntensityToEV100(unitIntensity);
-                    }
-                    else if (m_Unit == LightUnit.Lumen)
-                    {
-                        m_PhysicalIntensity = unitIntensity * 4.0f * Mathf.PI;
-                    }
-                    else
-                    {
-                        m_PhysicalIntensity = unitIntensity;
-                    }
-                    break;
-
-                case LightType.Spot:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        m_PhysicalIntensity = LightIntensityToEV100(unitIntensity);
-                    }
-                    else if (m_Unit == LightUnit.Lumen)
-                    {
-                        m_PhysicalIntensity = unitIntensity * GetSpotSolidAngle();
-                    }
-                    else
-                    {
-                        m_PhysicalIntensity = unitIntensity;
-                    }
-                    break;
-
-                case LightType.Rectangle:
-                case LightType.Disc:
-                    if (m_Unit == LightUnit.EV100)
-                    {
-                        m_PhysicalIntensity = LightIntensityToEV100(unitIntensity);
-                    }
-                    else
-                    {
-                        m_PhysicalIntensity = unitIntensity;
-                    }
-                    break;
-
-                default:
-                    m_PhysicalIntensity = unitIntensity;
-                    break;
-            }
-
+            m_PhysicalIntensity = LightUnitUtils.ConvertIntensity(m_Light, unitIntensity,
+                LightUnitUtils.GetNativeLightUnit(m_Light.type), GetHdrpUnit());
             SanitizePhysicalIntensity();
+        }
+
+        /// <summary>
+        /// 既存のシリアライズ済み列挙値をUnityの物理単位へ対応させる
+        /// </summary>
+        /// <returns>Unityのライト単位</returns>
+        private UnityEngine.Rendering.LightUnit GetHdrpUnit()
+        {
+            return m_Unit switch
+            {
+                LightUnit.Lumen => UnityEngine.Rendering.LightUnit.Lumen,
+                LightUnit.Lux => UnityEngine.Rendering.LightUnit.Lux,
+                LightUnit.Nits => UnityEngine.Rendering.LightUnit.Nits,
+                LightUnit.EV100 => UnityEngine.Rendering.LightUnit.Ev100,
+                _ => UnityEngine.Rendering.LightUnit.Candela
+            };
         }
 
         private void EnsureLight()
@@ -353,20 +274,5 @@ namespace Shinzui.Infrastructure.Lighting
             }
         }
 
-        private float GetSpotSolidAngle()
-        {
-            float angleRad = Mathf.Clamp(m_Light.spotAngle, 0.0f, 179.0f) * Mathf.Deg2Rad;
-            return 2.0f * Mathf.PI * (1.0f - Mathf.Cos(angleRad * 0.5f));
-        }
-
-        private static float EV100ToLightIntensity(float ev100)
-        {
-            return 2.5f * Mathf.Pow(2.0f, ev100);
-        }
-
-        private static float LightIntensityToEV100(float intensity)
-        {
-            return Mathf.Log(Mathf.Max(intensity, 0.0001f) / 2.5f, 2.0f);
-        }
     }
 }

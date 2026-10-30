@@ -47,6 +47,7 @@ namespace Shinzui.Presentation
         private readonly IHidingSpotRegistry _hidingSpots;
         private readonly Shinzui.Application.UseCases.Player.PlayerHidingUseCase _hiding;
         private readonly PlayerHidingPresenter _hidingPresenter;
+        private readonly StageResultUseCase _stageResult;
 
         /// <summary>敵の知覚と統括AIをプレイヤー状態へ接続</summary>
         /// <param name="playerTracker">プレイヤーの位置</param>
@@ -65,6 +66,10 @@ namespace Shinzui.Presentation
         /// <param name="feedback">敵の出現音通知</param>
         /// <param name="tactics">全敵で共有する学習</param>
         /// <param name="points">捜索点の取得</param>
+        /// <param name="hidingSpots">隠れ場所の登録先</param>
+        /// <param name="hiding">プレイヤーの隠れ状態</param>
+        /// <param name="hidingPresenter">隠れ場所の開閉処理</param>
+        /// <param name="stageResult">追跡遷移の集計先</param>
         public EnemyPresenter(
             IPlayerTracker playerTracker,
             PlayerDeathUseCase playerDeathUseCase,
@@ -77,7 +82,8 @@ namespace Shinzui.Presentation
             PlayerView playerView,
             PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings,
             IEnemyEncounterFeedback feedback, PlayerTacticTracker tactics, IEnemySearchPointProvider points,
-            IHidingSpotRegistry hidingSpots, Shinzui.Application.UseCases.Player.PlayerHidingUseCase hiding, PlayerHidingPresenter hidingPresenter)
+            IHidingSpotRegistry hidingSpots, Shinzui.Application.UseCases.Player.PlayerHidingUseCase hiding, PlayerHidingPresenter hidingPresenter,
+            StageResultUseCase stageResult = null)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
@@ -98,6 +104,7 @@ namespace Shinzui.Presentation
             _hidingSpots = hidingSpots; _hiding = hiding; _hidingPresenter = hidingPresenter;
             _visibility = IsPositionVisible;
             _canReachExit = CanReachExit;
+            _stageResult = stageResult;
         }
 
         /// <summary>各敵に独立した知覚状態を作成</summary>
@@ -147,6 +154,11 @@ namespace Shinzui.Presentation
         /// <summary>知覚を更新して移動と接触判定を駆動</summary>
         public void Tick()
         {
+            // 導入演出中もマップ生成を待ち、通常AIと接触判定より先に初期配置を確定
+            foreach (EnemyView enemy in _enemyViews)
+                if (enemy != null && enemy.isActiveAndEnabled
+                    && !enemy.TryCompleteInitialPlacement(_playerTracker.PlayerPosition)) return;
+
             if (_cinematicPaused || _playerDeathUseCase.IsDead.CurrentValue)
             {
                 _noiseHub.Drain();
@@ -163,6 +175,10 @@ namespace Shinzui.Presentation
                     ? directives[controller.Id]
                     : default;
                 controller.Tick(deltaTime, _playerTracker, _playerMove.CurrentHeight.CurrentValue, directive);
+
+                // 各敵のChase開始を集計し、継続フレームの重複はUseCase側で除く
+                _stageResult?.ObserveIntent(controller.Id, controller.ResultIntent);
+
                 _enemyReports[controller.Id] = controller.CurrentReport();
                 if (_playerDeathUseCase.IsDead.CurrentValue) break;
             }

@@ -80,12 +80,12 @@ namespace Shinzui.Infrastructure.ResourceNeed
                 }
             }
 
-            // 懐中電灯のストロボチャージ状況
+            // 懐中電灯のストロボ電池残量
             float strobeCharge = 0f;
             bool hasFlashlight = _flashlight != null;
             if (_flashlight != null)
             {
-                strobeCharge = _flashlight.StrobeCharge.CurrentValue;
+                strobeCharge = _flashlight.StrobeEnergy.CurrentValue;
             }
 
             // 各サブステートの構築（HP・銃器等は現状未実装のため安全な未定義/デフォルト値）

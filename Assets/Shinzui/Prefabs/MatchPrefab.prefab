@@ -51,6 +51,9 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 1
   interactMessage: "\u30DE\u30C3\u30C1\u68D2\u3092\u5165\u624B\u3057\u305F"
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!65 &1455171582000654978
 BoxCollider:
   m_ObjectHideFlags: 0

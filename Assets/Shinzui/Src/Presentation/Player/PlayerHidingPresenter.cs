@@ -11,12 +11,13 @@ using VContainer.Unity;
 
 namespace Shinzui.Presentation
 {
-    /// <summary>ロッカーの登録、操作、呼吸とカメラを接続</summary>
+    /// <summary>ロッカーの登録、操作、スタミナを使う息止めとカメラを接続</summary>
     public sealed class PlayerHidingPresenter : IInitializable, ITickable, ILateTickable, IDisposable
     {
         private const double TutorialIntervalSeconds = 3600d;
         private static double _nextLockerTutorialTime;
         private static double _nextItemTutorialTime;
+        private static double _nextBreathTutorialTime;
 
         /// <summary>ゲーム起動時に案内の待機時間を初期化する</summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -25,6 +26,7 @@ namespace Shinzui.Presentation
             // シーン遷移では維持し、ドメインリロード無効時も起動時にはリセットする
             _nextLockerTutorialTime = 0d;
             _nextItemTutorialTime = 0d;
+            _nextBreathTutorialTime = 0d;
         }
 
         private readonly PlayerHidingUseCase _hiding;
@@ -35,12 +37,12 @@ namespace Shinzui.Presentation
         private readonly FlashlightUseCase _light;
         private readonly PlayerDeathUseCase _death;
         private HidingLockerView _current;
-        private BreathGaugeView _gauge;
         private Shinzui.View.Objective.ObjectiveView _tutorial;
         private bool _nearLocker;
         private bool _nearItem;
         private Shinzui.View.Interaction.PlayerInteractionView _interaction;
         private float _tutorialRemaining;
+        private bool _breathTutorialPending;
         private Vector3 _entryPosition;
         private int _entryFrame;
         public Vector3 EntryPosition => _entryPosition;
@@ -62,9 +64,6 @@ namespace Shinzui.Presentation
             HidingLockerView.Registered += Register;
             HidingLockerView.Removed += Remove;
             HidingLockerView.InteractionRequested += Interact;
-            var go = new GameObject("Breath Gauge");
-            _gauge = go.AddComponent<BreathGaugeView>();
-            go.SetActive(false);
 
             // 目標HUDと同じCanvasに操作案内を作成する
             var objective = UnityEngine.Object.FindFirstObjectByType<Shinzui.View.Objective.ObjectiveView>();
@@ -92,19 +91,25 @@ namespace Shinzui.Presentation
                 || Vector3.Distance(_player.transform.position, locker.ExitPoint.position) > 3f) return;
             if (!_hiding.Enter(locker.Id, _move.IsRunning)) return;
             _current = locker; _entryFrame = Time.frameCount; _entryPosition = _player.transform.position;
-            locker.Occupied = true; locker.UseDoor();
+            locker.Occupied = true;
             _input.SetHiding(true); _light.ExtinguishForHiding();
-            _player.BeginHiding(locker.CameraAnchor, locker.transform.position);
-            _gauge.gameObject.SetActive(true);
+
+            // 入る案内を消し、1時間以上空いていれば入室後に息止めを案内する
+            HideTutorial();
+            _breathTutorialPending = Time.realtimeSinceStartupAsDouble >= _nextBreathTutorialTime;
+
+            // 扉は入室演出の手の動きで開閉する
+            _player.BeginHiding(locker);
         }
         /// <summary>息止め、退出、死亡時の後始末を処理</summary>
         public void Tick()
         {
             UpdateTutorial();
             if (_death.IsDead.CurrentValue) { if (_hiding.IsHidden) Exit(false); return; }
-            if (_hiding.IsHidden && Time.frameCount != _entryFrame && _input.HidingExitPressed) Exit(true);
-            _hiding.Tick(_input.HoldBreathHeld, Time.deltaTime);
-            if (_hiding.IsHidden) _gauge.Show(_hiding.Breath.Remaining / 4f, _hiding.IsHoldingBreath);
+            if (_hiding.IsHidden && Time.frameCount != _entryFrame && !_player.IsEnteringHiding && _input.HidingExitPressed) Exit(true);
+
+            // 入室演出が終わってから、スタミナを消費して息を止められる
+            _hiding.Tick(_input.HoldBreathHeld && !_player.IsEnteringHiding, Time.deltaTime);
         }
 
         /// <summary>接近時の操作案内を種類ごとに1時間以上空けて10秒間表示する</summary>
@@ -112,7 +117,21 @@ namespace Shinzui.Presentation
         {
             if (_tutorial == null) return;
 
-            // 死亡、演出、入室中は案内を消し、ポーズ中は残り時間を維持する
+            // 入室演出が終わってから、息止めの操作を案内する
+            if (_hiding.IsHidden && !_death.IsDead.CurrentValue && !_player.IsCinematicControlled)
+            {
+                if (_breathTutorialPending && !_player.IsEnteringHiding && Time.timeScale > 0f)
+                {
+                    _tutorial.Show("[右クリック] 長押しで息を止める\n（スタミナを消費）");
+                    _tutorialRemaining = 10f;
+                    _breathTutorialPending = false;
+                    _nextBreathTutorialTime = Time.realtimeSinceStartupAsDouble + TutorialIntervalSeconds;
+                }
+                TickTutorialRemaining();
+                return;
+            }
+
+            // 死亡、演出中は案内を消し、ポーズ中は残り時間を維持する
             if (_death.IsDead.CurrentValue || _player.IsCinematicControlled || _hiding.IsHidden)
             {
                 if (_tutorialRemaining > 0f) _tutorial.Hide();
@@ -157,10 +176,24 @@ namespace Shinzui.Presentation
                 _nextItemTutorialTime = now + TutorialIntervalSeconds;
             }
 
-            // 滞在中も表示時間を延長せず、時間経過でフェードアウトする
+            TickTutorialRemaining();
+        }
+
+        /// <summary>滞在中も表示時間を延長せず、時間経過でフェードアウトする</summary>
+        private void TickTutorialRemaining()
+        {
             if (_tutorialRemaining <= 0f) return;
             _tutorialRemaining -= Time.deltaTime;
             if (_tutorialRemaining <= 0f) _tutorial.Hide();
+        }
+
+        /// <summary>表示中の案内を消し、未表示の息止め案内も取り消す</summary>
+        private void HideTutorial()
+        {
+            _breathTutorialPending = false;
+            if (_tutorial == null || _tutorialRemaining <= 0f) return;
+            _tutorial.Hide();
+            _tutorialRemaining = 0f;
         }
         /// <summary>カメラ更新後にも内部視点を維持</summary>
         public void LateTick() { if (_hiding.IsHidden) _player.UpdateHidingCamera(_hiding.IsHoldingBreath); }
@@ -170,7 +203,7 @@ namespace Shinzui.Presentation
         {
             var locker = _current;
             _hiding.Exit(); _input.SetHiding(false);
-            if (_gauge != null) _gauge.gameObject.SetActive(false);
+            HideTutorial();
             if (locker != null)
             {
                 locker.Occupied = false;
@@ -202,7 +235,6 @@ namespace Shinzui.Presentation
             HidingLockerView.InteractionRequested -= Interact;
             if (_hiding.IsHidden) Exit(false);
             _spots.Clear();
-            if (_gauge != null) UnityEngine.Object.Destroy(_gauge.gameObject);
             if (_tutorial != null) UnityEngine.Object.Destroy(_tutorial.gameObject);
         }
     }

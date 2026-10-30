@@ -88,10 +88,16 @@ namespace Shinzui.View
         private Vector2 _pickupLeanVelocity;
         private Vector3 _pickupEyeOffset;
         private Vector3 _pickupBodyOffset;
+        private Vector3 _neckScale;
+        private Vector3 _eyeFromHead;
+        private Vector3 _eyeLocal;
 
         /// <summary>取得時の上半身の前傾による視点の移動量</summary>
         public Vector3 PickupEyeOffset => isActiveAndEnabled && model != null
             ? model.TransformVector(_pickupEyeOffset) : Vector3.zero;
+
+        /// <summary>前傾やしゃがみを含めた現在の頭部の目の位置</summary>
+        public Vector3 EyePosition => _initialized ? model.TransformPoint(_eyeLocal) : player.PostureEyePosition;
 
         /// <summary>右手の取得姿勢を設定し、通常の腕振りと合成</summary>
         /// <param name="position">掴む位置</param>
@@ -328,6 +334,7 @@ namespace Shinzui.View
                 _restRotations[bone] = bone.localRotation;
             }
             _hipPosition = _bones["Hips"].localPosition;
+            _neckScale = _bones["Neck"].localScale;
             _leftFootPosition = model.InverseTransformPoint(_bones["LeftFoot"].position);
             _rightFootPosition = model.InverseTransformPoint(_bones["RightFoot"].position);
             _leftFootRotation = Quaternion.Inverse(model.rotation) * _bones["LeftFoot"].rotation;
@@ -345,6 +352,9 @@ namespace Shinzui.View
             CacheFingers("Left", _leftFingers);
             CacheFingers("Right", _rightFingers);
             _standingEyeHeight = player.transform.InverseTransformPoint(player.PostureEyePosition).y;
+            // 立ち姿勢の視点を頭部基準で保存し、姿勢変化後も頭と同じ位置へ視点を置けるようにする
+            _eyeFromHead = _bones["Head"].InverseTransformPoint(player.PostureEyePosition);
+            _eyeLocal = model.InverseTransformPoint(player.PostureEyePosition);
             CachePickupBasePose();
             _initialized = true;
             SetHeadVisible(showHead);
@@ -367,6 +377,8 @@ namespace Shinzui.View
 
             // 前フレームの変形を累積せず、しゃがみ量を骨盤へ適用
             foreach (var pair in _restRotations) pair.Key.localRotation = pair.Value;
+            // 頭部位置を姿勢計算に使うため、潰した首を元の大きさへ戻す
+            _bones["Neck"].localScale = _neckScale;
             // カメラ演出による視点の下降をしゃがみとして扱わず、追従先の高さを参照
             float eyeHeight = player.transform.InverseTransformPoint(player.PostureEyePosition).y;
             float crouch = Mathf.Clamp(_standingEyeHeight - eyeHeight, 0f, .8f);
@@ -428,6 +440,12 @@ namespace Shinzui.View
                 leftHand.rotation = Quaternion.LookRotation(light.up, light.right) * _handBasis;
                 CurlFingers(leftHand, _leftFingers, gripStrength);
             }
+
+            // 首を潰す前に、確定した頭部から目の位置を求める
+            _eyeLocal = model.InverseTransformPoint(_bones["Head"].TransformPoint(_eyeFromHead));
+
+            // 頭部非表示中は首の頂点を付け根へ集め、俯きや前傾で切り口が視界へ入らないようにする
+            if (!showHead) _bones["Neck"].localScale = _neckScale * .0001f;
         }
 
         /// <summary>待機中の呼吸と歩調に合わせて右腕・手首・指を動かす</summary>

@@ -11,7 +11,7 @@ Shader "Custom/InverseScanline"
     
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" }
+        Tags { "RenderPipeline" = "HDRenderPipeline" }
         LOD 100
         ZTest Always ZWrite Off Cull Off
         
@@ -21,25 +21,32 @@ Shader "Custom/InverseScanline"
             
             HLSLPROGRAM
             
-            #pragma target 3.0
-            #pragma vertex vert
+            #pragma target 4.5
+            #pragma vertex Fullscreen
             #pragma fragment frag
             
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/PostProcessing/Shaders/RTUpscale.hlsl"
             
-            TEXTURE2D_X(_MainTex);
-            SAMPLER(sampler_BlitTexture);
-            float4 _MainTex_TexelSize;
+            TEXTURE2D_X(_InputTexture);
             float _GlitchPeriod;
             float _GlitchSpeed;
             float _GlitchProbability;
             float _GlitchSize;
             float2 _BlockScale;
             
-            struct Varyings 
+            struct Attributes
+            {
+                uint vertexID : SV_VertexID;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
-                float2 uv : TEXCOORD0;    
+                float2 uv : TEXCOORD0;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
             
             float hashNoise(float2 p) 
@@ -47,20 +54,30 @@ Shader "Custom/InverseScanline"
                 return frac(sin(dot(p, float2(12.9898, 78.233)))   * 43758.5453);
             }
             
-            Varyings vert(uint id : SV_VertexID) 
+            Varyings Fullscreen(Attributes input)
             {
                 Varyings output;
-                output.positionHCS = GetFullScreenTriangleVertexPosition(id);
-                output.uv = GetFullScreenTriangleTexCoord(id);
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.positionHCS = GetFullScreenTriangleVertexPosition(input.vertexID);
+                output.uv = GetFullScreenTriangleTexCoord(input.vertexID);
                 return output;
+            }
+
+            // 解像度変更時も有効な入力領域だけを線形補間する
+            float4 SampleInput(float2 uv)
+            {
+                return SAMPLE_TEXTURE2D_X(_InputTexture, s_linear_clamp_sampler,
+                    ClampAndScaleUVForBilinearPostProcessTexture(uv));
             }
             
             half4 frag(Varyings input) : SV_Target 
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.uv;
-                float3 finalColor = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv).rgb;
+                float3 finalColor = LOAD_TEXTURE2D_X(_InputTexture, uint2(input.positionHCS.xy)).rgb;
                 
-                float glitchTime = fmod(_Time.y, _GlitchPeriod);
+                float glitchTime = fmod(_Time.y, max(_GlitchPeriod, 0.0001));
                 float glitchY = glitchTime * _GlitchSpeed;
                 if (glitchY < 1.0) {
                     
@@ -94,7 +111,7 @@ Shader "Custom/InverseScanline"
                             shiftUV.x += (noiseVal - 0.5) * 0.03;
                             
                             // テクスチャをサンプリング
-                            float4 shiftColor = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, shiftUV);
+                            float4 shiftColor = SampleInput(shiftUV);
                             
                             // 元のコードと同様のブレンド計算を適用
                             float3 tempColor = finalColor + glitchColor * 2.5;

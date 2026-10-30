@@ -2434,17 +2434,19 @@ MonoBehaviour:
   destroyOnInteract: 0
   interactMessage: There is a creepy figurine here. It seems covered in dust.
   holdToPickup: 0
-  pickupDuration: 1
+  pickupDuration: 0.45
   pickupGrip: {fileID: 0}
   modelVariants:
   - root: {fileID: 6636422793572811140}
     lightOrigin: {fileID: 5547159713194111691}
     lampRenderer: {fileID: 8122432380562914154}
     lampMaterialIndex: 2
+    pressButton: {fileID: 2860921777364813382}
   - root: {fileID: 8027133019862541761}
     lightOrigin: {fileID: 8111765879173037886}
     lampRenderer: {fileID: 2880168402410153246}
     lampMaterialIndex: 0
+    pressButton: {fileID: 3810150544002141493}
   lampMaterialIndex: 2
   detectionRadius: 5
   cooldownSeconds: 30

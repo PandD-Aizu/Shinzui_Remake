@@ -4834,7 +4834,7 @@ MonoBehaviour:
   playerView: {fileID: 119550612}
   inventoryView: {fileID: 196527159}
   flashlightView: {fileID: 1217330893}
-  strobeGaugeView: {fileID: 0}
+  strobeGaugeView: {fileID: 1829609028}
   interactionView: {fileID: 119550618}
   interactionMessageView: {fileID: 168151109}
   specialItemHudView: {fileID: 929750188}
@@ -5911,7 +5911,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.StrobeGaugeView
   gaugeImage: {fileID: 714804824}
-  rootObject: {fileID: 1829609026}
+  rootObject: {fileID: 1083461841}
+  minFillAmount: 0.25
+  maxFillAmount: 0.75
+  batteryMaskImage: {fileID: 889548168}
+  batteryInsideImage: {fileID: 1710686133}
+  batteryMaskMinPosition: {x: 0, y: 0, z: 0.1}
+  batteryMaskMaxPosition: {x: -9, y: 0, z: 0}
 --- !u!1 &1923252012
 GameObject:
   m_ObjectHideFlags: 0

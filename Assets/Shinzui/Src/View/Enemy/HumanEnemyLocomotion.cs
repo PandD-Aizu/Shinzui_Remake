@@ -23,6 +23,12 @@ namespace Shinzui.View
         [SerializeField] private LayerMask groundLayers = 1 << 8;
         [SerializeField, Min(.01f)] private float soleHeight = .17f;
         [SerializeField, Min(.01f)] private float authoredWalkSpeed = .75f;
+        [Header("Ceiling Ambush")]
+        [SerializeField, Min(2f)] private float minCeilingHeight = 4.2f;
+        [SerializeField, Min(.5f)] private float ambushDropRadius = 4.5f;
+        [SerializeField, Min(0f)] private float ceilingCreepSpeed = .45f;
+        [SerializeField, Min(0f)] private float ceilingCreepRange = 8f;
+        [SerializeField, Min(1f)] private float ambushGiveUpTime = 50f;
         private static readonly int Speed = Animator.StringToHash("Speed");
         private static readonly int StrideRate = Animator.StringToHash("StrideRate");
         private const float CrawlSpineAngle = 105f;
@@ -43,12 +49,24 @@ namespace Shinzui.View
         private Vector3 _previousRoot;
         private float _crawlCycle;
         private bool _crawlInitialized;
+        private Vector3 _crawlUp;
         private float _lungeProgress;
         private Vector3 _lungeStartFace;
         private bool _chasing;
         private Vector3 _chaseTarget;
         private float _chaseWeight;
         private float _runCycle;
+
+        /// <summary>待ち伏せに使う大きいトンネルの最低天井高</summary>
+        public float MinCeilingHeight => minCeilingHeight;
+        /// <summary>真下へ落ちてくるプレイヤーとの水平距離</summary>
+        public float AmbushDropRadius => ambushDropRadius;
+        /// <summary>天井を這う速度</summary>
+        public float CeilingCreepSpeed => ceilingCreepSpeed;
+        /// <summary>登った地点から這って離れられる距離</summary>
+        public float CeilingCreepRange => ceilingCreepRange;
+        /// <summary>空振りした待ち伏せを諦めるまでの秒数</summary>
+        public float AmbushGiveUpTime => ambushGiveUpTime;
 
         /// <summary>追跡状態と両手を伸ばす位置を設定</summary>
         /// <param name="chasing">プレイヤーを追跡中か</param>
@@ -238,15 +256,20 @@ namespace Shinzui.View
         private void ApplyCrawlPose()
         {
             SavePose();
+
+            // 天井に逆さまで張り付く場合も身体の上方向を床の法線として扱う
+            Vector3 up = transform.up;
             Vector3 floor = GroundPoint(transform.position);
             Vector3 hips = _hips.position;
-            hips.y = floor.y + CrawlHipHeight;
+            hips += up * (CrawlHipHeight - Vector3.Dot(hips - floor, up));
             _hips.position = Vector3.Lerp(_hips.position, hips, _introPose);
             _spine.rotation = Quaternion.AngleAxis(CrawlSpineAngle * _introPose, transform.right) * _spine.rotation;
 
             // 歩幅は実移動に同期し、接地中の手足をワールド座標に固定
-            if (!_crawlInitialized)
+            // 天井へ跳び移る回転中は接地点を身体へ追従させる
+            if (!_crawlInitialized || Vector3.Dot(up, _crawlUp) < .999f)
             {
+                _crawlUp = up;
                 _crawlCycle = 0f;
                 for (int i = 0; i < 4; i++)
                 {
@@ -266,26 +289,25 @@ namespace Shinzui.View
                 if (swing && !_swinging[i])
                 {
                     _stepStarts[i] = _contacts[i];
-                    _stepEnds[i] = CrawlContact(i) + transform.forward * .16f;
-                    _stepEnds[i].y = GroundPoint(_stepEnds[i]).y + (i < 2 ? .14f : soleHeight);
+                    _stepEnds[i] = GroundPoint(CrawlContact(i) + transform.forward * .16f) + up * (i < 2 ? .14f : soleHeight);
                 }
                 if (swing)
                 {
                     float t = phase / .4f;
                     _contacts[i] = Vector3.Lerp(_stepStarts[i], _stepEnds[i], Mathf.SmoothStep(0f, 1f, t))
-                        + Vector3.up * (Mathf.Sin(t * Mathf.PI) * .07f);
+                        + up * (Mathf.Sin(t * Mathf.PI) * .07f);
                 }
                 else if (_swinging[i]) _contacts[i] = _stepEnds[i];
                 _swinging[i] = swing;
                 Vector3 side = transform.right * (i % 2 == 0 ? -1f : 1f);
-                Vector3 pole = i < 2 ? side + transform.forward * .25f : Vector3.down + side * .15f + transform.forward * .15f;
+                Vector3 pole = i < 2 ? side + transform.forward * .25f : -up + side * .15f + transform.forward * .15f;
                 PlaceCrawlLimb(_crawlLimbs[i], _contacts[i], pole, i < 2);
             }
 
             // 胴体の前傾から首を独立させ、床ではなくプレイヤーの顔を見る
             if (_introCamera != null)
             {
-                Quaternion look = Quaternion.LookRotation(_introCamera.transform.position - _head.position, Vector3.up);
+                Quaternion look = Quaternion.LookRotation(_introCamera.transform.position - _head.position, up);
                 _head.rotation = Quaternion.Slerp(_head.rotation, look, _introPose);
             }
 
@@ -310,7 +332,7 @@ namespace Shinzui.View
         {
             float side = index % 2 == 0 ? -1f : 1f;
             Vector3 point = transform.TransformPoint(new Vector3(side * (index < 2 ? .36f : .28f), 0f, index < 2 ? .65f : -.65f));
-            return GroundPoint(point) + Vector3.up * (index < 2 ? .14f : soleHeight);
+            return GroundPoint(point) + transform.up * (index < 2 ? .14f : soleHeight);
         }
 
         /// <summary>骨格補正で使う床面の位置を取得</summary>
@@ -318,8 +340,10 @@ namespace Shinzui.View
         /// <returns>床面上の位置</returns>
         private Vector3 GroundPoint(Vector3 point)
         {
-            if (Physics.Raycast(point + Vector3.up, Vector3.down, out var hit, 2f, groundLayers, QueryTriggerInteraction.Ignore)) return hit.point;
-            return new Vector3(point.x, transform.position.y, point.z);
+            // 天井では身体の上方向から接地面を探す
+            Vector3 up = transform.up;
+            if (Physics.Raycast(point + up, -up, out var hit, 2f, groundLayers, QueryTriggerInteraction.Ignore)) return hit.point;
+            return point + up * Vector3.Dot(transform.position - point, up);
         }
 
         /// <summary>手首または足首を接地点へ合わせ、肘や膝を外側へ曲げる</summary>
@@ -343,7 +367,7 @@ namespace Shinzui.View
                 * Mathf.Sqrt(Mathf.Max(0f, upper * upper - along * along));
             limb.thigh.rotation = Quaternion.FromToRotation(limb.shin.position - root, joint - root) * limb.thigh.rotation;
             limb.shin.rotation = Quaternion.FromToRotation(limb.foot.position - limb.shin.position, target - limb.shin.position) * limb.shin.rotation;
-            limb.foot.rotation = hand ? Quaternion.Slerp(endRotation, Quaternion.LookRotation(Vector3.down, transform.forward), _introPose) : endRotation;
+            limb.foot.rotation = hand ? Quaternion.Slerp(endRotation, Quaternion.LookRotation(-transform.up, transform.forward), _introPose) : endRotation;
         }
 
         /// <summary>膝の曲がる方向を保ち、届く範囲内で足を地面へ合わせる</summary>

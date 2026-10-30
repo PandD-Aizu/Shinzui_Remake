@@ -56,6 +56,7 @@ namespace Shinzui.Presentation.Flashlight
         }
 
         private bool _wasAttackHeld;
+        private bool _wasStrobeReady;
 
         public void Initialize()
         {
@@ -78,15 +79,17 @@ namespace Shinzui.Presentation.Flashlight
                 })
                 .AddTo(ref builder);
 
-            // ストロボのチャージ進捗を監視し、UIゲージを更新
+            // チャージするほど画面中央へズーム
+            _useCase.StrobeCharge
+                .Subscribe(charge => _view.SetStrobeZoom(charge))
+                .AddTo(ref builder);
+
+            // 電池残量とチャージ量から、残量と発光で減る量をUIゲージへ反映
             if (_strobeGaugeView != null)
             {
-                _useCase.StrobeCharge
-                    .Subscribe(charge =>
-                    {
-                        _strobeGaugeView.SetGaugeActive(charge > 0f);
-                        _strobeGaugeView.SetProgress(charge);
-                    })
+                _useCase.StrobeEnergy
+                    .CombineLatest(_useCase.StrobeCharge, (energy, charge) => (energy, charge))
+                    .Subscribe(x => _strobeGaugeView.SetEnergy(x.energy, _useCase.GetStrobeCost(x.charge)))
                     .AddTo(ref builder);
             }
 
@@ -109,18 +112,29 @@ namespace Shinzui.Presentation.Flashlight
                 _useCase.ToggleFlashlight();
             }
 
-            // ストロボ入力処理
-            var idx = _inventoryUseCase.CheckItem("FlashlightBattery");
-            bool isAttackHeld = _inputService.AttackHeld;
+            // 右クリックの構えを解いたら溜めを破棄
+            bool isStrobeReady = _inputService.StrobeReadyHeld;
+            if (!isStrobeReady && _wasStrobeReady) _useCase.CancelCharge();
+            _wasStrobeReady = isStrobeReady;
+
+            // 予備の乾電池の本数をUIへ反映
+            int batteryCount = _inventoryUseCase.CountItem("FlashlightBattery");
+            if (_strobeGaugeView != null) _strobeGaugeView.SetBatteryCount(batteryCount);
+
+            // ストロボ入力処理（構え中の左クリック長押しで溜め、離して発光）
+            bool isAttackHeld = isStrobeReady && _inputService.AttackHeld;
+
+            // 構え中は半透明、チャージ中は不透明でストロボUIを表示
+            if (_strobeGaugeView != null) _strobeGaugeView.SetVisibility(isStrobeReady, isAttackHeld);
             if (isAttackHeld)
             {
-                if (idx >= 0)
+                if (_useCase.CanStrobe)
                 {
                     _useCase.Charge(deltaTime);
                 }
                 else
                 {
-                    _messageView.ShowMessage("乾電池切れのようだ");
+                    _messageView.ShowMessage(batteryCount > 0 ? "乾電池を交換しよう" : "乾電池切れのようだ");
                 }
             }
             else if (_wasAttackHeld)
@@ -130,7 +144,7 @@ namespace Shinzui.Presentation.Flashlight
                 {
                     _noiseSink.Emit(new NoiseEvent(NoiseKind.Strobe, _view.StrobeOrigin, 8f));
                     ApplyStrobeToEnemies(result.Charge);
-                    _inventoryUseCase.UseItemAsync(idx);
+                    _view.PlayStrobeFlash(result.Charge);
                 }
             }
             _wasAttackHeld = isAttackHeld;

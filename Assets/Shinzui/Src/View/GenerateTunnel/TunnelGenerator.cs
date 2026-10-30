@@ -33,6 +33,8 @@ namespace Shinzui.View.GenerateTunnel
         [Header("Generation")]
         [Min(5)] [SerializeField] private int tunnelCount = 8;
         [SerializeField] private int seed = 2777;
+        [Tooltip("Pick a new random seed on every play. Disable to reproduce the inspector seed.")]
+        [SerializeField] private bool randomizeSeedOnPlay = true;
         [Min(1)] [SerializeField] private int placementAttemptsPerTunnel = 80;
 
         [Header("Upper Floor")]
@@ -79,8 +81,24 @@ namespace Shinzui.View.GenerateTunnel
         [SerializeField] private GameObject warpCorridorModel;
 
         [Header("Ceiling Lights")]
-        [Tooltip("天井中央に配置する蛍光灯の間隔（m）")]
-        [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 5.0f;
+        [Tooltip("側道のLED照明の間隔（m）")]
+        [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 12.0f;
+        [Tooltip("大型トンネル中央の蛍光灯の間隔（m） ループ内では周期に合わせて補正")]
+        [Min(1.5f)] [SerializeField] private float mainTunnelLightSpacing = 5.0f;
+
+        [Header("Tunnel Look")]
+        [SerializeField, Range(0f, 1f)] private float deadFixtureFraction = 0f;
+        [SerializeField, Range(0f, 1f)] private float flickerFixtureFraction = 0f;
+        [SerializeField, Range(0f, 0.5f)] private float decalDensity = 0.08f;
+        [SerializeField, Range(0, 256)] private int maxTunnelDecals = 96;
+        [SerializeField, Range(5f, 80f)] private float decalFadeDistance = 35f;
+        [SerializeField, Range(0, 32)] private int maxGroundFogPatches = 16;
+        public int MaxGroundFogPatches => maxGroundFogPatches;
+        public float DeadFixtureFraction => deadFixtureFraction;
+        public float FlickerFixtureFraction => flickerFixtureFraction;
+        public float DecalDensity => decalDensity;
+        public int MaxTunnelDecals => maxTunnelDecals;
+        public float DecalFadeDistance => decalFadeDistance;
 
         [Header("Model Scale")]
         [Tooltip("Xは長さの基準倍率、Yは断面の倍率。縦横比を維持するためZはYと同じ倍率になる")]
@@ -147,6 +165,8 @@ namespace Shinzui.View.GenerateTunnel
         public GameObject SmallRoomModel => smallRoomModel;
         public GameObject WarpCorridorModel => warpCorridorModel;
         public float CeilingLightSpacing => Mathf.Max(1.5f, ceilingLightSpacing);
+        /// <summary>SaveStageと同じ中央配置の基準間隔を取得する</summary>
+        public float MainTunnelLightSpacing => Mathf.Max(1.5f, mainTunnelLightSpacing);
         public Vector3 BasicTunnelModelScale
         {
             get
@@ -168,6 +188,19 @@ namespace Shinzui.View.GenerateTunnel
         /// <summary>
         /// Inspectorでも断面の縦横倍率を揃える
         /// </summary>
+        /// <summary>
+        /// 有効時はプレイ開始ごとにシードをランダムに差し替える
+        /// </summary>
+        private void Awake()
+        {
+            // インスペクターのシードを使う設定なら何もしない
+            if (!randomizeSeedOnPlay) return;
+
+            // 再現できるように使用シードをログへ残す
+            seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            Debug.Log($"[TunnelGenerator] Randomized seed: {seed}");
+        }
+
         private void OnValidate()
         {
             basicTunnelModelScale.z = basicTunnelModelScale.y;

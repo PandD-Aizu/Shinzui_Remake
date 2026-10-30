@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Newtonsoft.Json;
 using Shinzui.Application.Interfaces;
@@ -29,6 +29,7 @@ namespace Shinzui.Infrastructure.Repositories
         /// 設定データをJSONファイルから読み込み
         /// ファイルが存在しない、または読み込みに失敗した場合はデフォルト設定オブジェクトを生成して返す
         /// </summary>
+        /// <returns>保存済み設定または初期設定</returns>
         public GameSettings Load()
         {
 #if UNITY_SWITCH && !UNITY_EDITOR
@@ -48,6 +49,9 @@ namespace Shinzui.Infrastructure.Repositories
                         new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
                     if (settings != null)
                     {
+                        // 旧保存データも実際の描画項目からプリセットを復元する
+                        settings.Graphics.Preset = GraphicsPresets.Detect(settings.Graphics);
+
                         Debug.Log($"[Settings] Loaded settings from: {_saveFilePath}");
                         return settings;
                     }

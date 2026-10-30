@@ -25,8 +25,17 @@ namespace Shinzui.View.Interaction
         private Collider _pickupCollider;
 
         public virtual bool RequiresHold => holdToPickup;
+        /// <summary>長押し不要で右手を伸ばして押す動作を再生するか</summary>
+        public virtual bool PlaysPressAnimation => false;
         public float PickupDuration => pickupDuration;
         public Transform PickupGrip => pickupGrip;
+
+        /// <summary>実行時に決まる掴み位置を設定</summary>
+        /// <param name="grip">手を合わせる位置と向き</param>
+        protected void SetPickupGrip(Transform grip)
+        {
+            pickupGrip = grip;
+        }
 
         /// <summary>取得アイテムの判定を操作検出専用にする</summary>
         private void Awake()
@@ -106,6 +115,15 @@ namespace Shinzui.View.Interaction
             {
                 Destroy(gameObject);
             }
+        }
+
+        /// <summary>
+        /// 操作したプレイヤーを受け取ってインタラクト時のエフェクトを実行
+        /// </summary>
+        /// <param name="actor">操作したプレイヤー</param>
+        public virtual void ExecuteInteractEffect(PlayerView actor)
+        {
+            ExecuteInteractEffect();
         }
     }
 }

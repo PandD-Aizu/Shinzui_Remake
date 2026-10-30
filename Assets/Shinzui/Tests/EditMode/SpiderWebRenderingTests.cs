@@ -383,9 +383,10 @@ namespace Shinzui.Tests
                 Object.DestroyImmediate(playerObject);
                 playerObject = null;
 
-                float firstAlpha = burnMaterial.GetColor("_BaseColor").a;
+                float firstRadius = burnMaterial.GetFloat("_BurnRadius");
                 yield return new WaitForSeconds(0.12f);
-                Assert.That(burnMaterial.GetColor("_BaseColor").a, Is.LessThan(firstAlpha));
+                Assert.That(burnMaterial.GetFloat("_BurnRadius"), Is.GreaterThan(firstRadius));
+                Assert.That(originalMaterial.GetFloat("_BurnRadius"), Is.LessThan(0.0f));
                 Assert.That(originalMaterial.GetColor("_BaseColor").a, Is.EqualTo(originalAlpha));
 
                 float deadline = Time.realtimeSinceStartup + 5.0f;

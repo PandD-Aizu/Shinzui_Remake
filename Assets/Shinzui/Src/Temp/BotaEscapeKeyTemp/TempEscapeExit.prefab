@@ -43,13 +43,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0412a7713e98c314f80c895adff3375b, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Temp::Shinzui.Temp.TempEscapeExit
-  displayName: "[E] 調べる"
+  displayName: "[E] \u8ABF\u3079\u308B"
   interactableId: InteractionTest
   isOneTime: 0
   destroyOnInteract: 0
-  interactMessage:
+  interactMessage: 
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
   titleScenePath: Assets/Shinzui/Scenes/Title.unity
   clearMessageDelaySeconds: 1.5
   returnDelaySeconds: 4
@@ -120,7 +123,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: f1909e372fef96840bd10a1b6478b929, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

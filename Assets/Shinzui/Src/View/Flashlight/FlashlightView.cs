@@ -1,5 +1,9 @@
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using FMODUnity;
+using Unity.Cinemachine;
 
 namespace Shinzui.View.Flashlight
 {
@@ -15,8 +19,12 @@ namespace Shinzui.View.Flashlight
 
         [Header("Beam Optics")]
         [SerializeField] private bool useRealisticBeam;
-        [SerializeField] private LightShadows beamShadows = LightShadows.None;
+        [SerializeField] private LightShadows beamShadows = LightShadows.Soft;
         [SerializeField, Min(1f)] private float beamFocusDistance = 8f;
+        [SerializeField, Range(0f, 20f)] private float beamDownwardAngle = 8f;
+#if UNITY_EDITOR
+        private bool _lookDevForceLight;
+#endif
         [SerializeField, Min(0.1f)] private float nearWallDistance = 2f;
         [SerializeField, Range(0.02f, 1f)] private float nearWallIntensity = 0.12f;
         [SerializeField] private LayerMask beamObstructionMask = ~0;
@@ -34,15 +42,23 @@ namespace Shinzui.View.Flashlight
         [Header("Volumetric Light Settings")]
         [SerializeField] private bool enableVolumetric = true;  // ボリュメトリック効果を有効にするか
         [Range(-1.0f, 1.0f)]
-        [SerializeField] private float anisotropy = 0.25f;      // 前方散乱の度合い
+        [SerializeField, HideInInspector] private float anisotropy = 0.25f;      // 前方散乱の度合い
         [Range(0.0f, 16.0f)]
-        [SerializeField] private float scattering = 2.0f;       // 散乱強度
+        [SerializeField] private float scattering = 0.65f;       // 散乱強度
         [Range(0.0f, 1.0f)]
-        [SerializeField] private float radius = 0.2f;           // 光源付近のノイズ減衰半径
+        [SerializeField, HideInInspector] private float radius = 0.2f;           // 光源付近のノイズ減衰半径
 
         [Header("Strobe Visual Settings")]
-        [SerializeField] private float maxStrobeBoost = 15.0f;             // ストロボ最大追加輝度値
-        [SerializeField] private float volumetricScatteringBoost = 8.0f;   // ストロボ最大追加ボリュメトリック散乱度
+        [SerializeField, Min(1f)] private float strobeIntensityMultiplier = 10.0f;   // フルチャージ時の輝度倍率
+        [SerializeField, Min(1f)] private float strobeVolumetricMultiplier = 4.0f;   // フルチャージ時の散乱倍率
+        [SerializeField, Min(0f)] private float strobeSpotAngleBoost = 20.0f;        // フルチャージ時に広げる照射角
+
+        [Header("Strobe Camera Flash")]
+        [SerializeField, Min(0f)] private float cameraFlashIntensity = 400.0f;       // カメラ位置で一瞬光る点光源の光度(cd)
+        [SerializeField, Min(0.1f)] private float cameraFlashRange = 10.0f;          // 点光源の届く距離
+        [SerializeField, Min(0.01f)] private float screenFlashDuration = 0.3f;       // 閃光が消えるまでの秒数
+        [SerializeField] private float screenFlashExposure = 0.8f;                   // 閃光時の露出補正(EV)
+        [SerializeField, Range(0f, 1f)] private float screenFlashLift = 0.06f;       // 閃光時に暗部を白く持ち上げる量
 
         [Header("Strobe Hit Settings")]
         [SerializeField] private float strobeRange = 12.0f;                // ストロボが届く最大距離
@@ -56,11 +72,18 @@ namespace Shinzui.View.Flashlight
         [SerializeField] private LayerMask strobeHitMask = ~0;          // ストロボ命中判定対象
 
         private Quaternion _currentFollowRotation;          // 手振れを含まない純粋な追従回転キャッシュ
-        private VolumetricAdditionalLight _volumetricLight; // ボリュメトリックライトコンポーネント参照
+        private HDAdditionalLightData _volumetricLight; // ボリュメトリックライトコンポーネント参照
         private float _baseIntensity = -1f;                 // ライトの基本輝度
         private float _baseVolumetricScattering = -1f;      // ボリュメトリックライトの基本散乱強度
         private float _nearWallGain = 1f;                  // 壁際の減光係数
         private float _strobeFactor;                      // 現在のストロボ発光係数
+        private float _baseSpotAngle = -1f;               // ライトの基本照射角
+        private Light _cameraFlashLight;                  // カメラ位置で光る閃光用の点光源
+        private Volume _flashVolume;                      // 画面全体を白く飛ばす閃光用のボリューム
+        private VolumeProfile _flashProfile;
+        private float _flashStrength;                     // 閃光の強さ
+        private float _flashTime;                         // 閃光開始からの経過秒数
+        private StrobeZoomExtension _strobeZoom;          // チャージ中に画面中央へ寄せるズーム
 
         private static readonly System.Collections.Generic.List<FlashlightView> ActiveViews = new();
         private float _mistGain = 1f;
@@ -124,18 +147,22 @@ namespace Shinzui.View.Flashlight
         public float CenterViewportRadius => centerViewportRadius;
         public LayerMask StrobeHitMask => strobeHitMask;
 
+        /// <summary>
+        /// ライトの基本強度と散乱倍率を保持する
+        /// </summary>
         private void EnsureBaseValuesCached()
         {
             if (_baseIntensity < 0f && flashlightLight != null)
             {
                 _baseIntensity = flashlightLight.intensity;
+                _baseSpotAngle = flashlightLight.spotAngle;
             }
 
             if (_baseVolumetricScattering < 0f)
             {
                 if (_volumetricLight != null)
                 {
-                    _baseVolumetricScattering = _volumetricLight.Scattering;
+                    _baseVolumetricScattering = _volumetricLight.volumetricDimmer;
                 }
                 else
                 {
@@ -155,15 +182,19 @@ namespace Shinzui.View.Flashlight
             }
 
             // ボリュメトリックライトコンポーネントを自動セットアップ
-            if (flashlightLight != null && enableVolumetric)
+            if (flashlightLight != null)
             {
-                _volumetricLight = flashlightLight.GetComponent<VolumetricAdditionalLight>();
+                _volumetricLight = flashlightLight.GetComponent<HDAdditionalLightData>();
                 if (_volumetricLight == null)
                 {
-                    _volumetricLight = flashlightLight.gameObject.AddComponent<VolumetricAdditionalLight>();
+                    _volumetricLight = HdrpLightUtility.SetIntensity(flashlightLight,
+                        flashlightLight.intensity, LightUnitUtils.GetNativeLightUnit(flashlightLight.type));
                 }
             }
 
+            /* 手持ちモデルと一人称の腕が自分の光源を遮らないようにする */
+            foreach (Renderer renderer in GetSelfShadowRenderers()) renderer.shadowCastingMode = ShadowCastingMode.Off;
+            _baseVolumetricScattering = scattering;
             EnsureBaseValuesCached();
             
             if (flashlightLight != null)
@@ -172,20 +203,111 @@ namespace Shinzui.View.Flashlight
                 _currentFollowRotation = flashlightLight.transform.rotation;
 
                 // ボリュメトリックライトコンポーネントの設定適用
-                if (enableVolumetric && _volumetricLight != null)
+                if (_volumetricLight != null)
                 {
-                    _volumetricLight.Anisotropy = anisotropy;
-                    _volumetricLight.Scattering = scattering;
-                    _volumetricLight.Radius = radius;
+                    // 異方性はHDRPのFog Volumeで設定し光源では散乱倍率を調整する
+                    _volumetricLight.volumetricDimmer = scattering;
 
                     // 初期有効状態をライトの点灯状態に同期
-                    _volumetricLight.enabled = flashlightLight.enabled;
+                    _volumetricLight.affectsVolumetric = enableVolumetric;
                 }
             }
             else
             {
                 _currentFollowRotation = transform.rotation;
             }
+
+            CreateStrobeFlash();
+        }
+
+        /// <summary>
+        /// ストロボ発光時の閃光に使う点光源とボリュームを用意する
+        /// </summary>
+        private void CreateStrobeFlash()
+        {
+            // カメラ位置から周囲を一瞬照らす点光源
+            if (targetCamera != null)
+            {
+                var lightObject = new GameObject("StrobeCameraFlash");
+                lightObject.transform.SetParent(targetCamera.transform, false);
+                _cameraFlashLight = lightObject.AddComponent<Light>();
+                _cameraFlashLight.type = LightType.Point;
+                _cameraFlashLight.range = cameraFlashRange;
+                _cameraFlashLight.shadows = LightShadows.None;
+                _cameraFlashLight.color = new Color(0.92f, 0.96f, 1f);
+                HdrpLightUtility.SetIntensity(_cameraFlashLight, 0f, LightUnit.Candela);
+                _cameraFlashLight.enabled = false;
+            }
+
+            // 露出と暗部の持ち上げで画面全体を白く飛ばすボリューム
+            var volumeObject = new GameObject("StrobeFlashVolume");
+            volumeObject.transform.SetParent(transform, false);
+            _flashVolume = volumeObject.AddComponent<Volume>();
+            _flashVolume.isGlobal = true;
+            _flashVolume.priority = 100f;
+            _flashVolume.weight = 0f;
+            _flashProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            _flashProfile.Add<ColorAdjustments>().postExposure.Override(screenFlashExposure);
+            _flashProfile.Add<LiftGammaGain>().lift.Override(new Vector4(1f, 1f, 1f, screenFlashLift));
+            _flashVolume.sharedProfile = _flashProfile;
+        }
+
+        /// <summary>
+        /// ストロボ発光の瞬間にカメラから閃光を出す
+        /// </summary>
+        /// <param name="charge">ストロボのチャージ量</param>
+        public void PlayStrobeFlash(float charge)
+        {
+            _flashStrength = Mathf.Clamp01(charge);
+            _flashTime = 0f;
+        }
+
+        /// <summary>
+        /// チャージ量に応じて画面中央へズームさせる
+        /// </summary>
+        /// <param name="charge">ストロボのチャージ量</param>
+        public void SetStrobeZoom(float charge)
+        {
+            // 視点を描いている仮想カメラにズーム用の拡張を付ける
+            if (_strobeZoom == null && targetCamera != null
+                && targetCamera.TryGetComponent(out CinemachineBrain brain)
+                && brain.ActiveVirtualCamera is CinemachineVirtualCameraBase vcam)
+            {
+                if (!vcam.TryGetComponent(out _strobeZoom))
+                {
+                    _strobeZoom = vcam.gameObject.AddComponent<StrobeZoomExtension>();
+                }
+            }
+
+            if (_strobeZoom != null) _strobeZoom.SetZoom(charge);
+        }
+
+        /// <summary>
+        /// 閃光を一瞬で立ち上げ、急速に減衰させる
+        /// </summary>
+        private void UpdateStrobeFlash()
+        {
+            if (_flashStrength <= 0f) return;
+
+            _flashTime += Time.deltaTime;
+            float remain = 1f - _flashTime / screenFlashDuration;
+            float curve = remain > 0f ? remain * remain * _flashStrength : 0f;
+            if (curve <= 0f) _flashStrength = 0f;
+
+            if (_flashVolume != null) _flashVolume.weight = curve;
+            if (_cameraFlashLight != null)
+            {
+                _cameraFlashLight.enabled = curve > 0f;
+                _cameraFlashLight.intensity = cameraFlashIntensity * curve;
+            }
+        }
+
+        /// <summary>
+        /// 実行時に作った閃光用のプロファイルを破棄する
+        /// </summary>
+        private void OnDestroy()
+        {
+            if (_flashProfile != null) Destroy(_flashProfile);
         }
 
         /// <summary>
@@ -194,6 +316,7 @@ namespace Shinzui.View.Flashlight
         private void LateUpdate()
         {
             UpdateMistFlicker();
+            UpdateStrobeFlash();
 
             // モデル付きのライトは消灯中も視点に追従させる
             if (flashlightModel != null && flashlightLight != null && targetCamera != null)
@@ -205,12 +328,7 @@ namespace Shinzui.View.Flashlight
             if (flashlightLight != null && (flashlightLight.enabled || flashlightModel != null) && targetCamera != null)
             {
                 // 左端の発光位置から画面中央の注視点へ照射する
-                Quaternion targetRotation = targetCamera.transform.rotation;
-                if (useRealisticBeam)
-                {
-                    Vector3 focus = targetCamera.transform.position + targetCamera.transform.forward * beamFocusDistance;
-                    targetRotation = Quaternion.LookRotation(focus - flashlightLight.transform.position, targetCamera.transform.up);
-                }
+                Quaternion targetRotation = GetBeamRotation();
 
                 // キャッシュされている回転とターゲットカメラの回転の角度差を計算
                 float angleDiff = Quaternion.Angle(_currentFollowRotation, targetRotation);
@@ -262,12 +380,47 @@ namespace Shinzui.View.Flashlight
             }
         }
 
+        /// <summary>視線より少し下の注視点へ発光位置から照射する</summary>
+        /// <returns>手振れを含まないライトの向き</returns>
+        private Quaternion GetBeamRotation()
+        {
+            if (!useRealisticBeam) return targetCamera.transform.rotation;
+            Vector3 direction = targetCamera.transform.rotation * Quaternion.Euler(beamDownwardAngle, 0f, 0f) * Vector3.forward;
+            Vector3 focus = targetCamera.transform.position + direction * beamFocusDistance;
+            return Quaternion.LookRotation(focus - flashlightLight.transform.position, targetCamera.transform.up);
+        }
+
+        /// <summary>自分の光源を遮ってはいけない手持ちモデルと一人称の体を列挙する</summary>
+        /// <returns>影を落とさない描画部品</returns>
+        public System.Collections.Generic.IEnumerable<Renderer> GetSelfShadowRenderers()
+        {
+            if (flashlightModel != null)
+                foreach (Renderer renderer in flashlightModel.GetComponentsInChildren<Renderer>(true)) yield return renderer;
+            PlayerView player = GetComponentInParent<PlayerView>();
+            if (player != null)
+                foreach (SkinnedMeshRenderer renderer in player.GetComponentsInChildren<SkinnedMeshRenderer>(true)) yield return renderer;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>再生中の見た目確認だけに電池状態を無視した点灯を設定する</summary>
+        /// <param name="enabled">強制点灯するか</param>
+        public void SetLookDevLightOverride(bool enabled)
+        {
+            _lookDevForceLight = enabled;
+            SetLightActive(enabled);
+            ApplyBeamIntensity();
+        }
+#endif
+
         /// <summary>
         /// ライトのアクティブ状態を切り替える
         /// </summary>
         /// <param name="active">点灯する場合はtrue</param>
         public void SetLightActive(bool active)
         {
+#if UNITY_EDITOR
+            active |= _lookDevForceLight;
+#endif
             if (flashlightLight != null)
             {
                 flashlightLight.enabled = active;
@@ -277,14 +430,14 @@ namespace Shinzui.View.Flashlight
                 if (active && targetCamera != null)
                 {
                     // 点灯開始時に向きをカメラに同期させてワープを防ぐ
-                    _currentFollowRotation = targetCamera.transform.rotation;
+                    _currentFollowRotation = GetBeamRotation();
                     flashlightLight.transform.rotation = _currentFollowRotation;
                 }
 
                 // ボリュメトリックフォグへの寄与状態をライトと同期
                 if (_volumetricLight != null)
                 {
-                    _volumetricLight.enabled = active;
+                    _volumetricLight.affectsVolumetric = enableVolumetric && active;
                 }
             }
         }
@@ -307,14 +460,18 @@ namespace Shinzui.View.Flashlight
             EnsureBaseValuesCached();
             float gain = (useRealisticBeam ? _nearWallGain : 1f) * _mistGain;
 
+            // ストロボは通常光への倍率で強め、照射角も一時的に広げる
             if (flashlightLight != null)
             {
-                flashlightLight.intensity = (_baseIntensity + maxStrobeBoost * _strobeFactor) * gain;
+                float boost = Mathf.Lerp(1f, strobeIntensityMultiplier, _strobeFactor);
+                flashlightLight.intensity = _baseIntensity * boost * gain;
+                flashlightLight.spotAngle = Mathf.Min(_baseSpotAngle + strobeSpotAngleBoost * _strobeFactor, 179f);
             }
 
             if (_volumetricLight != null)
             {
-                _volumetricLight.Scattering = (_baseVolumetricScattering + volumetricScatteringBoost * _strobeFactor) * gain;
+                float boost = Mathf.Lerp(1f, strobeVolumetricMultiplier, _strobeFactor);
+                _volumetricLight.volumetricDimmer = _baseVolumetricScattering * boost * gain;
             }
         }
     }

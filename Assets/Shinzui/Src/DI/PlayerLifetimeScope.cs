@@ -80,6 +80,9 @@ namespace Shinzui.DI
         [Header("SaveSystem")]
         [SerializeField] private SaveController saveController;
 
+        [Header("Stage Result")]
+        [SerializeField] private Shinzui.Infrastructure.StageResultDefinition stageResultDefinition;
+
         /// <summary>
         /// プレイヤーとシーン内の各機能をDIコンテナに登録
         /// </summary>
@@ -133,6 +136,9 @@ namespace Shinzui.DI
             if (viewInstance != null)
             {
                 builder.RegisterComponent(viewInstance);
+
+                // 生成ゴールと同じプレイヤースコープへ結果画面を自動登録する
+                StageResultRegistration.Register(builder, viewInstance, stageResultDefinition);
 
                 // 装備したペンライトの設置をインベントリへ接続する
                 var penlightService = new PenlightPlacementService(

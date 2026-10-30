@@ -26,6 +26,7 @@ namespace Shinzui.View
             public float NoisePhase;
             public bool AttachmentCandidate;
             public bool KeepFixedWhenProjectionMisses;
+            public bool Burned;
         }
 
         [Serializable]
@@ -125,7 +126,16 @@ namespace Shinzui.View
         [SerializeField, Min(0.0f)] private float releaseImpulse = 0.28f;
 
         [Header("Burning")]
+        [Tooltip("燃焼前線が着火点から巣全体へ燃え広がる秒数")]
         [SerializeField, Min(0.1f)] private float burnFadeDuration = 1.35f;
+        [Tooltip("燃焼前線の不規則さ。シェーダーと炎の発生位置で共有する")]
+        [SerializeField, Range(0.0f, 0.5f)] private float burnJitter = 0.09f;
+        [Tooltip("前線で赤熱した糸が焼失するまでの距離")]
+        [SerializeField, Range(0.005f, 0.5f)] private float burnCharWidth = 0.07f;
+        [Tooltip("焼けた糸が熱で縮む割合。周囲の糸が炎へ引き寄せられる")]
+        [SerializeField, Range(0.0f, 0.9f)] private float burnShrink = 0.45f;
+        [Tooltip("支えを失った焼け残りに掛かる重力の倍率")]
+        [SerializeField, Range(0.0f, 1.0f)] private float burnedGravityScale = 0.6f;
 
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
@@ -559,9 +569,19 @@ namespace Shinzui.View
         }
 
         /// <summary>
-        /// 巣全体へ燃焼VFXを広げ、糸を焼失させてGameObjectを破棄する。
+        /// 巣の中心から燃やす
         /// </summary>
         public void Burn()
+        {
+            Vector3 center = _nodes.Length > 0 ? _nodes[0].Position : Vector3.zero;
+            Burn(transform.TransformPoint(center));
+        }
+
+        /// <summary>
+        /// 着火点から糸を伝って燃え広がらせ、焼失後にGameObjectを破棄する
+        /// </summary>
+        /// <param name="worldIgnitionPoint">炎を当てたワールド座標</param>
+        public void Burn(Vector3 worldIgnitionPoint)
         {
             if (_isBurning || !Application.isPlaying)
             {
@@ -569,21 +589,82 @@ namespace Shinzui.View
             }
 
             _isBurning = true;
-            StartCoroutine(BurnRoutine());
+            StartCoroutine(BurnRoutine(transform.InverseTransformPoint(worldIgnitionPoint)));
         }
 
-        private IEnumerator BurnRoutine()
+        /// <summary>
+        /// ワールド座標に最も近い糸上の点を求める
+        /// </summary>
+        /// <param name="worldPosition">基準の座標</param>
+        /// <returns>糸上の最も近い点のワールド座標</returns>
+        public Vector3 GetClosestThreadPoint(Vector3 worldPosition)
+        {
+            Vector3 local = transform.InverseTransformPoint(worldPosition);
+            Vector3 closest = _nodes.Length > 0 ? _nodes[0].Position : Vector3.zero;
+            float closestDistance = float.MaxValue;
+
+            // 描画用の点は放射糸を補間しているため、物理ノードより細かく探せる
+            if (_renderPositions.Length > 0)
+            {
+                foreach (Vector3 point in _renderPositions)
+                {
+                    float distance = (point - local).sqrMagnitude;
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closest = point;
+                    }
+                }
+            }
+            else
+            {
+                foreach (WebNode node in _nodes)
+                {
+                    float distance = (node.Position - local).sqrMagnitude;
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closest = node.Position;
+                    }
+                }
+            }
+
+            return transform.TransformPoint(closest);
+        }
+
+        /// <summary>
+        /// 燃焼前線の揺らぎを求める。SpiderWebシェーダーのBurnJitterと同じ式
+        /// </summary>
+        /// <param name="localPosition">巣のローカル座標</param>
+        /// <returns>-1から1の揺らぎ</returns>
+        public static float BurnJitter(Vector3 localPosition)
+        {
+            return Mathf.Sin(localPosition.x * 7.3f + Mathf.Sin(localPosition.y * 5.1f) * 1.7f) *
+                   Mathf.Sin(localPosition.y * 6.7f + Mathf.Sin(localPosition.x * 4.3f) * 1.3f);
+        }
+
+        private IEnumerator BurnRoutine(Vector3 localOrigin)
         {
             ReleaseAllPlayers();
             DisableInteractionColliders();
 
+            // 糸に沿った標本点を集め、最も遠い糸までの前線の距離を求める
             SpiderWebBurnVfx burnVfx = GetComponent<SpiderWebBurnVfx>();
+            var samples = new List<Vector3>();
+            CollectBurnSamples(samples, burnVfx != null ? burnVfx.SampleSpacing : 0.05f);
+            float farthest = 0.0f;
+            foreach (Vector3 sample in samples)
+            {
+                farthest = Mathf.Max(farthest, Vector3.Distance(sample, localOrigin) + burnJitter);
+            }
+            float endRadius = farthest + burnCharWidth;
+
             if (burnVfx != null)
             {
-                burnVfx.Play(width, height);
+                burnVfx.Play(localOrigin, samples, burnJitter);
             }
 
-            Color startColor = webColor;
+            // 共有マテリアルを汚さないよう複製し、前線の情報をシェーダーへ渡す
             if (_meshRenderer != null && _meshRenderer.sharedMaterial != null)
             {
                 _burnMaterial = new Material(_meshRenderer.sharedMaterial)
@@ -592,27 +673,24 @@ namespace Shinzui.View
                     hideFlags = HideFlags.HideAndDontSave
                 };
                 _meshRenderer.material = _burnMaterial;
-                if (_burnMaterial.HasProperty("_BaseColor"))
-                {
-                    startColor = _burnMaterial.GetColor("_BaseColor");
-                }
+                _burnMaterial.SetVector("_BurnOrigin", localOrigin);
+                _burnMaterial.SetFloat("_BurnJitter", burnJitter);
+                _burnMaterial.SetFloat("_BurnCharWidth", burnCharWidth);
+                _burnMaterial.SetFloat("_BurnRadius", 0.0f);
             }
 
             float elapsed = 0.0f;
             while (elapsed < burnFadeDuration)
             {
                 elapsed += Time.deltaTime;
+
+                // 着火直後は火が糸を這うように遅く、炎が育つにつれて加速する
                 float progress = Mathf.Clamp01(elapsed / burnFadeDuration);
-                Color charred = Color.Lerp(
-                    startColor,
-                    new Color(0.08f, 0.015f, 0.0f, 0.0f),
-                    progress);
-                if (_burnMaterial != null && _burnMaterial.HasProperty("_BaseColor"))
-                {
-                    _burnMaterial.SetColor("_BaseColor", charred);
-                }
+                float radius = endRadius * Mathf.Pow(progress, 1.35f);
+                SetBurnFront(localOrigin, radius, burnVfx);
                 yield return null;
             }
+            SetBurnFront(localOrigin, endRadius, burnVfx);
 
             if (_meshRenderer != null)
             {
@@ -628,6 +706,77 @@ namespace Shinzui.View
             }
 
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// 燃焼前線の半径をシェーダー・VFX・糸の物理へ反映する
+        /// </summary>
+        /// <param name="localOrigin">巣のローカル座標での着火点</param>
+        /// <param name="radius">前線の半径</param>
+        /// <param name="burnVfx">燃焼VFX</param>
+        private void SetBurnFront(Vector3 localOrigin, float radius, SpiderWebBurnVfx burnVfx)
+        {
+            if (_burnMaterial != null)
+            {
+                _burnMaterial.SetFloat("_BurnRadius", radius);
+            }
+            if (burnVfx != null)
+            {
+                burnVfx.UpdateFront(radius);
+            }
+
+            // 前線が通過したノードは支えを失い、そこへつながる糸は熱で縮んで周囲を引き寄せる
+            for (int i = 0; i < _nodes.Length; i++)
+            {
+                WebNode node = _nodes[i];
+                if (node.Burned ||
+                    Vector3.Distance(node.Position, localOrigin) + BurnJitter(node.Position) * burnJitter > radius)
+                {
+                    continue;
+                }
+
+                node.Burned = true;
+                node.InverseMass = 1.0f;
+                _nodes[i] = node;
+                for (int c = 0; c < _constraints.Length; c++)
+                {
+                    WebConstraint constraint = _constraints[c];
+                    if (constraint.A == i || constraint.B == i)
+                    {
+                        constraint.RestLength *= 1.0f - burnShrink;
+                        _constraints[c] = constraint;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 描画中の糸に沿って一定間隔の標本点を集める
+        /// </summary>
+        /// <param name="samples">巣のローカル座標の格納先</param>
+        /// <param name="spacing">標本点の間隔</param>
+        private void CollectBurnSamples(List<Vector3> samples, float spacing)
+        {
+            if (_renderPositions.Length == 0)
+            {
+                foreach (WebNode node in _nodes)
+                {
+                    samples.Add(node.Position);
+                }
+                return;
+            }
+
+            // 途中で切れた糸は描画される範囲だけを燃やす
+            foreach (RenderStrand strand in _renderStrands)
+            {
+                Vector3 a = _renderPositions[strand.A];
+                Vector3 b = Vector3.Lerp(a, _renderPositions[strand.B], strand.EndFraction);
+                int count = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(a, b) / Mathf.Max(0.005f, spacing)));
+                for (int i = 0; i < count; i++)
+                {
+                    samples.Add(Vector3.Lerp(a, b, (i + 0.5f) / count));
+                }
+            }
         }
 
         private void DisableInteractionColliders()
@@ -1409,7 +1558,7 @@ namespace Shinzui.View
                 Vector3 velocity = (node.Position - node.PreviousPosition) * damping;
                 node.PreviousPosition = node.Position;
                 float noise = Mathf.Sin(time * ambientFrequency + node.NoisePhase);
-                Vector3 acceleration = localGravity * gravityScale;
+                Vector3 acceleration = localGravity * (node.Burned ? burnedGravityScale : gravityScale);
                 acceleration.z += noise * ambientMotion;
                 node.Position += velocity + acceleration * deltaTimeSquared;
                 _nodes[i] = node;

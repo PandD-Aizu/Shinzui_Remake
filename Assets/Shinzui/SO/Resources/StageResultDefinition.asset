@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 271b0b0fe25c4a27a16d3a89b09ec786, type: 3}
+  m_Name: StageResultDefinition
+  m_EditorClassIdentifier:
+  stageDisplayName: トンネル - 通常
+  medals:
+  - Name: 時間メダル1
+    ConditionText: 15分以内にクリア
+    Points: 3
+    Metric: 0
+    Threshold: 900
+    AtLeast: 0
+  - Name: 時間メダル2
+    ConditionText: 10分以内にクリア
+    Points: 3
+    Metric: 0
+    Threshold: 600
+    AtLeast: 0
+  - Name: 隠密メダル1
+    ConditionText: 徘徊者の追跡を3回以下に抑えてクリア
+    Points: 3
+    Metric: 1
+    Threshold: 3
+    AtLeast: 0
+  - Name: 隠密メダル2
+    ConditionText: 一度も追跡されずにクリア
+    Points: 4
+    Metric: 1
+    Threshold: 0
+    AtLeast: 0
+  - Name: 不屈メダル
+    ConditionText: 身代わりを使わずにクリア
+    Points: 2
+    Metric: 2
+    Threshold: 0
+    AtLeast: 0
+  - Name: 探索メダル
+    ConditionText: アイテムを5個以上入手する
+    Points: 2
+    Metric: 3
+    Threshold: 5
+    AtLeast: 1
+  sThreshold: 0.9
+  aThreshold: 0.7
+  bThreshold: 0.45

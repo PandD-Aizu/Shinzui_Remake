@@ -51,6 +51,7 @@ namespace Shinzui.View
         private Transform _player;
         private PlayerBodyView _body;
         private PlayerView _playerView;
+        private PenlightPlacementView _penlight;
         private Vector3 _localVelocity;
         private Vector3 _previousLocalVelocity;
         private Vector3 _localAcceleration;
@@ -164,7 +165,10 @@ namespace Shinzui.View
             // 基準視点へ取得姿勢の移動量だけ加え、照準の回転と追従先は維持
             // 前フレームに確定した骨格を参照し、カメラ移動をしゃがみ判定へ逆流させない
             if (_body == null) _body = _player.GetComponentInChildren<PlayerBodyView>();
-            if (_body != null && _playerView != null && !_playerView.IsCinematicControlled)
+            if (_penlight == null) _penlight = _player.GetComponent<PenlightPlacementView>();
+            // ペンライト設置は演出制御中でも前傾に視点を追従させ、首の切り口や胴体を映さない
+            bool placing = _penlight != null && _penlight.IsPlaying;
+            if (_body != null && _playerView != null && (!_playerView.IsCinematicControlled || placing))
                 state.PositionCorrection += _body.PickupEyeOffset;
 
             if (deltaTime < 0.0f)

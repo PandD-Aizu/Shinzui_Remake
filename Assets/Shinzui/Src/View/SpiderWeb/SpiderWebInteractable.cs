@@ -18,10 +18,32 @@ namespace Shinzui.View
 
         public override void ExecuteInteractEffect()
         {
+            ExecuteInteractEffect(null);
+        }
+
+        /// <summary>
+        /// プレイヤーがマッチを擦って巣へ近づける演出を再生し、触れた糸から燃やす
+        /// 演出できない場合は巣の中心から直接燃やす
+        /// </summary>
+        /// <param name="actor">操作したプレイヤー</param>
+        public override void ExecuteInteractEffect(PlayerView actor)
+        {
             CanInteract = false;
 
             SpiderWeb spiderWeb = GetComponent<SpiderWeb>();
-            if (spiderWeb != null)
+            if (spiderWeb == null)
+            {
+                return;
+            }
+
+            // マッチ演出はプレイヤー側に必要になった時点で追加する
+            MatchIgnitionView match = null;
+            if (actor != null && !actor.TryGetComponent(out match))
+            {
+                match = actor.gameObject.AddComponent<MatchIgnitionView>();
+            }
+
+            if (match == null || !match.Play(spiderWeb))
             {
                 spiderWeb.Burn();
             }

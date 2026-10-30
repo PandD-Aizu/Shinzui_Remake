@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
@@ -58,6 +59,7 @@ namespace Shinzui.View.GenerateTunnel
         private bool _warpCorridorTemplateLongAxisIsX;
         private TunnelGenerator _generator;
         private GameObject _ceilingLightPrefab;
+        private GameObject _fluorescentLightPrefab;
 
         [Header("Ceiling Light Shadows")]
         [SerializeField, Min(0f)] private float ceilingShadowDistance = 15f;
@@ -66,12 +68,24 @@ namespace Shinzui.View.GenerateTunnel
         private readonly int[] _nearestShadowLights = new int[16];
         private readonly float[] _nearestShadowDistances = new float[16];
 
-        /// <summary>
-        /// カメラに近い蛍光灯だけ影を描画し、照明自体は遠方でも維持する
-        /// </summary>
-        private void LateUpdate()
+        /// <summary>ポータルの同期描画要求にも影予算を適用する</summary>
+        private void OnEnable()
         {
-            Camera camera = Camera.main;
+            RenderPipelineManager.beginCameraRendering += OnLookCameraRendering;
+        }
+
+        /// <summary>カリング前に描画先の視点へ影を割り当てる</summary>
+        /// <param name="context">描画コンテキスト</param>
+        /// <param name="camera">描画するカメラ</param>
+        private void OnLookCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            UpdateCeilingShadows(camera);
+        }
+
+        /// <summary>各描画カメラの近傍へ同じ影予算を適用する</summary>
+        /// <param name="camera">主視点またはポータル視点</param>
+        private void UpdateCeilingShadows(Camera camera)
+        {
             int budget = camera != null ? Mathf.Clamp(maxCeilingShadowLights, 0, 16) : 0;
             float distanceLimit = Mathf.Max(0f, ceilingShadowDistance);
             Vector3 cameraPosition = camera != null ? camera.transform.position : Vector3.zero;
@@ -122,6 +136,7 @@ namespace Shinzui.View.GenerateTunnel
         /// </summary>
         private void OnDisable()
         {
+            RenderPipelineManager.beginCameraRendering -= OnLookCameraRendering;
             foreach (var entry in _ceilingLights)
             {
                 if (entry.light == null) continue;
@@ -300,6 +315,7 @@ namespace Shinzui.View.GenerateTunnel
             GeometryClearing?.Invoke();
             ReleaseGeneratedMeshes();
             _ceilingLights.Clear();
+            PrepareTunnelLook();
             EnsureMapRoot();
             CreateMaterials();
             FindTemplates();
@@ -385,7 +401,7 @@ namespace Shinzui.View.GenerateTunnel
                 if (!FitTunnelConnections(model.transform, root, length, corridorWidth))
                     model.transform.localScale = GetTunnelModelScale(length, standardTunnelLength);
 
-                if (isSpecial)
+                if (isSpecial && showDebugGeometry)
                 {
                     foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                     {
@@ -405,7 +421,8 @@ namespace Shinzui.View.GenerateTunnel
                 CreateStageBox(root, "Right Wall", new Vector3(width * 0.5f, height * 0.5f, 0.0f), new Vector3(ShellThickness, height, length), shellMaterial);
             }
 
-            CreateCeilingLights(root, length, height);
+            if (!isSpecial || !showDebugGeometry) ApplyLookSurfaces(root.gameObject);
+            CreateCeilingLights(root, length, height, mainTunnel: true);
             return root;
         }
 
@@ -583,6 +600,8 @@ namespace Shinzui.View.GenerateTunnel
                 CreateStageBox(room, "Walkable Room Floor", Vector3.zero, new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
             }
 
+            ApplyLookSurfaces(room.gameObject);
+            RegisterLookSection(room, roomLength, tunnelHeight);
             return info;
         }
 
@@ -629,7 +648,12 @@ namespace Shinzui.View.GenerateTunnel
             camera.farClipPlane = Mathf.Max(camera.farClipPlane, boundsSize.magnitude * 3.0f);
         }
 
-        public void NotifyGeometryReady() => GeometryReady?.Invoke(_geometryRoot);
+        /// <summary>構造物の生成完了後に湿気を配置して利用側へ通知する</summary>
+        public void NotifyGeometryReady()
+        {
+            BuildTunnelWeathering();
+            GeometryReady?.Invoke(_geometryRoot);
+        }
 
         private void FindTemplates()
         {
@@ -808,7 +832,7 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// 通路上部の右側内面を測定してLED照明を一定間隔で配置する
+        /// 大型トンネルは中央の蛍光灯を配置し側道は左右交互のLED照明を維持する
         /// </summary>
         /// <param name="passage">配置先のトンネルまたは廊下</param>
         /// <param name="length">通路の長さ</param>
@@ -817,25 +841,49 @@ namespace Shinzui.View.GenerateTunnel
         /// <param name="floorOffset">床の補正高</param>
         /// <param name="slopeStartZ">平坦な踊り場の終端</param>
         /// <param name="slopeExitSign">接続先の階層へ向かう端の符号</param>
+        /// <param name="mainTunnel">SaveStageと同じ中央配置の蛍光灯を使用するか</param>
         private void CreateCeilingLights(Transform passage, float length, float height, float slope = 0.0f,
-            float floorOffset = 0.0f, float? slopeStartZ = null, int slopeExitSign = 0)
+            float floorOffset = 0.0f, float? slopeStartZ = null, int slopeExitSign = 0, bool mainTunnel = false)
         {
+            RegisterLookSection(passage, length, height);
             // 共通プレハブを再利用し、短い通路でも器具が端からはみ出さないようにする
             if (_ceilingLightPrefab == null)
             {
                 _ceilingLightPrefab = Resources.Load<GameObject>("TunnelLEDLight");
             }
 
+            if (mainTunnel && _fluorescentLightPrefab == null)
+                _fluorescentLightPrefab = Resources.Load<GameObject>("TunnelFluorescentLight");
+            GameObject prefab = mainTunnel ? _fluorescentLightPrefab : _ceilingLightPrefab;
             const float endMargin = 0.8f;
-            if (_ceilingLightPrefab == null || length < endMargin * 2.0f) return;
+            if (prefab == null)
+            {
+                Debug.LogWarning($"Tunnel fixtures skipped: {passage.name}, missing Resources/{(mainTunnel ? "TunnelFluorescentLight" : "TunnelLEDLight")}.prefab");
+                return;
+            }
+            if (length < endMargin * 2.0f) return;
 
-            float spacing = _generator != null ? _generator.CeilingLightSpacing : 5.0f;
+            float spacing = mainTunnel
+                ? (_generator != null ? _generator.MainTunnelLightSpacing : 5f)
+                : (_generator != null ? _generator.CeilingLightSpacing : 12f);
             int count = Mathf.FloorToInt((length - endMargin * 2.0f) / spacing) + 1;
             float start = -(count - 1) * spacing * 0.5f;
+            bool loop = TryGetLookLoop(passage, out float loopMin, out float loopMax);
+            if (loop)
+            {
+                /* 中央配置は整数台数へ合わせ左右交互の側道だけ偶数台数を維持する */
+                count = mainTunnel
+                    ? Mathf.Max(1, Mathf.RoundToInt((loopMax - loopMin) / spacing))
+                    : Mathf.Max(2, Mathf.RoundToInt((loopMax - loopMin) / (spacing * 2f)) * 2);
+                spacing = (loopMax - loopMin) / count;
+                start = loopMin + spacing * 0.5f;
+            }
+            int periodicImages = 0, placed = 0, missed = 0;
             Collider[] surfaces = passage.GetComponentsInChildren<Collider>(false);
             Physics.SyncTransforms();
 
-            // 上部から右側だけを測定し、実際の壁面へ取り付ける
+            /* 区間ごとの開始側をシードで決めて台数を増やさず左右へ交互に配置する */
+            int firstSide = (LookSeed(passage, 5917) & 1) == 0 ? 1 : -1;
             var lightRoot = new GameObject("Ceiling Lights").transform;
             lightRoot.SetParent(passage, false);
             for (int i = 0; i < count; i++)
@@ -845,8 +893,10 @@ namespace Shinzui.View.GenerateTunnel
                 float rise = slopeStartZ.HasValue
                     ? slope * exitSign * Mathf.Max(0.0f, exitSign * (localZ - slopeStartZ.Value))
                     : slope * localZ;
-                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, height * 0.8f + floorOffset + rise, localZ));
-                var ray = new Ray(origin, passage.right);
+                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, height * (mainTunnel ? 0.5f : 0.8f) + floorOffset + rise, localZ));
+                /* 中央から天井へ測定しモデルの公称寸法に依存せず実際の内面へ吊るす */
+                Vector3 mountingDirection = mainTunnel ? passage.up : passage.right * (i % 2 == 0 ? firstSide : -firstSide);
+                var ray = new Ray(origin, mountingDirection);
                 float distance = Mathf.Infinity;
                 Vector3 ceiling = default;
                 Vector3 inwardNormal = default;
@@ -854,7 +904,7 @@ namespace Shinzui.View.GenerateTunnel
                 {
                     if (surface.isTrigger || !surface.enabled) continue;
                     if (surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height * 4.0f, 10.0f) * passage.lossyScale.x)
-                        && hit.distance < distance && Vector3.Dot(hit.normal, passage.right) < -0.1f)
+                        && hit.distance < distance && Vector3.Dot(hit.normal, mountingDirection) < -0.1f)
                     {
                         distance = hit.distance;
                         ceiling = hit.point;
@@ -862,22 +912,55 @@ namespace Shinzui.View.GenerateTunnel
                     }
                 }
 
-                if (float.IsPositiveInfinity(distance)) continue;
+                if (float.IsPositiveInfinity(distance))
+                {
+                    missed++;
+                    Debug.LogWarning($"Tunnel fixture mounting skipped: {passage.name}, index={i}, localZ={localZ:F2}, no ceiling/wall collider hit");
+                    continue;
+                }
 
-                // 長辺を通路方向に揃え、発光面を壁から通路内へ向ける
-                GameObject light = Instantiate(_ceilingLightPrefab, lightRoot, false);
-                light.name = $"LED Light {i + 1:00}";
+                /* プレハブの管の寸法と向きを保ち取付面へ器具の上面を合わせる */
+                GameObject light = Instantiate(prefab, lightRoot, false);
+                light.name = $"{(mainTunnel ? "Fluorescent" : "LED")} Light {i + 1:00}";
+                if (mainTunnel)
+                {
+                    Vector3 scale = lightRoot.lossyScale;
+                    light.transform.localScale = new Vector3(1f / scale.x, 1f / scale.y, 1f / scale.z);
+                }
+                placed++;
                 light.transform.position = ceiling + inwardNormal * 0.02f;
                 light.transform.rotation = Quaternion.LookRotation(
                     Vector3.ProjectOnPlane(passage.forward, inwardNormal), -inwardNormal);
 
-                // 生成したLED照明のみを影予算の対象にし、懐中電灯は変更しない
+                ConfigureLookFixture(light, passage, i, spacing);
+                if (i < 2) Debug.Log($"Tunnel fixture layout: {passage.name} / {light.name}, layout={(mainTunnel ? "crown centreline" : "staggered")}, mounting={ceiling}, spacing={spacing:F2}m, count={count}");
+                /* 生成した常設照明だけを既存の影予算へ登録する */
                 foreach (Light source in light.GetComponentsInChildren<Light>(true))
                 {
+                    if (Shinzui.Infrastructure.Lighting.TunnelLookLighting.IsCeilingBounce(source)) continue;
                     _ceilingLights.Add((source, source.shadows, source.shadowStrength));
                     source.shadows = LightShadows.None;
                 }
+                if (loop)
+                {
+                    float reach = 0f;
+                    foreach (Light source in light.GetComponentsInChildren<Light>(true)) reach = Mathf.Max(reach, source.range);
+                    Vector3 period = passage.TransformVector(Vector3.forward * (loopMax - loopMin));
+                    float zScale = passage.TransformVector(Vector3.forward).magnitude;
+                    if ((localZ - loopMin) * zScale < reach)
+                    {
+                        CreateLookFixtureImage(light, passage, i, period);
+                        periodicImages++;
+                    }
+                    if ((loopMax - localZ) * zScale < reach)
+                    {
+                        CreateLookFixtureImage(light, passage, i, -period);
+                        periodicImages++;
+                    }
+                }
             }
+            Debug.Log($"Tunnel fixture summary: {passage.name}, prefab={prefab.name}, placed={placed}, mounting skipped={missed}, spacing={spacing:F2}m, periodic images={periodicImages}");
+            if (loop) Debug.Log($"Tunnel periodic lighting: {passage.name}, period={loopMax - loopMin:F2}m, fixtures={count}, spacing={spacing:F2}m, boundary images={periodicImages}, shared fault seeds/absolute flicker clock, shadow budget={maxCeilingShadowLights} per camera");
         }
 
         /// <summary>
@@ -886,6 +969,7 @@ namespace Shinzui.View.GenerateTunnel
         /// <param name="model">生成した廊下モデル</param>
         private void ApplyTunnelPassageMaterial(GameObject model)
         {
+            if (ApplyLookSurfaces(model)) return;
             // 出口と共通のマテリアルを参照して外観を揃える
             Transform exit = _tunnelPrefab != null ? _tunnelPrefab.transform.Find(ExitPathNames[1]) : null;
             Renderer source = exit != null ? exit.GetComponentInChildren<Renderer>(true) : null;
@@ -950,9 +1034,15 @@ namespace Shinzui.View.GenerateTunnel
                 new Vector3(corridorWidth * 1.1f, tunnelHeight, backstopThickness));
         }
 
+        /// <summary>
+        /// 指定色のHDRPマテリアルを生成する
+        /// </summary>
+        /// <param name="materialName">マテリアル名</param>
+        /// <param name="color">表示色</param>
+        /// <returns>生成したマテリアル</returns>
         private static Material CreateMaterial(string materialName, Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Shader shader = Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
             var material = new Material(shader) { name = materialName, color = color };
             return material;
         }

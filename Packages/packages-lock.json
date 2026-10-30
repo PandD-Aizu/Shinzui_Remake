@@ -28,12 +28,6 @@
       },
       "hash": "c21bf496bca87d54e75bad048563c3adb1782081"
     },
-    "com.cqf.urpvolumetricfog": {
-      "version": "file:com.cqf.urpvolumetricfog",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "com.cysharp.r3": {
       "version": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
       "depth": 0,
@@ -234,17 +228,22 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       }
     },
-    "com.unity.render-pipelines.universal": {
+    "com.unity.render-pipelines.high-definition": {
       "version": "17.5.0",
       "depth": 0,
       "source": "builtin",
       "dependencies": {
+        "com.unity.modules.video": "1.0.0",
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
         "com.unity.render-pipelines.core": "17.5.0",
         "com.unity.shadergraph": "17.5.0",
-        "com.unity.render-pipelines.universal-config": "17.5.0"
+        "com.unity.visualeffectgraph": "17.5.0",
+        "com.unity.render-pipelines.high-definition-config": "17.5.0"
       }
     },
-    "com.unity.render-pipelines.universal-config": {
+    "com.unity.render-pipelines.high-definition-config": {
       "version": "17.5.0",
       "depth": 1,
       "source": "builtin",
@@ -386,6 +385,12 @@
       "source": "builtin",
       "dependencies": {}
     },
+    "com.unity.modules.amd": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.modules.androidjni": {
       "version": "1.0.0",
       "depth": 0,
@@ -448,6 +453,12 @@
       "dependencies": {}
     },
     "com.unity.modules.jsonserialize": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.nvidia": {
       "version": "1.0.0",
       "depth": 0,
       "source": "builtin",

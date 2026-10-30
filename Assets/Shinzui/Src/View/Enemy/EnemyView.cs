@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.View
 {
@@ -16,6 +17,46 @@ namespace Shinzui.View
 
         [Header("References")]
         [SerializeField] private NavMeshAgent agentOverride;
+
+        [Header("Initial Placement")]
+        [SerializeField] private bool spawnFarthestFromPlayer;
+        private bool _initialPlacementComplete;
+
+        /// <summary>移動可能なNavMesh上でプレイヤーから最も遠い位置へ一度だけ配置する</summary>
+        /// <param name="playerPosition">ステージ開始時のプレイヤー位置</param>
+        /// <returns>初期配置が完了したか</returns>
+        public bool TryCompleteInitialPlacement(Vector3 playerPosition)
+        {
+            if (!spawnFarthestFromPlayer || _initialPlacementComplete) return true;
+
+            // 生成後のNavMeshとプレイヤーの接続地点が揃うまで待つ
+            NavMeshAgent agent = ResolveAgent();
+            if (agent == null || !agent.isActiveAndEnabled) return false;
+            var filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = agent.areaMask };
+            if (!NavMesh.SamplePosition(playerPosition, out var origin, 3f, filter)) return false;
+
+            // 直線距離を比較し、プレイヤーまで完全な経路がある最遠の頂点を選ぶ
+            var path = new NavMeshPath();
+            Vector3 farthest = default;
+            float farthestDistance = -1f;
+            foreach (Vector3 vertex in NavMesh.CalculateTriangulation().vertices)
+            {
+                if (!NavMesh.SamplePosition(vertex, out var hit, .1f, filter)) continue;
+                float distance = (hit.position - playerPosition).sqrMagnitude;
+                if (distance <= farthestDistance) continue;
+                if (!NavMesh.CalculatePath(hit.position, origin.position, filter, path)
+                    || path.status != NavMeshPathStatus.PathComplete) continue;
+
+                farthest = hit.position;
+                farthestDistance = distance;
+            }
+
+            // Agentの内部位置も更新してから通常AIへ制御を渡す
+            if (farthestDistance < 0f || !agent.Warp(farthest)) return false;
+            agent.ResetPath();
+            _initialPlacementComplete = true;
+            return true;
+        }
 
         private float _gizmoChaseDistance = -1.0f;
         private readonly Plane[] _visibilityPlanes = new Plane[6];
@@ -69,16 +110,11 @@ namespace Shinzui.View
                     float opacity = material.HasProperty("_Opacity") ? material.GetFloat("_Opacity") : 1f;
                     _fadeMaterials.Add((material, color, opacity));
 
-                    // URPの不透明マテリアルをアルファブレンドへ切り替える
-                    if (!material.HasProperty("_Surface")) continue;
-                    material.SetFloat("_Surface", 1f);
-                    material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                    material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                    material.SetFloat("_ZWrite", 0f);
-                    material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-                    material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                    material.SetOverrideTag("RenderType", "Transparent");
-                    material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                    /* HDRPの表面設定を検証して透明フェードへ切り替える */
+                    if (!material.HasProperty("_SurfaceType")) continue;
+                    HDMaterial.SetSurfaceType(material, true);
+                    material.SetFloat("_BlendMode", 0f);
+                    HDMaterial.ValidateMaterial(material);
                     material.SetShaderPassEnabled("ShadowCaster", false);
                 }
             }

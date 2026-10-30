@@ -15,24 +15,23 @@ Shader "Shinzui/BlackHoleLens"
 
     SubShader
     {
-        // One field for both eyes avoids overlapping quads erasing each other's rings.
-        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Transparent-10" "RenderType" = "Transparent" }
+        Tags { "RenderPipeline" = "HDRenderPipeline" "Queue" = "Transparent-10" "RenderType" = "Transparent" }
         Pass
         {
             Name "SurroundingGravitationalLens"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "ForwardOnly" }
             Cull Back
             ZWrite Off
             ZTest LEqual
             Blend One OneMinusSrcAlpha
 
             HLSLPROGRAM
-            #pragma target 3.5
+            #pragma target 4.5
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_instancing
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+            #include "HdrpObjectCommon.hlsl"
+
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _LensSize, _EyeA, _EyeB;
@@ -53,6 +52,9 @@ Shader "Shinzui/BlackHoleLens"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
+            /// <summary>頂点を画面座標へ変換する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             Varyings Vert(Attributes input)
             {
                 Varyings output;
@@ -64,22 +66,28 @@ Shader "Shinzui/BlackHoleLens"
                 return output;
             }
 
+            /// <summary>眼へ引き込む歪み量を求める</summary>
+            /// <param name="planePoint">評価に用いる入力値</param>
+            /// <param name="eye">評価に用いる入力値</param>
+            /// <param name="direction">評価に用いる入力値</param>
+            /// <param name="coverage">出力する被覆率</param>
+            /// <returns>変換または評価した値</returns>
             float2 PullField(float2 planePoint, float4 eye, float direction, out float coverage)
             {
                 float2 delta = planePoint - eye.xy;
                 float radius = max(eye.z * _RadiusScale, 0.001);
                 float radial = length(delta) / radius;
                 float falloff = saturate(1.0 - radial);
-                // Increasing time sends each pressure crest from the outside toward the eye.
                 float wave = radial * 14.0 + _Time.y * _FlowSpeed * 3.0 + eye.w;
                 float suction = _PullStrength * falloff * falloff * (1.0 + _PulseStrength * sin(wave));
                 float twist = direction * _TwistStrength * (0.8 + 0.2 * cos(wave + eye.w));
                 coverage = 1.0 - smoothstep(0.55, 1.0, radial);
-                // Sample farther OUT from the eye so scene features appear pulled IN.
-                // Sampling toward the centre would instead make the eye bulge outwards.
                 return suction * (delta + float2(-delta.y, delta.x) * twist);
             }
 
+            /// <summary>平面座標から画面UVへ投影する</summary>
+            /// <param name="planePoint">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             float2 PlaneToScreenUV(float2 planePoint)
             {
                 float4 clipPosition = TransformObjectToHClip(float3(planePoint / _LensSize.xy, 0));
@@ -87,24 +95,24 @@ Shader "Shinzui/BlackHoleLens"
                 return screenPosition.xy / max(screenPosition.w, 0.0001);
             }
 
+            /// <summary>画素の色と被覆率を評価する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                if (_CameraOpaqueTexture_TexelSize.z <= 16.0) return 0;
+                if (_ScreenSize.x <= 16.0) return 0;
                 float coverageA, coverageB;
                 float2 offset = PullField(input.planePosition, _EyeA, 1.0, coverageA);
                 offset += PullField(input.planePosition, _EyeB, -1.0, coverageB);
-                // Project displacement from the actual eye plane. Its apparent size scales
-                // with distance, camera FOV, perspective, and render resolution.
-                float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                float2 screenUV = (input.positionCS.xy * _ScreenSize.zw);
                 float2 warpedUV = screenUV + PlaneToScreenUV(input.planePosition + offset) - PlaneToScreenUV(input.planePosition);
-                float2 margin = _CameraOpaqueTexture_TexelSize.xy * 0.5;
-                half3 scene = SampleSceneColor(clamp(warpedUV, margin, 1.0 - margin));
+                float2 margin = _ScreenSize.zw * 0.5;
+                half3 scene = SampleCameraColor(clamp(warpedUV, margin, 1.0 - margin));
                 float2 edgeDistance = abs(input.planePosition / _LensSize.xy) * 2.0;
                 float edge = 1.0 - smoothstep(0.88, 1.0, max(edgeDistance.x, edgeDistance.y));
                 half alpha = max(coverageA, coverageB) * edge * _Opacity;
-                // The scene copy already includes fog; applying fog again creates a halo.
                 return half4(scene * alpha, alpha);
             }
             ENDHLSL

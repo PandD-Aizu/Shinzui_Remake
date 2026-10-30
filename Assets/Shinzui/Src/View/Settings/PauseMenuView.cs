@@ -15,9 +15,11 @@ namespace Shinzui.View.Settings
     public sealed class PauseMenuView : MonoBehaviour
     {
         [SerializeField] private TMP_FontAsset font;
+        public TMP_FontAsset Font => font;
         private GameObject _overlay;
         private GameObject _menu;
         private GameObject _options;
+        private UnityEngine.UI.Button _graphicsButton;
         private UnityEngine.UI.Button _resume;
         private UnityEngine.UI.Button _optionButton;
         private readonly List<Behaviour> _cameraInputs = new();
@@ -31,11 +33,13 @@ namespace Shinzui.View.Settings
 
         public event Action OptionsOpened;
         public event Action OptionsClosed;
+        public event Action GraphicsOpened;
         public event Action TitleRequested;
         public bool IsPaused { get; private set; }
         public bool IsBusy { get; set; }
         public UnityEngine.UI.Slider[] Sliders { get; private set; }
         public UnityEngine.UI.Toggle CenterDot { get; private set; }
+        public GraphicsOptionsView Graphics { get; private set; }
 
         /// <summary>画面全体を覆うメニューと設定パネルを構築する</summary>
         private void Awake()
@@ -80,7 +84,13 @@ namespace Shinzui.View.Settings
             for (int i = 0; i < labels.Length; i++)
                 Sliders[i] = Slider(labels[i], 300 - i * 66, i == 4 || i == 5, i);
             CenterDot = Toggle("中央のドットを表示", 300 - labels.Length * 66);
-            Button(_options.transform, "もどる", -250, 960, CloseOptions);
+            _graphicsButton = Button(_options.transform, "グラフィック設定  ›", 300 - (labels.Length + 1) * 66, 960, OpenGraphics);
+            Button(_options.transform, "もどる", -310, 960, CloseOptions);
+
+            // プリセットと個別項目を切り替えるグラフィック設定画面
+            Graphics = GraphicsOptionsView.Create(overlay, font, new Vector2(160f, 20f));
+            Graphics.BackRequested += CloseGraphics;
+            Graphics.gameObject.SetActive(false);
             _overlay.SetActive(false);
         }
 
@@ -95,6 +105,7 @@ namespace Shinzui.View.Settings
 
             if (IsBusy || Keyboard.current?.escapeKey.wasPressedThisFrame != true) return;
             if (!IsPaused) Pause();
+            else if (Graphics.gameObject.activeSelf) CloseGraphics();
             else if (_options.activeSelf) CloseOptions();
             else Resume();
         }
@@ -137,6 +148,7 @@ namespace Shinzui.View.Settings
             Time.timeScale = 0f;
             _overlay.SetActive(true);
             _options.SetActive(false);
+            Graphics.gameObject.SetActive(false);
             _menu.SetActive(true);
             _resume.Select();
             Cursor.lockState = CursorLockMode.None;
@@ -147,6 +159,7 @@ namespace Shinzui.View.Settings
         public void Resume()
         {
             if (!IsPaused || IsBusy || _resumeFrame >= 0) return;
+            if (Graphics.gameObject.activeSelf) CloseGraphics();
             if (_options.activeSelf) CloseOptions();
             _overlay.SetActive(false);
             _resumeFrame = Time.frameCount;
@@ -170,6 +183,25 @@ namespace Shinzui.View.Settings
             _options.SetActive(false);
             _menu.SetActive(true);
             _optionButton.Select();
+        }
+
+        /// <summary>設定一覧からグラフィック設定画面へ切り替える</summary>
+        private void OpenGraphics()
+        {
+            if (IsBusy) return;
+            _options.SetActive(false);
+            Graphics.gameObject.SetActive(true);
+            GraphicsOpened?.Invoke();
+            Graphics.Focus();
+        }
+
+        /// <summary>グラフィック設定画面から設定一覧へ戻る</summary>
+        private void CloseGraphics()
+        {
+            if (IsBusy) return;
+            Graphics.gameObject.SetActive(false);
+            _options.SetActive(true);
+            _graphicsButton.Select();
         }
 
         /// <summary>ゲームの時間、カメラ入力、カーソルを元に戻す</summary>
@@ -360,7 +392,7 @@ namespace Shinzui.View.Settings
             rule.rectTransform.anchoredPosition = new Vector2(0f, 96f);
 
             // キー名を明るく、操作名を控えめに表示する
-            var hint = Label(parent, "Enter  <color=#85807A>決定</color>      Esc  <color=#85807A>戻る</color>", Vector2.zero, new Vector2(800, 60), 24);
+            var hint = Label(parent, "←→  <color=#85807A>変更</color>      Enter  <color=#85807A>決定</color>      Esc  <color=#85807A>戻る</color>", Vector2.zero, new Vector2(800, 60), 24);
             var rect = hint.rectTransform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0f);
             rect.anchoredPosition = new Vector2(-160f, 30f);

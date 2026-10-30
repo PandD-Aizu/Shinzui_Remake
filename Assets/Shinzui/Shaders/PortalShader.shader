@@ -6,17 +6,21 @@ Shader "Custom/PortalShader"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
+        Tags { "Queue"="Transparent-99" "RenderType"="Opaque" "RenderPipeline"="HDRenderPipeline" }
         LOD 100
 
         Pass
         {
             Name "Unlit"
+            Tags { "LightMode" = "ForwardOnly" }
+            /* HDRP 17.5の透過描画後のTAA除外ビット */
+            Stencil { Ref 2 WriteMask 2 Comp Always Pass Replace }
             HLSLPROGRAM
+            #pragma target 4.5
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "HdrpObjectCommon.hlsl"
 
             struct Attributes
             {
@@ -32,19 +36,26 @@ Shader "Custom/PortalShader"
             Texture2D _BaseMap;
             SamplerState sampler_BaseMap;
 
+            /// <summary>頂点を画面座標へ変換する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             Varyings vert(Attributes input)
             {
                 Varyings output = (Varyings)0;
-                VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
-                output.positionCS = vertexInput.positionCS;
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
                 output.screenPos = ComputeScreenPos(output.positionCS);
                 return output;
             }
 
+            /// <summary>画素の色を評価する</summary>
+            /// <param name="input">評価に用いる入力値</param>
+            /// <returns>変換または評価した値</returns>
             half4 frag(Varyings input) : SV_Target
             {
                 float2 uv = input.screenPos.xy / input.screenPos.w;
                 half4 col = _BaseMap.Sample(sampler_BaseMap, uv);
+                /* メインカメラの前露出空間へ合わせてから共通のトーンマップへ渡す */
+                col.rgb *= GetCurrentExposureMultiplier();
                 return col;
             }
             ENDHLSL

@@ -15,6 +15,10 @@ namespace Shinzui.Domain.Entities.Flashlight
         private readonly ReactiveProperty<float> _strobeIntensity = new(0f);
         public ReadOnlyReactiveProperty<float> StrobeIntensity => _strobeIntensity;
 
+        // ストロボに使える電池残量 (0.0 〜 1.0)
+        private readonly ReactiveProperty<float> _strobeEnergy = new(1f);
+        public ReadOnlyReactiveProperty<float> StrobeEnergy => _strobeEnergy;
+
         public FlashlightEntity(bool initialOn = false)
         {
             _isOn.Value = initialOn;
@@ -50,6 +54,27 @@ namespace Shinzui.Domain.Entities.Flashlight
         public void SetStrobeIntensity(float intensity)
         {
             _strobeIntensity.Value = UnityEngine.Mathf.Max(0f, intensity);
+        }
+
+        /// <summary>
+        /// ストロボの電池残量を設定する
+        /// </summary>
+        /// <param name="energy">電池残量</param>
+        public void SetStrobeEnergy(float energy)
+        {
+            _strobeEnergy.Value = UnityEngine.Mathf.Clamp01(energy);
+        }
+
+        /// <summary>
+        /// 乾電池の交換でストロボの電池残量を満タンにする
+        /// </summary>
+        /// <returns>満タンでなく交換できたか</returns>
+        public bool TryRefillStrobeEnergy()
+        {
+            if (_strobeEnergy.Value >= 1f) return false;
+
+            _strobeEnergy.Value = 1f;
+            return true;
         }
     }
 }

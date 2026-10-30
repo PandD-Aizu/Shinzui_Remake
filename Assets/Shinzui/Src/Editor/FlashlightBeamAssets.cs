@@ -1,4 +1,5 @@
 using UnityEditor;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 
 namespace Shinzui.Editor
@@ -11,7 +12,7 @@ namespace Shinzui.Editor
         private const string CookiePath = "Assets/Shinzui/Art/Flashlight/FlashlightBeam.asset";
 
         /// <summary>
-        /// 中心光と周辺光を持つURP用クッキーを生成して保存する
+        /// 中心光と周辺光を持つHDRP用クッキーを生成して保存する
         /// </summary>
         [MenuItem("Shinzui/Flashlight/Rebuild Beam Cookie")]
         public static void RebuildCookie()
@@ -34,12 +35,8 @@ namespace Shinzui.Editor
                     float u = (x + 0.5f) / size * 2f - 1f;
                     float v = (y + 0.5f) / size * 2f - 1f;
                     float radius = Mathf.Sqrt(u * u + v * v);
-                    float core = Mathf.Exp(-Mathf.Pow(radius / 0.28f, 2.4f));
-                    float spill = 0.16f * Mathf.Exp(-radius * radius * 2.4f);
-                    float reflector = 0.018f * Mathf.Exp(-Mathf.Pow((radius - 0.53f) / 0.13f, 2f));
-                    float edge = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.72f, 1f, radius));
-                    float value = Mathf.Clamp01((core * 0.84f + spill + reflector) * edge);
-                    pixels[y * size + x] = new Color(value, value, value, value);
+                    float value = TunnelLookLighting.FlashlightCookie(radius);
+                    pixels[y * size + x] = new Color(value, value, value, 1f);
                 }
             }
 
@@ -55,6 +52,7 @@ namespace Shinzui.Editor
 
             EditorUtility.SetDirty(texture);
             AssetDatabase.SaveAssets();
+            Debug.Log($"Flashlight cookie rebuilt: {CookiePath}, 512x512 linear, hotspot + 25% broad spill, calibrated peak={TunnelLookLighting.FlashlightCandela(true):F0}cd for 3000 emitted lm");
         }
     }
 }

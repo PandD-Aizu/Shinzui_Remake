@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using R3;
 using Shinzui.Application.UseCases;
+using Shinzui.Domain.Settings;
 using Shinzui.View.Settings;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,10 +27,13 @@ namespace Shinzui.Presentation.Settings
         private readonly SettingsUseCase _useCase;
         private readonly OptionWindowView _view;
         private readonly CompositeDisposable _disposables = new();
+        private readonly CompositeDisposable _upscalingDisposables = new();
 
         private readonly List<CategoryDefinition> _availableCategories = new();
         private readonly List<Button> _categoryButtons = new();
         private int _selectedCategoryIndex = 0;
+
+        private GraphicsOptionsBinder _graphicsBinder;
 
         private Button _dynamicDefaultButton;
         private Button _dynamicCloseButton;
@@ -150,7 +154,59 @@ namespace Shinzui.Presentation.Settings
             }
         }
 
+        /// <summary>設定画面の操作と編集値を接続する</summary>
         private void BindUi()
+        {
+            // 詳細画面がある場合は共通の接続処理へ委譲する
+            if (_view.Graphics != null)
+            {
+                _view.ConfigureUpscaling(null, false);
+                _graphicsBinder = new GraphicsOptionsBinder(_useCase, _view.Graphics);
+                _view.GraphicsOpened += _graphicsBinder.Refresh;
+            }
+            else
+            {
+                // 既存のタイトル画面では従来のアップスケーリング操作を維持する
+                BindUpscalingUi(_useCase.SupportedUpscaler);
+                Observable.EveryUpdate().Select(_ => _useCase.SupportedUpscaler).DistinctUntilChanged()
+                    .Subscribe(BindUpscalingUi).AddTo(_disposables);
+            }
+
+            BindStandardUi();
+        }
+
+        /// <summary>対応方式の保存値へアップスケーリングUIを接続する</summary>
+        /// <param name="upscaler">現在利用できる方式</param>
+        private void BindUpscalingUi(UpscalerType upscaler)
+        {
+            // 表示方式が変わる前に旧方式の購読を解除する
+            _upscalingDisposables.Clear();
+            string name = upscaler == UpscalerType.Fsr2 ? "FSR 2" : "DLSS";
+            _view.ConfigureUpscaling(name, upscaler != UpscalerType.None);
+            if (upscaler == UpscalerType.None) return;
+
+            var enabled = _useCase.UpscalingEnabled;
+            var quality = _useCase.UpscalingQuality;
+            if (_view.DlssToggle != null)
+            {
+                enabled.Subscribe(val => _view.DlssToggle.isOn = val).AddTo(_upscalingDisposables);
+                OnToggleValueChanged(_view.DlssToggle).Subscribe(val => enabled.Value = val).AddTo(_upscalingDisposables);
+            }
+
+            // 品質ボタンを押すたびにQuality、Balanced、Performanceを順番に選ぶ
+            if (_view.DlssQualityButton != null)
+            {
+                var button = _view.DlssQualityButton;
+                enabled.Subscribe(val => button.interactable = val).AddTo(_upscalingDisposables);
+                quality.Subscribe(val => button.GetComponentInChildren<TMPro.TMP_Text>().text =
+                    OptionWindowView.UpscalingQualityLabel(val, name)).AddTo(_upscalingDisposables);
+                Observable.FromEvent(h => button.onClick.AddListener(h.Invoke), h => button.onClick.RemoveListener(h.Invoke))
+                    .Subscribe(_ => quality.Value = (quality.Value + 1) % 3).AddTo(_upscalingDisposables);
+            }
+        }
+
+        /// <summary>既存の音量、カメラ、表示設定をUIへ接続する</summary>
+        private void BindStandardUi()
         {
             // --- UseCase -> View のバインディング (UseCaseのプロパティ値が変わったらUIへ反映する) ---
             _useCase.MasterVolume.Subscribe(val => _view.MasterVolumeSlider.value = val).AddTo(_disposables);
@@ -215,8 +271,14 @@ namespace Shinzui.Presentation.Settings
             Debug.Log($"[Settings] Tab Switched to: {category.Label}");
         }
 
+        /// <summary>設定画面の購読と操作イベントを解放する</summary>
         public void Dispose()
         {
+            // 共通グラフィック画面の購読と再表示通知を解除する
+            if (_graphicsBinder != null) _view.GraphicsOpened -= _graphicsBinder.Refresh;
+            _graphicsBinder?.Dispose();
+
+            _upscalingDisposables.Dispose();
             _disposables.Dispose();
 
             // onClickリスナーは GameObject 破棄時にクリアされますが、念のため明示的解除

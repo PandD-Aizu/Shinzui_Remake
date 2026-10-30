@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Shinzui.Application.DTOs.Enemy
 {
     /// <summary>敵自身が選んだ行動</summary>
-    public enum EnemyIntentType { Idle, Wander, MoveTo, Chase, LookAround, GoBackstage, Hidden, Emerge, InspectHidingSpot, OpenHidingSpot }
+    public enum EnemyIntentType { Idle, Wander, MoveTo, Chase, LookAround, GoBackstage, Hidden, Emerge, InspectHidingSpot, OpenHidingSpot, CeilingAmbush }
 
     /// <summary>知覚から決定した移動先と速度</summary>
     public readonly struct EnemyIntent
