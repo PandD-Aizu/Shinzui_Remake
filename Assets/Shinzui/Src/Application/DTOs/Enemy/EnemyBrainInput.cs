@@ -14,6 +14,7 @@ namespace Shinzui.Application.DTOs.Enemy
         public bool IsVisibleToPlayer { get; }
         public bool IsReady { get; }
         public bool IsStunned { get; }
+        public HidingSense HidingSense { get; }
 
         /// <summary>物理層で採取した知覚をまとめる</summary>
         /// <param name="enemyPosition">敵自身の位置</param>
@@ -26,7 +27,8 @@ namespace Shinzui.Application.DTOs.Enemy
         /// <param name="isBackstage">実際に舞台裏へ切り替わったか</param>
         /// <param name="isVisibleToPlayer">プレイヤーから見えているか</param>
         public EnemyBrainInput(Vector3 enemyPosition, SightSample sight, PlayerSignature playerSignature,
-            float noiseGain = 0f, NoiseEvent heardNoise = default, bool isReady = true, bool isStunned = false, bool isBackstage = false, bool isVisibleToPlayer = false)
+            float noiseGain = 0f, NoiseEvent heardNoise = default, bool isReady = true, bool isStunned = false, bool isBackstage = false, bool isVisibleToPlayer = false,
+            HidingSense hidingSense = default)
         {
             IsBackstage = isBackstage;
             IsVisibleToPlayer = isVisibleToPlayer;
@@ -37,6 +39,7 @@ namespace Shinzui.Application.DTOs.Enemy
             HeardNoise = noiseGain > 0f ? heardNoise : default;
             IsReady = isReady;
             IsStunned = isStunned;
+            HidingSense = hidingSense;
         }
     }
 }

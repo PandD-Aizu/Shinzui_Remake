@@ -60,6 +60,15 @@ namespace Shinzui.Application.UseCases.Flashlight
             _flashlightEntity.SetStrobeCharge(charge);
         }
 
+        /// <summary>隠れる時は光とストロボの溜めを解除</summary>
+        public void ExtinguishForHiding()
+        {
+            if (_flashlightEntity.IsOn.CurrentValue) _flashlightEntity.Toggle();
+            _currentPushTime = 0f;
+            _flashlightEntity.SetStrobeCharge(0f);
+            _flashlightEntity.SetStrobeIntensity(0f);
+        }
+
         /// <summary>
         /// ストロボ発光処理（リリース時）
         /// </summary>

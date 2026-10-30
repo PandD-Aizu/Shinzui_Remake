@@ -87,6 +87,7 @@ namespace Shinzui.View
         private Vector2 _pickupLean;
         private Vector2 _pickupLeanVelocity;
         private Vector3 _pickupEyeOffset;
+        private Vector3 _pickupBodyOffset;
 
         /// <summary>取得時の上半身の前傾による視点の移動量</summary>
         public Vector3 PickupEyeOffset => isActiveAndEnabled && model != null
@@ -101,7 +102,7 @@ namespace Shinzui.View
         {
             _pickupPosition = position;
             _pickupRotation = rotation;
-            _pickupWeight = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(progress / .85f));
+            _pickupWeight = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(progress));
             _pickupGripStrength = Mathf.Clamp01(grip);
 
             // 近距離の手がニアクリップで消えないよう、取得中だけ描画開始位置を寄せる
@@ -112,6 +113,19 @@ namespace Shinzui.View
                 _pickupCamera.nearClipPlane = Mathf.Min(_pickupNearClip, .03f);
             }
             if (_pickupWeight <= 0f) RestorePickupCamera();
+        }
+
+        /// <summary>右手に持つ小物の追従位置と向きを取得する</summary>
+        /// <param name="pose">掌の位置と指先方向を基準とした姿勢</param>
+        /// <returns>右手の骨格が初期化済みか</returns>
+        public bool TryGetRightPalmPose(out Pose pose)
+        {
+            pose = default;
+            if (!_initialized || !_bones.TryGetValue("RightHand", out Transform hand)) return false;
+
+            Quaternion rotation = hand.rotation * Quaternion.Inverse(_rightHandBasis);
+            pose = new Pose(hand.position + rotation * Vector3.forward * .09f, rotation);
+            return true;
         }
 
         /// <summary>取得開始前のカメラ描画距離へ戻す</summary>
@@ -129,20 +143,22 @@ namespace Shinzui.View
             _pickupLean = Vector2.zero;
             _pickupLeanVelocity = Vector2.zero;
             _pickupEyeOffset = Vector3.zero;
+            _pickupBodyOffset = Vector3.zero;
             RestorePickupCamera();
         }
 
         /// <summary>上半身の可動域と腕の長さから取得可能か判定</summary>
         /// <param name="position">掴む位置</param>
         /// <param name="rotation">指定した持ち手の向き</param>
-        /// <returns>骨を伸ばさずに届くか</returns>
-        public bool CanReachPickup(Vector3 position, Quaternion? rotation = null)
+        /// <param name="reachTolerance">取得判定に加える距離の余裕</param>
+        /// <returns>許容距離を含めて取得できるか</returns>
+        public bool CanReachPickup(Vector3 position, Quaternion? rotation = null, float reachTolerance = 0f)
         {
             InitializePose();
             if (!_initialized) return false;
             Vector3 forward = rotation.HasValue ? rotation.Value * Vector3.forward
                 : (position - player.CameraPosition).normalized;
-            return FindPickupLean(position - forward * .09f, out _);
+            return FindPickupLean(position - forward * .09f, out _, reachTolerance);
         }
 
         /// <summary>取得の前傾を含まない姿勢をモデル座標で保存</summary>
@@ -186,8 +202,9 @@ namespace Shinzui.View
         /// <summary>可動域内で届く最小限の前傾を探索</summary>
         /// <param name="wrist">手首の目標位置</param>
         /// <param name="lean">到達可能な姿勢、または最も近づく姿勢</param>
+        /// <param name="reachTolerance">到達判定に加える距離の余裕</param>
         /// <returns>腕の可動範囲まで肩を寄せられるか</returns>
-        private bool FindPickupLean(Vector3 wrist, out Vector2 lean)
+        private bool FindPickupLean(Vector3 wrist, out Vector2 lean, float reachTolerance = 0f)
         {
             // しゃがみと怯えの前傾を上限から差し引く
             float forwardLimit = Mathf.Min(pickupForwardLean,
@@ -203,7 +220,7 @@ namespace Shinzui.View
                 Vector2 candidate = new Vector2(forwardLimit * forward / 24f, pickupSideLean * side * sideSign / 4f);
                 float distance = Vector3.Distance(PredictPickupShoulder(candidate), wrist);
                 float cost = candidate.x * candidate.x + candidate.y * candidate.y * 4f;
-                if (distance <= _pickupArmLength)
+                if (distance <= _pickupArmLength + Mathf.Max(0f, reachTolerance))
                 {
                     if (!reachable || cost < bestCost) { lean = candidate; bestCost = cost; }
                     reachable = true;
@@ -241,6 +258,14 @@ namespace Shinzui.View
             _bones["Spine"].rotation = PickupLeanRotation(_pickupLean, .3f) * _bones["Spine"].rotation;
             _bones["Chest"].rotation = PickupLeanRotation(_pickupLean, .15f) * _bones["Chest"].rotation;
             _bones["Neck"].rotation = Quaternion.Inverse(PickupLeanRotation(_pickupLean, .6f)) * _bones["Neck"].rotation;
+
+            // 腕だけで届かない分は体重移動で補い、骨の長さを変えずに対象へ寄せる
+            Vector3 wrist = _pickupPosition - _pickupRotation * Vector3.forward * .09f;
+            Vector3 shoulderToWrist = wrist - _bones["RightUpperArm"].position;
+            float shortage = Mathf.Clamp(shoulderToWrist.magnitude - _pickupArmLength + .025f, 0f, .2f);
+            Vector3 bodyTarget = shoulderToWrist.normalized * shortage * _pickupWeight;
+            _pickupBodyOffset = Vector3.Lerp(_pickupBodyOffset, bodyTarget, 1f - Mathf.Exp(-12f * deltaTime));
+            _bones["Hips"].position += _pickupBodyOffset;
             _pickupEyeOffset = model.InverseTransformVector(_bones["Head"].position - headBefore);
         }
 
@@ -251,6 +276,8 @@ namespace Shinzui.View
             public Transform Intermediate;
             public Transform Distal;
             public Vector3 Axis;
+            public Vector3 SpreadAxis;
+            public float SpreadAngle;
             public float Strength;
         }
 
@@ -432,16 +459,28 @@ namespace Shinzui.View
             Vector3 restTarget = model.TransformPoint(_rightHandOffset) - model.up * crouch
                 + model.forward * (.1f * _crouchWeight);
             Vector3 pickupWrist = _pickupPosition - _pickupRotation * Vector3.forward * .09f;
+
+            // 少し上へ弧を描いて接近し、最後は減速して上面へ手を添える
+            Vector3 wristTarget = Vector3.Lerp(restTarget, pickupWrist, _pickupWeight);
+            wristTarget += Vector3.up * (.08f * Mathf.Sin(Mathf.PI * _pickupWeight));
+            Vector3 pickupElbow = _bones["RightUpperArm"].position
+                + model.right * .25f - model.up * .35f - model.forward * .1f;
             SolveLimb(_bones["RightUpperArm"], _bones["RightLowerArm"], hand,
-                Vector3.Lerp(restTarget, pickupWrist, _pickupWeight),
+                wristTarget,
                 Vector3.Lerp(model.TransformPoint(elbow) - model.up * crouch,
-                    player.CameraPosition + player.CameraRight * .45f - Vector3.up * .45f, _pickupWeight));
+                    pickupElbow, _pickupWeight));
 
             // 手首を少し遅れて揺らし、指も握り切らず緩やかに曲げ伸ばし
             float wristSwing = Mathf.Sin(_phase - .4f) * _stride * 5f + breath * 1.2f
                 + _tremor.x * Mathf.Lerp(calmTremorAngle, chasedTremorAngle, _fear) * 2f;
             hand.rotation = Quaternion.AngleAxis(wristSwing, model.right) * hand.rotation;
             hand.rotation = Quaternion.Slerp(hand.rotation, _pickupRotation * _rightHandBasis, _pickupWeight);
+            // 接近中に開いた指を、接触に合わせて徐々に閉じる
+            foreach (FingerChain finger in _rightFingers)
+                finger.Proximal.rotation = Quaternion.AngleAxis(
+                    finger.SpreadAngle * _pickupWeight * (1f - _pickupGripStrength),
+                    hand.TransformDirection(finger.SpreadAxis)) * finger.Proximal.rotation;
+
             CurlFingers(hand, _rightFingers, Mathf.Lerp(.18f + _armRunWeight * .10f + breath * .018f,
                 _pickupGripStrength, _pickupWeight));
         }
@@ -589,6 +628,11 @@ namespace Shinzui.View
                     Intermediate = second,
                     Distal = _bones[side + finger + "Distal"],
                     Axis = hand.InverseTransformDirection(Vector3.Cross(second.position - first.position, -model.up).normalized),
+                    SpreadAxis = hand.InverseTransformDirection(Vector3.Cross(
+                        _bones[side + "MiddleIntermediate"].position - _bones[side + "MiddleProximal"].position,
+                        first.position - _bones[side + "MiddleProximal"].position).normalized),
+                    SpreadAngle = finger == "Thumb" ? 25f : finger == "Index" || finger == "Little" ? 12f
+                        : finger == "Ring" ? 6f : 0f,
                     Strength = finger == "Thumb" ? .55f : 1f
                 });
             }

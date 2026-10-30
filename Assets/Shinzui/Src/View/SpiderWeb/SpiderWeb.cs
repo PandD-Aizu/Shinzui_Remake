@@ -187,6 +187,17 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>非アクティブ中に自動配置用の寸法とシードを設定する</summary>
+        /// <param name="width">巣の幅</param>
+        /// <param name="height">巣の高さ</param>
+        /// <param name="seed">外観のシード</param>
+        public void ConfigureShape(float width, float height, int seed)
+        {
+            this.width = width;
+            this.height = height;
+            this.seed = seed;
+        }
+
         private void OnEnable()
         {
             _sourceId = GetEntityId().GetHashCode();

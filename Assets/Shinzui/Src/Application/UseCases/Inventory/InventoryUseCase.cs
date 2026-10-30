@@ -15,6 +15,7 @@ namespace Shinzui.Application.UseCases.Inventory
         private readonly IItemCatalog _catalog;
         private readonly IInventoryRepository _repository;
         private readonly PlayerEntity _playerEntity;
+        private readonly IPenlightPlacementService _penlightPlacement;
 
         private readonly ReactiveProperty<InventorySlotDto>[] _slotDtos;
         public ReadOnlyReactiveProperty<InventorySlotDto> GetSlotDto(int index) => _slotDtos[index];
@@ -37,12 +38,14 @@ namespace Shinzui.Application.UseCases.Inventory
             InventoryEntity inventory,
             IItemCatalog catalog,
             IInventoryRepository repository,
-            PlayerEntity playerEntity)
+            PlayerEntity playerEntity,
+            IPenlightPlacementService penlightPlacement = null)
         {
             _inventory = inventory;
             _catalog = catalog;
             _repository = repository;
             _playerEntity = playerEntity;
+            _penlightPlacement = penlightPlacement;
 
             // 装備アイテムIDのストリームを構築
             EquippedItemId = _equippedSlotIndex
@@ -208,30 +211,36 @@ namespace Shinzui.Application.UseCases.Inventory
             var slot = _inventory.GetSlot(slotIndex).CurrentValue;
             if (slot == null || !slot.Item.IsConsumable) return false;
 
-            // TODO: ここでアイテム効果を適用する
-            // アイテム効果の適用 (ぼたもち消費時にスタミナを全回復)
-            if (slot.Item.Id == "potion_botamochi")
-            {
-                if (_playerEntity != null)
-                {
-                    var stamina = _playerEntity.PlayerStamina;
-                    _playerEntity.PlayerStamina = stamina with 
-                    { 
-                        CurrentStamina = stamina.MaxStamina
-                    };
-                    _playerEntity.CurrentStamina.Value = stamina.MaxStamina;
-                    _playerEntity.IsExhausted.Value = false;
-                }
-            }
-            
             // 使用したため個数を1減らす
             bool success = _inventory.TryRemoveItem(slotIndex, 1);
             if (success)
             {
+                // ぼたもちを食べた時だけ全回復し、5秒間の消費停止を付与する
+                if (slot.Item.Id == "potion_botamochi")
+                {
+                    _playerEntity?.RestoreStaminaWithProtection(5f);
+                }
+
                 await SaveAsync();
             }
             
             return success;
+        }
+
+        /// <summary>
+        /// 装備中のペンライトを設置し、成功時だけ1本消費する
+        /// </summary>
+        /// <returns>設置と消費が成功したか</returns>
+        public async Task<bool> PlaceEquippedPenlightAsync()
+        {
+            int index = _equippedSlotIndex.Value;
+            if (index < 0 || _inventory.GetSlot(index).CurrentValue?.Item.Id != "penlight"
+                || _penlightPlacement == null || !_penlightPlacement.TryPlace()) return false;
+
+            // 設置から消費までは待機を挟まず、最後の1本なら装備も解除する
+            _inventory.TryRemoveItem(index, 1);
+            await SaveAsync();
+            return true;
         }
 
         /// <summary>

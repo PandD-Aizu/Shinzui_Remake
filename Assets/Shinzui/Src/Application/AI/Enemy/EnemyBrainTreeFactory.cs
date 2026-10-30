@@ -15,10 +15,13 @@ namespace Shinzui.Application.AI.Enemy
             return new BtSelector("Root",
                 new BtAction("Backstage", brain.Backstage),
                 new BtAction("Stunned", brain.Stunned),
+                new BtAction("WitnessedLocker", brain.OpenWitnessedLocker),
                 new BtSelector("Chase",
                     new BtGate(EnemyBehaviorFlags.PredictiveChase,
                         new BtAction("Predict", brain.PredictiveChase), () => brain.Blackboard.Unlocked),
                     new BtAction("LastSeen", brain.Chase)),
+                new BtGate(EnemyBehaviorFlags.CheckHidingSpots,
+                    new BtAction("InspectLocker", brain.InspectLocker), () => brain.Blackboard.Unlocked),
                 new BtGuard("Search", () => brain.CanSearch,
                     new BtTimeLimit(brain.SearchDuration,
                         new BtSequence("Route",
@@ -40,6 +43,8 @@ namespace Shinzui.Application.AI.Enemy
                         new BtAction("Finish", brain.FinishInvestigation))),
                 new BtGate(EnemyBehaviorFlags.Backtrack,
                     new BtAction("Backtrack", brain.Backtrack), () => brain.Blackboard.Unlocked),
+                new BtGate(EnemyBehaviorFlags.LingerAfterSearch,
+                    new BtAction("Linger", brain.Linger), () => brain.Blackboard.Unlocked),
                 new BtAction("FollowHint", brain.FollowHint, brain.ResetHint),
                 new BtAction("Wander", brain.Wander));
         }

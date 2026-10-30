@@ -14,6 +14,7 @@ namespace Shinzui.Application.AI.Enemy
         public NoiseEvent LastHeardNoise { get; internal set; }
         public bool HasClue { get; internal set; }
         public bool IsBackstage { get; internal set; }
+        public int WitnessedHidingSpotId { get; internal set; }
         public DirectorDirective Directive { get; internal set; }
         public EnemyBehaviorFlags Unlocked { get; set; }
         internal readonly Vector3[] SearchPoints = new Vector3[8];

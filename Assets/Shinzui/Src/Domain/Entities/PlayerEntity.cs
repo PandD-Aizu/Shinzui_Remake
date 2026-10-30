@@ -8,6 +8,7 @@ namespace Shinzui.Domain.Entities
     public class PlayerEntity
     {
         private SpecialItemModifiers _specialItemModifiers = SpecialItemModifiers.None;
+        private float _staminaProtectionRemaining;
         public PlayerSpeedStatus PlayerSpeedStatus { get; set; }
         public PlayerCrouchStatus PlayerCrouchStatus { get; set; }
         public PlayerStamina PlayerStamina { get; set; }
@@ -57,15 +58,31 @@ namespace Shinzui.Domain.Entities
             _specialItemModifiers = modifiers ?? SpecialItemModifiers.None;
         }
 
+        /// <summary>スタミナを全回復し、指定時間だけ消費を停止する</summary>
+        /// <param name="duration">消費を停止する秒数 再使用時は残り時間を更新する</param>
+        public void RestoreStaminaWithProtection(float duration)
+        {
+            // 疲労を解除し、ゲージと内部値を同時に回復する
+            PlayerStamina = PlayerStamina with { CurrentStamina = PlayerStamina.MaxStamina };
+            CurrentStamina.Value = PlayerStamina.MaxStamina;
+            IsExhausted.Value = false;
+            _staminaProtectionRemaining = Mathf.Max(0f, duration);
+        }
+
         /// <summary>
         /// 移動状態に基づいてスタミナを更新する
         /// </summary>
+        /// <param name="deltaTime">ゲーム内の経過秒数</param>
         public void UpdateStamina(float deltaTime)
         {
+            // 効果が切れるフレームは、切れた後の時間だけ消費する
+            float consumptionTime = Mathf.Max(0f, deltaTime - _staminaProtectionRemaining);
+            _staminaProtectionRemaining = Mathf.Max(0f, _staminaProtectionRemaining - deltaTime);
+
             float staminaChange;
             if (MovementState.Value == PlayerMovementState.Running)
             {
-                staminaChange = -PlayerStamina.StaminaDecreaseRate * deltaTime;
+                staminaChange = -PlayerStamina.StaminaDecreaseRate * consumptionTime;
             }
             else
             {

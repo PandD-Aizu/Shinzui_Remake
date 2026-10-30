@@ -23,6 +23,39 @@ namespace Shinzui.Tests.EnemyDirector
         private UnityEnemyRuntime _runtime;
         private bool _enabled;
 
+        /// <summary>提供モデルの開閉と内部視点からの退出を実行して復帰状態を確認</summary>
+        [UnityTest] public IEnumerator LockerModelOpensAndPlayerCameraRestores()
+        {
+            var prefab = Resources.Load<GameObject>("HidingLocker");
+            Assert.That(prefab, Is.Not.Null);
+            _wall = Object.Instantiate(prefab, new Vector3(10f, 0f, 0f), Quaternion.identity);
+            var locker = _wall.GetComponent<HidingLockerView>();
+            Assert.That(locker.DoorHinge, Is.Not.Null);
+            Assert.That(locker.CameraAnchor.localPosition.z, Is.LessThan(.39f));
+            Quaternion closed = locker.DoorHinge.localRotation;
+            locker.OpenByEnemy();
+            yield return new WaitForSeconds(.3f);
+            Assert.That(Quaternion.Angle(closed, locker.DoorHinge.localRotation), Is.GreaterThan(90f));
+
+            _player.SetActive(false);
+            var player = _player.AddComponent<PlayerView>();
+            var cam = new GameObject("Locker Test Camera").AddComponent<Camera>();
+            cam.transform.SetParent(_player.transform, false);
+            var cameraField = typeof(PlayerView).GetField("mainCamera", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            cameraField.SetValue(player, cam);
+            _player.SetActive(true);
+            float near = cam.nearClipPlane;
+            player.BeginHiding(locker.CameraAnchor, locker.transform.position);
+            Assert.That(player.IsHiding, Is.True);
+            Assert.That(Vector3.Distance(cam.transform.position, locker.CameraAnchor.position), Is.LessThan(.001f));
+            player.UpdateHidingCamera(true);
+            Assert.That(Vector3.Distance(cam.transform.position, locker.CameraAnchor.position), Is.EqualTo(.15f).Within(.001f));
+            player.EndHiding(locker.ExitPoint.position, locker.transform.forward);
+            Assert.That(player.IsHiding, Is.False);
+            Assert.That(cam.nearClipPlane, Is.EqualTo(near));
+            Assert.That(player.transform.position.z, Is.EqualTo(locker.ExitPoint.position.z).Within(.001f));
+        }
+
         [UnitySetUp] public IEnumerator SetUp()
         {
             var settings = NavMesh.GetSettingsByIndex(0);

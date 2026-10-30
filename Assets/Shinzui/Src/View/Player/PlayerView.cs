@@ -6,7 +6,7 @@ using Unity.Cinemachine;
 
 namespace Shinzui.View
 {
-    public class PlayerView : MonoBehaviour
+    public partial class PlayerView : MonoBehaviour
     {
         [Header("Components")]
         [SerializeField] private CharacterController characterController;
@@ -154,6 +154,8 @@ namespace Shinzui.View
                 {
                     _staminaCanvasGroup = staminaSlider.gameObject.AddComponent<CanvasGroup>();
                 }
+
+                InitializeStaminaAnimation();
             }
 
             if (cameraTarget == null)
@@ -193,11 +195,13 @@ namespace Shinzui.View
             }
         }
 
+        /// <summary>スタミナの波形と表示状態を更新</summary>
         private void Update()
         {
             if (staminaSlider == null || _staminaCanvasGroup == null) return;
 
             float currentValue = staminaSlider.value;
+            UpdateStaminaAnimation(Time.deltaTime);
 
             // 値に変動があったかチェック
             if (!Mathf.Approximately(currentValue, _lastStaminaValue))
@@ -209,8 +213,8 @@ namespace Shinzui.View
                 _lastStaminaValue = currentValue;
             }
 
-            // タイマー稼働時はフェードイン、ゼロになったらフェードアウト
-            if (_staminaChangeTimer > 0.0f)
+            // 残量不足中は表示を維持し、満タンで待機時間を過ぎたらフェードアウト
+            if (_staminaChangeTimer > 0.0f || staminaSlider.normalizedValue < 0.999f)
             {
                 _staminaChangeTimer -= Time.deltaTime;
                 _staminaCanvasGroup.alpha = Mathf.MoveTowards(_staminaCanvasGroup.alpha, 1.0f, StaminaFadeInSpeed * Time.deltaTime);

@@ -32,6 +32,8 @@ namespace Shinzui.Application.DTOs.Enemy
             new(PlayerTacticKind.SneakNearEnemy, 3, EnemyBehaviorFlags.SlowStalk),
             new(PlayerTacticKind.DecoyThrow, 3, EnemyBehaviorFlags.DecoyWariness),
             new(PlayerTacticKind.StrobeHitEnemy, 3, EnemyBehaviorFlags.StrobeResistance),
+            new(PlayerTacticKind.HidDuringSearch, 2, EnemyBehaviorFlags.CheckHidingSpots),
+            new(PlayerTacticKind.HidDuringSearch, 4, EnemyBehaviorFlags.LingerAfterSearch),
             new(PlayerTacticKind.EscapedSearch, 2, EnemyBehaviorFlags.SearchSideRooms),
             new(PlayerTacticKind.EscapedSearch, 3, EnemyBehaviorFlags.Backtrack),
             new(PlayerTacticKind.BrokeSightAtCorner, 3, EnemyBehaviorFlags.PredictiveChase)

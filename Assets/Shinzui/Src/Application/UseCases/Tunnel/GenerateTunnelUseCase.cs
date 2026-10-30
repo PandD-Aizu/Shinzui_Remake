@@ -16,6 +16,7 @@ namespace Shinzui.Application.UseCases.Tunnel
     public sealed class GenerateTunnelUseCase : IGenerateTunnelUseCase
     {
         private readonly ITunnelLayoutGenerator _layoutGenerator;
+        private readonly ITunnelGimmickPlanner _gimmickPlanner;
         private readonly object _lock = new();
         private bool _hasGenerated;
         private TunnelMapDto _cachedMapDto;
@@ -31,9 +32,13 @@ namespace Shinzui.Application.UseCases.Tunnel
             }
         }
 
-        public GenerateTunnelUseCase(ITunnelLayoutGenerator layoutGenerator)
+        /// <summary>生成と配置計画のサービスを保持する</summary>
+        /// <param name="layoutGenerator">レイアウト生成サービス</param>
+        /// <param name="gimmickPlanner">ギミック配置サービス</param>
+        public GenerateTunnelUseCase(ITunnelLayoutGenerator layoutGenerator, ITunnelGimmickPlanner gimmickPlanner = null)
         {
             _layoutGenerator = layoutGenerator ?? new TunnelLayoutGenerator();
+            _gimmickPlanner = gimmickPlanner ?? new TunnelGimmickPlanner();
         }
 
         public bool GenerateOnce(TunnelGenerationRequestDto request, out TunnelMapDto mapDto)
@@ -73,7 +78,7 @@ namespace Shinzui.Application.UseCases.Tunnel
         /// <param name="layoutResult">ドメイン層の生成結果</param>
         /// <param name="config">寸法設定</param>
         /// <returns>描画と音響で共用する配置情報</returns>
-        private static TunnelMapDto ConvertToDto(TunnelLayoutResult layoutResult, TunnelGenerationConfig config)
+        private TunnelMapDto ConvertToDto(TunnelLayoutResult layoutResult, TunnelGenerationConfig config)
         {
             var tunnelDtos = new List<TunnelNodeDto>(layoutResult.Tunnels.Count);
             foreach (var tunnel in layoutResult.Tunnels)
@@ -202,8 +207,27 @@ namespace Shinzui.Application.UseCases.Tunnel
                 ShellThickness = 0.2f
             };
 
+            // 既存の候補順と乱数呼び出し順を保ち、配置計画とゴール位置を共有する
+            var goalCandidates = layoutResult.Tunnels.Where(t => t.Slope == 0 && !t.IsSpecial && t.Id != 0).ToArray();
+            int? goalTunnelId = null;
+            int goalEndSign = 0;
+            if (goalCandidates.Length > 0)
+            {
+                var random = new System.Random(unchecked(layoutResult.Seed ^ 0x47504c));
+                goalTunnelId = goalCandidates[random.Next(goalCandidates.Length)].Id;
+                goalEndSign = random.Next(2) == 0 ? -1 : 1;
+            }
+            var gimmicks = _gimmickPlanner.Plan(layoutResult, config, goalTunnelId, goalEndSign);
+
             return new TunnelMapDto
             {
+                GoalTunnelId = goalTunnelId,
+                GoalEndSign = goalEndSign,
+                Gimmicks = gimmicks.Select(g => new TunnelGimmickDto
+                {
+                    Kind = (TunnelGimmickKindDto)g.Kind, HostId = g.HostId,
+                    LocalZ = g.LocalZ, Side = g.Side, VisualSeed = g.VisualSeed, LocalX = g.LocalX, Yaw = g.Yaw
+                }).ToArray(),
                 Tunnels = tunnelDtos,
                 NormalCorridors = corridorDtos,
                 SmallRooms = smallRoomDtos,

@@ -35,6 +35,33 @@ namespace Shinzui.View.Interaction
         [SerializeField] private TMP_Text interactionPromptText;
 
         private InteractableComponent _currentInteractable;
+        private Collider[] _tutorialColliders = new Collider[32];
+
+        /// <summary>近くに壁で遮られていない未取得アイテムがあるか調べる</summary>
+        /// <param name="origin">接近距離の基準位置</param>
+        /// <param name="range">検出する距離</param>
+        /// <returns>取得可能なアイテムが範囲内にあるか</returns>
+        public bool HasNearbyPickup(Vector3 origin, float range)
+        {
+            if (!isActiveAndEnabled || playerCamera == null) return false;
+
+            // 視線やしゃがみ状態に依存せず、周囲のアイテムを検出する
+            int count;
+            while ((count = Physics.OverlapSphereNonAlloc(origin, range, _tutorialColliders,
+                interactLayerMask, QueryTriggerInteraction.Collide)) == _tutorialColliders.Length)
+                System.Array.Resize(ref _tutorialColliders, _tutorialColliders.Length * 2);
+
+            for (int i = 0; i < count; i++)
+            {
+                var target = _tutorialColliders[i].GetComponentInParent<InteractableComponent>();
+                if (target == null || !target.isActiveAndEnabled || !target.CanInteract || !target.RequiresHold
+                    || target.gameObject.scene != gameObject.scene) continue;
+                if ((target.PickupPosition - origin).sqrMagnitude > range * range) continue;
+                if (InteractionVisibility.IsVisible(playerCamera.transform.position, target.PickupPosition, target, _owner))
+                    return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// 現在視線が捉えているインタラクト対象。
@@ -78,7 +105,7 @@ namespace Shinzui.View.Interaction
             Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit, interactRange, interactLayerMask))
+            if (Physics.Raycast(ray, out hit, interactRange, interactLayerMask, QueryTriggerInteraction.Collide))
             {
                 // ヒットしたオブジェクト、またはその親から InteractableComponent を取得
                 var interactable = hit.collider.GetComponentInParent<InteractableComponent>();
@@ -142,9 +169,17 @@ namespace Shinzui.View.Interaction
         public bool CanReachPickup(InteractableComponent target)
         {
             if (_body == null && _owner != null) _body = _owner.GetComponentInChildren<PlayerBodyView>();
+
+            // 乾電池とぼたもちは腕の到達距離に余裕を持たせ、床付近でも取得しやすくする
+            float reachTolerance = target is FlashlightBattery ? .5f : 0f;
+            if (target != null && target.InteractableId == "ItemTest_potion_botamochi") reachTolerance = .2f;
+
+            // 全アイテムの取得距離を20cm広げる
+            reachTolerance += .2f;
+
             return target != null && _body != null && playerCamera != null
                 && _body.CanReachPickup(target.GetPickupContact(playerCamera.transform.position),
-                    target.PickupGrip != null ? target.PickupGrip.rotation : (Quaternion?)null);
+                    target.GetPickupRotation(playerCamera.transform.forward), reachTolerance);
         }
 
         /// <summary>取得中の案内と他のアイテム操作の排他状態を更新</summary>

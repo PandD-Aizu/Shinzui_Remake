@@ -34,6 +34,9 @@ namespace Shinzui.Presentation.GenerateTunnel
         /// <summary>
         /// リクエストパラメータに基づき、一度だけトンネル生成・配置・NavMeshベイクを実行する。
         /// </summary>
+        /// <param name="request">生成設定</param>
+        /// <param name="regenerate">既存の生成物を置き換えるか</param>
+        /// <returns>生成とNavMesh構築に成功したか</returns>
         public bool ExecuteGeneration(TunnelGenerationRequestDto request, bool regenerate = false)
         {
             if (_useCase == null || _mapView == null)
@@ -57,6 +60,16 @@ namespace Shinzui.Presentation.GenerateTunnel
 
             var adjustedRequest = new TunnelGenerationRequestDto
             {
+                SpiderWebCount = request.SpiderWebCount,
+                CarCount = request.CarCount,
+                CarPlacementWidth = _mapView.ResolveCarPlacementWidth(tWidth),
+                CarMinSpacing = request.CarMinSpacing,
+                HidingLockerCount = request.HidingLockerCount,
+                HidingLockerMinSpacing = request.HidingLockerMinSpacing,
+                FireAlarmCount = request.FireAlarmCount,
+                FireAlarmMinSpacing = request.FireAlarmMinSpacing,
+                FireAlarmEndMargin = request.FireAlarmEndMargin,
+                FireAlarmMouthMargin = request.FireAlarmMouthMargin,
                 TunnelCount = request.TunnelCount,
                 Seed = request.Seed,
                 PlacementAttemptsPerTunnel = request.PlacementAttemptsPerTunnel,
@@ -110,6 +123,8 @@ namespace Shinzui.Presentation.GenerateTunnel
             Dispose();
             _mapView.PrepareBuild();
             var tunnelRoots = new Dictionary<int, Transform>();
+            var corridorRoots = new Dictionary<int, Transform>();
+            var roomRoots = new Dictionary<int, Transform>();
 
             // 1. トンネルノードと出入口候補マーカーの生成
             foreach (TunnelNodeDto tunnel in mapDto.Tunnels.OrderBy(t => t.Slope != 0.0f))
@@ -179,7 +194,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                 Vector3 center = new Vector3(corridor.CenterX, corridor.CenterY, corridor.CenterZ);
                 Vector3 dir = new Vector3(corridor.DirX, corridor.DirY, corridor.DirZ);
 
-                _mapView.CreateNormalCorridor(
+                var corridorInfo = _mapView.CreateNormalCorridor(
                     center,
                     dir,
                     corridor.Length,
@@ -190,6 +205,8 @@ namespace Shinzui.Presentation.GenerateTunnel
                     corridor.OpenEnd,
                     corridor.OpenLeft,
                     corridor.OpenRight);
+                // 曲がり通路は接続番号を共有するため、区間のリスト番号で識別する
+                corridorRoots.Add(corridorRoots.Count, corridorInfo.transform);
             }
 
             // 3. 小部屋接続の生成
@@ -198,7 +215,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                 Vector3 center = new Vector3(room.CenterX, room.CenterY, room.CenterZ);
                 Vector3 dir = new Vector3(room.DirX, room.DirY, room.DirZ);
 
-                _mapView.CreateSmallRoomConnection(
+                var roomInfo = _mapView.CreateSmallRoomConnection(
                     center,
                     dir,
                     room.RoomNumber,
@@ -208,6 +225,7 @@ namespace Shinzui.Presentation.GenerateTunnel
                     mapDto.Dimensions.CorridorWidth,
                     passageHeight,
                     mapDto.Dimensions.CorridorLength);
+                roomRoots.Add(room.RoomNumber, roomInfo.transform);
             }
 
             // 4. ワープ通路の生成とペアリング
@@ -253,17 +271,52 @@ namespace Shinzui.Presentation.GenerateTunnel
                     opening.LowerFloorY, opening.UpperFloorY, mapDto.Dimensions.TunnelHeight);
             }
 
-            // 6. 平坦な通常トンネルを一つ選び、片端をゴールにする
-            var goalCandidates = mapDto.Tunnels.Where(t => t.Slope == 0 && !t.IsSpecial && t.Id != 0).ToArray();
-            if (goalCandidates.Length > 0)
+            // 6. 配置計画と共通のゴール位置を使う
+            if (mapDto.GoalTunnelId.HasValue)
             {
-                var random = new System.Random(unchecked(mapDto.Seed ^ 0x47504c));
-                TunnelNodeDto goalTunnel = goalCandidates[random.Next(goalCandidates.Length)];
+                TunnelNodeDto goalTunnel = mapDto.Tunnels.Single(t => t.Id == mapDto.GoalTunnelId.Value);
                 _mapView.CreateTunnelGoal(tunnelRoots[goalTunnel.Id], goalTunnel.Length,
-                    mapDto.Dimensions.TunnelWidth, mapDto.Dimensions.TunnelHeight, random.Next(2) == 0 ? -1 : 1);
+                    mapDto.Dimensions.TunnelWidth, mapDto.Dimensions.TunnelHeight, mapDto.GoalEndSign);
             }
 
-            // 7. カメラフレーミング
+            // 7. 同フレームの床と壁を物理へ反映してからギミックを配置する
+            Physics.SyncTransforms();
+            foreach (var gimmick in mapDto.Gimmicks)
+            {
+                if (gimmick.Kind == TunnelGimmickKindDto.SpiderWeb)
+                {
+                    _mapView.CreateSpiderWeb(corridorRoots[gimmick.HostId], gimmick.LocalZ,
+                        mapDto.Dimensions.CorridorWidth - 0.2f, passageHeight - 0.2f, gimmick.VisualSeed);
+                }
+                else if (gimmick.Kind == TunnelGimmickKindDto.FireAlarm)
+                {
+                    _mapView.CreateFireAlarm(tunnelRoots[gimmick.HostId], gimmick.LocalZ,
+                        gimmick.Side, _mapView.FireAlarmHeight, mapDto.Dimensions.TunnelWidth);
+                }
+                else if (gimmick.Kind == TunnelGimmickKindDto.Car)
+                {
+                    _mapView.CreateCar(tunnelRoots[gimmick.HostId], gimmick.LocalX, gimmick.LocalZ,
+                        gimmick.Yaw, gimmick.VisualSeed);
+                }
+                else if (gimmick.Kind == TunnelGimmickKindDto.HidingLocker)
+                {
+                    // 負のホストIDは小部屋番号を符号化したもの
+                    bool room = gimmick.HostId < 0;
+                    var host = room ? roomRoots[-gimmick.HostId - 1] : tunnelRoots[gimmick.HostId];
+                    float width = room ? mapDto.SmallRooms.First(r => r.RoomNumber == -gimmick.HostId - 1).Width : mapDto.Dimensions.TunnelWidth;
+                    _mapView.CreateHidingLocker(host, gimmick.LocalZ, gimmick.Side, width);
+                }
+            }
+
+            // 家具の衝突を反映し、小部屋の空いた側壁へラックを配置する
+            Physics.SyncTransforms();
+            foreach (var room in mapDto.SmallRooms)
+            {
+                _mapView.CreateSmallRoomRacks(roomRoots[room.RoomNumber], room.Width, room.RoomLength,
+                    mapDto.Dimensions.CorridorWidth, unchecked(mapDto.Seed ^ (room.RoomNumber * 397)));
+            }
+
+            // 8. カメラフレーミング
             if (mapDto.Bounds != null)
             {
                 Vector3 boundsCenter = new Vector3(mapDto.Bounds.CenterX, mapDto.Bounds.CenterY, mapDto.Bounds.CenterZ);

@@ -16,6 +16,7 @@ namespace Shinzui.Presentation
     {
         private readonly EnemyView _view;
         private readonly HumanEnemyLocomotion _humanMotion;
+        private readonly float _humanChaseMultiplier;
         private readonly IEnemyRuntime _runtime;
         private readonly EnemyMoveUseCase _movement;
         private readonly PlayerDeathUseCase _death;
@@ -42,6 +43,11 @@ namespace Shinzui.Presentation
         private Vector3 _strobeSource;
         private bool _investigateAfterStrobe;
         private float _debugTimer;
+        private readonly Shinzui.Application.UseCases.Player.PlayerHidingUseCase _hiding;
+        private readonly PlayerHidingPresenter _hidingPresenter;
+        private readonly System.Func<int, bool> _openLocker;
+        private bool _hidDuringSearch;
+        private readonly IHidingSpotRegistry _hidingSpots;
 
         /// <summary>敵一体の知覚と移動を初期化</summary>
         /// <param name="id">敵の識別子</param>
@@ -57,18 +63,29 @@ namespace Shinzui.Presentation
         /// <param name="points">捜索候補の取得先</param>
         public EnemyController(int id, EnemyView view, IEnemyRuntime runtime, EnemyMoveUseCase movement,
             PlayerDeathUseCase death, EnemyDirectorSettings settings, EnemyBrainSettings brainSettings, IEnemyEncounterFeedback feedback,
-            System.Func<EnemyView, bool> capture = null, PlayerTacticTracker tactics = null, IEnemySearchPointProvider points = null)
+            System.Func<EnemyView, bool> capture = null, PlayerTacticTracker tactics = null, IEnemySearchPointProvider points = null,
+            IHidingSpotRegistry hidingSpots = null, Shinzui.Application.UseCases.Player.PlayerHidingUseCase hiding = null,
+            PlayerHidingPresenter hidingPresenter = null, System.Func<int, bool> openLocker = null)
         {
             Id = id;
             _view = view;
             _humanMotion = view.GetComponent<HumanEnemyLocomotion>();
+            if (_humanMotion != null)
+            {
+                // 通常歩行より10%速くし、歩行では追いつかれダッシュでは距離を離せる速度に設定
+                var playerSpeed = new Shinzui.Domain.ValueObjects.Player.PlayerSpeedStatus();
+                _humanChaseMultiplier = playerSpeed.MoveSpeed * 1.10f
+                    / Mathf.Max(.01f, view.ResolveAgent().speed);
+            }
             _runtime = runtime;
             _movement = movement;
             _death = death;
             _settings = settings;
             _brainSettings = brainSettings;
             _tactics = tactics;
-            _brain = new EnemyBrain(brainSettings, settings, id + 1, tactics, points);
+            _brain = new EnemyBrain(brainSettings, settings, id + 1, tactics, points, hidingSpots);
+            _hiding = hiding; _hidingPresenter = hidingPresenter; _openLocker = openLocker; _hidingSpots = hidingSpots;
+            _brain.SearchTimedOut += OnSearchExpired;
             _capture = capture;
             _feedback = feedback;
         }
@@ -117,7 +134,22 @@ namespace Shinzui.Presentation
                 _investigateAfterStrobe = false;
             }
             bool ready = _runtime.IsReady && !_strobeStops;
-            SightSample sight = ready ? _runtime.SampleSight(playerPosition, playerHeight, playerVelocity) : default;
+            bool hidden = _hiding != null && _hiding.IsHidden;
+            SightSample sight = ready && !hidden ? _runtime.SampleSight(playerPosition, playerHeight, playerVelocity) : default;
+            int witnessed = 0, presence = 0;
+            if (ready && hidden)
+            {
+                if (_hiding.IsEntering && _brain.Awareness >= EnemyAwarenessLevel.Suspicious && _hidingPresenter != null
+                    && _runtime.SampleSight(_hidingPresenter.EntryPosition, playerHeight, Vector3.zero).VisibleRatio > 0f)
+                    witnessed = _hiding.CurrentSpotId;
+                if (_brain.InspectingSpotId == _hiding.CurrentSpotId && !_hiding.IsHoldingBreath
+                    && _hidingSpots != null && _hidingSpots.TryGet(_hiding.CurrentSpotId, out var occupiedSpot)
+                    && Vector3.Distance(_runtime.Position, occupiedSpot.Position) <= 1.5f)
+                    presence = _hiding.CurrentSpotId;
+                if (_brain.Awareness == EnemyAwarenessLevel.Alerted && Vector3.Distance(_runtime.Position, playerPosition) <= 15f)
+                    _hidDuringSearch = true;
+            }
+            if (_brain.Awareness == EnemyAwarenessLevel.Engaged || _runtime.IsBackstage) _hidDuringSearch = false;
             // 聴覚は遮蔽を反映し、最も強い刺激だけを調査対象にする
             float strongest = 0f;
             float totalNoiseGain = 0f;
@@ -140,7 +172,7 @@ namespace Shinzui.Presentation
             // Brainへは視覚サンプルと聞こえた音だけを渡す
             bool visibleForTransition = IsVisibleAt(_runtime.Position);
             _input = new EnemyBrainInput(_runtime.Position, sight, signature, totalNoiseGain, heardNoise,
-                _runtime.IsReady, _strobeStops, _runtime.IsBackstage, visibleForTransition);
+                _runtime.IsReady, _strobeStops, _runtime.IsBackstage, visibleForTransition, new HidingSense(witnessed, presence));
             _visibleToPlayer = !_runtime.IsBackstage && _view.IsVisibleFrom(playerCamera, playerRoot, _settings.sightBlockingLayers);
             return CurrentReport();
         }
@@ -171,7 +203,7 @@ namespace Shinzui.Presentation
             }
 #endif
             // 移動用の原点ではなく体の中心から接近距離を測定
-            if (!_runtime.IsBackstage && _runtime.IsReady && !_strobeStops && _death != null && _deathTimer <= 0f &&
+            if (!(_hiding?.IsHidden ?? false) && !_runtime.IsBackstage && _runtime.IsReady && !_strobeStops && _death != null && _deathTimer <= 0f &&
                 Vector3.Distance(_view.PlayerDeathPosition, player.PlayerPosition) <= _view.PlayerDeathDistance &&
                 _runtime.HasClearContact(player.PlayerPosition, playerHeight))
             {
@@ -179,6 +211,11 @@ namespace Shinzui.Presentation
                 _deathTimer = Mathf.Max(.1f, _view.DeathAttemptCooldown);
                 if (killed) return;
             }
+
+            // 通常行動中だけ叫び、舞台裏や出現待ちでは音声を停止
+            if (_humanMotion != null)
+                _humanMotion.TickVoice(deltaTime, _runtime.IsReady && !_runtime.IsBackstage
+                    && intent.Type != EnemyIntentType.Hidden && intent.Type != EnemyIntentType.Emerge);
 
             // 表示と接触を切り替える直前に再確認し、見えている間は切り替えない
             if (intent.Type == EnemyIntentType.Hidden)
@@ -209,8 +246,11 @@ namespace Shinzui.Presentation
             }
             bool changed = intent.Type != _currentIntent.Type;
             _currentIntent = intent;
-            bool stopped = intent.Type == EnemyIntentType.Idle || intent.Type == EnemyIntentType.LookAround;
-            _runtime.SetSpeed(intent.SpeedMultiplier * _strobeMultiplier, _strobeStops || stopped);
+            bool stopped = intent.Type == EnemyIntentType.Idle || intent.Type == EnemyIntentType.LookAround
+                || intent.Type == EnemyIntentType.InspectHidingSpot || intent.Type == EnemyIntentType.OpenHidingSpot;
+            float speedMultiplier = _humanMotion != null && intent.Type == EnemyIntentType.Chase
+                ? _humanChaseMultiplier : intent.SpeedMultiplier;
+            _runtime.SetSpeed(speedMultiplier * _strobeMultiplier, _strobeStops || stopped);
             // 追跡命令を見た目へ反映し、腕をプレイヤーの上半身へ向ける
             if (_humanMotion != null)
                 _humanMotion.SetChasePose(intent.Type == EnemyIntentType.Chase && !_strobeStops && _runtime.IsReady,
@@ -219,6 +259,11 @@ namespace Shinzui.Presentation
 
             switch (intent.Type)
             {
+                case EnemyIntentType.OpenHidingSpot:
+                    _runtime.Stop();
+                    _brain.FinishHidingInspection();
+                    if (_openLocker?.Invoke(intent.HidingSpotId) == true) _brain.ConfirmPulledOut(player.PlayerPosition);
+                    return;
                 case EnemyIntentType.Idle:
                     _movement.Stop();
                     _runtime.Stop();
@@ -233,6 +278,7 @@ namespace Shinzui.Presentation
                     }
                     break;
                 case EnemyIntentType.LookAround:
+                case EnemyIntentType.InspectHidingSpot:
                     _movement.Stop();
                     _runtime.Stop();
                     _runtime.FaceTowards(intent.Target);
@@ -298,6 +344,13 @@ namespace Shinzui.Presentation
         {
             _runtime.Stop();
             _runtime.SetSpeed(1f, false);
+        }
+
+        /// <summary>隠れながら捜索をやり過ごした回だけ共有学習へ通知</summary>
+        private void OnSearchExpired()
+        {
+            if (_hidDuringSearch) _tactics?.Record(PlayerTacticKind.HidDuringSearch);
+            _hidDuringSearch = false;
         }
     }
 }

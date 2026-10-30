@@ -8,6 +8,17 @@ namespace Shinzui.Domain.ValueObjects.Tunnel
     /// </summary>
     public sealed class TunnelGenerationConfig
     {
+        public int SpiderWebCount { get; init; } = 3;
+        public int CarCount { get; init; } = 4;
+        public float CarPlacementWidth { get; init; }
+        public float CarMinSpacing { get; init; } = 15f;
+        public int HidingLockerCount { get; init; } = 4;
+        public float HidingLockerMinSpacing { get; init; } = 25f;
+        public int FireAlarmCount { get; init; } = 3;
+        public float FireAlarmMinSpacing { get; init; } = 40.0f;
+        public float FireAlarmEndMargin { get; init; } = 12.0f;
+        public float FireAlarmMouthMargin { get; init; } = 4.0f;
+
         public int TunnelCount { get; init; } = 8;
         public int Seed { get; init; } = 2777;
         public int PlacementAttemptsPerTunnel { get; init; } = 80;

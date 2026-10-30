@@ -55,6 +55,8 @@ namespace Shinzui.Application.AI.Enemy
             if (_searching)
             {
                 _tactics?.Record(PlayerTacticKind.EscapedSearch);
+                SearchTimedOut?.Invoke();
+                _lingerRemaining = HasBehavior(EnemyBehaviorFlags.LingerAfterSearch) ? 9f : 0f;
                 _backtrackPending = HasBehavior(EnemyBehaviorFlags.Backtrack);
                 _backtrackTarget = _searchOrigin;
                 _backtrackTime = 0f;

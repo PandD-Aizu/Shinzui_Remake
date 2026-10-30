@@ -140,6 +140,9 @@ namespace Shinzui.Application.DTOs.Tunnel
         public IReadOnlyList<NormalCorridorDto> NormalCorridors { get; init; }
         public IReadOnlyList<SmallRoomDto> SmallRooms { get; init; }
         public IReadOnlyList<WarpCorridorDto> WarpCorridors { get; init; }
+        public int? GoalTunnelId { get; init; }
+        public int GoalEndSign { get; init; }
+        public IReadOnlyList<TunnelGimmickDto> Gimmicks { get; init; } = System.Array.Empty<TunnelGimmickDto>();
         public int? SpecialTunnelId { get; init; }
         public TunnelBoundsDto Bounds { get; init; }
         public TunnelDimensionsDto Dimensions { get; init; }
@@ -159,5 +162,20 @@ namespace Shinzui.Application.DTOs.Tunnel
         public float Size { get; init; }
         public float LowerFloorY { get; init; }
         public float UpperFloorY { get; init; }
+    }
+    /// <summary>生成するギミックの種類</summary>
+    public enum TunnelGimmickKindDto { SpiderWeb, FireAlarm, HidingLocker, Car }
+
+    /// <summary>ホスト内のギミック配置情報</summary>
+    public sealed class TunnelGimmickDto
+    {
+        public TunnelGimmickKindDto Kind { get; init; }
+        /// <summary>蜘蛛の巣はNormalCorridorsのリスト番号、報知器はトンネル番号</summary>
+        public int HostId { get; init; }
+        public float LocalX { get; init; }
+        public float Yaw { get; init; }
+        public float LocalZ { get; init; }
+        public int Side { get; init; }
+        public int VisualSeed { get; init; }
     }
 }

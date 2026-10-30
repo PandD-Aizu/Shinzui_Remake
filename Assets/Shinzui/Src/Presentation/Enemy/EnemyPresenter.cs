@@ -44,6 +44,9 @@ namespace Shinzui.Presentation
         private readonly PlayerTacticTracker _tactics;
         private readonly IEnemySearchPointProvider _points;
         private IEnemyStageProgress _stageProgress;
+        private readonly IHidingSpotRegistry _hidingSpots;
+        private readonly Shinzui.Application.UseCases.Player.PlayerHidingUseCase _hiding;
+        private readonly PlayerHidingPresenter _hidingPresenter;
 
         /// <summary>敵の知覚と統括AIをプレイヤー状態へ接続</summary>
         /// <param name="playerTracker">プレイヤーの位置</param>
@@ -73,7 +76,8 @@ namespace Shinzui.Presentation
             PlayerMoveUseCase playerMove,
             PlayerView playerView,
             PlayerDeathView deathView, FlashlightUseCase flashlight, NoiseEventHub noiseHub, EnemyBrainSettings brainSettings,
-            IEnemyEncounterFeedback feedback, PlayerTacticTracker tactics, IEnemySearchPointProvider points)
+            IEnemyEncounterFeedback feedback, PlayerTacticTracker tactics, IEnemySearchPointProvider points,
+            IHidingSpotRegistry hidingSpots, Shinzui.Application.UseCases.Player.PlayerHidingUseCase hiding, PlayerHidingPresenter hidingPresenter)
         {
             _playerTracker = playerTracker;
             _playerDeathUseCase = playerDeathUseCase;
@@ -91,6 +95,7 @@ namespace Shinzui.Presentation
             _feedback = feedback;
             _tactics = tactics;
             _points = points;
+            _hidingSpots = hidingSpots; _hiding = hiding; _hidingPresenter = hidingPresenter;
             _visibility = IsPositionVisible;
             _canReachExit = CanReachExit;
         }
@@ -123,7 +128,8 @@ namespace Shinzui.Presentation
                     _settings,
                     _brainSettings,
                     _feedback,
-                    CapturePlayer, _tactics, _points);
+                    CapturePlayer, _tactics, _points, _hidingSpots, _hiding, _hidingPresenter,
+                    id => OpenHidingSpot(id, enemyView));
                 controller.Initialize();
 
                 _controllers.Add(controller);
@@ -186,6 +192,17 @@ namespace Shinzui.Presentation
                     if (other != null && other != enemy) other.FadeOut();
             }
             return killed;
+        }
+
+        /// <summary>ドアを開けて実際に中にいた場合だけ既存の死亡判定を行う</summary>
+        /// <param name="id">ロッカー</param>
+        /// <param name="enemy">開けた敵</param>
+        /// <returns>プレイヤーを引きずり出したか</returns>
+        private bool OpenHidingSpot(int id, EnemyView enemy)
+        {
+            if (!_hidingPresenter.OpenByEnemy(id)) return false;
+            CapturePlayer(enemy);
+            return true;
         }
 
         public void Dispose()
@@ -285,6 +302,7 @@ namespace Shinzui.Presentation
         /// <returns>足音が発生しない場合は0</returns>
         private float GetFootstepNoiseRadius(float deltaTime)
         {
+            if (_hiding.IsHidden) { _hasPreviousPosition = false; return 0f; }
             Vector3 position = _playerTracker.PlayerPosition;
             Vector3 movement = position - _previousPlayerPosition;
             movement.y = 0f;

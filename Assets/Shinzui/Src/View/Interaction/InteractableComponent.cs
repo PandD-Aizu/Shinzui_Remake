@@ -28,6 +28,20 @@ namespace Shinzui.View.Interaction
         public float PickupDuration => pickupDuration;
         public Transform PickupGrip => pickupGrip;
 
+        /// <summary>取得アイテムの判定を操作検出専用にする</summary>
+        private void Awake()
+        {
+            if (!RequiresHold) return;
+
+            // 子モデルを含めて物理衝突をなくし、足場になることを防ぐ
+            foreach (Collider itemCollider in GetComponentsInChildren<Collider>(true))
+            {
+                if (itemCollider.GetComponentInParent<InteractableComponent>() != this) continue;
+                if (itemCollider is MeshCollider mesh) mesh.convex = true;
+                itemCollider.isTrigger = true;
+            }
+        }
+
         /// <summary>明示した掴み位置、または対象のコライダー中心</summary>
         public Vector3 PickupPosition
         {
@@ -39,15 +53,31 @@ namespace Shinzui.View.Interaction
             }
         }
 
-        /// <summary>明示した掴み位置、または視点に近いコライダー表面を返す</summary>
+        /// <summary>明示した掴み位置、または掌で覆うコライダー上面を返す</summary>
         /// <param name="origin">手を伸ばす側の視点</param>
-        /// <returns>指先が触れる位置</returns>
+        /// <returns>掌を合わせる位置</returns>
         public Vector3 GetPickupContact(Vector3 origin)
         {
             Vector3 center = PickupPosition;
             if (pickupGrip != null || _pickupCollider == null) return center;
-            if (_pickupCollider is MeshCollider mesh && !mesh.convex) return mesh.bounds.ClosestPoint(origin);
-            return _pickupCollider.ClosestPoint(origin);
+
+            // 側面をなでず、対象の上から掌を被せる
+            Vector3 above = center + Vector3.up * (_pickupCollider.bounds.extents.y + .1f);
+            Vector3 surface = _pickupCollider is MeshCollider mesh && !mesh.convex
+                ? mesh.bounds.ClosestPoint(above) : _pickupCollider.ClosestPoint(above);
+            return surface + Vector3.up * .025f;
+        }
+
+        /// <summary>掌を下に向け、指を対象の奥へ伸ばす手首姿勢を返す</summary>
+        /// <param name="forward">プレイヤーの前方</param>
+        /// <returns>掴み位置の回転</returns>
+        public Quaternion GetPickupRotation(Vector3 forward)
+        {
+            if (pickupGrip != null) return pickupGrip.rotation;
+
+            // 見下ろす角度を手首へ伝えず、掌を上面に沿わせる
+            Vector3 direction = Vector3.ProjectOnPlane(forward, Vector3.up);
+            return Quaternion.LookRotation(direction.sqrMagnitude > .0001f ? direction : Vector3.forward, Vector3.up);
         }
 
         public virtual string DisplayName => displayName;

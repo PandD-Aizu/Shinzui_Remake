@@ -31,6 +31,9 @@ namespace Shinzui.Application.Interfaces
         /// </summary>
         int QuickItemScrollDelta { get; }
 
+        /// <summary>矢印キーによる切り替え方向 右・上が次、左・下が前</summary>
+        int QuickItemArrowDelta { get; }
+
         /// <summary>
         /// プレイヤーの移動やカメラ回転入力（Playerアクションマップ）の入力をブロックするか制御します。
         /// </summary>
@@ -51,6 +54,9 @@ namespace Shinzui.Application.Interfaces
         /// 攻撃・投擲入力（左クリック等）が押し続けられているか
         /// </summary>
         bool AttackHeld { get; }
+        bool HoldBreathHeld { get; }
+        bool HidingExitPressed { get; }
+        void SetHiding(bool hiding);
     }
 
     /// <summary>

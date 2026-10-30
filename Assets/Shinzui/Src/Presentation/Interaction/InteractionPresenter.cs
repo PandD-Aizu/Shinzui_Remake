@@ -77,6 +77,7 @@ namespace Shinzui.Presentation.Interaction
         public void Tick()
         {
             if (_disposed || _interactionView == null) return;
+            if (_playerView.IsHiding || _playerView.GetComponent<PenlightPlacementView>()?.IsPlaying == true) return;
             bool held = _inputService.ItemUseHeld;
             if (!held) _requireRelease = false;
             if (_body == null && _playerView != null) _body = _playerView.GetComponentInChildren<PlayerBodyView>();
@@ -120,6 +121,8 @@ namespace Shinzui.Presentation.Interaction
                 {
                     if (!held || !_interactionView.CanContinuePickup(target)) return;
                     _pickupTarget = target;
+                    // 手首の向きは開始時に決め、見回しによる急な捻りを防ぐ
+                    _pickupRotation = target.GetPickupRotation(target.PickupPosition - _playerView.CameraPosition);
                     _interruption = target.GetComponent<IPickupInterruption>();
                     _interruptionStarted = false;
                     _requireRelease = true;
@@ -137,12 +140,9 @@ namespace Shinzui.Presentation.Interaction
             if (_pickupTarget != null && (_pickup.State == ItemPickupState.Reaching || _pickup.State == ItemPickupState.Waiting))
             {
                 _pickupPosition = _pickupTarget.GetPickupContact(_playerView.CameraPosition);
-                Vector3 direction = _pickupPosition - _playerView.CameraPosition;
-                if (direction.sqrMagnitude < .0001f) direction = _playerView.CameraForward;
-                _pickupRotation = _pickupTarget.PickupGrip != null ? _pickupTarget.PickupGrip.rotation
-                    : Quaternion.LookRotation(direction.normalized, _playerView.MainCamera.transform.up);
             }
-            float grip = _pickup.Succeeded ? .8f : Mathf.InverseLerp(.8f, 1f, _pickup.Progress) * .8f;
+            float grip = _pickup.Succeeded ? .45f
+                : Mathf.SmoothStep(0f, .45f, Mathf.InverseLerp(.65f, 1f, _pickup.Progress));
             if (_body != null) _body.SetPickupPose(_pickupPosition, _pickupRotation, _pickup.Progress, grip);
             _interactionView.SetPickupProgress(_pickup.IsActive, _pickup.Progress,
                 _pickup.State == ItemPickupState.Reaching || _pickup.State == ItemPickupState.Waiting

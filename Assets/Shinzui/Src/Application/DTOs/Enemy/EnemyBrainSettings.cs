@@ -20,5 +20,9 @@ namespace Shinzui.Application.DTOs.Enemy
         public float noiseBase = .6f;
         public float decayPerSecond = .12f;
         public float alertedHoldTime = 8f;
+        public float inspectDuration = 3f;
+        public float inspectCooldown = 30f;
+        public float blindOpenChance = .15f;
+        public float lingerBlindOpenChance = .3f;
     }
 }

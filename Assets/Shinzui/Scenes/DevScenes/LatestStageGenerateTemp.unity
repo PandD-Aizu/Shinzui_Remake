@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.3
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  m_AmbientSkyColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 0
@@ -302,6 +302,8 @@ MonoBehaviour:
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  footstepDistance: 0.8
+  minimumFootstepInterval: 0.37
   crouchRatio: 0.5
   heightChangeRate: 10
   staminaSlider: {fileID: 1958970259}
@@ -477,6 +479,10 @@ MonoBehaviour:
   interactLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  markerRange: 5
+  markerDiameter: 14
+  interactableMarkerDiameter: 24
+  holdProgressDiameter: 72
   reticleDot: {fileID: 877069337}
   interactionPromptText: {fileID: 858249419}
 --- !u!1 &128163229
@@ -774,7 +780,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76b0ede3473dc5c46aa0404113afa3b9, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.SpiderWebBurnVfx
   duration: 2.4
 --- !u!114 &138528206
@@ -787,13 +793,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad924b4d32b9189419f31d69aba26cf5, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.SpiderWebInteractable
   displayName: "[E] \u8ABF\u3079\u308B"
   interactableId: InteractionTest
   isOneTime: 0
   destroyOnInteract: 0
   interactMessage: There is a creepy figurine here. It seems covered in dust.
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!1 &148840331
 GameObject:
   m_ObjectHideFlags: 0
@@ -2217,6 +2226,9 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 1
   interactMessage: "\u53E4\u3073\u305F\u9774\u3092\u5165\u624B\u3057\u305F"
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!1 &608900463
 GameObject:
   m_ObjectHideFlags: 0
@@ -2733,6 +2745,9 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 1
   interactMessage: "\u3044\u3057\u3092\u5165\u624B\u3057\u305F"
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!65 &690180212
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4336,6 +4351,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.FlashlightView
   flashlightLight: {fileID: 775528540}
   targetCamera: {fileID: 632997464}
+  flashlightModel: {fileID: 0}
+  modelLightOffset: {x: -0.24, y: -0.23, z: 0.52}
+  useRealisticBeam: 0
+  beamShadows: 0
+  beamFocusDistance: 8
+  nearWallDistance: 2
+  nearWallIntensity: 0.12
+  beamObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   minSpeed: 2
   maxSpeed: 45
   maxAngle: 30
@@ -4826,8 +4851,35 @@ MonoBehaviour:
   playerDeathView: {fileID: 396944459}
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
+  objectiveView: {fileID: 0}
+  objectiveIcon: {fileID: 0}
+  enemyDirectorSettings:
+    ambientDuration: 12
+    buildUpDuration: 35
+    recoveryDuration: 18
+    searchDuration: 14
+    hintInterval: 8
+    hintCellSize: 12
+    searchRadius: 7
+    searchPointInterval: 3
+    retreatDistance: 18
+    pressureDistance: 18
+    chasePressurePerSecond: 0.075
+    proximityPressurePerSecond: 0.025
+    pressureDecayPerSecond: 0.06
+    sightDistance: 16
+    fieldOfView: 110
+    detectionTime: 0.3
+    eyeHeight: 1
+    walkingNoiseRadius: 4
+    runningNoiseRadius: 13
+    footstepInterval: 0.65
+    patrolSpeedMultiplier: 0.65
+    repathInterval: 0.3
+    sightBlockingLayers: -1
   needWeightSettings: {fileID: 0}
   itemCategoryClassifier: {fileID: 0}
+  saveController: {fileID: 0}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0
@@ -5552,7 +5604,7 @@ MonoBehaviour:
   m_OverrideVoxelSize: 0
   m_VoxelSize: 0.16666667
   m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 1525b1182cdd9cd4b9488f7f6ff69fee, type: 2}
+  m_NavMeshData: {fileID: 0}
   m_BuildHeightMesh: 0
 --- !u!1 &1940410821
 GameObject:
@@ -6396,6 +6448,9 @@ MonoBehaviour:
   isOneTime: 0
   destroyOnInteract: 0
   interactMessage: "\u3069\u3053\u304B\u304B\u3089\u90AA\u60AA\u306A\u7B11\u3044\u58F0\u304C\u805E\u3053\u3048\u308B\n\u307C\u305F\u3082\uFF5E\u3061\u3082\u3061\u3082\u3061\u3082\u3061"
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!1 &2133416719
 GameObject:
   m_ObjectHideFlags: 0
@@ -6726,6 +6781,8 @@ MonoBehaviour:
   mapRoot: {fileID: 379417648}
   overviewCamera: {fileID: 0}
   showDebugGeometry: 0
+  ceilingShadowDistance: 15
+  maxCeilingShadowLights: 8
 --- !u!114 &8000000000000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6756,13 +6813,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74df90422b0f47e0b33d3dfc71db809b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
+  spiderWebCount: 3
+  fireAlarmCount: 3
+  fireAlarmMinSpacing: 40
+  fireAlarmEndMargin: 12
+  fireAlarmMouthMargin: 4
+  spiderWebTemplate: {fileID: 4811854858651217045, guid: 0f88d6edce2d3a147a9c50e07dbc0388, type: 3}
+  fireAlarmPrefab: {fileID: 0}
+  fireAlarmHeight: 1.4
   tunnelCount: 8
   seed: 2777
   placementAttemptsPerTunnel: 80
+  generateUpperFloor: 0
+  upperFloorHeight: 12
+  generateLowerFloor: 0
+  lowerFloorDepth: 12
+  dropOpeningCount: 2
+  dropOpeningSize: 3
   smallRoomCount: 1
   smallRoomWidth: 12
   smallRoomLength: 12
   tunnelLength: 153.12695
+  minTunnelLength: 153.12695
+  maxTunnelLength: 153.12695
   connectionPointSpacing: 51.042316
   tunnelWidth: 14.800003
   tunnelHeight: 5
@@ -6777,6 +6850,7 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
+  ceilingLightSpacing: 5
   basicTunnelModelScale: {x: 1, y: 1, z: 1}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}

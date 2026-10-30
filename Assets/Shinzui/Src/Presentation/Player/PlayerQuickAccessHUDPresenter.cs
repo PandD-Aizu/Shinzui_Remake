@@ -22,6 +22,7 @@ namespace Shinzui.Presentation
         private readonly IInputService _inputService;
         private readonly PlayerQuickItemSlotView _playerQuickItemSlotView;
         private PlayerInteractionView _interactionView;
+        private readonly PenlightPlacementView _penlightView;
 
         private IDisposable _disposable;
         private bool _isUsingItem;
@@ -30,12 +31,14 @@ namespace Shinzui.Presentation
             InventoryUseCase inventoryUseCase,
             SpecialItemUseCase specialItemUseCase,
             IInputService inputService,
-            PlayerQuickItemSlotView playerQuickItemSlotView)
+            PlayerQuickItemSlotView playerQuickItemSlotView,
+            PenlightPlacementView penlightView)
         {
             _inventoryUseCase = inventoryUseCase;
             _specialItemUseCase = specialItemUseCase;
             _inputService = inputService;
             _playerQuickItemSlotView = playerQuickItemSlotView;
+            _penlightView = penlightView;
         }
 
         public void Initialize()
@@ -75,7 +78,7 @@ namespace Shinzui.Presentation
 
         public void Tick()
         {
-            if (_inventoryUseCase.IsOpen.CurrentValue)
+            if (_inventoryUseCase.IsOpen.CurrentValue || _isUsingItem)
             {
                 return;
             }
@@ -86,20 +89,23 @@ namespace Shinzui.Presentation
                 _ = TryUseEquippedNormalItemAsync();
             }
 
-            // 通常アイテムはCtrl + マウスホイールでアイテムを切り替え
-            if (_inputService.QuickItemModifierHeld)
+            // 矢印キーを優先し、Ctrl + マウスホイールでも切り替える
+            int direction = _inputService.QuickItemArrowDelta;
+            if (direction == 0 && _inputService.QuickItemModifierHeld)
             {
-                int scrollDelta = _inputService.QuickItemScrollDelta;
-                if (scrollDelta != 0)
-                {
-                    SelectNextNormalItem(scrollDelta);
-                }
+                direction = _inputService.QuickItemScrollDelta;
+            }
+
+            if (direction != 0)
+            {
+                SelectNextNormalItem(direction);
             }
         }
 
         /// <summary>
         /// 装備中の通常アイテムを使用する
         /// </summary>
+        /// <returns>使用または設置演出の完了タスク</returns>
         private async Task TryUseEquippedNormalItemAsync()
         {
             _isUsingItem = true;
@@ -113,12 +119,22 @@ namespace Shinzui.Presentation
                 }
 
                 var dto = _inventoryUseCase.GetSlotDto(equippedIndex).CurrentValue;
-                if (dto == null || !dto.HasItem || !dto.IsConsumable)
+                if (dto == null || !dto.HasItem)
                 {
                     return;
                 }
 
-                await _inventoryUseCase.UseItemAsync(equippedIndex);
+                if (dto.ItemId == "penlight")
+                {
+                    await _penlightView.PlayAsync(() =>
+                        _inventoryUseCase.EquippedSlotIndex.CurrentValue == equippedIndex
+                        && !_inventoryUseCase.IsOpen.CurrentValue
+                            ? _inventoryUseCase.PlaceEquippedPenlightAsync() : Task.FromResult(false));
+                }
+                else if (dto.IsConsumable)
+                {
+                    await _inventoryUseCase.UseItemAsync(equippedIndex);
+                }
             }
             finally
             {

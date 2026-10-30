@@ -13,6 +13,8 @@ namespace Shinzui.Domain.ValueObjects.Enemy
         SearchSideRooms = 8,
         Backtrack = 16,
         PredictiveChase = 32,
-        AmbushFromAbove = 64
+        AmbushFromAbove = 64,
+        CheckHidingSpots = 128,
+        LingerAfterSearch = 256
     }
 }

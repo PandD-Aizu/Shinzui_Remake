@@ -112,6 +112,9 @@ namespace Shinzui.DI
             builder.RegisterInstance(behaviorUnlockSettings);
             builder.Register<Shinzui.Domain.Entities.Enemy.BehaviorUnlockEntity>(Lifetime.Scoped);
             builder.Register<PlayerTacticTracker>(Lifetime.Scoped);
+            builder.Register<HidingSpotRegistry>(Lifetime.Scoped).As<IHidingSpotRegistry>();
+            builder.Register<Shinzui.Application.UseCases.Player.PlayerHidingUseCase>(Lifetime.Scoped);
+            builder.RegisterEntryPoint<PlayerHidingPresenter>().AsSelf();
             builder.Register<IEnemySearchPointProvider>(_ => CreateEnemySearchPointProvider(), Lifetime.Scoped);
             builder.Register<NoiseEventHub>(Lifetime.Scoped).As<INoiseEventSink>().AsSelf();
             builder.RegisterEntryPoint<EnemyNoisePresenter>();
@@ -130,6 +133,15 @@ namespace Shinzui.DI
             if (viewInstance != null)
             {
                 builder.RegisterComponent(viewInstance);
+
+                // 装備したペンライトの設置をインベントリへ接続する
+                var penlightService = new PenlightPlacementService(
+                    viewInstance.transform, Resources.Load<GameObject>("PlacedPenlight"));
+                builder.RegisterInstance<IPenlightPlacementService>(penlightService);
+                var penlightView = viewInstance.GetComponent<PenlightPlacementView>();
+                if (penlightView == null) penlightView = viewInstance.gameObject.AddComponent<PenlightPlacementView>();
+                penlightView.Configure(viewInstance, penlightService);
+                builder.RegisterComponent(penlightView);
 
                 // PlayerThrowViewの動的アタッチとDI登録
                 var throwViewInstance = viewInstance.GetComponent<PlayerThrowView>();

@@ -116,7 +116,8 @@ namespace Shinzui.Presentation.ItemSpawn
                 Matrix4x4 w2l = surface.transform.worldToLocalMatrix;
                 var surfaceDto = new SpawnSurfaceDataDto
                 {
-                    SurfaceId = surface.gameObject.name,
+                    // 同じプレハブの棚でも別の生成面として重みと座標変換を参照する
+                    SurfaceId = $"{surface.gameObject.name} [{s}]",
                     RegionWeight = surface.RegionWeight,
                     IsValid = surface.IsDataValid,
                     MapResolution = surface.MapResolution,

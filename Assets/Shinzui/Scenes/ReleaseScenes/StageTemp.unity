@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.06
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  m_AmbientSkyColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 0
@@ -1762,17 +1762,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74df90422b0f47e0b33d3dfc71db809b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
+  spiderWebCount: 3
+  fireAlarmCount: 3
+  fireAlarmMinSpacing: 40
+  fireAlarmEndMargin: 12
+  fireAlarmMouthMargin: 4
+  spiderWebTemplate: {fileID: 4811854858651217045, guid: 0f88d6edce2d3a147a9c50e07dbc0388, type: 3}
+  fireAlarmPrefab: {fileID: 0}
+  hidingLockerCount: 4
+  hidingLockerMinSpacing: 25
+  hidingLockerPrefab: {fileID: 0}
+  fireAlarmHeight: 1.4
   tunnelCount: 8
-  seed: 2777
+  seed: 30
   placementAttemptsPerTunnel: 80
+  generateUpperFloor: 0
+  upperFloorHeight: 14
+  generateLowerFloor: 0
+  lowerFloorDepth: 14
+  dropOpeningCount: 2
+  dropOpeningSize: 3
   smallRoomCount: 1
   smallRoomWidth: 8
   smallRoomLength: 6
-  tunnelLength: 153.12695
-  connectionPointSpacing: 51.042316
+  tunnelLength: 40
+  minTunnelLength: 60
+  maxTunnelLength: 76
+  connectionPointSpacing: 11
   tunnelWidth: 14.800003
   tunnelHeight: 5
-  corridorLength: 8
+  corridorLength: 4
   corridorWidth: 3
   placementMargin: 2
   tunnelOverlapSizeMultiplier: 1
@@ -1784,7 +1803,7 @@ MonoBehaviour:
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
   ceilingLightSpacing: 5
-  basicTunnelModelScale: {x: 1, y: 1, z: 1}
+  basicTunnelModelScale: {x: 1, y: 0.75, z: 0.75}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}
   warpCorridorModelScale: {x: 1, y: 1, z: 1}
@@ -1794,6 +1813,8 @@ MonoBehaviour:
   warpCorridorModelEuler: {x: 0, y: 0, z: 0}
   useModelBoundsForLayout: 1
   configureBasicTunnelExitParts: 1
+  smallRoomRackCount: 2
+  smallRoomRackPrefab: {fileID: 0}
 --- !u!1 &583186507
 GameObject:
   m_ObjectHideFlags: 0
@@ -4602,7 +4623,7 @@ MonoBehaviour:
   enemyViews: []
   horrorDetectionView: {fileID: 2133416720}
   objectiveView: {fileID: 0}
-  objectiveIcon: {fileID: 0}
+  objectiveIcon: {fileID: 21300000, guid: 5b9327444dcc6874da257bec1a7d03f5, type: 3}
   enemyDirectorSettings:
     ambientDuration: 12
     buildUpDuration: 35
@@ -4627,6 +4648,75 @@ MonoBehaviour:
     patrolSpeedMultiplier: 0.65
     repathInterval: 0.3
     sightBlockingLayers: -1
+  menaceSettings:
+    engagedPerSecond: 0.1
+    visiblePerSecond: 0.06
+    proximityPerSecond: 0.04
+    decayPerSecond: 0.05
+    backstageDecayPerSecond: 0.12
+    visibleDistance: 12
+    menaceRadius: 15
+    backstageMinDuration: 20
+    backstageMaxDuration: 35
+    emergeMinDistance: 15
+    emergeMaxDistance: 30
+    featuredHoldTime: 20
+    otherRetreatDistance: 20
+    leashDistance: 35
+    leashTime: 25
+    backstageSpeed: 3
+    backstageSoundInterval: 4
+    pointRetryInterval: 2
+    exitRetryTime: 12
+  behaviorUnlockSettings:
+    unlockCooldown: 60
+    sneakDistance: 8
+    sneakDuration: 10
+    ambushFloor: 2
+    rules:
+    - tactic: 0
+      count: 3
+      behavior: 1
+    - tactic: 1
+      count: 3
+      behavior: 2
+    - tactic: 2
+      count: 3
+      behavior: 4
+    - tactic: 5
+      count: 2
+      behavior: 128
+    - tactic: 5
+      count: 4
+      behavior: 256
+    - tactic: 3
+      count: 2
+      behavior: 8
+    - tactic: 3
+      count: 3
+      behavior: 16
+    - tactic: 4
+      count: 3
+      behavior: 32
+  enemyBrainSettings:
+    chaseGraceTime: 1.5
+    searchDuration: 20
+    searchRadius: 7
+    searchSpeedMultiplier: 0.8
+    investigateSpeedMultiplier: 0.5
+    arrivalDistance: 1
+    lookAroundDuration: 2
+    investigateTurnDuration: 1
+    moveTimeout: 6
+    baseSightRate: 2.5
+    instantDetectDistance: 2.5
+    noiseBase: 0.6
+    decayPerSecond: 0.12
+    alertedHoldTime: 8
+    inspectDuration: 3
+    inspectCooldown: 30
+    blindOpenChance: 0.15
+    lingerBlindOpenChance: 0.3
   needWeightSettings: {fileID: 11400000, guid: c8a8bc2f4cef6e74593e9f7b646a8e1b, type: 2}
   itemCategoryClassifier: {fileID: 0}
   saveController: {fileID: 0}
@@ -4727,6 +4817,8 @@ MonoBehaviour:
   itemDefinitions:
   - {fileID: 11400000, guid: 835b343855f4b9d4dba0461967a4926a, type: 2}
   - {fileID: 11400000, guid: 02151f61257e8d345a6cdfeaa6baed7a, type: 2}
+  - {fileID: 11400000, guid: e6669694807e4b0ab3dd2044e561a9bb, type: 2}
+  - {fileID: 11400000, guid: d615d1b2e43961a4c820665bf44ed7c6, type: 2}
   containerView: {fileID: 1433029502}
   manager: {fileID: 1433029501}
 --- !u!4 &1433029504
@@ -5729,6 +5821,9 @@ MonoBehaviour:
   playerDeathDistance: 1.2
   deathAttemptCooldown: 1
   agentOverride: {fileID: 0}
+  activeBehaviorPath: 
+  unlockedBehaviors: 
+  observedTactics: 
 --- !u!1 &2038647889
 GameObject:
   m_ObjectHideFlags: 0

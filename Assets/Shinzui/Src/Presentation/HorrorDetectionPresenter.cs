@@ -8,8 +8,8 @@ using VContainer.Unity;
 namespace Shinzui.Presentation
 {
     /// <summary>
-    /// 敵に見つかった瞬間に画面エフェクトを一瞬強く適用し、
-    /// 見つかり続けている間は弱めに適用し、見失ったら減衰させて消すPresenter。
+    /// 敵に見つかっている間は弱いノイズを表示し、プレイヤーも敵を視認した瞬間に強める
+    /// 追跡が終わったら減衰させて消すPresenter
     /// </summary>
     public class HorrorDetectionPresenter : IInitializable, ITickable, IDisposable
     {
@@ -34,22 +34,26 @@ namespace Shinzui.Presentation
             _view = view;
         }
 
-        /// <summary>画面演出を初期化し、プレイヤーが認知した追跡を監視</summary>
+        /// <summary>画面演出を初期化し、敵の追跡とプレイヤーの認知を監視</summary>
         public void Initialize()
         {
             // 初期化時に一度エフェクトをクリア
             _view.UpdateEffect(0f);
 
-            // プレイヤー自身が敵を視認した追跡だけ演出へ反映
+            // 視認前でも敵に見つかっていれば弱いノイズで存在を示す
+            _enemyDirectorUseCase.IsPlayerFound
+                .Subscribe(found => _isPlayerFound = found)
+                .AddTo(_disposables);
+
+            // プレイヤー自身が追跡する敵を視認した瞬間だけノイズを強める
             _enemyDirectorUseCase.IsEncounterRecognized
                 .Subscribe(found =>
                 {
-                    if (found && !_isPlayerFound)
+                    if (found)
                     {
-                        // 敵に発見された瞬間！一瞬だけエフェクトの強度を最大にする
+                        // 敵を認知した瞬間にエフェクトの強度を最大にする
                         _currentIntensity = StrongIntensity;
                     }
-                    _isPlayerFound = found;
                 })
                 .AddTo(_disposables);
         }

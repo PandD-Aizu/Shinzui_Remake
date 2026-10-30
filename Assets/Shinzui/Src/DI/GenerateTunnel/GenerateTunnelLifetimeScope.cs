@@ -57,6 +57,7 @@ namespace Shinzui.DI.GenerateTunnel
             if (navigation == null)
                 navigation = mapRoot.AddComponent<TunnelNavigationBuilder>();
 
+            builder.Register<TunnelGimmickPlanner>(Lifetime.Scoped).As<ITunnelGimmickPlanner>();
             builder.Register<TunnelLayoutGenerator>(Lifetime.Scoped).As<ITunnelLayoutGenerator>();
             builder.Register<GenerateTunnelUseCase>(Lifetime.Scoped).As<IGenerateTunnelUseCase>();
             builder.RegisterComponent(mapView);

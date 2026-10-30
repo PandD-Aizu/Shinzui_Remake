@@ -74,7 +74,7 @@ namespace Shinzui.Presentation
         public void Tick()
         {
             // 転倒中は通常移動とカメラ揺れによる姿勢の上書きを止める
-            if (_view != null && _view.IsCinematicControlled)
+            if (_view != null && (_view.IsCinematicControlled || _view.IsHiding))
             {
                 _useCase.RestDuringCinematic(Time.deltaTime);
                 return;
@@ -112,8 +112,9 @@ namespace Shinzui.Presentation
             // 計算された速度をUseCaseから取得し、Viewに適用して物理移動を実行
             Vector3 currentVelocity = _useCase.Velocity.CurrentValue;
             _view.Move(currentVelocity);
+            // 追跡による震えはプレイヤーが敵を視認してから開始
             _view.UpdateCameraMotion(currentVelocity, isGrounded, _useCase.IsRunning, landingSpeed,
-                _useCase.StaminaRatio.CurrentValue, _enemyDirector.IsPlayerFound.CurrentValue);
+                _useCase.StaminaRatio.CurrentValue, _enemyDirector.IsEncounterRecognized.CurrentValue);
 
             // Y回転をカメラに合わせる
             _view.AlignYRotationWithCamera(currentVelocity);

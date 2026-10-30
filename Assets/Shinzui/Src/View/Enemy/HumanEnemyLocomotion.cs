@@ -6,7 +6,7 @@ namespace Shinzui.View
 {
     /// <summary>実移動に歩行周期を同期し、脚の二関節IKで足元の接地を補正</summary>
     [DefaultExecutionOrder(100)]
-    public sealed class HumanEnemyLocomotion : MonoBehaviour
+    public sealed partial class HumanEnemyLocomotion : MonoBehaviour
     {
         [Serializable]
         public sealed class Leg

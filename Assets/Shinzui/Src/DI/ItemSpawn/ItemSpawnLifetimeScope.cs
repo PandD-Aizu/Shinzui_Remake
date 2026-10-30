@@ -84,9 +84,15 @@ namespace Shinzui.DI.ItemSpawn
                     var targetsDto = new List<ItemSpawnTargetDto>();
                     var prefabMap = new Dictionary<string, GameObject>(StringComparer.OrdinalIgnoreCase);
 
-                    for (int i = 0; i < itemDefinitions.Count; i++)
+                    // 既存シーンでもペンライトを抽選対象に含め、明示設定があれば優先する
+                    var definitions = new List<ItemSpawnDefinitionSO>(itemDefinitions);
+                    var penlight = Resources.Load<ItemSpawnDefinitionSO>("PenlightItemSpawnDefinition");
+                    if (penlight != null && !definitions.Exists(def => def != null && def.ItemId == penlight.ItemId))
+                        definitions.Add(penlight);
+
+                    for (int i = 0; i < definitions.Count; i++)
                     {
-                        ItemSpawnDefinitionSO def = itemDefinitions[i];
+                        ItemSpawnDefinitionSO def = definitions[i];
                         if (def == null) continue;
 
                         ItemSpawnTargetDto dto = def.ToDto();

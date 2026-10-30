@@ -17,9 +17,16 @@ namespace Shinzui.Infrastructure.Services
         private readonly InputAction _attackAction;
 
         private bool _isBlocked;
+        private bool _isHiding;
+        private readonly InputAction _holdBreathAction;
+        public bool HoldBreathHeld => !_isBlocked && Time.timeScale > 0f && _holdBreathAction.IsPressed();
+        public bool HidingExitPressed => !_isBlocked && Time.timeScale > 0f && _itemUseAction.WasPressedThisFrame();
+        /// <summary>出入りと呼吸以外の操作を止める</summary>
+        /// <param name="hiding">隠れ中か</param>
+        public void SetHiding(bool hiding) => _isHiding = hiding;
 
         // 時間停止中はメニュー操作をゲーム入力へ伝えない
-        private bool IsBlocked => _isBlocked || Time.timeScale <= 0f;
+        private bool IsBlocked => _isBlocked || _isHiding || Time.timeScale <= 0f;
 
         public Vector2 MoveInput => !IsBlocked && _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
         public bool SprintPressed => !IsBlocked && _sprintAction != null && _sprintAction.IsPressed();
@@ -43,7 +50,7 @@ namespace Shinzui.Infrastructure.Services
             get
             {
                 // UI等によるTabキーの消費や動的InputActionの不具合を回避するため、直接デバイス入力をフォールバックとしてチェック
-                if (Time.timeScale <= 0f) return false;
+                if (_isHiding || Time.timeScale <= 0f) return false;
                 bool keyboardTab = Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame;
                 bool gamepadSelect = Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame;
                 bool actionPressed = _inventoryToggleAction != null && (_inventoryToggleAction.triggered || _inventoryToggleAction.WasPressedThisFrame());
@@ -92,6 +99,21 @@ namespace Shinzui.Infrastructure.Services
             }
         }
 
+        /// <summary>矢印キーを押したフレームだけアイテムの切り替え方向を返す</summary>
+        public int QuickItemArrowDelta
+        {
+            get
+            {
+                if (IsBlocked || Keyboard.current == null) return 0;
+
+                // 逆方向の同時押しは相殺し、長押しでは連続切り替えしない
+                var keyboard = Keyboard.current;
+                bool next = keyboard.rightArrowKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame;
+                bool previous = keyboard.leftArrowKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame;
+                return (next ? 1 : 0) - (previous ? 1 : 0);
+            }
+        }
+
         public bool FlashlightTogglePressed
         {
             get
@@ -136,6 +158,9 @@ namespace Shinzui.Infrastructure.Services
             // アクションマップを作成してアセットに追加
             var playerMap = new InputActionMap("Player");
             _actionAsset.AddActionMap(playerMap);
+            _holdBreathAction = playerMap.AddAction("HoldBreath", InputActionType.Button);
+            _holdBreathAction.AddBinding("<Mouse>/rightButton");
+            _holdBreathAction.AddBinding("<Gamepad>/leftTrigger");
             
             // Moveアクション (Vector2) の作成とバインディング
             _moveAction = playerMap.AddAction("Move", type: InputActionType.Value, expectedControlLayout: "Vector2");

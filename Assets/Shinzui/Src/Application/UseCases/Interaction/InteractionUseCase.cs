@@ -44,6 +44,7 @@ namespace Shinzui.Application.UseCases.Interaction
         public async Task<bool> InteractAsync(string interactableId, string message)
         {
             if (string.IsNullOrEmpty(interactableId)) return false;
+            if (interactableId == "hiding_locker") return true;
 
             // 蜘蛛の巣は、装備中のマッチ棒を1本消費した場合だけ燃やせる。
             if (string.Equals(interactableId, SpiderWebInteractionId, StringComparison.OrdinalIgnoreCase))

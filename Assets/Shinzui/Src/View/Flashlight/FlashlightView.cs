@@ -62,6 +62,53 @@ namespace Shinzui.View.Flashlight
         private float _nearWallGain = 1f;                  // 壁際の減光係数
         private float _strobeFactor;                      // 現在のストロボ発光係数
 
+        private static readonly System.Collections.Generic.List<FlashlightView> ActiveViews = new();
+        private float _mistGain = 1f;
+        private float _mistPhase;
+
+        /// <summary>消灯能力から除外する懐中電灯を登録する</summary>
+        private void OnEnable()
+        {
+            ActiveViews.Add(this);
+        }
+
+        /// <summary>懐中電灯の登録と一時的な減光を解除する</summary>
+        private void OnDisable()
+        {
+            ActiveViews.Remove(this);
+            _mistGain = 1f;
+            _mistPhase = 0f;
+            ApplyBeamIntensity();
+        }
+
+        /// <summary>光源が懐中電灯の照射光か判定する</summary>
+        /// <param name="light">判定対象の光源</param>
+        /// <returns>懐中電灯の光源ならtrue</returns>
+        public static bool IsFlashlight(Light light)
+        {
+            foreach (var view in ActiveViews)
+                if (view.flashlightLight == light) return true;
+            return false;
+        }
+
+        /// <summary>黒い霧への接近に合わせて点滅を速くし、消灯時間も増やす</summary>
+        private void UpdateMistFlicker()
+        {
+            float strength = BlackMistLightEffect.GetInterference(StrobeOrigin);
+            if (strength <= 0f)
+            {
+                _mistPhase = 0f;
+                _mistGain = 1f;
+            }
+            else
+            {
+                // 遠方では毎秒1回、至近距離では毎秒12回の点滅にする
+                _mistPhase = Mathf.Repeat(_mistPhase + Time.deltaTime * Mathf.Lerp(1f, 12f, strength), 1f);
+                _mistGain = _mistPhase < Mathf.Lerp(.15f, .65f, strength) ? 0f : 1f;
+            }
+            ApplyBeamIntensity();
+        }
+
         public Camera TargetCamera => targetCamera != null ? targetCamera : Camera.main;
         /// <summary>腕と指の追従に使う懐中電灯の発光基準</summary>
         public Transform HeldLightTransform => flashlightLight != null ? flashlightLight.transform : null;
@@ -146,6 +193,8 @@ namespace Shinzui.View.Flashlight
         /// </summary>
         private void LateUpdate()
         {
+            UpdateMistFlicker();
+
             // モデル付きのライトは消灯中も視点に追従させる
             if (flashlightModel != null && flashlightLight != null && targetCamera != null)
             {
@@ -256,7 +305,7 @@ namespace Shinzui.View.Flashlight
         private void ApplyBeamIntensity()
         {
             EnsureBaseValuesCached();
-            float gain = useRealisticBeam ? _nearWallGain : 1f;
+            float gain = (useRealisticBeam ? _nearWallGain : 1f) * _mistGain;
 
             if (flashlightLight != null)
             {

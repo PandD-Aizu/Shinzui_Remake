@@ -165,6 +165,8 @@ MonoBehaviour:
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  footstepDistance: 0.8
+  minimumFootstepInterval: 0.37
   crouchRatio: 0.5
   heightChangeRate: 10
   staminaSlider: {fileID: 1958970259}
@@ -338,6 +340,10 @@ MonoBehaviour:
   interactLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  markerRange: 5
+  markerDiameter: 14
+  interactableMarkerDiameter: 24
+  holdProgressDiameter: 72
   reticleDot: {fileID: 0}
   interactionPromptText: {fileID: 0}
 --- !u!1 &128163229
@@ -762,6 +768,8 @@ MonoBehaviour:
   mapRoot: {fileID: 2019728671}
   overviewCamera: {fileID: 0}
   showDebugGeometry: 0
+  ceilingShadowDistance: 15
+  maxCeilingShadowLights: 8
 --- !u!114 &508128750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -792,13 +800,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74df90422b0f47e0b33d3dfc71db809b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
+  spiderWebCount: 3
+  fireAlarmCount: 3
+  fireAlarmMinSpacing: 40
+  fireAlarmEndMargin: 12
+  fireAlarmMouthMargin: 4
+  spiderWebTemplate: {fileID: 4811854858651217045, guid: 0f88d6edce2d3a147a9c50e07dbc0388, type: 3}
+  fireAlarmPrefab: {fileID: 0}
+  fireAlarmHeight: 1.4
   tunnelCount: 8
   seed: 2777
   placementAttemptsPerTunnel: 80
+  generateUpperFloor: 0
+  upperFloorHeight: 12
+  generateLowerFloor: 0
+  lowerFloorDepth: 12
+  dropOpeningCount: 2
+  dropOpeningSize: 3
   smallRoomCount: 1
   smallRoomWidth: 8
   smallRoomLength: 6
   tunnelLength: 153.12695
+  minTunnelLength: 153.12695
+  maxTunnelLength: 153.12695
   connectionPointSpacing: 51.042316
   tunnelWidth: 14.800003
   tunnelHeight: 5
@@ -813,6 +837,7 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
+  ceilingLightSpacing: 5
   basicTunnelModelScale: {x: 1, y: 1, z: 1}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}
@@ -2007,6 +2032,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.Flashlight.FlashlightView
   flashlightLight: {fileID: 775528540}
   targetCamera: {fileID: 632997464}
+  flashlightModel: {fileID: 0}
+  modelLightOffset: {x: -0.24, y: -0.23, z: 0.52}
+  useRealisticBeam: 0
+  beamShadows: 0
+  beamFocusDistance: 8
+  nearWallDistance: 2
+  nearWallIntensity: 0.12
+  beamObstructionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   minSpeed: 2
   maxSpeed: 45
   maxAngle: 30
@@ -2301,8 +2336,35 @@ MonoBehaviour:
   playerDeathView: {fileID: 0}
   enemyViews: []
   horrorDetectionView: {fileID: 0}
+  objectiveView: {fileID: 0}
+  objectiveIcon: {fileID: 0}
+  enemyDirectorSettings:
+    ambientDuration: 12
+    buildUpDuration: 35
+    recoveryDuration: 18
+    searchDuration: 14
+    hintInterval: 8
+    hintCellSize: 12
+    searchRadius: 7
+    searchPointInterval: 3
+    retreatDistance: 18
+    pressureDistance: 18
+    chasePressurePerSecond: 0.075
+    proximityPressurePerSecond: 0.025
+    pressureDecayPerSecond: 0.06
+    sightDistance: 16
+    fieldOfView: 110
+    detectionTime: 0.3
+    eyeHeight: 1
+    walkingNoiseRadius: 4
+    runningNoiseRadius: 13
+    footstepInterval: 0.65
+    patrolSpeedMultiplier: 0.65
+    repathInterval: 0.3
+    sightBlockingLayers: -1
   needWeightSettings: {fileID: 0}
   itemCategoryClassifier: {fileID: 0}
+  saveController: {fileID: 0}
 --- !u!4 &1431612332
 Transform:
   m_ObjectHideFlags: 0

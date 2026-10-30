@@ -10,6 +10,26 @@ namespace Shinzui.View.GenerateTunnel
     [DefaultExecutionOrder(-110)]
     public sealed class TunnelGenerator : MonoBehaviour
     {
+        [Header("Gimmicks")]
+        [Min(0)] [SerializeField] private int spiderWebCount = 3;
+        [Min(0)] [SerializeField] private int fireAlarmCount = 3;
+        [Min(0)] [SerializeField] private float fireAlarmMinSpacing = 40.0f;
+        [Min(0)] [SerializeField] private float fireAlarmEndMargin = 12.0f;
+        [Min(0)] [SerializeField] private float fireAlarmMouthMargin = 4.0f;
+        [SerializeField] private GameObject spiderWebTemplate;
+        [SerializeField] private GameObject fireAlarmPrefab;
+        [Min(0)] [SerializeField] private int hidingLockerCount = 4;
+        [Min(0)] [SerializeField] private float hidingLockerMinSpacing = 25f;
+        [SerializeField] private GameObject hidingLockerPrefab;
+        [Min(0)] [SerializeField] private int carCount = 4;
+        [Min(0)] [SerializeField] private float carMinSpacing = 15f;
+        public int CarCount => carCount;
+        public float CarMinSpacing => carMinSpacing;
+        public int HidingLockerCount => hidingLockerCount;
+        public float HidingLockerMinSpacing => hidingLockerMinSpacing;
+        public GameObject HidingLockerPrefab => hidingLockerPrefab != null ? hidingLockerPrefab : Resources.Load<GameObject>("HidingLocker");
+        [Min(0)] [SerializeField] private float fireAlarmHeight = 1.4f;
+
         [Header("Generation")]
         [Min(5)] [SerializeField] private int tunnelCount = 8;
         [SerializeField] private int seed = 2777;
@@ -79,6 +99,23 @@ namespace Shinzui.View.GenerateTunnel
         [Tooltip("Measure layout dimensions and side-mouth spacing from model meshes, including Model Scale.")]
         [SerializeField] private bool useModelBoundsForLayout = true;
         [SerializeField] private bool configureBasicTunnelExitParts = true;
+
+        [Header("Small Room Racks")]
+        [Min(0)] [SerializeField] private int smallRoomRackCount = 2;
+        [SerializeField] private GameObject smallRoomRackPrefab;
+
+        public int SmallRoomRackCount => smallRoomRackCount;
+        public GameObject SmallRoomRackPrefab => smallRoomRackPrefab != null
+            ? smallRoomRackPrefab : Resources.Load<GameObject>("RustedWireRack");
+
+        public int SpiderWebCount => spiderWebCount;
+        public int FireAlarmCount => fireAlarmCount;
+        public float FireAlarmMinSpacing => fireAlarmMinSpacing;
+        public float FireAlarmEndMargin => fireAlarmEndMargin;
+        public float FireAlarmMouthMargin => fireAlarmMouthMargin;
+        public GameObject SpiderWebTemplate => spiderWebTemplate;
+        public GameObject FireAlarmPrefab => fireAlarmPrefab;
+        public float FireAlarmHeight => fireAlarmHeight;
 
         public int TunnelCount => tunnelCount;
         public int Seed => seed;

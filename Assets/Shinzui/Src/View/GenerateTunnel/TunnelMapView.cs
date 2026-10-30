@@ -808,7 +808,7 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// 天井の内面を測定して通路の中央へ蛍光灯を一定間隔で配置する
+        /// 通路上部の右側内面を測定してLED照明を一定間隔で配置する
         /// </summary>
         /// <param name="passage">配置先のトンネルまたは廊下</param>
         /// <param name="length">通路の長さ</param>
@@ -823,7 +823,7 @@ namespace Shinzui.View.GenerateTunnel
             // 共通プレハブを再利用し、短い通路でも器具が端からはみ出さないようにする
             if (_ceilingLightPrefab == null)
             {
-                _ceilingLightPrefab = Resources.Load<GameObject>("TunnelFluorescentLight");
+                _ceilingLightPrefab = Resources.Load<GameObject>("TunnelLEDLight");
             }
 
             const float endMargin = 0.8f;
@@ -835,7 +835,7 @@ namespace Shinzui.View.GenerateTunnel
             Collider[] surfaces = passage.GetComponentsInChildren<Collider>(false);
             Physics.SyncTransforms();
 
-            // 通路内から上向きに測定し、外側の境界ではなく実際の天井面へ取り付ける
+            // 上部から右側だけを測定し、実際の壁面へ取り付ける
             var lightRoot = new GameObject("Ceiling Lights").transform;
             lightRoot.SetParent(passage, false);
             for (int i = 0; i < count; i++)
@@ -845,29 +845,33 @@ namespace Shinzui.View.GenerateTunnel
                 float rise = slopeStartZ.HasValue
                     ? slope * exitSign * Mathf.Max(0.0f, exitSign * (localZ - slopeStartZ.Value))
                     : slope * localZ;
-                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, 1.5f + floorOffset + rise, localZ));
-                var ray = new Ray(origin, passage.up);
+                Vector3 origin = passage.TransformPoint(new Vector3(0.0f, height * 0.8f + floorOffset + rise, localZ));
+                var ray = new Ray(origin, passage.right);
                 float distance = Mathf.Infinity;
                 Vector3 ceiling = default;
+                Vector3 inwardNormal = default;
                 foreach (Collider surface in surfaces)
                 {
                     if (surface.isTrigger || !surface.enabled) continue;
-                    if (surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height, 2.0f) * passage.lossyScale.y)
-                        && hit.distance < distance && Vector3.Dot(hit.normal, passage.up) < -0.5f)
+                    if (surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height * 4.0f, 10.0f) * passage.lossyScale.x)
+                        && hit.distance < distance && Vector3.Dot(hit.normal, passage.right) < -0.1f)
                     {
                         distance = hit.distance;
                         ceiling = hit.point;
+                        inwardNormal = hit.normal;
                     }
                 }
 
                 if (float.IsPositiveInfinity(distance)) continue;
 
-                // プレハブの取付面を天井直下へ置き、通路の伸縮を器具の寸法へ伝えない
+                // 長辺を通路方向に揃え、発光面を壁から通路内へ向ける
                 GameObject light = Instantiate(_ceilingLightPrefab, lightRoot, false);
-                light.name = $"Fluorescent Light {i + 1:00}";
-                light.transform.position = ceiling - passage.up * 0.02f;
+                light.name = $"LED Light {i + 1:00}";
+                light.transform.position = ceiling + inwardNormal * 0.02f;
+                light.transform.rotation = Quaternion.LookRotation(
+                    Vector3.ProjectOnPlane(passage.forward, inwardNormal), -inwardNormal);
 
-                // 生成した蛍光灯のみを影予算の対象にし、懐中電灯は変更しない
+                // 生成したLED照明のみを影予算の対象にし、懐中電灯は変更しない
                 foreach (Light source in light.GetComponentsInChildren<Light>(true))
                 {
                     _ceilingLights.Add((source, source.shadows, source.shadowStrength));

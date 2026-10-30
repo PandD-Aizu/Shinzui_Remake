@@ -33,19 +33,25 @@ namespace Shinzui.Infrastructure.Repositories
         public static readonly IReadOnlyList<CanonicalItemEntry> Entries = new CanonicalItemEntry[]
         {
             new(
+                new ItemDefinition("penlight", "ペンライト", "装備してEキーで赤く光るペンライトを地面に置く", "Sprite/ItemPreview/penlight", ItemType.Equipment, 99),
+                "ペンライト",
+                ResourceCategory.LightResource,
+                1
+            ),
+            new(
                 new ItemDefinition("potion_red", "赤色のポーション", "体力を回復する赤いポーション。", "Sprite/Medicine", ItemType.Consumable, 99),
                 "potion_red",
                 ResourceCategory.Healing,
                 1
             ),
             new(
-                new ItemDefinition("stone", "石", "ただの石", "Sprite/Medicine", ItemType.Equipment, 99),
+                new ItemDefinition("stone", "石", "ただの石", "Sprite/ItemPreview/stone", ItemType.Equipment, 99),
                 "石",
                 ResourceCategory.Utility,
                 1
             ),
             new(
-                new ItemDefinition("match_stick", "マッチ棒", "蜘蛛の巣など燃えやすい物に火をつけられる。", "Sprite/Medicine", ItemType.Equipment, 99),
+                new ItemDefinition("match_stick", "マッチ棒", "蜘蛛の巣など燃えやすい物に火をつけられる。", "Sprite/ItemPreview/match_stick", ItemType.Equipment, 99),
                 "マッチ棒",
                 ResourceCategory.Utility,
                 1
@@ -57,7 +63,7 @@ namespace Shinzui.Infrastructure.Repositories
                 1
             ),
             new(
-                new ItemDefinition("potion_botamochi", "牡丹餅", "スタミナを回復する", "Sprite/Medicine", ItemType.Consumable, 99),
+                new ItemDefinition("potion_botamochi", "ぼたもち", "スタミナを全回復し、5秒間スタミナを消費しなくなる", "Sprite/ItemPreview/potion_botamochi", ItemType.Consumable, 99),
                 "牡丹餅",
                 ResourceCategory.Utility,
                 1
@@ -69,7 +75,7 @@ namespace Shinzui.Infrastructure.Repositories
                 1
             ),
             new(
-                new ItemDefinition("FlashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/Medicine", ItemType.Consumable, 99),
+                new ItemDefinition("FlashlightBattery", "乾電池", "使い捨て電池、ストロボで使用する", "Sprite/ItemPreview/FlashlightBattery", ItemType.Consumable, 99),
                 "乾電池",
                 ResourceCategory.LightResource,
                 1

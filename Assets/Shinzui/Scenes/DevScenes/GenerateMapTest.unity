@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.05
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  m_AmbientSkyColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 0
@@ -303,6 +303,8 @@ MonoBehaviour:
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  footstepDistance: 0.8
+  minimumFootstepInterval: 0.37
   crouchRatio: 0.5
   heightChangeRate: 10
   staminaSlider: {fileID: 1958970259}
@@ -476,6 +478,10 @@ MonoBehaviour:
   interactLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  markerRange: 5
+  markerDiameter: 14
+  interactableMarkerDiameter: 24
+  holdProgressDiameter: 72
   reticleDot: {fileID: 877069337}
   interactionPromptText: {fileID: 858249419}
 --- !u!114 &119550619
@@ -1756,6 +1762,9 @@ MonoBehaviour:
   isOneTime: 1
   destroyOnInteract: 1
   interactMessage: Get Red Potion
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!1 &608900463
 GameObject:
   m_ObjectHideFlags: 0
@@ -3838,6 +3847,8 @@ MonoBehaviour:
   playerDeathView: {fileID: 0}
   enemyViews: []
   horrorDetectionView: {fileID: 0}
+  objectiveView: {fileID: 0}
+  objectiveIcon: {fileID: 0}
   enemyDirectorSettings:
     ambientDuration: 12
     buildUpDuration: 35
@@ -4895,6 +4906,9 @@ MonoBehaviour:
   isOneTime: 0
   destroyOnInteract: 0
   interactMessage: '>_<'
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
 --- !u!1 &9001001001
 GameObject:
   m_ObjectHideFlags: 0
@@ -4941,6 +4955,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74df90422b0f47e0b33d3dfc71db809b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelGenerator
+  spiderWebCount: 3
+  fireAlarmCount: 3
+  fireAlarmMinSpacing: 40
+  fireAlarmEndMargin: 12
+  fireAlarmMouthMargin: 4
+  spiderWebTemplate: {fileID: 4811854858651217045, guid: 0f88d6edce2d3a147a9c50e07dbc0388, type: 3}
+  fireAlarmPrefab: {fileID: 0}
+  fireAlarmHeight: 1.4
   tunnelCount: 8
   seed: 30
   placementAttemptsPerTunnel: 80
@@ -5409,6 +5431,9 @@ MonoBehaviour:
   isOneTime: 0
   destroyOnInteract: 0
   interactMessage: there is a door
+  holdToPickup: 0
+  pickupDuration: 1
+  pickupGrip: {fileID: 0}
   afterMessage: door closed
   doorParts:
   - partTransform: {fileID: 7675107122062924463}

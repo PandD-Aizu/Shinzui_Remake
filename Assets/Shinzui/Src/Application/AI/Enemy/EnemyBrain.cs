@@ -50,13 +50,15 @@ namespace Shinzui.Application.AI.Enemy
         /// <param name="tactics">共有する戦術の記録先</param>
         /// <param name="points">捜索点の取得先</param>
         public EnemyBrain(EnemyBrainSettings settings, EnemyDirectorSettings directorSettings, int seed = 1,
-            PlayerTacticTracker tactics = null, Shinzui.Application.Interfaces.Enemy.IEnemySearchPointProvider points = null)
+            PlayerTacticTracker tactics = null, Shinzui.Application.Interfaces.Enemy.IEnemySearchPointProvider points = null,
+            Shinzui.Application.Interfaces.Enemy.IHidingSpotRegistry hidingSpots = null)
         {
             _settings = settings;
             _directorSettings = directorSettings;
             _perception = new EnemyPerception(settings);
             _tactics = tactics;
             _points = points;
+            _hidingSpots = hidingSpots;
             _random = (uint)seed + 1u;
             _tree = EnemyBrainTreeFactory.Create(this);
         }
@@ -79,6 +81,8 @@ namespace Shinzui.Application.AI.Enemy
             SightSample sight = sensesEnabled ? input.Sight : default;
             float noise = sensesEnabled ? input.NoiseGain : 0f;
             ObserveSightLoss(sight, sensesEnabled);
+            if (sensesEnabled && input.HidingSense.WitnessedId != 0)
+                Blackboard.WitnessedHidingSpotId = input.HidingSense.WitnessedId;
             _perception.Update(sight, input.PlayerSignature, _directorSettings.sightDistance,
                 _directorSettings.fieldOfView, noise, deltaTime);
 
@@ -92,6 +96,7 @@ namespace Shinzui.Application.AI.Enemy
                 Blackboard.HasClue = true;
                 _impactClue = false;
                 _backtrackPending = false;
+                Blackboard.WitnessedHidingSpotId = input.HidingSense.WitnessedId;
                 if (_perception.Level == EnemyAwarenessLevel.Engaged) _confirmed = true;
             }
             else if (_time - Blackboard.LastSeenTime >= Positive(_settings.chaseGraceTime, 1.5f))
@@ -126,6 +131,8 @@ namespace Shinzui.Application.AI.Enemy
         /// <summary>物理層で退避が成功したことを反映</summary>
         public void ConfirmBackstage()
         {
+            ResetHidingInspection();
+            Blackboard.WitnessedHidingSpotId = 0;
             _backtrackPending = false;
             Blackboard.IsBackstage = true;
             _confirmed = false;
@@ -160,7 +167,7 @@ namespace Shinzui.Application.AI.Enemy
                     : new EnemyIntent(EnemyIntentType.Hidden);
                 return BtStatus.Running;
             }
-            if (_confirmed || !_input.IsReady || _input.IsStunned
+            if (_confirmed || Blackboard.WitnessedHidingSpotId != 0 || !_input.IsReady || _input.IsStunned
                 || directive.Type != DirectorDirectiveType.GoBackstage) return BtStatus.Failure;
             _intent = Arrived(directive.Position) && !_input.IsVisibleToPlayer
                 ? new EnemyIntent(EnemyIntentType.Hidden)

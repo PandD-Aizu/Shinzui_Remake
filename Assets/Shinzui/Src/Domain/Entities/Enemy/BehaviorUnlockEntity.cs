@@ -6,7 +6,7 @@ namespace Shinzui.Domain.Entities.Enemy
     /// <summary>一つのランで共有する戦術回数と解放済み行動</summary>
     public sealed class BehaviorUnlockEntity
     {
-        private readonly int[] _counts = new int[5];
+        private readonly int[] _counts = new int[6];
         public EnemyBehaviorFlags Unlocked { get; private set; }
         public float CooldownRemaining { get; private set; }
 
