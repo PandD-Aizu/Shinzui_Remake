@@ -30,6 +30,19 @@ namespace Shinzui.Editor.LookDev
                 return new Color(0.5f + (noise - 0.5f) * 0.12f, 0.5f, 0.5f + (noise - 0.5f) * 0.08f, 0.5f);
             });
             Texture2D detail = ImportTexture(detailPath, false);
+            /* HDRPの詳細法線はAにX成分とGにY成分を格納する */
+            string roadDetailPath = TextureFolder + "/Generated/TunnelRoadDetail.png";
+            WriteTexture(roadDetailPath, 256, (u, v) =>
+            {
+                const float step = 1f / 256f;
+                float grain = Mathf.PerlinNoise(u * 32f, v * 32f);
+                float dx = Mathf.PerlinNoise((u + step) * 32f, v * 32f) - Mathf.PerlinNoise((u - step) * 32f, v * 32f);
+                float dy = Mathf.PerlinNoise(u * 32f, (v + step) * 32f) - Mathf.PerlinNoise(u * 32f, (v - step) * 32f);
+                Vector3 normal = new Vector3(-dx * 2f, -dy * 2f, 1f).normalized;
+                return new Color(0.5f + (grain - 0.5f) * 0.25f, normal.y * 0.5f + 0.5f,
+                    0.5f + (grain - 0.5f) * 0.3f, normal.x * 0.5f + 0.5f);
+            });
+            Texture2D roadDetail = ImportTexture(roadDetailPath, false);
             string[] sets = { "concrete_slab_wall_02", "asphalt_03", "damaged_concrete_floor", "concrete_wall_008" };
             string[] names = { "TunnelWall", "TunnelRoad", "TunnelWalkway", "TunnelCeiling" };
             int fallbackCount = 0;
@@ -39,7 +52,7 @@ namespace Shinzui.Editor.LookDev
                 string normalPath = FindSource(sets[i], "nor_gl");
                 string armPath = FindSource(sets[i], "arm");
                 string roughPath = FindSource(sets[i], "rough");
-                string displacement = FindSource(sets[i], "disp");
+
                 bool complete = diffusePath != null && normalPath != null && (armPath != null || roughPath != null);
                 if (!complete)
                 {
@@ -48,7 +61,6 @@ namespace Shinzui.Editor.LookDev
                     diffusePath = Fallback + "diff_1k.png";
                     normalPath = Fallback + "nor_gl_1k.png";
                     armPath = Fallback + "arm_1k.png";
-                    displacement = Fallback + "disp_1k.png";
                 }
                 Texture2D diffuse = ImportTexture(diffusePath, true);
                 Texture2D normal = ImportTexture(normalPath, false, true);
@@ -57,9 +69,10 @@ namespace Shinzui.Editor.LookDev
                 Texture2D mask = BuildMask(packedSource, maskPath, armPath != null);
                 Material material = GetMaterial(ResourceFolder + "/" + names[i] + ".mat", "HDRP/Lit");
                 material.SetTexture("_BaseColorMap", diffuse);
-                material.SetColor("_BaseColor", Color.white);
+                /* 元画像の茶色を抑え路面だけを湿った中立色へ寄せる */
+                material.SetColor("_BaseColor", i == 1 ? new Color(0.55f, 0.64f, 0.78f, 1f) : Color.white);
                 material.SetTexture("_NormalMap", normal);
-                material.SetFloat("_NormalScale", 0.75f);
+                material.SetFloat("_NormalScale", i == 1 ? 1.25f : 0.75f);
                 material.SetTexture("_MaskMap", mask);
                 material.SetFloat("_Metallic", 0f);
                 material.SetFloat("_MetallicRemapMin", 0f);
@@ -67,8 +80,8 @@ namespace Shinzui.Editor.LookDev
                 material.SetFloat("_AORemapMin", 0.35f);
                 material.SetFloat("_AORemapMax", 1f);
                 material.SetFloat("_Smoothness", 0.3f);
-                material.SetFloat("_SmoothnessRemapMin", 0.05f);
-                material.SetFloat("_SmoothnessRemapMax", i == 1 ? 0.55f : 0.65f);
+                material.SetFloat("_SmoothnessRemapMin", i == 1 ? 0.18f : 0.05f);
+                material.SetFloat("_SmoothnessRemapMax", i == 1 ? 0.68f : 0.65f);
                 /* 2.5mで一周するワールド座標投影により変形後のUV伸びを回避する */
                 material.SetFloat("_UVBase", 5f);
                 material.SetFloat("_ObjectSpaceUVMapping", 0f);
@@ -76,21 +89,22 @@ namespace Shinzui.Editor.LookDev
                 material.SetTextureScale("_BaseColorMap", Vector2.one);
                 material.SetTextureOffset("_BaseColorMap", Vector2.zero);
                 material.SetFloat("_NormalMapSpace", 0f);
-                material.SetTexture("_DetailMap", detail);
+                material.SetTexture("_DetailMap", i == 1 ? roadDetail : detail);
                 material.SetTextureScale("_DetailMap", Vector2.one * 8f);
                 material.SetFloat("_LinkDetailsWithBase", 1f);
                 material.SetFloat("_DetailAlbedoScale", 0.3f);
-                material.SetFloat("_DetailNormalScale", 0.15f);
+                material.SetFloat("_DetailNormalScale", i == 1 ? 0.65f : 0.15f);
                 material.SetFloat("_DetailSmoothnessScale", 0.2f);
                 material.SetFloat("_SupportDecals", 1f);
                 material.SetFloat("_ReceivesSSR", 1f);
                 material.SetFloat("_EnableGeometricSpecularAA", 1f);
-                /* 高さマップは保持するが衝突面と異なる変位はこの段階では有効化しない */
-                material.SetTexture("_HeightMap", displacement != null && File.Exists(displacement) ? ImportTexture(displacement, false) : null);
+                material.SetFloat("_SpecularOcclusionMode", 1f);
+                /* 未使用の高さマップとキーワードを外して変位のない描画に揃える */
+                material.SetTexture("_HeightMap", null);
                 material.SetFloat("_DisplacementMode", 0f);
                 HDMaterial.ValidateMaterial(material);
                 EditorUtility.SetDirty(material);
-                Debug.Log($"Tunnel material built: {AssetDatabase.GetAssetPath(material)}, diffuse={diffusePath}, normal={normalPath}, world tiling=2.5m, mask={maskPath}");
+                Debug.Log($"Tunnel material built: {AssetDatabase.GetAssetPath(material)}, diffuse={diffusePath}, normal={normalPath}, world tiling=2.5m, mask={maskPath}, normal scale={material.GetFloat("_NormalScale")}, displacement=off, height keyword={material.IsKeywordEnabled("_HEIGHTMAP")}");
             }
             /* 旧材質を参照する静的シーンでもUV修正を適用する */
             string fallbackPath = "Assets/Shinzui/Materials/TunnelTempMaterial.mat";
@@ -103,6 +117,16 @@ namespace Shinzui.Editor.LookDev
             HdrpVerificationAssets.VisitAssets((root, path, persistent) =>
             {
                 bool changed = false;
+                foreach (HDAdditionalCameraData camera in root.GetComponentsInChildren<HDAdditionalCameraData>(true))
+                {
+                    if (!camera.customRenderingSettings) continue;
+                    camera.renderingPathCustomFrameSettings.SetEnabled(FrameSettingsField.Decals, true);
+                    camera.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)FrameSettingsField.Decals] = true;
+                    EditorUtility.SetDirty(camera);
+                    if (PrefabUtility.IsPartOfPrefabInstance(camera)) PrefabUtility.RecordPrefabInstancePropertyModifications(camera);
+                    changed = true;
+                    Debug.Log($"Tunnel camera decals enabled: {path} / {HdrpVerificationAssets.Hierarchy(camera.transform)}");
+                }
                 foreach (MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true))
                 {
                     string name = renderer.name.ToLowerInvariant();
@@ -129,7 +153,7 @@ namespace Shinzui.Editor.LookDev
                 return changed;
             });
             AssetDatabase.SaveAssets();
-            Debug.Log($"Tunnel material summary: surfaces=4, fallback material=1 ({fallbackPath}), fallback sets={fallbackCount}, procedural detail maps=1, static assignments={assigned}; displacement disabled");
+            Debug.Log($"Tunnel material summary: surfaces=4, fallback material=1 ({fallbackPath}), fallback sets={fallbackCount}, procedural detail maps=2, static assignments={assigned}; displacement disabled");
         }
 
         /// <summary>水溜まりと漏水と汚れの投影材質を生成する</summary>
@@ -150,7 +174,7 @@ namespace Shinzui.Editor.LookDev
                     float noise = Mathf.PerlinNoise(u * 9f + 11f, v * 9f + 7f);
                     float x = u * 2f - 1f, y = v * 2f - 1f;
                     float edge = Mathf.Clamp01((1f - x * x - y * y + (noise - 0.5f) * 0.7f) * 5f);
-                    float alpha = edge * (0.65f + noise * 0.35f);
+                    float alpha = edge * (0.85f + noise * 0.15f);
                     if (type == 1)
                     {
                         float streak = Mathf.PerlinNoise(u * 35f + 4f, v * 2f);
@@ -166,9 +190,14 @@ namespace Shinzui.Editor.LookDev
                 WriteTexture(maskPath, 512, (u, v) => new Color(0f, 1f, shape(u, v).a, smoothness));
                 Material material = GetMaterial(ResourceFolder + "/" + names[kind] + ".mat", "HDRP/Decal");
                 material.SetTexture("_BaseColorMap", ImportTexture(path, true, false, true));
-                material.SetColor("_BaseColor", kind == 0 ? new Color(0.015f, 0.018f, 0.02f, 0.25f) : new Color(0.025f, 0.03f, 0.028f, 0.65f));
+                material.SetColor("_BaseColor", kind == 0 ? new Color(0.018f, 0.022f, 0.025f, 0.65f) : new Color(0.025f, 0.03f, 0.028f, 0.85f));
                 material.SetTexture("_MaskMap", ImportTexture(maskPath, false, false, true));
-                material.SetFloat("_DecalBlend", kind == 0 ? 0.75f : 0.5f);
+                material.SetFloat("_DecalBlend", kind == 0 ? 0.95f : 0.85f);
+                material.SetFloat("_DecalMaskMapBlueScale", 1f);
+                material.SetFloat("_SmoothnessRemapMin", 0f);
+                material.SetFloat("_SmoothnessRemapMax", 1f);
+                material.SetInt("_DrawOrder", kind == 0 ? 20 : 10);
+                material.enableInstancing = true;
                 material.SetFloat("_MaskBlendSrc", 1f);
                 material.SetFloat("_NormalBlendSrc", 1f);
                 material.SetFloat("_AffectAlbedo", 1f);
@@ -176,7 +205,8 @@ namespace Shinzui.Editor.LookDev
                 material.SetFloat("_AffectMetal", 0f);
                 material.SetFloat("_AffectAO", 0f);
                 material.SetFloat("_AffectSmoothness", 1f);
-                /* 水面だけ細かな路面法線を弱めて薄い反射面を作る */
+                /* 水面の追加法線は平坦にして不要な凹凸を加えない */
+                material.SetTexture("_NormalMap", null);
                 if (kind == 0)
                 {
                     string normalPath = folder + "/WaterNormal.png";
@@ -185,8 +215,9 @@ namespace Shinzui.Editor.LookDev
                 }
                 HDMaterial.ValidateMaterial(material);
                 EditorUtility.SetDirty(material);
-                Debug.Log($"Tunnel decal built: {AssetDatabase.GetAssetPath(material)}, albedo/opacity={path}, mask={maskPath}, smoothness={smoothness}");
+                Debug.Log($"Tunnel decal built: {AssetDatabase.GetAssetPath(material)}, albedo/opacity={path}, mask={maskPath}, smoothness={smoothness}, blend={material.GetFloat("_DecalBlend")}, mask opacity=blue, base opacity={material.GetColor("_BaseColor").a}");
             }
+            TunnelLookEnvironment.EnsureDecalRendering();
             AssetDatabase.SaveAssets();
             Debug.Log("Tunnel decal summary: materials=4, generated textures=9, skipped=0; runtime density/count controlled by TunnelGenerator");
         }
@@ -213,12 +244,16 @@ namespace Shinzui.Editor.LookDev
         {
             Texture2D source = ImportTexture(sourcePath, false);
             Color32[] pixels = ReadLinearPixels(source);
+            byte minSmoothness = 255, maxSmoothness = 0;
             for (int i = 0; i < pixels.Length; i++)
             {
                 Color32 input = pixels[i];
                 pixels[i] = packed ? new Color32(input.b, input.r, 255, (byte)(255 - input.g))
                     : new Color32(0, 255, 255, (byte)(255 - input.r));
+                minSmoothness = (byte)Mathf.Min(minSmoothness, pixels[i].a);
+                maxSmoothness = (byte)Mathf.Max(maxSmoothness, pixels[i].a);
             }
+            Debug.Log($"Tunnel mask verified: {outputPath}, linear R=metal G=AO B=detail A=1-roughness, smoothness={minSmoothness / 255f:F3}..{maxSmoothness / 255f:F3}");
             var output = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false, true);
             output.SetPixels32(pixels);
             output.Apply();
@@ -293,9 +328,11 @@ namespace Shinzui.Editor.LookDev
             importer.wrapMode = clamp ? TextureWrapMode.Clamp : TextureWrapMode.Repeat;
             importer.mipmapEnabled = true;
             importer.maxTextureSize = 2048;
-            importer.anisoLevel = 8;
+            importer.anisoLevel = 16;
+            importer.filterMode = FilterMode.Trilinear;
             importer.textureCompression = TextureImporterCompression.CompressedHQ;
             importer.SaveAndReimport();
+            if (normal) Debug.Log($"Tunnel normal import: {path}, type={importer.textureType}, sRGB={importer.sRGBTexture}, convertFromHeight={importer.convertToNormalmap}, flipGreen={importer.flipGreenChannel}");
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 

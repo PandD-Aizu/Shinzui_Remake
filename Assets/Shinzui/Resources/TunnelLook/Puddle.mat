@@ -22,7 +22,7 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2000
+  m_CustomRenderQueue: 2020
   stringTagMap: {}
   disabledShaderPasses:
   - DecalMeshForwardEmissive
@@ -58,7 +58,7 @@ Material:
     - _AffectMetal: 0
     - _AffectNormal: 1
     - _AffectSmoothness: 1
-    - _DecalBlend: 0.75
+    - _DecalBlend: 0.95
     - _DecalColorMask0: 15
     - _DecalColorMask1: 15
     - _DecalColorMask2: 3
@@ -69,7 +69,7 @@ Material:
     - _DecalMeshViewBias: 0
     - _DecalStencilRef: 16
     - _DecalStencilWriteMask: 16
-    - _DrawOrder: 0
+    - _DrawOrder: 20
     - _EmissiveExposureWeight: 1
     - _EmissiveIntensity: 1
     - _EmissiveIntensityUnit: 0
@@ -84,7 +84,7 @@ Material:
     - _Unity_Identify_HDRP_Decal: 1
     - _UseEmissiveIntensity: 0
     m_Colors:
-    - _BaseColor: {r: 0.015, g: 0.018, b: 0.02, a: 0.25}
+    - _BaseColor: {r: 0.018, g: 0.022, b: 0.025, a: 0.65}
     - _EmissiveColor: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveColorHDR: {r: 0, g: 0, b: 0, a: 1}
     - _EmissiveColorLDR: {r: 0, g: 0, b: 0, a: 1}

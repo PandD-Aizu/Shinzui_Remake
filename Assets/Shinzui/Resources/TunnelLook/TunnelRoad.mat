@@ -15,7 +15,6 @@ Material:
   - _DETAIL_MAP
   - _DISABLE_SSR_TRANSPARENT
   - _ENABLE_GEOMETRIC_SPECULAR_AA
-  - _HEIGHTMAP
   - _MAPPING_TRIPLANAR
   - _MASKMAP
   - _NORMALMAP
@@ -57,7 +56,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailMap:
-        m_Texture: {fileID: 2800000, guid: fca06c94b9c431847bac537884e712d5, type: 3}
+        m_Texture: {fileID: 2800000, guid: 34082a98472c59c46b6a2364d19ede58, type: 3}
         m_Scale: {x: 8, y: 8}
         m_Offset: {x: 0, y: 0}
     - _EmissiveColorMap:
@@ -65,7 +64,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _HeightMap:
-        m_Texture: {fileID: 2800000, guid: fef3aac3e7bfb1b41a4509bc1a35c909, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _IridescenceMaskMap:
@@ -156,7 +155,7 @@ Material:
     - _Cutoff: 0.5
     - _DepthOffsetEnable: 0
     - _DetailAlbedoScale: 0.3
-    - _DetailNormalScale: 0.15
+    - _DetailNormalScale: 0.65
     - _DetailSmoothnessScale: 0.2
     - _DiffusionProfile: 0
     - _DiffusionProfileHash: 0
@@ -195,7 +194,7 @@ Material:
     - _MetallicRemapMax: 1
     - _MetallicRemapMin: 0
     - _NormalMapSpace: 0
-    - _NormalScale: 0.75
+    - _NormalScale: 1.25
     - _ObjectSpaceUVMapping: 0
     - _ObjectSpaceUVMappingEmissive: 0
     - _OpaqueCullMode: 2
@@ -210,8 +209,8 @@ Material:
     - _ReceivesSSRTransparent: 0
     - _RefractionModel: 0
     - _Smoothness: 0.3
-    - _SmoothnessRemapMax: 0.55
-    - _SmoothnessRemapMin: 0.05
+    - _SmoothnessRemapMax: 0.68
+    - _SmoothnessRemapMin: 0.18
     - _SpecularAAScreenSpaceVariance: 0.1
     - _SpecularAAThreshold: 0.2
     - _SpecularOcclusionMode: 1
@@ -249,8 +248,8 @@ Material:
     - _ZTestTransparent: 4
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.55, g: 0.64, b: 0.78, a: 1}
+    - _Color: {r: 0.54999995, g: 0.6399999, b: 0.78, a: 1}
     - _DiffusionProfileAsset: {r: 0, g: 0, b: 0, a: 0}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}

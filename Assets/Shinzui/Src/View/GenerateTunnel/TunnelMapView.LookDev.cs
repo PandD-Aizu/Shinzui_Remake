@@ -18,6 +18,7 @@ namespace Shinzui.View.GenerateTunnel
         private readonly List<(Transform root, float length, float height, Collider[] surfaces)> _lookSections = new();
         private int _lookSplits, _lookUnknown, _lookDead, _lookFlicker, _lookFog;
         private bool _weatheringBuilt;
+        private bool _roadSurfaceAudited;
 
         /// <summary>再生成前に参照とカウンターをリセットする</summary>
         private void PrepareTunnelLook()
@@ -26,6 +27,7 @@ namespace Shinzui.View.GenerateTunnel
             _lookSections.Clear();
             _lookSplits = _lookUnknown = _lookDead = _lookFlicker = _lookFog = 0;
             _weatheringBuilt = false;
+            _roadSurfaceAudited = false;
             if (tunnelWall == null) tunnelWall = Resources.Load<Material>("TunnelLook/TunnelWall");
             if (tunnelRoad == null) tunnelRoad = Resources.Load<Material>("TunnelLook/TunnelRoad");
             if (tunnelWalkway == null) tunnelWalkway = Resources.Load<Material>("TunnelLook/TunnelWalkway");
@@ -87,6 +89,82 @@ namespace Shinzui.View.GenerateTunnel
                 _generatedMeshes.Add(mesh);
                 _lookSplits++;
             }
+            AuditLookRoad(model);
+            return true;
+        }
+
+        /// <summary>中央道路の実三角形を調べ歩道の境界箱を重なりと誤認しないよう報告する</summary>
+        /// <param name="model">材質を割り当てた構造物</param>
+        private void AuditLookRoad(GameObject model)
+        {
+            if (_roadSurfaceAudited) return;
+            MeshRenderer[] renderers = model.GetComponentsInChildren<MeshRenderer>(false);
+            MeshRenderer road = Array.Find(renderers, r => r.name.Equals("tunnel_floor", StringComparison.OrdinalIgnoreCase));
+            if (road == null) return;
+            _roadSurfaceAudited = true;
+            /* 中央と前後の中心線で実際の描画三角形を直接照合する */
+            for (int sample = -1; sample <= 1; sample++)
+            {
+                Vector3 point = road.bounds.center;
+                int axis = road.bounds.size.x > road.bounds.size.z ? 0 : 2;
+                point[axis] += sample * road.bounds.size[axis] * 0.25f;
+                var hits = new List<(float height, string name, string material)>();
+                foreach (MeshRenderer renderer in renderers)
+                {
+                    if (!renderer.enabled || !renderer.TryGetComponent(out MeshFilter filter)) continue;
+                    Mesh mesh = filter.sharedMesh;
+                    if (mesh == null || !mesh.isReadable) continue;
+                    Vector3[] vertices = mesh.vertices;
+                    Material[] materials = renderer.sharedMaterials;
+                    for (int slot = 0; slot < mesh.subMeshCount; slot++)
+                    {
+                        int[] triangles = mesh.GetTriangles(slot);
+                        float highest = float.NegativeInfinity;
+                        for (int i = 0; i < triangles.Length; i += 3)
+                        {
+                            Vector3 a = renderer.transform.TransformPoint(vertices[triangles[i]]);
+                            Vector3 b = renderer.transform.TransformPoint(vertices[triangles[i + 1]]);
+                            Vector3 c = renderer.transform.TransformPoint(vertices[triangles[i + 2]]);
+                            if (TryLookFloorHeight(point, a, b, c, out float y) && y <= point.y + 0.5f)
+                                highest = Mathf.Max(highest, y);
+                        }
+                        if (float.IsNegativeInfinity(highest)) continue;
+                        hits.Add((highest, renderer.name, slot < materials.Length && materials[slot] != null ? materials[slot].name : "missing"));
+                    }
+                }
+                hits.Sort((a, b) => b.height.CompareTo(a.height));
+                if (hits.Count == 0)
+                {
+                    Debug.LogWarning($"Tunnel road audit: {model.name}, centerline={point}, no readable upward triangle");
+                    continue;
+                }
+                var top = hits[0];
+                string layers = string.Join("; ", hits.ConvertAll(h => $"{h.name}/{h.material}@y={h.height:F3}"));
+                bool overlap = hits.Count > 1 && Mathf.Abs(top.height - hits[1].height) < 0.005f;
+                Debug.Log($"Tunnel road audit: {model.name}, centerline={point}, visible={top.name}/{top.material}, layers={layers}, coplanar={overlap}");
+                if (overlap || top.material != tunnelRoad.name)
+                    Debug.LogWarning($"Tunnel road receiver needs review: {model.name}, centerline={point}, {layers}");
+            }
+        }
+
+        /// <summary>XZ平面の重心座標で上向き三角形の床高を求める</summary>
+        /// <param name="point">確認する水平位置</param>
+        /// <param name="a">頂点A</param>
+        /// <param name="b">頂点B</param>
+        /// <param name="c">頂点C</param>
+        /// <param name="height">三角形上の高さ</param>
+        /// <returns>水平位置が上向き面の内側ならtrue</returns>
+        private static bool TryLookFloorHeight(Vector3 point, Vector3 a, Vector3 b, Vector3 c, out float height)
+        {
+            height = 0f;
+            Vector3 ab = b - a, ac = c - a, ap = point - a;
+            if (Vector3.Cross(ab, ac).normalized.y < 0.6f) return false;
+            float determinant = ab.x * ac.z - ab.z * ac.x;
+            if (Mathf.Abs(determinant) < 0.000001f) return false;
+            float u = (ap.x * ac.z - ap.z * ac.x) / determinant;
+            float v = (ab.x * ap.z - ab.z * ap.x) / determinant;
+            if (u < -0.0001f || v < -0.0001f || u + v > 1.0001f) return false;
+            height = a.y + u * ab.y + v * ac.y;
             return true;
         }
 
@@ -237,19 +315,24 @@ namespace Shinzui.View.GenerateTunnel
                         if (!RaycastStructure(section.surfaces, origin, side, 25f, out hit) || Mathf.Abs(hit.normal.y) > 0.8f) { missed++; continue; }
                     }
                     var decalObject = new GameObject("Tunnel " + materials[kind].name + " " + ordinal);
+                    decalObject.layer = hit.collider.gameObject.layer;
                     decalObject.transform.SetParent(section.root, true);
                     decalObject.transform.position = hit.point + hit.normal * 0.03f;
                     decalObject.transform.rotation = Quaternion.LookRotation(-hit.normal, kind == 0 ? section.root.forward : Vector3.up);
                     var projector = decalObject.AddComponent<DecalProjector>();
                     projector.material = materials[kind];
                     float scale = 0.7f + (float)random.NextDouble() * 0.6f;
-                    projector.size = kind == 0 ? new Vector3(2.4f * scale, 3f * scale, 0.16f)
-                        : new Vector3((kind == 1 ? 0.8f : 1.6f) * scale, (kind == 2 ? 0.65f : 2.2f) * scale, 0.18f);
-                    projector.pivot = new Vector3(0f, 0f, 0.05f);
+                    projector.size = kind == 0 ? new Vector3(2.4f * scale, 3f * scale, 0.6f)
+                        : new Vector3((kind == 1 ? 0.8f : 1.6f) * scale, (kind == 2 ? 0.65f : 2.2f) * scale, 1.0f);
+                    /* +Zを面内へ向け投影体積の中心を衝突面に一致させる */
+                    projector.pivot = new Vector3(0f, 0f, 0.03f);
+                    projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                    projector.fadeFactor = 1f;
                     projector.drawDistance = _generator != null ? _generator.DecalFadeDistance : 35f;
                     projector.fadeScale = 0.8f;
                     projector.affectsTransparency = false;
                     if (kind == 0) CreateGroundMoisture(section.root, hit);
+                    if (placed < 4) Debug.Log($"Tunnel decal placement: {section.root.name} / {decalObject.name}, receiver={hit.collider.name}, hit={hit.point}, forward dot normal={Vector3.Dot(decalObject.transform.forward, hit.normal):F2}, size={projector.size}, volume center={decalObject.transform.TransformPoint(projector.pivot)}");
                     placed++;
                 }
             }
@@ -281,28 +364,37 @@ namespace Shinzui.View.GenerateTunnel
             _lookFog++;
         }
 
-        /// <summary>天井を通過し区間内の上向きの床面を探す</summary>
+        /// <summary>天井を通過しシェル底面より実際の道路と歩道を優先する</summary>
         /// <param name="surfaces">区間の構造物</param>
         /// <param name="origin">構造物より高い始点</param>
         /// <param name="distance">探索深さ</param>
-        /// <param name="floor">最も低い床面</param>
+        /// <param name="floor">描画される床上面</param>
         /// <returns>床を見つけた場合はtrue</returns>
         private static bool RaycastFloor(Collider[] surfaces, Vector3 origin, float distance, out RaycastHit floor)
         {
             floor = default;
             bool found = false;
+            bool namedFloorFound = false;
             foreach (Collider surface in surfaces)
             {
                 if (surface == null || !surface.enabled || !surface.gameObject.activeInHierarchy || surface.isTrigger) continue;
                 string name = surface.name.ToLowerInvariant();
                 if (name.Contains("ceiling") || name.Contains("header")) continue;
+                bool namedFloor = name.Contains("floor") || name.Contains("road") || name.Contains("walkway");
                 Vector3 start = origin;
                 float remaining = distance;
                 /* 複合メッシュの屋根に当たった場合もその直下から床まで調べる */
                 for (int layer = 0; layer < 4 && remaining > 0f; layer++)
                 {
                     if (!surface.Raycast(new Ray(start, Vector3.down), out RaycastHit hit, remaining)) break;
-                    if (hit.normal.y > 0.6f && (!found || hit.point.y < floor.point.y)) { floor = hit; found = true; }
+                    /* 名前付き床同士は上面を選び複合シェルだけの場合は屋根を避けて底面を選ぶ */
+                    if (hit.normal.y > 0.6f && (!found || namedFloor && !namedFloorFound
+                        || namedFloor == namedFloorFound && (namedFloor ? hit.point.y > floor.point.y : hit.point.y < floor.point.y)))
+                    {
+                        floor = hit;
+                        found = true;
+                        namedFloorFound = namedFloor;
+                    }
                     float step = hit.distance + 0.02f;
                     start += Vector3.down * step;
                     remaining -= step;

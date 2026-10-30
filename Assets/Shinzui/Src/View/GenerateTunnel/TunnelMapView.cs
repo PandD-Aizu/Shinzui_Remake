@@ -817,7 +817,7 @@ namespace Shinzui.View.GenerateTunnel
         }
 
         /// <summary>
-        /// 通路上部の右側内面を測定してLED照明を一定間隔で配置する
+        /// 通路上部の左右の内面を交互に測定してLED照明を一定間隔で配置する
         /// </summary>
         /// <param name="passage">配置先のトンネルまたは廊下</param>
         /// <param name="length">通路の長さ</param>
@@ -845,7 +845,8 @@ namespace Shinzui.View.GenerateTunnel
             Collider[] surfaces = passage.GetComponentsInChildren<Collider>(false);
             Physics.SyncTransforms();
 
-            // 上部から右側だけを測定し、実際の壁面へ取り付ける
+            /* 区間ごとの開始側をシードで決めて台数を増やさず左右へ交互に配置する */
+            int firstSide = (LookSeed(passage, 5917) & 1) == 0 ? 1 : -1;
             var lightRoot = new GameObject("Ceiling Lights").transform;
             lightRoot.SetParent(passage, false);
             for (int i = 0; i < count; i++)
@@ -856,7 +857,8 @@ namespace Shinzui.View.GenerateTunnel
                     ? slope * exitSign * Mathf.Max(0.0f, exitSign * (localZ - slopeStartZ.Value))
                     : slope * localZ;
                 Vector3 origin = passage.TransformPoint(new Vector3(0.0f, height * 0.8f + floorOffset + rise, localZ));
-                var ray = new Ray(origin, passage.right);
+                Vector3 mountingDirection = passage.right * (i % 2 == 0 ? firstSide : -firstSide);
+                var ray = new Ray(origin, mountingDirection);
                 float distance = Mathf.Infinity;
                 Vector3 ceiling = default;
                 Vector3 inwardNormal = default;
@@ -864,7 +866,7 @@ namespace Shinzui.View.GenerateTunnel
                 {
                     if (surface.isTrigger || !surface.enabled) continue;
                     if (surface.Raycast(ray, out RaycastHit hit, Mathf.Max(height * 4.0f, 10.0f) * passage.lossyScale.x)
-                        && hit.distance < distance && Vector3.Dot(hit.normal, passage.right) < -0.1f)
+                        && hit.distance < distance && Vector3.Dot(hit.normal, mountingDirection) < -0.1f)
                     {
                         distance = hit.distance;
                         ceiling = hit.point;
@@ -882,6 +884,7 @@ namespace Shinzui.View.GenerateTunnel
                     Vector3.ProjectOnPlane(passage.forward, inwardNormal), -inwardNormal);
 
                 ConfigureLookFixture(light, passage, i);
+                if (i < 2) Debug.Log($"Tunnel staggered fixture: {passage.name} / {light.name}, side={(i % 2 == 0 ? firstSide : -firstSide)}, spacing={spacing}m, count={count}");
                 // 生成したLED照明のみを影予算の対象にし、懐中電灯は変更しない
                 foreach (Light source in light.GetComponentsInChildren<Light>(true))
                 {

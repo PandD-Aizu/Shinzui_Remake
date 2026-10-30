@@ -258,6 +258,34 @@ namespace Shinzui.Editor.LookDev
                 count++;
                 Debug.Log($"Tunnel pipeline: {path}, decals=on, SSGI={(tier == 2)}, SSR={(tier > 0)}, contact={(tier > 0)}");
             }
+            SetDefaultFrameFeatures(Features);
+            Debug.Log($"Tunnel rendering features: pipelines={count}, global frame settings=1");
+        }
+
+        /// <summary>露出や照明値を変更せずデカールの描画経路を有効にする</summary>
+        internal static void EnsureDecalRendering()
+        {
+            int count = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:HDRenderPipelineAsset", new[] { "Assets/Shinzui/GraphicSettings" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<HDRenderPipelineAsset>(path);
+                var settings = asset.currentPlatformRenderPipelineSettings;
+                settings.supportDecals = true;
+                settings.decalSettings.perChannelMask = true;
+                asset.currentPlatformRenderPipelineSettings = settings;
+                EditorUtility.SetDirty(asset);
+                count++;
+                Debug.Log($"Tunnel decal pipeline verified: {path}, support=on, per-channel mask=on, distance={settings.decalSettings.drawDistance}");
+            }
+            SetDefaultFrameFeatures(new[] { FrameSettingsField.Decals });
+            Debug.Log($"Tunnel decal rendering summary: pipelines={count}, global camera decal frame flag=on; camera overrides verified by menu 1");
+        }
+
+        /// <summary>既定カメラのフレーム設定で指定機能を有効にする</summary>
+        /// <param name="features">有効にする機能</param>
+        private static void SetDefaultFrameFeatures(FrameSettingsField[] features)
+        {
             var global = GraphicsSettings.GetSettingsForRenderPipeline<HDRenderPipeline>();
             if (global == null) throw new InvalidOperationException("HDRP Global Settings missing");
             var serialized = new SerializedObject(global);
@@ -267,11 +295,10 @@ namespace Shinzui.Editor.LookDev
                 if (iterator.propertyType != SerializedPropertyType.ManagedReference || iterator.managedReferenceValue?.GetType().Name != "RenderingPathFrameSettings") continue;
                 var camera = iterator.FindPropertyRelative("m_Camera");
                 var frame = (FrameSettings)camera.boxedValue;
-                foreach (FrameSettingsField field in Features) frame.SetEnabled(field, true);
+                foreach (FrameSettingsField field in features) frame.SetEnabled(field, true);
                 camera.boxedValue = frame;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(global);
-                Debug.Log($"Tunnel rendering features: pipelines={count}, global frame settings=1");
                 return;
             }
             throw new InvalidOperationException("HDRP RenderingPathFrameSettings container missing");
