@@ -5,9 +5,11 @@ using System.Reflection;
 using Shinzui.View;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Shinzui.Infrastructure.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 using Object = UnityEngine.Object;
 
 namespace Shinzui.Editor
@@ -46,6 +48,10 @@ namespace Shinzui.Editor
             }
         }
 
+        /// <summary>
+        /// 検証ステージを撮影して保存先を返す
+        /// </summary>
+        /// <returns>保存先のパス</returns>
         public static string CaptureStage()
         {
             EditorSceneManager.OpenScene(Stage);
@@ -63,13 +69,13 @@ namespace Shinzui.Editor
             Vector3 viewOffset = new Vector3(0, 0.35f, -1).normalized;
             camera.transform.position = bounds.center + viewOffset * Mathf.Min(3.5f, radius * 1.6f);
             camera.transform.LookAt(bounds.center);
-            camera.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+            HdrpCameraUtility.SetPostProcessing(camera, false);
             var light = new GameObject("Spider Web Review Flashlight").AddComponent<Light>();
             light.type = LightType.Spot;
             light.range = radius * 8;
             light.spotAngle = 60;
             light.innerSpotAngle = 40;
-            light.intensity = 8;
+            HdrpLightUtility.SetIntensity(light, 8f, LightUnit.Candela);
             light.shadows = LightShadows.Soft;
             light.transform.position = camera.transform.position + camera.transform.right * 0.3f;
             light.transform.LookAt(bounds.center);
@@ -97,6 +103,11 @@ namespace Shinzui.Editor
             public long meshUpdateAllocatedBytes;
         }
 
+        /// <summary>
+        /// 品質別の検証画像を生成して保存先を返す
+        /// </summary>
+        /// <param name="label">保存画像の識別名</param>
+        /// <returns>保存先のパス</returns>
         public static string Capture(string label)
         {
             if (UnityEngine.Application.isPlaying)
@@ -145,21 +156,21 @@ namespace Shinzui.Editor
             camera.farClipPlane = 100;
             camera.allowHDR = true;
             camera.allowMSAA = true;
-            var cameraData = camera.GetUniversalAdditionalCameraData();
-            cameraData.renderPostProcessing = false;
-            cameraData.antialiasing = AntialiasingMode.None;
+            var cameraData = HdrpCameraUtility.GetOrAdd(camera);
+            HdrpCameraUtility.SetPostProcessing(camera, false);
+            cameraData.antialiasing = HDAdditionalCameraData.AntialiasingMode.None;
 
             var key = new GameObject("Probe Flashlight").AddComponent<Light>();
             key.type = LightType.Spot;
             key.range = 25;
             key.spotAngle = 68;
             key.innerSpotAngle = 40;
-            key.intensity = 20;
+            HdrpLightUtility.SetIntensity(key, 20f, LightUnit.Candela);
             key.color = new Color(0.92f, 0.96f, 1f);
             key.shadows = LightShadows.Soft;
             var sun = new GameObject("Probe Directional").AddComponent<Light>();
             sun.type = LightType.Directional;
-            sun.intensity = 0.6f;
+            HdrpLightUtility.SetIntensity(sun, 0.6f, LightUnit.Lux);
             sun.transform.rotation = Quaternion.Euler(35, -25, 0);
             sun.enabled = false;
 
@@ -175,18 +186,11 @@ namespace Shinzui.Editor
             {
                 foreach (string quality in new[] { "High", "Midium", "Low" })
                 {
-                    var asset = Object.Instantiate(AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(
-                        "Assets/Shinzui/GraphicSettings/Quality" + quality + ".asset"));
+                    var asset = Object.Instantiate(AssetDatabase.LoadAssetAtPath<HDRenderPipelineAsset>(
+                        "Assets/Shinzui/GraphicSettings/Quality" + quality + "_HDRP.asset"));
                     asset.hideFlags = HideFlags.HideAndDontSave;
-                    var assetData = new SerializedObject(asset);
-                    var rendererArray = assetData.FindProperty("m_RendererDataList");
-                    var renderer = Object.Instantiate((UniversalRendererData)rendererArray.GetArrayElementAtIndex(0).objectReferenceValue);
-                    renderer.hideFlags = HideFlags.HideAndDontSave;
-                    renderer.rendererFeatures.Clear();
-                    rendererArray.GetArrayElementAtIndex(0).objectReferenceValue = renderer;
-                    assetData.ApplyModifiedPropertiesWithoutUndo();
+                    // HDRPではRendererFeatureを複製せずカメラ側でポスト処理を制御する
                     pipelineClones.Add(asset);
-                    pipelineClones.Add(renderer);
                     QualitySettings.renderPipeline = asset;
 
                     camera.transform.position = center + new Vector3(0, 0, -distance);
@@ -259,6 +263,13 @@ namespace Shinzui.Editor
             }
         }
 
+        /// <summary>
+        /// 単独カメラのHDRP出力を検証画像として保存する
+        /// </summary>
+        /// <param name="web">撮影対象の蜘蛛の巣</param>
+        /// <param name="camera">描画対象カメラ</param>
+        /// <param name="name">生成物の名前</param>
+        /// <param name="images">保存画像の一覧</param>
         private static void CaptureImage(SpiderWeb web, Camera camera, string name, List<string> images)
         {
             var target = new RenderTexture(ImageWidth, ImageHeight, 24, RenderTextureFormat.ARGB32)
@@ -270,7 +281,7 @@ namespace Shinzui.Editor
             {
                 camera.targetTexture = target;
                 typeof(SpiderWeb).GetMethod("UpdateMeshGeometry", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(web, null);
-                var request = new UniversalRenderPipeline.SingleCameraRequest { destination = target };
+                var request = new RenderPipeline.StandardRequest { destination = target };
                 RenderPipeline.SubmitRenderRequest(camera, request);
                 RenderPipeline.SubmitRenderRequest(camera, request);
                 RenderTexture.active = target;

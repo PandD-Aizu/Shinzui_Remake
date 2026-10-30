@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.Rendering;
 
 namespace Shinzui.View
@@ -206,10 +207,14 @@ namespace Shinzui.View
             renderer.material = CreateParticleMaterial(tint);
         }
 
+        /// <summary>
+        /// 炎粒子用のHDRP透過マテリアルを生成する
+        /// </summary>
+        /// <param name="tint">粒子の色</param>
+        /// <returns>生成したマテリアル</returns>
         private Material CreateParticleMaterial(Color tint)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
-                            ?? Shader.Find("Particles/Standard Unlit");
+            Shader shader = Shader.Find("HDRP/Unlit");
             if (shader == null)
             {
                 return null;
@@ -220,46 +225,12 @@ namespace Shinzui.View
                 name = "Spider Web Burn Runtime Material",
                 hideFlags = HideFlags.HideAndDontSave
             };
-            material.SetOverrideTag("RenderType", "Transparent");
-            material.renderQueue = (int)RenderQueue.Transparent;
-            if (material.HasProperty("_Surface"))
-            {
-                material.SetFloat("_Surface", 1.0f);
-            }
-            if (material.HasProperty("_Blend"))
-            {
-                material.SetFloat("_Blend", 0.0f);
-            }
-            if (material.HasProperty("_SrcBlend"))
-            {
-                material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
-            }
-            if (material.HasProperty("_DstBlend"))
-            {
-                material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
-            }
-            if (material.HasProperty("_ZWrite"))
-            {
-                material.SetFloat("_ZWrite", 0.0f);
-            }
-            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            if (material.HasProperty("_BaseColor"))
-            {
-                material.SetColor("_BaseColor", tint);
-            }
-            else if (material.HasProperty("_Color"))
-            {
-                material.SetColor("_Color", tint);
-            }
-            Texture2D particleTexture = GetOrCreateSoftParticleTexture();
-            if (material.HasProperty("_BaseMap"))
-            {
-                material.SetTexture("_BaseMap", particleTexture);
-            }
-            if (material.HasProperty("_MainTex"))
-            {
-                material.SetTexture("_MainTex", particleTexture);
-            }
+            // HDRP Unlitの色と透過状態を公開APIで初期化する
+            material.SetColor("_UnlitColor", tint);
+            material.SetTexture("_UnlitColorMap", GetOrCreateSoftParticleTexture());
+            material.SetFloat("_BlendMode", 0f);
+            HDMaterial.SetSurfaceType(material, true);
+            HDMaterial.ValidateMaterial(material);
             _runtimeMaterials.Add(material);
             return material;
         }

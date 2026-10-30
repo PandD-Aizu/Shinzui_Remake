@@ -16,7 +16,7 @@ namespace Shinzui.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(folder + "PenlightRed.mat");
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                material = new Material(Shader.Find("HDRP/Lit"));
                 AssetDatabase.CreateAsset(material, folder + "PenlightRed.mat");
             }
 

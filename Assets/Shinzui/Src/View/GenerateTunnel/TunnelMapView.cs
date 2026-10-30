@@ -950,9 +950,15 @@ namespace Shinzui.View.GenerateTunnel
                 new Vector3(corridorWidth * 1.1f, tunnelHeight, backstopThickness));
         }
 
+        /// <summary>
+        /// 指定色のHDRPマテリアルを生成する
+        /// </summary>
+        /// <param name="materialName">マテリアル名</param>
+        /// <param name="color">表示色</param>
+        /// <returns>生成したマテリアル</returns>
         private static Material CreateMaterial(string materialName, Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            Shader shader = Shader.Find("HDRP/Lit") ?? Shader.Find("Standard");
             var material = new Material(shader) { name = materialName, color = color };
             return material;
         }

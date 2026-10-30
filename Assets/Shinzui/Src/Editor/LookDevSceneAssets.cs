@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Shinzui.Infrastructure.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
+using HdrpExposure = UnityEngine.Rendering.HighDefinition.Exposure;
 
 namespace Shinzui.Editor
 {
@@ -14,9 +17,9 @@ namespace Shinzui.Editor
     {
         private const string Folder = "Assets/Shinzui/LookDev";
         private const string SnapshotPath = Folder + "/TunnelSnapshot.prefab";
-        private const string ProfilePath = Folder + "/LookDev_URP_VolumeProfile.asset";
-        private const string SourceProfilePath = "Assets/Shinzui/GraphicSettings/QualityHigh_VolumeProfile.asset";
-        private const string ScenePath = "Assets/Shinzui/Scenes/DevScenes/LookDev_URP.unity";
+        private const string ProfilePath = Folder + "/LookDev_HDRP_VolumeProfile.asset";
+        private const string SourceProfilePath = "Assets/Shinzui/GraphicSettings/HDRP_DefaultVolumeProfile.asset";
+        private const string ScenePath = "Assets/Shinzui/Scenes/DevScenes/LookDev_HDRP.unity";
         private const float Radius = 45f;
         private static readonly Vector3 CameraPosition = new(-28f, 1.7f, 1.2f);
         private static readonly Vector3 CameraEuler = new(4f, 90f, 0f);
@@ -76,18 +79,34 @@ namespace Shinzui.Editor
                 var copy = new GameObject(source.name);
                 copy.transform.SetParent(root.transform, false);
                 copy.transform.SetPositionAndRotation(source.transform.position, source.transform.rotation);
-                EditorUtility.CopySerialized(source, copy.AddComponent<Light>());
-                var data = source.GetComponent<UniversalAdditionalLightData>();
-                if (data != null)
+                // 描画パイプライン固有の内部状態をコピーせず公開APIで初期化する
+                var light = copy.AddComponent<Light>();
+                light.type = source.type;
+                light.color = source.color;
+                light.useColorTemperature = source.useColorTemperature;
+                light.colorTemperature = source.colorTemperature;
+                light.range = source.range;
+                light.spotAngle = source.spotAngle;
+                light.innerSpotAngle = source.innerSpotAngle;
+                light.areaSize = source.areaSize;
+                light.enableSpotReflector = source.enableSpotReflector;
+                light.luxAtDistance = source.luxAtDistance;
+                light.shadows = source.shadows;
+                light.cookie = source.cookie;
+                light.cullingMask = source.cullingMask;
+                light.renderingLayerMask = source.renderingLayerMask;
+                light.bounceIntensity = source.bounceIntensity;
+                light.lightmapBakeType = LightmapBakeType.Realtime;
+                var copyData = HdrpLightUtility.SetIntensity(light,
+                    LightUnitUtils.ConvertIntensity(source, source.intensity,
+                        LightUnitUtils.GetNativeLightUnit(source.type), source.lightUnit), source.lightUnit);
+                if (source.TryGetComponent(out HDAdditionalLightData data))
                 {
-                    var copyData = copy.GetComponent<UniversalAdditionalLightData>();
-                    if (copyData == null) copyData = copy.AddComponent<UniversalAdditionalLightData>();
-                    EditorUtility.CopySerialized(data, copyData);
-                }
-                foreach (MonoBehaviour extra in source.GetComponents<MonoBehaviour>())
-                {
-                    if (extra == null || extra.GetType().Name != "VolumetricAdditionalLight") continue;
-                    EditorUtility.CopySerialized(extra, copy.AddComponent(extra.GetType()));
+                    copyData.affectsVolumetric = data.affectsVolumetric;
+                    copyData.volumetricDimmer = data.volumetricDimmer;
+                    copyData.lightDimmer = data.lightDimmer;
+                    copyData.affectDiffuse = data.affectDiffuse;
+                    copyData.affectSpecular = data.affectSpecular;
                 }
             }
 
@@ -100,7 +119,7 @@ namespace Shinzui.Editor
         /// <summary>
         /// 保存済みスナップショットと中立な画作り用Volumeで比較シーンを作る
         /// </summary>
-        [MenuItem("Shinzui/LookDev/Build URP LookDev Scene")]
+        [MenuItem("Shinzui/LookDev/Build HDRP LookDev Scene")]
         public static void BuildScene()
         {
             var snapshot = AssetDatabase.LoadAssetAtPath<GameObject>(SnapshotPath);
@@ -120,9 +139,10 @@ namespace Shinzui.Editor
             var source = AssetDatabase.LoadAssetAtPath<VolumeProfile>(SourceProfilePath);
             foreach (VolumeComponent original in source.components)
             {
+                if (original == null) continue;
                 string name = original.GetType().Name;
                 if (name == "ProbeVolumesOptions") continue;
-                if (name is "ExposureVolume" or "VolumetricFogVolumeComponent")
+                if (original is HdrpExposure or Fog)
                 {
                     VolumeComponent copy = Object.Instantiate(original);
                     copy.name = original.name;
@@ -141,20 +161,20 @@ namespace Shinzui.Editor
             }
 
             // 比較用の画作りはACESと控えめなブルーム、周辺減光のみとする
-            profile.TryGet(out Tonemapping tonemapping);
+            if (!profile.TryGet(out Tonemapping tonemapping)) tonemapping = profile.Add<Tonemapping>(true);
             tonemapping.mode.value = TonemappingMode.ACES;
-            profile.TryGet(out Bloom bloom);
+            if (!profile.TryGet(out Bloom bloom)) bloom = profile.Add<Bloom>(true);
             bloom.intensity.value = 0.6f;
             bloom.threshold.value = 1.0f;
-            profile.TryGet(out Vignette vignette);
+            if (!profile.TryGet(out Vignette vignette)) vignette = profile.Add<Vignette>(true);
             vignette.intensity.value = 0.25f;
 
             // 単フレームの撮影でも順応途中の値にならないよう露出を固定する
-            profile.TryGet(out Infrastructure.Rendering.Exposure.ExposureVolume exposure);
-            exposure.mode.value = Infrastructure.Rendering.Exposure.ExposureMode.Fixed;
-            exposure.eyeAdaptation.value = Infrastructure.Rendering.Exposure.EyeAdaptationMode.Instant;
-            exposure.exposureCompensation.value = 1.0f;
-            exposure.mode.overrideState = exposure.eyeAdaptation.overrideState = exposure.exposureCompensation.overrideState = true;
+            if (!profile.TryGet(out HdrpExposure exposure)) exposure = profile.Add<HdrpExposure>(true);
+            exposure.mode.Override(ExposureMode.Fixed);
+            exposure.adaptationMode.Override(AdaptationMode.Fixed);
+            exposure.fixedExposure.Override(0f);
+            exposure.compensation.Override(0f);
 
             foreach (VolumeComponent component in profile.components)
             {
@@ -173,7 +193,7 @@ namespace Shinzui.Editor
             camera.nearClipPlane = 0.05f;
             camera.backgroundColor = Color.black;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            cameraObject.AddComponent<UniversalAdditionalCameraData>().renderPostProcessing = true;
+            HdrpCameraUtility.SetPostProcessing(camera, true);
             var volume = new GameObject("Global Volume").AddComponent<Volume>();
             volume.isGlobal = true;
             volume.sharedProfile = profile;

@@ -1,9 +1,11 @@
 using Shinzui.View;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using Shinzui.Infrastructure.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
 
 namespace Shinzui.Editor
@@ -35,7 +37,7 @@ namespace Shinzui.Editor
                 floor.transform.localScale = new Vector3(24f, .5f, 24f);
                 var light = new GameObject("Key Light", typeof(Light)).GetComponent<Light>();
                 light.type = LightType.Directional;
-                light.intensity = 1.5f;
+                HdrpLightUtility.SetIntensity(light, 1.5f, LightUnit.Lux);
                 light.transform.rotation = Quaternion.Euler(45f, -30f, 0f);
                 var camera = new GameObject("Test Camera", typeof(Camera), typeof(AudioListener)).GetComponent<Camera>();
                 camera.tag = "MainCamera";
@@ -45,7 +47,7 @@ namespace Shinzui.Editor
                 camera.farClipPlane = 80f;
                 camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = new Color(.035f, .045f, .06f);
-                camera.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+                HdrpCameraUtility.SetPostProcessing(camera, false);
 
                 // DIやステージ生成に依存せず本番の導入Viewへプレイヤーを供給
                 var playerObject = new GameObject("Test Player", typeof(CharacterController), typeof(PlayerView));

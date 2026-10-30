@@ -47,11 +47,11 @@ namespace Shinzui.Editor
             importer.clipAnimations = clips;
             importer.SaveAndReimport();
 
-            // 元の色テクスチャをURPの肌マテリアルへ接続
+            // 元の色テクスチャをHDRPの肌マテリアルへ接続
             var material = AssetDatabase.LoadAssetAtPath<Material>(Folder + "/HumanEnemySkin.mat");
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                material = new Material(Shader.Find("HDRP/Lit"));
                 material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "/Texture0.jpg"));
                 material.SetColor("_BaseColor", new Color(.8f, .8f, .8f));
                 material.SetFloat("_Smoothness", .32f);

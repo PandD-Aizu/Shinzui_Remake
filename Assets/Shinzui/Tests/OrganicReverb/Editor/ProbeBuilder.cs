@@ -10,6 +10,8 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
 using Vector3 = UnityEngine.Vector3;
 
 namespace Shinzui.AudioProbe.Editor
@@ -23,6 +25,9 @@ namespace Shinzui.AudioProbe.Editor
 
         static ProbeBuilder() { EditorApplication.update += Poll; }
 
+        /// <summary>
+        /// 音響検証用のシーンとHDRP光源を作成する
+        /// </summary>
         [MenuItem("Shinzui/Audio/Create Organic Reverb Probe")]
         public static void Create()
         {
@@ -54,7 +59,7 @@ namespace Shinzui.AudioProbe.Editor
                 material.scattering = .2f;
                 AssetDatabase.CreateAsset(material, Root + "/Data/Concrete.asset");
             }
-            var visual = new UnityEngine.Material(Shader.Find("Universal Render Pipeline/Lit"));
+            var visual = new UnityEngine.Material(Shader.Find("HDRP/Lit"));
             visual.color = new Color(.32f, .36f, .4f);
             string visualPath = Root + "/Data/ConcreteVisual.mat";
             if (AssetDatabase.LoadAssetAtPath<UnityEngine.Material>(visualPath))
@@ -94,7 +99,12 @@ namespace Shinzui.AudioProbe.Editor
             acoustics.occlusionInput = OcclusionInput.SimulationDefined;
             var probe = new GameObject("Organic Reverb Experiment").AddComponent<OrganicReverbProbe>();
             probe.Listener = listener.transform; probe.Emitter = emitter; probe.AcousticSource = acoustics;
-            new GameObject("Probe Light").AddComponent<Light>().type = LightType.Directional;
+            // HDRPデータと物理単位を明示して検証用光源を初期化する
+            var light = new GameObject("Probe Light").AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.gameObject.AddComponent<HDAdditionalLightData>();
+            light.lightUnit = LightUnit.Lux;
+            light.intensity = 1f;
             var data = AssetDatabase.LoadAssetAtPath<SerializedData>(Root + "/Data/ProbeGeometry.asset");
             if (!data) { data = ScriptableObject.CreateInstance<SerializedData>(); AssetDatabase.CreateAsset(data, Root + "/Data/ProbeGeometry.asset"); }
             var mesh = new GameObject("Acoustic Geometry").AddComponent<SteamAudioStaticMesh>();

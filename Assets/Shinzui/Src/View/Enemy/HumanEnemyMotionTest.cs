@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Shinzui.Infrastructure.Rendering;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.View
 {
@@ -71,7 +72,7 @@ namespace Shinzui.View
             _result = "";
             var camera = player.MainCamera;
             camera.fieldOfView = 55f;
-            camera.GetUniversalAdditionalCameraData().renderPostProcessing = false;
+            HdrpCameraUtility.SetPostProcessing(camera, false);
             camera.transform.SetPositionAndRotation(new Vector3(3f, 1.6f, -4f),
                 Quaternion.LookRotation(new Vector3(-3f, -.65f, 6f)));
 

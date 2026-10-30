@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.Editor
 {
@@ -95,7 +97,6 @@ namespace Shinzui.Editor
                 light.color = Color.white;
                 light.useColorTemperature = true;
                 light.colorTemperature = 4600;
-                light.intensity = 1.4f;
                 light.range = 22;
                 light.spotAngle = 170;
                 light.innerSpotAngle = 135;
@@ -107,12 +108,8 @@ namespace Shinzui.Editor
                 light.renderMode = LightRenderMode.Auto;
 
                 // 多数の器具でシャドウアトラスを圧迫しないよう低解像度の影を共有する
-                UniversalAdditionalLightData data = light.GetComponent<UniversalAdditionalLightData>();
-                if (data == null) data = light.gameObject.AddComponent<UniversalAdditionalLightData>();
-                data.usePipelineSettings = false;
-                var settings = new SerializedObject(data);
-                settings.FindProperty("m_AdditionalLightsShadowResolutionTier").intValue = 0;
-                settings.ApplyModifiedPropertiesWithoutUndo();
+                HDAdditionalLightData data = HdrpLightUtility.SetIntensity(light, 1.4f, LightUnit.Candela);
+                data.SetShadowResolution(512);
 
                 // 近接する二光源を中央の一光源へまとめ、総光量を保ちつつ影計算を半減する
                 Transform second = root.transform.Find("Fluorescent Illumination End");
@@ -132,7 +129,7 @@ namespace Shinzui.Editor
                 bounce.type = LightType.Point;
                 bounce.lightmapBakeType = LightmapBakeType.Realtime;
                 bounce.color = new Color(0.92f, 0.95f, 1.0f);
-                bounce.intensity = 0.025f;
+                HdrpLightUtility.SetIntensity(bounce, 0.025f, LightUnit.Candela);
                 bounce.range = 2.2f;
                 bounce.shadows = LightShadows.None;
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
@@ -160,7 +157,7 @@ namespace Shinzui.Editor
         }
 
         /// <summary>
-        /// 再生成時も参照を維持するURP Litマテリアルを取得する
+        /// 再生成時も参照を維持するHDRP Litマテリアルを取得する
         /// </summary>
         /// <param name="name">材質の名前</param>
         /// <returns>保存済みまたは新規のマテリアル</returns>
@@ -170,7 +167,7 @@ namespace Shinzui.Editor
             Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = name };
+                material = new Material(Shader.Find("HDRP/Lit")) { name = name };
                 AssetDatabase.CreateAsset(material, path);
             }
 

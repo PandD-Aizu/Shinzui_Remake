@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.View
 {
@@ -42,6 +42,9 @@ namespace Shinzui.View
         private float targetFocusDistance;
         private float raycastTimer;
 
+        /// <summary>
+        /// 追従対象と描画用パラメータを初期化する
+        /// </summary>
         private void Start()
         {
             if (targetVolume == null)
@@ -87,8 +90,9 @@ namespace Shinzui.View
             // パラメータの上書き設定
             if (depthOfField != null && enableDepthOfField)
             {
-                depthOfField.mode.overrideState = true;
-                depthOfField.mode.value = DepthOfFieldMode.Bokeh;
+                depthOfField.focusMode.overrideState = true;
+                depthOfField.focusMode.value = DepthOfFieldMode.UsePhysicalCamera;
+                depthOfField.focusDistanceMode.Override(FocusDistanceMode.Volume);
                 depthOfField.focusDistance.overrideState = true;
             }
 

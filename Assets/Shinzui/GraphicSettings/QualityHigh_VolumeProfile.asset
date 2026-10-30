@@ -389,46 +389,6 @@ MonoBehaviour:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
---- !u!114 &-3267896414627624232
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5cf8be55ce8e43899b6c4935e66ff02c, type: 3}
-  m_Name: ExposureVolume
-  m_EditorClassIdentifier: InfrastructureLayer::Shinzui.Infrastructure.Rendering.Exposure.ExposureVolume
-  active: 1
-  mode:
-    m_OverrideState: 1
-    m_Value: 2
-  filtering:
-    m_OverrideState: 1
-    m_Value: {x: 90, y: 99}
-  minLuminance:
-    m_OverrideState: 1
-    m_Value: -2
-  maxLuminance:
-    m_OverrideState: 1
-    m_Value: -1.6
-  exposureCompensation:
-    m_OverrideState: 1
-    m_Value: 1
-  eyeAdaptation:
-    m_OverrideState: 1
-    m_Value: 1
-  speedUp:
-    m_OverrideState: 1
-    m_Value: 5
-  speedDown:
-    m_OverrideState: 1
-    m_Value: 5
-  portalExposureCompensation:
-    m_OverrideState: 1
-    m_Value: 1
 --- !u!114 &-3257076713848821620
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -625,30 +585,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.VolumeProfile
   components:
   - {fileID: 7256664503053151593}
-  - {fileID: 8419845154667855337}
-  - {fileID: -2760067132624038314}
-  - {fileID: 9087586311572707975}
-  - {fileID: -1979837425324744372}
-  - {fileID: -3312732970047254830}
-  - {fileID: 2911110360777730867}
-  - {fileID: 6549510615640023942}
-  - {fileID: 1373401093309902266}
-  - {fileID: -2825357319432367998}
-  - {fileID: 1236995100406719820}
-  - {fileID: -4480900584651681756}
-  - {fileID: -2905667766686548467}
-  - {fileID: -3257076713848821620}
-  - {fileID: -5814313382732556513}
-  - {fileID: 7183810964788968330}
-  - {fileID: 8780823003380897920}
-  - {fileID: 1859528079905493729}
-  - {fileID: -6973434839311246141}
-  - {fileID: 1156189575943319257}
   - {fileID: 2244419491005358}
   - {fileID: 1692021023060196932}
   - {fileID: 3606543353807393277}
-  - {fileID: -3267896414627624232}
   - {fileID: 5321196330620673177}
+  - {fileID: 8051249811728017524}
 --- !u!114 &2244419491005358
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1043,6 +984,157 @@ MonoBehaviour:
   worldOffset:
     m_OverrideState: 1
     m_Value: {x: 0, y: 0, z: 0}
+--- !u!114 &8051249811728017524
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d08ce26990eb1a4a9177b860541e702, type: 3}
+  m_Name: Exposure
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Runtime::UnityEngine.Rendering.HighDefinition.Exposure
+  active: 1
+  mode:
+    m_OverrideState: 1
+    m_Value: 4
+  meteringMode:
+    m_OverrideState: 0
+    m_Value: 2
+  luminanceSource:
+    m_OverrideState: 0
+    m_Value: 1
+  fixedExposure:
+    m_OverrideState: 0
+    m_Value: 0
+  compensation:
+    m_OverrideState: 1
+    m_Value: 1
+  limitMin:
+    m_OverrideState: 1
+    m_Value: -2
+  limitMax:
+    m_OverrideState: 1
+    m_Value: -1.6
+  curveMap:
+    m_OverrideState: 0
+    m_Value:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: -10
+        value: -10
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 20
+        value: 20
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  limitMinCurveMap:
+    m_OverrideState: 0
+    m_Value:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: -10
+        value: -12
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 20
+        value: 18
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  limitMaxCurveMap:
+    m_OverrideState: 0
+    m_Value:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: -10
+        value: -8
+        inSlope: 0
+        outSlope: 1
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 20
+        value: 22
+        inSlope: 1
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  adaptationMode:
+    m_OverrideState: 1
+    m_Value: 1
+  adaptationSpeedDarkToLight:
+    m_OverrideState: 1
+    m_Value: 5
+  adaptationSpeedLightToDark:
+    m_OverrideState: 1
+    m_Value: 5
+  weightTextureMask:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+  histogramPercentages:
+    m_OverrideState: 1
+    m_Value: {x: 90, y: 99}
+  histogramUseCurveRemapping:
+    m_OverrideState: 0
+    m_Value: 0
+  targetMidGray:
+    m_OverrideState: 0
+    m_Value: 0
+  centerAroundExposureTarget:
+    m_OverrideState: 0
+    m_Value: 0
+  proceduralCenter:
+    m_OverrideState: 0
+    m_Value: {x: 0.5, y: 0.5}
+  proceduralRadii:
+    m_OverrideState: 0
+    m_Value: {x: 0.3, y: 0.3}
+  maskMinIntensity:
+    m_OverrideState: 0
+    m_Value: -30
+  maskMaxIntensity:
+    m_OverrideState: 0
+    m_Value: 30
+  proceduralSoftness:
+    m_OverrideState: 0
+    m_Value: 0.5
 --- !u!114 &8419845154667855337
 MonoBehaviour:
   m_ObjectHideFlags: 3

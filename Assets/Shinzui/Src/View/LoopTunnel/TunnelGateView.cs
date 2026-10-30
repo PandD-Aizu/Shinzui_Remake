@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using Shinzui.Infrastructure.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Shinzui.View
 {
     /// <summary>
     /// トンネルの端点のViewクラス
-    /// URP環境において、RenderTexture投影方式によるステンシルマスク付きポータル表現をセットアップ
+    /// HDRP環境において、RenderTexture投影方式によるステンシルマスク付きポータル表現をセットアップ
     /// </summary>
+    [DefaultExecutionOrder(10000)]
     [RequireComponent(typeof(Collider))]
     public class TunnelGateView : MonoBehaviour
     {
@@ -61,8 +62,6 @@ namespace Shinzui.View
         private Transform _cachedPlayerRoot;
         private Transform _cachedCameraRoot;
         private float _lastLightScanTime;
-
-        private static FieldInfo _rendererIndexField;
 
         // 全アクティブなゲートのリスト
         public static readonly List<TunnelGateView> ActiveGates = new();
@@ -182,12 +181,32 @@ namespace Shinzui.View
 
         private const int MaxRecursionDepth = 2; // 再帰深度
 
+        /// <summary>
+        /// メイン描画の開始前に可視ポータルの再帰画像を更新する
+        /// </summary>
+        private void LateUpdate()
+        {
+            // HDRPの描画ループ内でRenderRequestを再入させない
+            _mainCamera = Camera.main;
+            if (targetGate != null && _mainCamera != null && _mainCamera.isActiveAndEnabled
+                && GraphicsSettings.currentRenderPipeline is HDRenderPipelineAsset
+                && IsVisibleFromMainCamera(_mainCamera))
+            {
+                RenderPortalRecursive(MaxRecursionDepth);
+            }
+        }
+
+        /// <summary>
+        /// ポータルカメラの描画時にクリップ面を再適用する
+        /// </summary>
+        /// <param name="context">現在の描画コンテキスト</param>
+        /// <param name="camera">描画対象カメラ</param>
         private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             if (targetGate == null) return;
 
             // ポータルカメラ自身のレンダリング開始時：
-            // URPによる自動的な射影行列の再計算を上書きし、フェイルセーフな斜め射影ニアクリップ面を適用する
+            // HDRPによる自動的な射影行列の再計算を上書きし、フェイルセーフな斜め射影ニアクリップ面を適用する
             if (camera == _portalCamera)
             {
                 if (useDynamicNearClip)
@@ -201,15 +220,6 @@ namespace Shinzui.View
                 return;
             }
 
-            // メインカメラのレンダリング開始時のみ、メインカメラから可視のゲートだけ再帰ポータル描画をトリガー
-            if (camera == Camera.main)
-            {
-                _mainCamera = camera;
-                if (IsVisibleFromMainCamera(_mainCamera))
-                {
-                    RenderPortalRecursive(context, MaxRecursionDepth);
-                }
-            }
         }
 
         /// <summary>
@@ -401,6 +411,9 @@ namespace Shinzui.View
             _portalMaskRenderer.receiveShadows = false;
         }
 
+        /// <summary>
+        /// 手動描画するポータルカメラを生成する
+        /// </summary>
         private void BuildPortalCamera()
         {
             var cameraObject = new GameObject("[Portal Camera]");
@@ -413,14 +426,8 @@ namespace Shinzui.View
             _portalCamera.backgroundColor = Color.black;
             _portalCamera.useOcclusionCulling = false;
 
-            var targetData = _portalCamera.GetComponent<UniversalAdditionalCameraData>();
-            if (targetData == null)
-            {
-                targetData = _portalCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
-            }
-            targetData.renderType = CameraRenderType.Base;
-            targetData.renderPostProcessing = false; // ポストプロセスの二重適用を防ぐため無効にする
-            targetData.antialiasing = AntialiasingMode.None;
+            // 手動描画の初期状態ではポスト処理を無効にする
+            HdrpCameraUtility.SetPostProcessing(_portalCamera, false);
         }
 
         /// <summary>
@@ -441,7 +448,7 @@ namespace Shinzui.View
             if (width <= 0) width = 1024;
             if (height <= 0) height = 576;
 
-            _portalRT = new RenderTexture(width, height, 24, RenderTextureFormat.DefaultHDR)
+            _portalRT = new RenderTexture(width, height, 24, RenderTextureFormat.ARGBHalf)
             {
                 name = $"PortalRT_{gameObject.name}",
                 useMipMap = false
@@ -466,6 +473,11 @@ namespace Shinzui.View
             cameraTransform.rotation = _mainCamera.transform.rotation;
         }
 
+        /// <summary>
+        /// 出口面より手前の物体を除外する斜めクリップ面を設定する
+        /// </summary>
+        /// <param name="portalCamera">ポータルカメラ</param>
+        /// <param name="destinationPortal">出口の平面</param>
         private void SetObliqueNearClipPlane(Camera portalCamera, Transform destinationPortal)
         {
             // まずベースのプロジェクション行列を確定（メインカメラの通常プロジェクションに一致させる）
@@ -545,7 +557,7 @@ namespace Shinzui.View
             // 候補の oblique 射影行列を適用
             portalCamera.projectionMatrix = obliqueMatrix;
 
-            // URP で実際にカリングパラメータが生成可能かを検証
+            // HDRPで実際にカリングパラメータが生成可能かを検証
             // （Screen position out of view frustum 等の射影破綻エラーを確実に防ぐ）
             if (!portalCamera.TryGetCullingParameters(false, out _))
             {
@@ -561,24 +573,6 @@ namespace Shinzui.View
             {
                 portalCamera.projectionMatrix = _mainCamera.projectionMatrix;
             }
-        }
-
-        private static int GetRendererIndex(UniversalAdditionalCameraData data)
-        {
-            if (data == null) return -1;
-
-            if (_rendererIndexField == null)
-            {
-                _rendererIndexField = typeof(UniversalAdditionalCameraData).GetField(
-                    "m_RendererIndex",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-            }
-
-            if (_rendererIndexField != null)
-            {
-                return (int)_rendererIndexField.GetValue(data);
-            }
-            return -1;
         }
 
         /// <summary>
@@ -609,30 +603,10 @@ namespace Shinzui.View
                 target.cullingMask = target.cullingMask & ~(1 << playerLayer);
             }
 
-            var sourceData = source.GetComponent<UniversalAdditionalCameraData>();
-            var targetData = target.GetComponent<UniversalAdditionalCameraData>();
-            if (sourceData != null)
-            {
-                if (targetData == null)
-                {
-                    targetData = target.gameObject.AddComponent<UniversalAdditionalCameraData>();
-                }
-                // ポストプロセスの二重適用を防ぐため無効
-                targetData.renderPostProcessing = false;
-                targetData.renderShadows = sourceData.renderShadows;
-                targetData.antialiasing = sourceData.antialiasing;
-                targetData.antialiasingQuality = sourceData.antialiasingQuality;
-                targetData.volumeLayerMask = sourceData.volumeLayerMask;
-                // Volumeのブレンド判定基準を実際の仮想視点位置にある portalCamera.transform に設定
-                targetData.volumeTrigger = target.transform;
-
-                // メインカメラのRenderer Indexと同期（-1の場合は明示指定せずDefault Rendererを使用）
-                int rendererIndex = GetRendererIndex(sourceData);
-                if (rendererIndex >= 0)
-                {
-                    targetData.SetRenderer(rendererIndex);
-                }
-            }
+            // ポータル側のVolume判定位置と黒背景を維持する
+            var targetData = HdrpCameraUtility.CopyForPortal(source, target, target.transform);
+            targetData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+            targetData.backgroundColorHDR = Color.black;
         }
 
         /// <summary>
@@ -651,7 +625,7 @@ namespace Shinzui.View
                 var shader = Shader.Find("Custom/PortalProjection");
                 if (shader == null)
                 {
-                    shader = Shader.Find("Universal Render Pipeline/Unlit");
+                    shader = Shader.Find("HDRP/Unlit");
                 }
                 mat = new Material(shader) { name = $"PortalProjectionMaterial_{gameObject.name}" };
             }
@@ -662,6 +636,10 @@ namespace Shinzui.View
             return mat;
         }
 
+        /// <summary>
+        /// ポータル開口のマスク用マテリアルを生成する
+        /// </summary>
+        /// <returns>生成したマテリアル</returns>
         private Material CreatePortalMaskMaterial()
         {
             if (maskMaterialTemplate != null)
@@ -671,7 +649,7 @@ namespace Shinzui.View
             var shader = Shader.Find("Custom/PortalMask");
             if (shader == null)
             {
-                shader = Shader.Find("Universal Render Pipeline/Unlit");
+                shader = Shader.Find("HDRP/Unlit");
             }
             return new Material(shader) { name = $"PortalMaskMaterial_{gameObject.name}" };
         }
@@ -710,6 +688,12 @@ namespace Shinzui.View
             return mesh;
         }
 
+        /// <summary>
+        /// 再帰段数と解像度に合わせてHDR描画先を確保する
+        /// </summary>
+        /// <param name="depth">再帰段数</param>
+        /// <param name="width">画像の幅</param>
+        /// <param name="height">画像の高さ</param>
         private void EnsureRecursionRenderTextures(int depth, int width, int height)
         {
             if (_recursionRTs != null && _recursionRTs.Length == depth)
@@ -731,7 +715,7 @@ namespace Shinzui.View
             _recursionRTs = new RenderTexture[depth];
             for (int i = 0; i < depth; i++)
             {
-                _recursionRTs[i] = new RenderTexture(width, height, 24, RenderTextureFormat.DefaultHDR)
+                _recursionRTs[i] = new RenderTexture(width, height, 24, RenderTextureFormat.ARGBHalf)
                 {
                     name = $"Portal_RecursionRT_{gameObject.name}_{i}",
                     useMipMap = false
@@ -830,9 +814,8 @@ namespace Shinzui.View
         /// <summary>
         /// ポータル内の再帰像を奥から描画し、最前面を表示用テクスチャへ直接出力する
         /// </summary>
-        /// <param name="context">現在の描画コンテキスト</param>
         /// <param name="depth">ポータルの再帰描画回数</param>
-        private void RenderPortalRecursive(ScriptableRenderContext context, int depth)
+        private void RenderPortalRecursive(int depth)
         {
             // レンダリング直前にもオンデマンド初期化を実行し、オブジェクトの生存を確実に
             InitializePortalResources();
@@ -896,7 +879,7 @@ namespace Shinzui.View
                 else
                 {
                     // 最深部は前フレームの映像による時間差にじみを防ぐため、
-                    // クリアカラーである黒を貼り、奥の暗闇に自然に溶け込ませます
+                    // クリアカラーである黒を貼り、奥の暗闇に自然に溶け込ませる
                     if (PortalRenderer != null && PortalRenderer.sharedMaterial != null)
                     {
                         PortalRenderer.sharedMaterial.SetTexture("_MainTex", Texture2D.blackTexture);
@@ -934,8 +917,9 @@ namespace Shinzui.View
                         }
                     }
 
-                    // URPの機能でカメラを明示的に即時描画
-                    UniversalRenderPipeline.RenderSingleCamera(context, _portalCamera);
+                    // 最深部から同期描画し次の再帰段へ渡す
+                    var request = new RenderPipeline.StandardRequest { destination = _portalCamera.targetTexture };
+                    RenderPipeline.SubmitRenderRequest(_portalCamera, request);
                 }
                 finally
                 {

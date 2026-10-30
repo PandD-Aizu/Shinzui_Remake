@@ -1,4 +1,7 @@
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.Rendering;
+using Shinzui.Infrastructure.Lighting;
 using FMODUnity;
 
 namespace Shinzui.View.Flashlight
@@ -34,11 +37,11 @@ namespace Shinzui.View.Flashlight
         [Header("Volumetric Light Settings")]
         [SerializeField] private bool enableVolumetric = true;  // ボリュメトリック効果を有効にするか
         [Range(-1.0f, 1.0f)]
-        [SerializeField] private float anisotropy = 0.25f;      // 前方散乱の度合い
+        [SerializeField, HideInInspector] private float anisotropy = 0.25f;      // 前方散乱の度合い
         [Range(0.0f, 16.0f)]
         [SerializeField] private float scattering = 2.0f;       // 散乱強度
         [Range(0.0f, 1.0f)]
-        [SerializeField] private float radius = 0.2f;           // 光源付近のノイズ減衰半径
+        [SerializeField, HideInInspector] private float radius = 0.2f;           // 光源付近のノイズ減衰半径
 
         [Header("Strobe Visual Settings")]
         [SerializeField] private float maxStrobeBoost = 15.0f;             // ストロボ最大追加輝度値
@@ -56,7 +59,7 @@ namespace Shinzui.View.Flashlight
         [SerializeField] private LayerMask strobeHitMask = ~0;          // ストロボ命中判定対象
 
         private Quaternion _currentFollowRotation;          // 手振れを含まない純粋な追従回転キャッシュ
-        private VolumetricAdditionalLight _volumetricLight; // ボリュメトリックライトコンポーネント参照
+        private HDAdditionalLightData _volumetricLight; // ボリュメトリックライトコンポーネント参照
         private float _baseIntensity = -1f;                 // ライトの基本輝度
         private float _baseVolumetricScattering = -1f;      // ボリュメトリックライトの基本散乱強度
         private float _nearWallGain = 1f;                  // 壁際の減光係数
@@ -124,6 +127,9 @@ namespace Shinzui.View.Flashlight
         public float CenterViewportRadius => centerViewportRadius;
         public LayerMask StrobeHitMask => strobeHitMask;
 
+        /// <summary>
+        /// ライトの基本強度と散乱倍率を保持する
+        /// </summary>
         private void EnsureBaseValuesCached()
         {
             if (_baseIntensity < 0f && flashlightLight != null)
@@ -135,7 +141,7 @@ namespace Shinzui.View.Flashlight
             {
                 if (_volumetricLight != null)
                 {
-                    _baseVolumetricScattering = _volumetricLight.Scattering;
+                    _baseVolumetricScattering = _volumetricLight.volumetricDimmer;
                 }
                 else
                 {
@@ -155,15 +161,17 @@ namespace Shinzui.View.Flashlight
             }
 
             // ボリュメトリックライトコンポーネントを自動セットアップ
-            if (flashlightLight != null && enableVolumetric)
+            if (flashlightLight != null)
             {
-                _volumetricLight = flashlightLight.GetComponent<VolumetricAdditionalLight>();
+                _volumetricLight = flashlightLight.GetComponent<HDAdditionalLightData>();
                 if (_volumetricLight == null)
                 {
-                    _volumetricLight = flashlightLight.gameObject.AddComponent<VolumetricAdditionalLight>();
+                    _volumetricLight = HdrpLightUtility.SetIntensity(flashlightLight,
+                        flashlightLight.intensity, LightUnitUtils.GetNativeLightUnit(flashlightLight.type));
                 }
             }
 
+            _baseVolumetricScattering = scattering;
             EnsureBaseValuesCached();
             
             if (flashlightLight != null)
@@ -172,14 +180,13 @@ namespace Shinzui.View.Flashlight
                 _currentFollowRotation = flashlightLight.transform.rotation;
 
                 // ボリュメトリックライトコンポーネントの設定適用
-                if (enableVolumetric && _volumetricLight != null)
+                if (_volumetricLight != null)
                 {
-                    _volumetricLight.Anisotropy = anisotropy;
-                    _volumetricLight.Scattering = scattering;
-                    _volumetricLight.Radius = radius;
+                    // 異方性はHDRPのFog Volumeで設定し光源では散乱倍率を調整する
+                    _volumetricLight.volumetricDimmer = scattering;
 
                     // 初期有効状態をライトの点灯状態に同期
-                    _volumetricLight.enabled = flashlightLight.enabled;
+                    _volumetricLight.affectsVolumetric = enableVolumetric;
                 }
             }
             else
@@ -284,7 +291,7 @@ namespace Shinzui.View.Flashlight
                 // ボリュメトリックフォグへの寄与状態をライトと同期
                 if (_volumetricLight != null)
                 {
-                    _volumetricLight.enabled = active;
+                    _volumetricLight.affectsVolumetric = enableVolumetric && active;
                 }
             }
         }
@@ -314,7 +321,7 @@ namespace Shinzui.View.Flashlight
 
             if (_volumetricLight != null)
             {
-                _volumetricLight.Scattering = (_baseVolumetricScattering + volumetricScatteringBoost * _strobeFactor) * gain;
+                _volumetricLight.volumetricDimmer = (_baseVolumetricScattering + volumetricScatteringBoost * _strobeFactor) * gain;
             }
         }
     }

@@ -15,7 +15,7 @@ Shader "Custom/Scanline"
     
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" }
+        Tags { "RenderPipeline" = "HDRenderPipeline" }
         LOD 100
         ZTest Always ZWrite Off Cull Off
         
@@ -25,14 +25,15 @@ Shader "Custom/Scanline"
             
             HLSLPROGRAM
             
-            #pragma target 3.0
-            #pragma vertex vert
+            #pragma target 4.5
+            #pragma vertex Fullscreen
             #pragma fragment frag
             
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/PostProcessing/Shaders/RTUpscale.hlsl"
             
-            TEXTURE2D_X(_MainTex);
-            SAMPLER(sampler_BlitTexture);
+            TEXTURE2D_X(_InputTexture);
             
             float _Speed;
             float _BarSize;
@@ -44,18 +45,34 @@ Shader "Custom/Scanline"
             float _Vignette;
             float _Flicker;
             
-            struct Varyings 
+            struct Attributes
+            {
+                uint vertexID : SV_VertexID;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
-                float2 uv : TEXCOORD0;    
+                float2 uv : TEXCOORD0;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
             
-            Varyings vert(uint id : SV_VertexID) 
+            Varyings Fullscreen(Attributes input)
             {
                 Varyings output;
-                output.positionHCS = GetFullScreenTriangleVertexPosition(id);
-                output.uv = GetFullScreenTriangleTexCoord(id);
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.positionHCS = GetFullScreenTriangleVertexPosition(input.vertexID);
+                output.uv = GetFullScreenTriangleTexCoord(input.vertexID);
                 return output;
+            }
+
+            // 解像度変更時も有効な入力領域だけを線形補間する
+            float4 SampleInput(float2 uv)
+            {
+                return SAMPLE_TEXTURE2D_X(_InputTexture, s_linear_clamp_sampler,
+                    ClampAndScaleUVForBilinearPostProcessTexture(uv));
             }
             
             // 擬似乱数ノイズ生成
@@ -82,6 +99,7 @@ Shader "Custom/Scanline"
             
             half4 frag(Varyings input) : SV_Target 
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 baseUV = input.uv;
                 float time = _Time.y;
                 
@@ -104,7 +122,7 @@ Shader "Custom/Scanline"
                 float dist = abs(uv.y - (1.0 - scanY));
                 
                 // 帯の中心ほど強く、端に向かって滑らかに減衰するベルカーブを計算
-                float halfSize = _BarSize * 0.5;
+                float halfSize = max(_BarSize * 0.5, 0.0001);
                 float rawIntensity = saturate(1.0 - (dist / halfSize));
                 float intensity = smoothstep(0.0, 1.0, rawIntensity); // 境界の急激な変化を防ぐ
                 
@@ -124,9 +142,9 @@ Shader "Custom/Scanline"
                 float aberration = distortion * 0.004 + (distFromCenter * 0.0015);
                 
                 half3 finalColor;
-                finalColor.r = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, distortedUV + float2(aberration, 0.0)).r;
-                finalColor.g = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, distortedUV).g;
-                finalColor.b = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, distortedUV - float2(aberration, 0.0)).b;
+                finalColor.r = SampleInput(distortedUV + float2(aberration, 0.0)).r;
+                finalColor.g = SampleInput(distortedUV).g;
+                finalColor.b = SampleInput(distortedUV - float2(aberration, 0.0)).b;
                 
                 // 微細な水平走査線の重畳
                 if (_FineLines > 0.0)

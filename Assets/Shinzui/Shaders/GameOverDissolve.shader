@@ -13,7 +13,7 @@ Shader "Custom/GameOverDissolve"
 
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" }
+        Tags { "RenderPipeline" = "HDRenderPipeline" }
         LOD 100
         ZTest Always ZWrite Off Cull Off
 
@@ -23,13 +23,15 @@ Shader "Custom/GameOverDissolve"
 
             HLSLPROGRAM
 
-            #pragma target 3.0
-            #pragma vertex Vert
+            #pragma target 4.5
+            #pragma vertex Fullscreen
             #pragma fragment Frag
 
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
+            #include "Packages/com.unity.render-pipelines.high-definition/Runtime/PostProcessing/Shaders/RTUpscale.hlsl"
 
-            TEXTURE2D_X(_MainTex);
+            TEXTURE2D_X(_InputTexture);
             float _Progress;
             float _EdgeWidth;
             float _NoiseStrength;
@@ -38,18 +40,34 @@ Shader "Custom/GameOverDissolve"
             float4 _MembraneColor;
             float4 _HotEdgeColor;
 
+            struct Attributes
+            {
+                uint vertexID : SV_VertexID;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
             struct Varyings
             {
                 float4 positionHCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            Varyings Vert(uint id : SV_VertexID)
+            Varyings Fullscreen(Attributes input)
             {
                 Varyings output;
-                output.positionHCS = GetFullScreenTriangleVertexPosition(id);
-                output.uv = GetFullScreenTriangleTexCoord(id);
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                output.positionHCS = GetFullScreenTriangleVertexPosition(input.vertexID);
+                output.uv = GetFullScreenTriangleTexCoord(input.vertexID);
                 return output;
+            }
+
+            // 解像度変更時も有効な入力領域だけを線形補間する
+            float4 SampleInput(float2 uv)
+            {
+                return SAMPLE_TEXTURE2D_X(_InputTexture, s_linear_clamp_sampler,
+                    ClampAndScaleUVForBilinearPostProcessTexture(uv));
             }
 
             float Hash21(float2 p)
@@ -162,12 +180,13 @@ Shader "Custom/GameOverDissolve"
 
             half4 Frag(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.uv;
-                half4 source = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv);
+                half4 source = SampleInput(uv);
 
-                float2 centered = (uv * 2.0 - 1.0) * float2(_ScreenParams.x / _ScreenParams.y, 1.0);
+                float2 centered = (uv * 2.0 - 1.0) * float2(_ScreenSize.x / _ScreenSize.y, 1.0);
                 float time = _Time.y;
-                float radialDistance = saturate(length(centered) / length(float2(_ScreenParams.x / _ScreenParams.y, 1.0)));
+                float radialDistance = saturate(length(centered) / length(float2(_ScreenSize.x / _ScreenSize.y, 1.0)));
 
                 float2 warped = DomainWarp(centered * 2.15 + float2(time * 0.035, -time * 0.02), time * 0.75);
                 float broadNoise = Fbm(warped * 2.2 + float2(time * 0.025, -time * 0.018));
