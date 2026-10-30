@@ -80,7 +80,21 @@ namespace Shinzui.View.GenerateTunnel
 
         [Header("Ceiling Lights")]
         [Tooltip("天井中央に配置する蛍光灯の間隔（m）")]
-        [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 5.0f;
+        [Min(1.5f)] [SerializeField] private float ceilingLightSpacing = 12.0f;
+
+        [Header("Tunnel Look")]
+        [SerializeField, Range(0f, 1f)] private float deadFixtureFraction = 0.1f;
+        [SerializeField, Range(0f, 1f)] private float flickerFixtureFraction = 0.05f;
+        [SerializeField, Range(0f, 0.5f)] private float decalDensity = 0.08f;
+        [SerializeField, Range(0, 256)] private int maxTunnelDecals = 96;
+        [SerializeField, Range(5f, 80f)] private float decalFadeDistance = 35f;
+        [SerializeField, Range(0, 32)] private int maxGroundFogPatches = 16;
+        public int MaxGroundFogPatches => maxGroundFogPatches;
+        public float DeadFixtureFraction => deadFixtureFraction;
+        public float FlickerFixtureFraction => flickerFixtureFraction;
+        public float DecalDensity => decalDensity;
+        public int MaxTunnelDecals => maxTunnelDecals;
+        public float DecalFadeDistance => decalFadeDistance;
 
         [Header("Model Scale")]
         [Tooltip("Xは長さの基準倍率、Yは断面の倍率。縦横比を維持するためZはYと同じ倍率になる")]

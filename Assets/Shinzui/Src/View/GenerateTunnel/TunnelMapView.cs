@@ -300,6 +300,7 @@ namespace Shinzui.View.GenerateTunnel
             GeometryClearing?.Invoke();
             ReleaseGeneratedMeshes();
             _ceilingLights.Clear();
+            PrepareTunnelLook();
             EnsureMapRoot();
             CreateMaterials();
             FindTemplates();
@@ -385,7 +386,7 @@ namespace Shinzui.View.GenerateTunnel
                 if (!FitTunnelConnections(model.transform, root, length, corridorWidth))
                     model.transform.localScale = GetTunnelModelScale(length, standardTunnelLength);
 
-                if (isSpecial)
+                if (isSpecial && showDebugGeometry)
                 {
                     foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                     {
@@ -405,6 +406,7 @@ namespace Shinzui.View.GenerateTunnel
                 CreateStageBox(root, "Right Wall", new Vector3(width * 0.5f, height * 0.5f, 0.0f), new Vector3(ShellThickness, height, length), shellMaterial);
             }
 
+            if (!isSpecial || !showDebugGeometry) ApplyLookSurfaces(root.gameObject);
             CreateCeilingLights(root, length, height);
             return root;
         }
@@ -583,6 +585,8 @@ namespace Shinzui.View.GenerateTunnel
                 CreateStageBox(room, "Walkable Room Floor", Vector3.zero, new Vector3(roomWidth, floorThickness, roomLength), _smallRoomMaterial);
             }
 
+            ApplyLookSurfaces(room.gameObject);
+            RegisterLookSection(room, roomLength, tunnelHeight);
             return info;
         }
 
@@ -629,7 +633,12 @@ namespace Shinzui.View.GenerateTunnel
             camera.farClipPlane = Mathf.Max(camera.farClipPlane, boundsSize.magnitude * 3.0f);
         }
 
-        public void NotifyGeometryReady() => GeometryReady?.Invoke(_geometryRoot);
+        /// <summary>構造物の生成完了後に湿気を配置して利用側へ通知する</summary>
+        public void NotifyGeometryReady()
+        {
+            BuildTunnelWeathering();
+            GeometryReady?.Invoke(_geometryRoot);
+        }
 
         private void FindTemplates()
         {
@@ -820,6 +829,7 @@ namespace Shinzui.View.GenerateTunnel
         private void CreateCeilingLights(Transform passage, float length, float height, float slope = 0.0f,
             float floorOffset = 0.0f, float? slopeStartZ = null, int slopeExitSign = 0)
         {
+            RegisterLookSection(passage, length, height);
             // 共通プレハブを再利用し、短い通路でも器具が端からはみ出さないようにする
             if (_ceilingLightPrefab == null)
             {
@@ -829,7 +839,7 @@ namespace Shinzui.View.GenerateTunnel
             const float endMargin = 0.8f;
             if (_ceilingLightPrefab == null || length < endMargin * 2.0f) return;
 
-            float spacing = _generator != null ? _generator.CeilingLightSpacing : 5.0f;
+            float spacing = _generator != null ? _generator.CeilingLightSpacing : 12.0f;
             int count = Mathf.FloorToInt((length - endMargin * 2.0f) / spacing) + 1;
             float start = -(count - 1) * spacing * 0.5f;
             Collider[] surfaces = passage.GetComponentsInChildren<Collider>(false);
@@ -871,9 +881,11 @@ namespace Shinzui.View.GenerateTunnel
                 light.transform.rotation = Quaternion.LookRotation(
                     Vector3.ProjectOnPlane(passage.forward, inwardNormal), -inwardNormal);
 
+                ConfigureLookFixture(light, passage, i);
                 // 生成したLED照明のみを影予算の対象にし、懐中電灯は変更しない
                 foreach (Light source in light.GetComponentsInChildren<Light>(true))
                 {
+                    if (Shinzui.Infrastructure.Lighting.TunnelLookLighting.IsCeilingBounce(source)) continue;
                     _ceilingLights.Add((source, source.shadows, source.shadowStrength));
                     source.shadows = LightShadows.None;
                 }
@@ -886,6 +898,7 @@ namespace Shinzui.View.GenerateTunnel
         /// <param name="model">生成した廊下モデル</param>
         private void ApplyTunnelPassageMaterial(GameObject model)
         {
+            if (ApplyLookSurfaces(model)) return;
             // 出口と共通のマテリアルを参照して外観を揃える
             Transform exit = _tunnelPrefab != null ? _tunnelPrefab.transform.Find(ExitPathNames[1]) : null;
             Renderer source = exit != null ? exit.GetComponentInChildren<Renderer>(true) : null;

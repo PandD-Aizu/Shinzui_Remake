@@ -112,16 +112,19 @@ namespace Shinzui.Editor
                 light.renderMode = LightRenderMode.Auto;
 
                 // 多数の器具でシャドウアトラスを圧迫しないよう低解像度の影を共有する
-                HDAdditionalLightData data = HdrpLightUtility.SetIntensity(light, 3000f, LightUnit.Lumen);
-                data.SetShadowResolution(512);
+                TunnelLookLighting.ConfigureFixture(light, fluorescent: true);
 
                 // 近接する二光源を中央の一光源へまとめ、総光量を保ちつつ影計算を半減する
                 Transform second = root.transform.Find("Fluorescent Illumination End");
                 if (second != null) Object.DestroyImmediate(second.gameObject);
 
                 /* 天井の間接光はHDRPへ任せ旧補助光源だけを削除する */
-                Transform bounceTransform = root.transform.Find("Ceiling Bounce");
-                if (bounceTransform != null) Object.DestroyImmediate(bounceTransform.gameObject);
+                foreach (Light helper in root.GetComponentsInChildren<Light>(true))
+                {
+                    if (!TunnelLookLighting.IsCeilingBounce(helper)) continue;
+                    if (helper.TryGetComponent(out HDAdditionalLightData additional)) Object.DestroyImmediate(additional);
+                    Object.DestroyImmediate(helper);
+                }
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             }
             finally

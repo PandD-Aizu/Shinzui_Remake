@@ -37,7 +37,7 @@ namespace Shinzui.View.GenerateTunnel
             Vector3 size = new Vector3(width + ShellThickness * 2, height + ShellThickness, thickness);
             Vector3 center = new Vector3(centerX, floorY + size.y * 0.5f, endSign * endZ);
             GameObject block = CreateStageBox(root, "Goal Block", center, size, _goalMaterial);
-            CreateStageBox(root, "Goal Tunnel End Wall", new Vector3(centerX, center.y, -endSign * endZ), size, _tunnelMaterial);
+            CreateStageBox(root, "Goal Tunnel End Wall", new Vector3(centerX, center.y, -endSign * endZ), size, tunnelWall != null ? tunnelWall : _tunnelMaterial);
 
             // ブロックの手前へ判定を張り、壁に接触するプレイヤーを検知する
             var trigger = new GameObject("Goal Trigger");

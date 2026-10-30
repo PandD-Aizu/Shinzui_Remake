@@ -89,7 +89,13 @@ MonoBehaviour:
   corridorModel: {fileID: 919132149155446097, guid: 9208d269cbca764409b751d4237c21bf, type: 3}
   smallRoomModel: {fileID: 0}
   warpCorridorModel: {fileID: 0}
-  ceilingLightSpacing: 5
+  ceilingLightSpacing: 12
+  deadFixtureFraction: 0.1
+  flickerFixtureFraction: 0.05
+  decalDensity: 0.08
+  maxTunnelDecals: 96
+  decalFadeDistance: 35
+  maxGroundFogPatches: 16
   basicTunnelModelScale: {x: 1, y: 1, z: 1}
   corridorModelScale: {x: 1, y: 1, z: 1}
   smallRoomModelScale: {x: 1, y: 1, z: 1}
@@ -114,6 +120,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c82b2015f49b5b69c200222222222015, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ViewLayer::Shinzui.View.GenerateTunnel.TunnelMapView
+  tunnelWall: {fileID: 0}
+  tunnelRoad: {fileID: 0}
+  tunnelWalkway: {fileID: 0}
+  tunnelCeiling: {fileID: 0}
   mapRoot: {fileID: 4930561835335588376}
   overviewCamera: {fileID: 0}
   showDebugGeometry: 0

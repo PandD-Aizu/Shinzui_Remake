@@ -18,7 +18,7 @@ namespace Shinzui.View.Flashlight
 
         [Header("Beam Optics")]
         [SerializeField] private bool useRealisticBeam;
-        [SerializeField] private LightShadows beamShadows = LightShadows.None;
+        [SerializeField] private LightShadows beamShadows = LightShadows.Soft;
         [SerializeField, Min(1f)] private float beamFocusDistance = 8f;
         [SerializeField, Min(0.1f)] private float nearWallDistance = 2f;
         [SerializeField, Range(0.02f, 1f)] private float nearWallIntensity = 0.12f;
@@ -39,7 +39,7 @@ namespace Shinzui.View.Flashlight
         [Range(-1.0f, 1.0f)]
         [SerializeField, HideInInspector] private float anisotropy = 0.25f;      // 前方散乱の度合い
         [Range(0.0f, 16.0f)]
-        [SerializeField] private float scattering = 2.0f;       // 散乱強度
+        [SerializeField] private float scattering = 0.65f;       // 散乱強度
         [Range(0.0f, 1.0f)]
         [SerializeField, HideInInspector] private float radius = 0.2f;           // 光源付近のノイズ減衰半径
 
