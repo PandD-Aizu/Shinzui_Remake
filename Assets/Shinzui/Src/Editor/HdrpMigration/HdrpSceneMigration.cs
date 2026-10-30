@@ -200,7 +200,7 @@ namespace Shinzui.Editor.HdrpMigration
         }
 
         /// <summary>元の恐怖演出を読み取り常駐Volumeのプレハブへ保存する</summary>
-        private static void SetupHorrorDetection()
+        internal static void SetupHorrorDetection()
         {
             const string source = "Assets/Shinzui/GraphicSettings/QualityHigh_Renderer.asset";
             Material material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Shinzui/Materials/HorrorDetection.mat");
@@ -217,12 +217,22 @@ namespace Shinzui.Editor.HdrpMigration
             }
             else Debug.Log($"HDRP HorrorDetection: legacy source absent, retaining known fullscreen material: {AssetDatabase.GetAssetPath(material)}");
             if (material == null) throw new InvalidOperationException("Missing HorrorDetection material");
+            Shader shader = Shader.Find("Custom/HorrorDetectionNoise");
+            if (shader == null || ShaderUtil.ShaderHasError(shader))
+                throw new InvalidOperationException("HorrorDetectionNoise shader is missing or has compilation errors");
+            /* 旧シェーダー参照や無効なパス設定を材質のGUIDを保って修復する */
+            material.shader = shader;
+            material.SetShaderPassEnabled("Horror Detection Noise", true);
+            EditorUtility.SetDirty(material);
             bool exists = File.Exists(HorrorPrefab);
             GameObject root = exists ? PrefabUtility.LoadPrefabContents(HorrorPrefab) : new GameObject("HDRP Horror Detection");
             try
             {
                 var volume = root.GetComponent<CustomPassVolume>();
                 if (volume == null) volume = root.AddComponent<CustomPassVolume>();
+                root.SetActive(true);
+                root.layer = 0;
+                volume.enabled = true;
                 volume.isGlobal = true;
                 volume.injectionPoint = CustomPassInjectionPoint.AfterPostProcess;
                 volume.customPasses.RemoveAll(p => p is HdrpHorrorDetectionPass);

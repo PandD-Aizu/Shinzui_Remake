@@ -82,13 +82,13 @@ MonoBehaviour:
     m_Value: 0
   compensation:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: -0.5
   limitMin:
     m_OverrideState: 1
-    m_Value: -3
+    m_Value: 0
   limitMax:
     m_OverrideState: 1
-    m_Value: 8
+    m_Value: 6
   curveMap:
     m_OverrideState: 1
     m_Value:
@@ -175,13 +175,13 @@ MonoBehaviour:
     m_Value: 3
   adaptationSpeedLightToDark:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.5
   weightTextureMask:
     m_OverrideState: 1
     m_Value: {fileID: 0}
   histogramPercentages:
     m_OverrideState: 1
-    m_Value: {x: 40, y: 90}
+    m_Value: {x: 50, y: 95}
   histogramUseCurveRemapping:
     m_OverrideState: 1
     m_Value: 0
@@ -409,6 +409,52 @@ MonoBehaviour:
   blockScale:
     m_OverrideState: 1
     m_Value: {x: 50, y: 300}
+--- !u!114 &-4218590753527461521
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcf384b154398e341b6b29969c078198, type: 3}
+  m_Name: MotionBlur
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Runtime::UnityEngine.Rendering.HighDefinition.MotionBlur
+  active: 1
+  quality:
+    m_OverrideState: 1
+    m_Value: 3
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0
+  maximumVelocity:
+    m_OverrideState: 0
+    m_Value: 200
+  minimumVelocity:
+    m_OverrideState: 0
+    m_Value: 2
+  cameraMotionBlur:
+    m_OverrideState: 1
+    m_Value: 0
+  specialCameraClampMode:
+    m_OverrideState: 0
+    m_Value: 0
+  cameraVelocityClamp:
+    m_OverrideState: 0
+    m_Value: 0.05
+  cameraTranslationVelocityClamp:
+    m_OverrideState: 0
+    m_Value: 0.05
+  cameraRotationVelocityClamp:
+    m_OverrideState: 0
+    m_Value: 0.03
+  depthComparisonExtent:
+    m_OverrideState: 0
+    m_Value: 1
+  m_SampleCount:
+    m_OverrideState: 1
+    m_Value: 8
 --- !u!114 &-801041681879811441
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -551,6 +597,7 @@ MonoBehaviour:
   - {fileID: -5673671924952017609}
   - {fileID: 7322019431013675194}
   - {fileID: 255876010647416928}
+  - {fileID: -4218590753527461521}
 --- !u!114 &255876010647416928
 MonoBehaviour:
   m_ObjectHideFlags: 3

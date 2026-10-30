@@ -48,14 +48,14 @@ MonoBehaviour:
   fadeRadius: 0
   priority: 0
   customPasses:
-  - rid: 6252558279157743699
+  - rid: 6252558279157743700
   injectionPoint: 3
   m_TargetCamera: {fileID: 0}
   useTargetCamera: 0
   references:
     version: 2
     RefIds:
-    - rid: 6252558279157743699
+    - rid: 6252558279157743700
       type: {class: HdrpHorrorDetectionPass, ns: Shinzui.Infrastructure.Rendering, asm: InfrastructureLayer}
       data:
         m_Name: HorrorDetection

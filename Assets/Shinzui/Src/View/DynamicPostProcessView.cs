@@ -19,8 +19,8 @@ namespace Shinzui.View
         [SerializeField] private Transform trackingCamera;
         [SerializeField] private float maxVelocity = 10f; // m/s (この速度に達したときブラー強度が最大になる)
         [SerializeField] private float maxAngularVelocity = 180f; // deg/s (この回転速度に達したときブラー強度が最大になる)
-        [SerializeField] private float minBlurIntensity = 0f;
-        [SerializeField] private float maxBlurIntensity = 1f;
+        [SerializeField] private float minBlurIntensity = 0.05f;
+        [SerializeField] private float maxBlurIntensity = 0.15f;
         [SerializeField] private float blurLerpSpeed = 5f;
 
         [Header("Depth of Field Settings")]
@@ -100,6 +100,8 @@ namespace Shinzui.View
             {
                 motionBlur.intensity.overrideState = true;
                 motionBlur.intensity.value = minBlurIntensity;
+                /* カメラの振り向きで画面全体を流さず物体の移動だけをぼかす */
+                motionBlur.cameraMotionBlur.Override(false);
             }
         }
 
@@ -147,6 +149,8 @@ namespace Shinzui.View
             lastRotation = trackingCamera.rotation;
         }
 
+        /// <summary>移動量に応じて物体ブラーの強度を補間する</summary>
+        /// <param name="dt">前フレームからの経過秒</param>
         private void UpdateDynamicMotionBlur(float dt)
         {
             // カメラの移動速度を算出 (m/s)

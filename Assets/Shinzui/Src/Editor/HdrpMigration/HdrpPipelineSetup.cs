@@ -150,14 +150,7 @@ namespace Shinzui.Editor.HdrpMigration
 
             // 暗所で過度に持ち上がらないヒストグラム露出と自然な順応を設定する
             var exposure = profile.Add<HdrpExposure>(true);
-            exposure.mode.Override(ExposureMode.AutomaticHistogram);
-            exposure.compensation.Override(0f);
-            exposure.limitMin.Override(-3f);
-            exposure.limitMax.Override(8f);
-            exposure.histogramPercentages.Override(new Vector2(40f, 90f));
-            exposure.adaptationMode.Override(AdaptationMode.Progressive);
-            exposure.adaptationSpeedDarkToLight.Override(3f);
-            exposure.adaptationSpeedLightToDark.Override(1f);
+            HdrpGameplayTuning.ConfigureExposure(exposure);
 
             // 光源による散乱を主体にし環境色による白い霧を抑える
             var fog = profile.Add<Fog>(true);
