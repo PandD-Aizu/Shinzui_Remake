@@ -62,8 +62,8 @@ namespace Shinzui.Infrastructure.Lighting
             light.shadowNormalBias = 0.12f;
 
             /* HDRPの逆二乗減衰と距離窓と床面の余弦を使って軸上照度を合わせる */
-            /* 露出と懐中電灯を変えず常設光だけを約0.86段持ち上げる */
-            float targetLux = fluorescent ? 1.45f : 1.1f;
+            /* 蛍光灯は暗所設定と移行直後の対数的な中間へ寄せ側道も同じ約2.27段持ち上げる */
+            float targetLux = fluorescent ? 7f : 5.31f;
             float cosine = Mathf.Max(0.2f, Vector3.Dot(normal, (light.transform.position - point).normalized));
             float window = DistanceWindow(distance, light.range);
             float candela = targetLux * distance * distance / (window * cosine);

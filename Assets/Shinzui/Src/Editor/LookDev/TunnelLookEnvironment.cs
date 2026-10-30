@@ -30,7 +30,7 @@ namespace Shinzui.Editor.LookDev
             cookie = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Shinzui/Art/Flashlight/FlashlightBeam.asset");
             HdrpVerificationAssets.VisitAssets(TuneRoot);
             AssetDatabase.SaveAssets();
-            Debug.Log($"Tunnel lighting summary: fixtures={fixtures}, flashlights={flashlights}, generators={generators}, cookies=1, skipped={skipped}, bounce lights removed={bounceRemoved}; LED target=1.1lux, fluorescent target=1.45lux, measured range/beam; main tunnels=SaveStage fluorescent/crown centreline/5m nominal/dead 0%/flicker 0%; side passages=LED/12m; flashlight=3000 emitted lm after cookie/5000K/70deg/35m");
+            Debug.Log($"Tunnel lighting summary: fixtures={fixtures}, flashlights={flashlights}, generators={generators}, cookies=1, skipped={skipped}, bounce lights removed={bounceRemoved}; LED target=5.31lux, fluorescent target=7lux (fixture output +2.27EV), measured range/beam; main tunnels=SaveStage fluorescent/crown centreline/5m nominal/dead 0%/flicker 0%; side passages=LED/12m; flashlight=3000 emitted lm after cookie/5000K/70deg/35m");
         }
 
         /// <summary>既知の役割に限定してライトと生成設定を変更する</summary>
@@ -248,10 +248,10 @@ namespace Shinzui.Editor.LookDev
                 profiles++;
                 Debug.Log($"Tunnel look profile: {path}, EV=3..4, compensation=0, histogram=40..85, temperature=-6, contrast=8, saturation=-12, fog MFP=120m, tier={tier}");
             }
-            /* 8%反射の路面が1.45luxを受ける基準をトーンマッピング前の値で報告する */
-            float floorLuminance = 1.45f * 0.08f / Mathf.PI;
+            /* 8%反射の路面が7luxを受ける基準をトーンマッピング前の値で報告する */
+            float floorLuminance = 7f * 0.08f / Mathf.PI;
             float exposedFloor = floorLuminance * ColorUtils.ConvertEV100ToExposure(3f);
-            Debug.Log($"Tunnel exposure reference: 1.45lux, 8% diffuse floor -> {floorLuminance:F3}cd/m2, at EV3 -> linear {exposedFloor:F3}, {Mathf.Log(exposedFloor / 0.18f, 2f):F2} stops relative to 18% grey before ACES; histogram/actual albedo change the result");
+            Debug.Log($"Tunnel exposure reference: 7lux, 8% diffuse floor -> {floorLuminance:F3}cd/m2, at EV3 -> linear {exposedFloor:F3}, {Mathf.Log(exposedFloor / 0.18f, 2f):F2} stops relative to 18% grey before ACES; histogram/actual albedo change the result");
             ConfigurePipelines();
             AssetDatabase.SaveAssets();
             Debug.Log($"Tunnel look profile summary: updated={profiles}, missing={missing}; dynamic profile preserves quality feature overrides, ground moisture generated at puddles");
